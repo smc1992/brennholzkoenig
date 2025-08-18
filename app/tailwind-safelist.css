@@ -1,0 +1,37 @@
+/* This file ensures critical Tailwind classes are included in the production build */
+
+.bg-pergament {
+  background-color: #F5F0E0;
+}
+
+.text-tiefschwarz {
+  color: #1A1A1A;
+}
+
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Force critical layout classes */
+.min-h-dvh {
+  min-height: 100dvh;
+}
+
+.antialiased {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
