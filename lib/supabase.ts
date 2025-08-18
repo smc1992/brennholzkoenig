@@ -1,23 +1,26 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Supabase-Konfiguration für Entwicklung und Produktion
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tmxhamdyrjuxwnskgfka.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_RG-WtLPeFpt7cQGOXUIbsw_i87cO71q'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-// Logging für Debugging
-console.log('Supabase URL:', supabaseUrl);
-console.log('Umgebung:', process.env.NODE_ENV);
-
-// Validierung der URL-Pattern
-if (!supabaseUrl.includes('supabase.co')) {
-  console.warn('Supabase URL Pattern nicht erkannt, verwende Fallback')
+// Validierung der Umgebungsvariablen
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase Umgebungsvariablen fehlen. Bitte .env.local Datei überprüfen.')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: false
+// Supabase Client erstellen mit verbesserten Optionen
+export const supabase = createClient(
+  supabaseUrl,
+  supabaseAnonKey,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
   }
-})
+)
 
 export type Database = {
   public: {
