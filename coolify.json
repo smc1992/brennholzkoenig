@@ -3,5 +3,6 @@
   "healthCheckPath": "/healthcheck",
   "healthCheckTimeout": 60,
   "dockerCommand": "npm start",
-  "buildPack": "nodejs"
+  "buildPack": "nodejs",
+  "exposePort": true
 }
