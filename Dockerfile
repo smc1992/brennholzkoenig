@@ -50,7 +50,7 @@ COPY --from=builder /app/.next/static ./.next/static
 RUN chown -R nextjs:nodejs /app
 
 # Health Check Script
-RUN echo '#!/bin/sh\ncurl -f http://localhost:3000/_health || exit 1' > /app/healthcheck.sh
+RUN echo '#!/bin/sh\ncurl -f http://localhost:3000/healthcheck || exit 1' > /app/healthcheck.sh
 RUN chmod +x /app/healthcheck.sh
 
 # Zum nicht-Root-Benutzer wechseln
