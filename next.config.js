@@ -42,5 +42,7 @@ const nextConfig = {
 
 // Explizit Port 3000 setzen und sicherstellen, dass er nicht überschrieben wird
 process.env.PORT = '3000';
+// Explizit auf alle Netzwerkinterfaces binden
+process.env.HOSTNAME = '0.0.0.0';
 
 module.exports = nextConfig;
