@@ -5,35 +5,7 @@
   "buildCommand": "npm run build",
   "startCommand": "npm run start",
   "isStaticSite": false,
-  "useNixpacks": true,
-  "nixpacksPlan": {
-    "providers": [
-      "node"
-    ],
-    "buildImage": "node:18-alpine",
-    "variables": {
-      "NODE_ENV": "production",
-      "PORT": "3000"
-    },
-    "phases": {
-      "setup": {
-        "cmds": [
-          "apk add --no-cache curl"
-        ]
-      },
-      "install": {
-        "cmds": [
-          "npm ci"
-        ]
-      },
-      "build": {
-        "cmds": [
-          "npm run build"
-        ]
-      }
-    },
-    "start": {
-      "cmd": "npm run start"
-    }
-  }
+  "useDockerfile": true,
+  "useBuildpacks": false,
+  "useNixpacks": false
 }
