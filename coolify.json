@@ -4,5 +4,12 @@
   "healthCheckTimeout": 60,
   "buildCommand": "npm run build",
   "startCommand": "npm run start",
-  "isStaticSite": false
+  "isStaticSite": false,
+  "baseImage": "node:18-alpine",
+  "dockerfileCommands": [
+    "RUN apk add --no-cache curl"
+  ],
+  "useBuildpacks": false,
+  "useNixpacks": false,
+  "useDockerfile": true
 }
