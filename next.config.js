@@ -38,7 +38,7 @@ const nextConfig = {
   },
 };
 
-// Explizit Port 8000 setzen
-process.env.PORT = process.env.PORT || '8000';
+// Explizit Port 3000 setzen
+process.env.PORT = process.env.PORT || '3000';
 
 module.exports = nextConfig;

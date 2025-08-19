@@ -32,7 +32,7 @@ WORKDIR /app
 # Umgebungsvariablen für die Laufzeit
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
-ENV PORT 8000
+ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
 # Nicht-Root-Benutzer für Sicherheit
@@ -50,14 +50,14 @@ COPY --from=builder /app/.next/static ./.next/static
 RUN chown -R nextjs:nodejs /app
 
 # Health Check Script
-RUN echo '#!/bin/sh\ncurl -f http://localhost:8000/_health || exit 1' > /app/healthcheck.sh
+RUN echo '#!/bin/sh\ncurl -f http://localhost:3000/_health || exit 1' > /app/healthcheck.sh
 RUN chmod +x /app/healthcheck.sh
 
 # Zum nicht-Root-Benutzer wechseln
 USER nextjs
 
 # Port freigeben
-EXPOSE 8000
+EXPOSE 3000
 
 # Server starten
 CMD ["node", "server.js"]
