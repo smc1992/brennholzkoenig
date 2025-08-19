@@ -8,6 +8,8 @@ const nextConfig = {
   
   // Output standalone for better Docker compatibility
   output: 'standalone',
+  // Explizite Konfiguration für Produktionsumgebung
+  distDir: '.next',
   
   // Environment variables
   env: {
@@ -38,7 +40,7 @@ const nextConfig = {
   },
 };
 
-// Explizit Port 3000 setzen
-process.env.PORT = process.env.PORT || '3000';
+// Explizit Port 3000 setzen und sicherstellen, dass er nicht überschrieben wird
+process.env.PORT = '3000';
 
 module.exports = nextConfig;
