@@ -1,65 +1,35 @@
 # Basis-Image
-FROM node:18-alpine AS base
-
-# Abhängigkeiten installieren
-FROM base AS deps
-WORKDIR /app
+FROM node:18-alpine
 
 # Pakete für Healthcheck
 RUN apk add --no-cache curl
 
-# Nur package.json und package-lock.json kopieren
-COPY package.json package-lock.json ./
-RUN npm ci
-
-# Build-Phase
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
-# Umgebungsvariablen für den Build
-ENV NEXT_TELEMETRY_DISABLED 1
-ENV NODE_ENV production
-
-# Anwendung bauen
-RUN npm run build
-
-# Produktions-Image
-FROM base AS runner
+# Arbeitsverzeichnis erstellen
 WORKDIR /app
 
-# Umgebungsvariablen für die Laufzeit
+# Umgebungsvariablen setzen
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
-ENV NEXT_PUBLIC_HOST "0.0.0.0"
 ENV HOST "0.0.0.0"
 
-# Nicht-Root-Benutzer für Sicherheit
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Abhängigkeiten installieren
+COPY package.json package-lock.json ./
+RUN npm ci
 
-# Öffentliche Dateien kopieren
-COPY --from=builder /app/public ./public
+# Anwendungsdateien kopieren
+COPY . .
 
-# Standalone-Output verwenden
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-
-# Berechtigungen setzen
-RUN chown -R nextjs:nodejs /app
+# Anwendung bauen
+RUN npm run build
 
 # Health Check Script
 RUN echo '#!/bin/sh\ncurl -f http://localhost:3000/healthcheck || exit 1' > /app/healthcheck.sh
 RUN chmod +x /app/healthcheck.sh
 
-# Zum nicht-Root-Benutzer wechseln
-USER nextjs
-
 # Port freigeben
 EXPOSE 3000
 
 # Server starten - explizit auf alle Interfaces binden
-CMD ["node", "server.js", "--hostname", "0.0.0.0"]
+CMD ["npm", "start"]
