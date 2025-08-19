@@ -32,4 +32,4 @@ RUN chmod +x /app/healthcheck.sh
 EXPOSE 3000
 
 # Server starten - explizit auf alle Interfaces binden
-CMD ["npm", "start"]
+CMD ["npm", "start", "--", "--hostname", "0.0.0.0"]
