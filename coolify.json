@@ -11,5 +11,5 @@
   ],
   "useBuildpacks": false,
   "useNixpacks": false,
-  "useDockerfile": true
+  "useDockerfile": false
 }
