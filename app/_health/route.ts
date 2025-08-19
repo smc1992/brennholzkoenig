@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  return NextResponse.json({ status: 'ok', timestamp: new Date().toISOString() }, { status: 200 });
+  // Einfache Antwort mit Status 200, genau wie in Coolify konfiguriert
+  return new NextResponse('OK', {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/plain'
+    }
+  });
 }
