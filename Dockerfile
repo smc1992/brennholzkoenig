@@ -34,6 +34,8 @@ ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
+ENV NEXT_PUBLIC_HOST "0.0.0.0"
+ENV HOST "0.0.0.0"
 
 # Nicht-Root-Benutzer für Sicherheit
 RUN addgroup --system --gid 1001 nodejs
@@ -59,5 +61,5 @@ USER nextjs
 # Port freigeben
 EXPOSE 3000
 
-# Server starten
-CMD ["node", "server.js"]
+# Server starten - explizit auf alle Interfaces binden
+CMD ["node", "server.js", "--hostname", "0.0.0.0"]
