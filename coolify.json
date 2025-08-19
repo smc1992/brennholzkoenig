@@ -1,9 +1,8 @@
 {
-  "port": 3000,
-  "healthCheckPath": "/healthcheck",
+  "port": 8000,
+  "healthCheckPath": "/",
   "healthCheckTimeout": 60,
-  "dockerCommand": "npm start",
-  "buildPack": "nodejs",
-  "exposePort": true,
-  "pullmergeRequestId": "auto"
+  "buildCommand": "npm run build",
+  "startCommand": "npm run start",
+  "isStaticSite": false
 }

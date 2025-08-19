@@ -10,9 +10,7 @@ WORKDIR /app
 # Umgebungsvariablen setzen
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
-ENV HOST "0.0.0.0"
+ENV PORT 8000
 
 # Abhängigkeiten installieren
 COPY package.json package-lock.json ./
@@ -25,11 +23,11 @@ COPY . .
 RUN npm run build
 
 # Health Check Script
-RUN echo '#!/bin/sh\ncurl -f http://localhost:3000/healthcheck || exit 1' > /app/healthcheck.sh
+RUN echo '#!/bin/sh\ncurl -f http://localhost:8000/ || exit 1' > /app/healthcheck.sh
 RUN chmod +x /app/healthcheck.sh
 
 # Port freigeben
-EXPOSE 3000
+EXPOSE 8000
 
-# Server starten - explizit auf alle Interfaces binden
-CMD ["npm", "start", "--", "--hostname", "0.0.0.0"]
+# Server starten
+CMD ["npm", "run", "start"]

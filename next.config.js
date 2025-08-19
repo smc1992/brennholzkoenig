@@ -3,13 +3,10 @@ const nextConfig = {
   // Basic configuration
   reactStrictMode: false,
   swcMinify: true,
-  images: { unoptimized: true },
   poweredByHeader: false,
   
   // Output standalone for better Docker compatibility
   output: 'standalone',
-  // Explizite Konfiguration für Produktionsumgebung
-  distDir: '.next',
   
   // Environment variables
   env: {
@@ -40,9 +37,7 @@ const nextConfig = {
   },
 };
 
-// Explizit Port 3000 setzen und sicherstellen, dass er nicht überschrieben wird
-process.env.PORT = '3000';
-// Explizit auf alle Netzwerkinterfaces binden
-process.env.HOSTNAME = '0.0.0.0';
+// Wir lassen die PORT und HOSTNAME Umgebungsvariablen vom Start-Skript setzen
+// und nicht hier, um Konflikte zu vermeiden
 
 module.exports = nextConfig;
