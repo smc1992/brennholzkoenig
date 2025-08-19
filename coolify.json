@@ -4,5 +4,6 @@
   "healthCheckTimeout": 60,
   "dockerCommand": "npm start",
   "buildPack": "nodejs",
-  "exposePort": true
+  "exposePort": true,
+  "pullmergeRequestId": "auto"
 }
