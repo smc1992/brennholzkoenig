@@ -34,6 +34,27 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Add specific port binding for Coolify
+  httpAgentOptions: {
+    keepAlive: true,
+  },
+  // Configure server to listen on all interfaces
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Fix for server-side rendering issues
+      config.resolve.fallback = {
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    return config;
+  },
 };
+
+// Handle port binding explicitly
+if (process.env.PORT) {
+  console.log(`Setting port to ${process.env.PORT}`);
+}
 
 module.exports = nextConfig;

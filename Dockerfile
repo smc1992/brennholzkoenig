@@ -2,7 +2,7 @@ FROM node:18-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat curl
 WORKDIR /app
 
 # Copy package.json and package-lock.json
@@ -29,23 +29,35 @@ WORKDIR /app
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 
+# Install curl for health checks
+RUN apk add --no-cache curl
+
+# Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Copy public files
 COPY --from=builder /app/public ./public
 
 # Set the correct permission for prerender cache
-RUN mkdir .next
+RUN mkdir -p .next
 RUN chown nextjs:nodejs .next
 
 # Automatically leverage output traces to reduce image size
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Create a simple health check script
+RUN echo '#!/bin/sh\ncurl -f http://localhost:3000/ || exit 1' > /app/healthcheck.sh
+RUN chmod +x /app/healthcheck.sh
+
+# Switch to non-root user
 USER nextjs
 
+# Explicitly expose port 3000
 EXPOSE 3000
 
+# Set environment variables for Next.js
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 

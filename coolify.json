@@ -1,0 +1,13 @@
+{
+  "port": 3000,
+  "buildPack": "dockerfile",
+  "healthCheckPath": "/_health",
+  "healthCheckTimeout": 60,
+  "startCommand": "node server.js",
+  "dockerOptions": {
+    "exposedPort": 3000,
+    "internalPort": 3000,
+    "restartPolicy": "always",
+    "memory": 1024
+  }
+}
