@@ -21,7 +21,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   
-  // Explizite Server-Konfiguration
+  // Explizite Server-Konfiguration für Node.js
   experimental: {
     serverComponentsExternalPackages: ['@supabase/supabase-js']
   },
@@ -37,7 +37,7 @@ const nextConfig = {
   },
 };
 
-// Wir lassen die PORT und HOSTNAME Umgebungsvariablen vom Start-Skript setzen
-// und nicht hier, um Konflikte zu vermeiden
+// Wir verwenden Node.js Runtime und lassen die PORT und HOSTNAME Umgebungsvariablen 
+// vom Start-Skript setzen, um Konflikte zu vermeiden
 
 module.exports = nextConfig;
