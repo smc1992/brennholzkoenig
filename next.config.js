@@ -1,60 +1,26 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false, // Changed to false to avoid double-rendering in production
+  // Basic configuration
+  reactStrictMode: false,
   swcMinify: true,
   images: { unoptimized: true },
-  // Production optimizations
   poweredByHeader: false,
-  // Improved output configuration for Coolify Docker deployment
+  
+  // Output standalone for better Docker compatibility
   output: 'standalone',
-  // Disable server actions for better compatibility
-  experimental: {
-    serverComponentsExternalPackages: ['@supabase/supabase-js'],
-    serverActions: false
-  },
-  // Adjust for Coolify deployment
+  
+  // Environment variables
   env: {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://brennholz-koenig.de'
   },
-  // Explicitly set distDir for Coolify
-  distDir: '.next',
-  // Increase timeout for API routes
-  serverRuntimeConfig: {
-    api: {
-      bodyParser: {
-        sizeLimit: '1mb',
-      },
-      responseLimit: '4mb',
-    },
-  },
-  // Disable strict mode for production
+  
+  // Disable strict checks for production builds
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Add specific port binding for Coolify
-  httpAgentOptions: {
-    keepAlive: true,
-  },
-  // Configure server to listen on all interfaces
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      // Fix for server-side rendering issues
-      config.resolve.fallback = {
-        fs: false,
-        net: false,
-        tls: false,
-      };
-    }
-    return config;
-  },
 };
-
-// Handle port binding explicitly
-if (process.env.PORT) {
-  console.log(`Setting port to ${process.env.PORT}`);
-}
 
 module.exports = nextConfig;
