@@ -21,9 +21,24 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  
+  // Explizite Server-Konfiguration
+  experimental: {
+    serverComponentsExternalPackages: ['@supabase/supabase-js']
+  },
+  
+  // Erhöhte Timeouts für API-Routen
+  serverRuntimeConfig: {
+    api: {
+      bodyParser: {
+        sizeLimit: '1mb',
+      },
+      responseLimit: '4mb',
+    },
+  },
 };
 
-// Explicitly set port to 8000
+// Explizit Port 8000 setzen
 process.env.PORT = process.env.PORT || '8000';
 
 module.exports = nextConfig;
