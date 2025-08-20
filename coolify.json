@@ -7,5 +7,7 @@
   "isStaticSite": false,
   "useDockerfile": true,
   "useBuildpacks": false,
-  "useNixpacks": false
+  "useNixpacks": false,
+  "installCommand": "npm ci",
+  "publish": "out"
 }
