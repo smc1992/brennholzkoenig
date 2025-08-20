@@ -2,11 +2,8 @@
   "port": 3000,
   "healthCheckPath": "/",
   "healthCheckTimeout": 60,
-  "buildCommand": "npm run build",
-  "startCommand": "npm run start",
   "isStaticSite": false,
-  "useDockerfile": false,
+  "useDockerfile": true,
   "useBuildpacks": false,
-  "useNixpacks": true,
-  "installCommand": "npm ci"
+  "useNixpacks": false
 }
