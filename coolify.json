@@ -1,9 +1,4 @@
 {
   "port": 3000,
-  "healthCheckPath": "/",
-  "healthCheckTimeout": 60,
-  "isStaticSite": false,
-  "useDockerfile": true,
-  "useBuildpacks": false,
-  "useNixpacks": false
+  "healthCheckPath": "/"
 }
