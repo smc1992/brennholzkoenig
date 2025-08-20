@@ -8,7 +8,8 @@
     "start": "next start -H 0.0.0.0 -p ${PORT:-3000}",
     "lint": "next lint",
     "tailwind:dev": "tailwindcss -i ./app/globals.css -o ./app/output.css --watch",
-    "tailwind:build": "tailwindcss -i ./app/globals.css -o ./app/output.css"
+    "tailwind:build": "tailwindcss -i ./app/globals.css -o ./app/output.css",
+    "postinstall": "echo 'Node.js installation successful'"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.0",

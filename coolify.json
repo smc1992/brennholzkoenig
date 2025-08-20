@@ -5,9 +5,8 @@
   "buildCommand": "npm run build",
   "startCommand": "npm run start",
   "isStaticSite": false,
-  "useDockerfile": true,
+  "useDockerfile": false,
   "useBuildpacks": false,
-  "useNixpacks": false,
-  "installCommand": "npm ci",
-  "publish": "out"
+  "useNixpacks": true,
+  "installCommand": "npm ci"
 }

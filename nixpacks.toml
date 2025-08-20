@@ -1,0 +1,16 @@
+[phases.setup]
+nixPkgs = ["nodejs", "nodejs.npm", "curl"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm run start"
+
+[variables]
+NODE_ENV = "production"
+PORT = "3000"
+NEXT_TELEMETRY_DISABLED = "1"
