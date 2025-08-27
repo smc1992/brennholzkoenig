@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import MediaManager from './MediaManager';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
@@ -9,7 +10,18 @@ import TextAlign from '@tiptap/extension-text-align';
 import Color from '@tiptap/extension-color';
 import TextStyle from '@tiptap/extension-text-style';
 import Highlight from '@tiptap/extension-highlight';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableHeader from '@tiptap/extension-table-header';
+import TableCell from '@tiptap/extension-table-cell';
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import { common, createLowlight } from 'lowlight';
+import Underline from '@tiptap/extension-underline';
+import Strike from '@tiptap/extension-strike';
+import HorizontalRule from '@tiptap/extension-horizontal-rule';
 import { useCallback } from 'react';
+
+const lowlight = createLowlight(common);
 
 interface RichTextEditorProps {
   content: string;
@@ -20,7 +32,9 @@ interface RichTextEditorProps {
 export default function RichTextEditor({ content, onChange, placeholder }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        codeBlock: false, // Disable default code block to use CodeBlockLowlight
+      }),
       Image.configure({
         HTMLAttributes: {
           class: 'max-w-full h-auto rounded-lg',
@@ -40,6 +54,21 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
       Highlight.configure({
         multicolor: true,
       }),
+      Underline,
+      Strike,
+      HorizontalRule,
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      CodeBlockLowlight.configure({
+        lowlight,
+        HTMLAttributes: {
+          class: 'bg-gray-100 rounded p-4 font-mono text-sm',
+        },
+      }),
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -52,11 +81,17 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
     },
   });
 
+  const [showMediaManager, setShowMediaManager] = useState(false);
+
   const addImage = useCallback(() => {
-    const url = window.prompt('Bild URL eingeben:');
-    if (url && editor) {
-      editor.chain().focus().setImage({ src: url }).run();
+    setShowMediaManager(true);
+  }, []);
+
+  const handleImageSelect = useCallback((imageUrl: string) => {
+    if (imageUrl && editor) {
+      editor.chain().focus().setImage({ src: imageUrl }).run();
     }
+    setShowMediaManager(false);
   }, [editor]);
 
   const addLink = useCallback(() => {
@@ -80,8 +115,26 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
   }
 
   return (
-    <div className="border border-gray-300 rounded-lg overflow-hidden">
-      <div className="bg-gray-50 border-b border-gray-300 p-2 flex flex-wrap gap-1">
+    <>
+      {showMediaManager && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-4xl max-h-[80vh] overflow-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Medien auswählen</h3>
+              <button
+                onClick={() => setShowMediaManager(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <i className="ri-close-line text-xl"></i>
+              </button>
+            </div>
+            <MediaManager onSelect={handleImageSelect} />
+          </div>
+        </div>
+      )}
+      
+      <div className="border border-gray-300 rounded-lg overflow-hidden">
+        <div className="bg-gray-50 border-b border-gray-300 p-2 flex flex-wrap gap-1">
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -144,6 +197,60 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
 
         <button
           type="button"
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          className={`px-3 py-1 rounded text-sm font-medium ${
+            editor.isActive('underline') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          <i className="ri-underline w-4 h-4 flex items-center justify-center"></i>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().toggleStrike().run()}
+          className={`px-3 py-1 rounded text-sm font-medium ${
+            editor.isActive('strike') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          <i className="ri-strikethrough w-4 h-4 flex items-center justify-center"></i>
+        </button>
+
+        <div className="w-px h-6 bg-gray-300 mx-1"></div>
+
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          className={`px-3 py-1 rounded text-sm font-medium ${
+            editor.isActive('heading', { level: 3 }) ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          H3
+        </button>
+
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          className={`px-3 py-1 rounded text-sm font-medium ${
+            editor.isActive('blockquote') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          <i className="ri-double-quotes-l w-4 h-4 flex items-center justify-center"></i>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          className={`px-3 py-1 rounded text-sm font-medium ${
+            editor.isActive('codeBlock') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          <i className="ri-code-box-line w-4 h-4 flex items-center justify-center"></i>
+        </button>
+
+        <div className="w-px h-6 bg-gray-300 mx-1"></div>
+
+        <button
+          type="button"
           onClick={addLink}
           className={`px-3 py-1 rounded text-sm font-medium ${
             editor.isActive('link') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -162,12 +269,50 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
 
         <button
           type="button"
-          onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          className={`px-3 py-1 rounded text-sm font-medium ${
-            editor.isActive({ textAlign: 'left' }) ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
-          }`}
+          onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+          className="px-3 py-1 rounded text-sm font-medium bg-white text-gray-700 hover:bg-gray-100"
         >
-          <i className="ri-align-left w-4 h-4 flex items-center justify-center"></i>
+          <i className="ri-table-line w-4 h-4 flex items-center justify-center"></i>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          className="px-3 py-1 rounded text-sm font-medium bg-white text-gray-700 hover:bg-gray-100"
+        >
+          <i className="ri-separator w-4 h-4 flex items-center justify-center"></i>
+        </button>
+
+        <div className="w-px h-6 bg-gray-300 mx-1"></div>
+
+        <div className="w-px h-6 bg-gray-300 mx-1"></div>
+
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().undo().run()}
+          disabled={!editor.can().undo()}
+          className="px-3 py-1 rounded text-sm font-medium bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <i className="ri-arrow-go-back-line w-4 h-4 flex items-center justify-center"></i>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().redo().run()}
+          disabled={!editor.can().redo()}
+          className="px-3 py-1 rounded text-sm font-medium bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <i className="ri-arrow-go-forward-line w-4 h-4 flex items-center justify-center"></i>
+        </button>
+
+        <div className="w-px h-6 bg-gray-300 mx-1"></div>
+
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().clearNodes().run()}
+          className="px-3 py-1 rounded text-sm font-medium bg-white text-gray-700 hover:bg-gray-100"
+        >
+          <i className="ri-format-clear w-4 h-4 flex items-center justify-center"></i>
         </button>
 
         <button
@@ -189,13 +334,14 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
         >
           <i className="ri-align-right w-4 h-4 flex items-center justify-center"></i>
         </button>
-      </div>
+        </div>
 
-      <EditorContent
-        editor={editor}
-        className="min-h-[200px] max-h-[400px] overflow-y-auto"
-        placeholder={placeholder}
-      />
-    </div>
+        <EditorContent
+          editor={editor}
+          className="min-h-[200px] max-h-[400px] overflow-y-auto"
+          placeholder={placeholder}
+        />
+      </div>
+    </>
   );
 }

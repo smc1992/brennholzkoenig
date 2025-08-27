@@ -4,3 +4,204 @@
 
 /* Ensure Remix Icon is loaded properly */
 @import url('https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.5.0/remixicon.min.css');
+
+/* Blog Content Styling - WordPress-like Theme */
+.blog-content {
+  @apply text-gray-800 leading-relaxed;
+}
+
+.blog-content h1 {
+  @apply text-4xl font-bold text-gray-900 mt-12 mb-6 leading-tight;
+  border-bottom: 3px solid #10b981;
+  padding-bottom: 0.5rem;
+}
+
+.blog-content h2 {
+  @apply text-3xl font-bold text-gray-900 mt-10 mb-5 leading-tight;
+  position: relative;
+}
+
+.blog-content h2::before {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: 0.5rem;
+  width: 4px;
+  height: 2rem;
+  background: linear-gradient(to bottom, #10b981, #059669);
+  border-radius: 2px;
+}
+
+.blog-content h3 {
+  @apply text-2xl font-semibold text-gray-800 mt-8 mb-4 leading-tight;
+  color: #059669;
+}
+
+.blog-content h4 {
+  @apply text-xl font-semibold text-gray-800 mt-6 mb-3;
+}
+
+.blog-content p {
+  @apply text-gray-700 leading-relaxed mb-6 text-lg;
+  line-height: 1.8;
+}
+
+.blog-content strong {
+  @apply font-semibold text-gray-900;
+}
+
+.blog-content em {
+  @apply italic text-gray-700;
+}
+
+.blog-content a {
+  @apply text-green-600 font-medium no-underline;
+  transition: all 0.2s ease;
+}
+
+.blog-content a:hover {
+  @apply text-green-700 underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.blog-content ul {
+  @apply space-y-3 mb-6 pl-6;
+}
+
+.blog-content ol {
+  @apply space-y-3 mb-6 pl-6;
+}
+
+.blog-content li {
+  @apply text-gray-700 leading-relaxed text-lg;
+  position: relative;
+}
+
+.blog-content ul li::before {
+  content: '✓';
+  position: absolute;
+  left: -1.5rem;
+  color: #10b981;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.blog-content ol li {
+  counter-increment: list-counter;
+}
+
+.blog-content ol {
+  counter-reset: list-counter;
+}
+
+.blog-content ol li::before {
+  content: counter(list-counter) '.';
+  position: absolute;
+  left: -2rem;
+  color: #10b981;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.blog-content blockquote {
+  @apply border-l-4 border-green-500 bg-gradient-to-r from-green-50 to-transparent py-4 px-6 my-8 italic text-gray-800 rounded-r-lg;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+}
+
+.blog-content blockquote p {
+  @apply mb-0 text-lg font-medium;
+}
+
+.blog-content table {
+  @apply w-full border-collapse my-8 rounded-lg overflow-hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.blog-content th {
+  @apply bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4 text-left font-semibold text-lg;
+}
+
+.blog-content td {
+  @apply border-b border-gray-200 px-6 py-4 text-gray-700 text-lg;
+}
+
+.blog-content tr:nth-child(even) {
+  @apply bg-gray-50;
+}
+
+.blog-content tr:hover {
+  @apply bg-green-50;
+  transition: background-color 0.2s ease;
+}
+
+.blog-content hr {
+  @apply border-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent my-12;
+}
+
+.blog-content code {
+  @apply bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800;
+  border: 1px solid #e5e7eb;
+}
+
+.blog-content pre {
+  @apply bg-gray-900 text-gray-100 p-6 rounded-lg overflow-x-auto my-8;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.blog-content pre code {
+  @apply bg-transparent border-0 p-0 text-gray-100;
+}
+
+.blog-content img {
+  @apply rounded-lg shadow-lg my-8 w-full;
+  transition: transform 0.2s ease;
+}
+
+.blog-content img:hover {
+  transform: scale(1.02);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .blog-content h1 {
+    @apply text-3xl mt-8 mb-4;
+  }
+  
+  .blog-content h2 {
+    @apply text-2xl mt-6 mb-3;
+  }
+  
+  .blog-content h2::before {
+    left: -0.75rem;
+    width: 3px;
+    height: 1.5rem;
+  }
+  
+  .blog-content h3 {
+    @apply text-xl mt-5 mb-3;
+  }
+  
+  .blog-content p,
+  .blog-content li {
+    @apply text-base;
+  }
+  
+  .blog-content ul,
+  .blog-content ol {
+    @apply pl-4;
+  }
+  
+  .blog-content ul li::before {
+    left: -1.25rem;
+  }
+  
+  .blog-content ol li::before {
+    left: -1.5rem;
+  }
+  
+  .blog-content th,
+  .blog-content td {
+    @apply px-3 py-2 text-sm;
+  }
+}

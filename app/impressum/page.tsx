@@ -9,7 +9,7 @@ export default function ImpressumPage() {
 
       <SEOMetadata 
         title="Impressum - Brennholzkönig"
-        description="Impressum und Angaben gemäß § 5 TMG von Brennholzkönig - Ihr Premium Brennholz-Lieferant in Rhön-Grabfeld."
+        description="Impressum und Angaben gemäß § 5 DDG von Brennholzkönig - Ihr Premium Brennholz-Lieferant in Rhön-Grabfeld."
         keywords={['Impressum', 'Brennholzkönig', 'Thorsten Vey', 'Buttlar', 'Kontakt']}
         url="https://brennholzkoenig.de/impressum"
       />
@@ -28,7 +28,7 @@ export default function ImpressumPage() {
                 </h1>
               </div>
               <p className="text-xl md:text-2xl text-white/90 font-light">
-                Angaben gemäß § 5 TMG
+                Angaben gemäß § 5 DDG
               </p>
             </div>
           </div>
@@ -46,7 +46,7 @@ export default function ImpressumPage() {
                     <div className="w-8 h-8 flex items-center justify-center bg-[#C04020] rounded-full mr-3">
                       <i className="ri-building-line text-white"></i>
                     </div>
-                    Angaben gemäß § 5 TMG
+                    Angaben gemäß § 5 DDG
                   </h2>
 
                   <div className="bg-[#F5F0E0] rounded-xl p-6">
@@ -98,30 +98,11 @@ export default function ImpressumPage() {
                     <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
                       <h3 className="text-lg font-bold text-blue-900 mb-3">Umsatzsteuer-Identifikationsnummer</h3>
                       <p className="text-blue-800">
-                        <strong>USt-IdNr.:</strong> DE200789994<br />
-                        (Gemäß § 27 a Umsatzsteuergesetz)
+                        <strong>USt-IdNr.:</strong> DE200789994
                       </p>
                     </div>
 
-                    <div className="bg-green-50 border border-green-200 rounded-xl p-6">
-                      <h3 className="text-lg font-bold text-green-900 mb-3">Berufsbezeichnung und Kammer</h3>
-                      <p className="text-green-800">
-                        <strong>Berufsbezeichnung:</strong> Handel<br />
-                        <strong>Zuständige Kammer:</strong> IHK Fulda<br />
-                        <strong>Verliehen durch:</strong> Hessen
-                      </p>
-                    </div>
 
-                    <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
-                      <h3 className="text-lg font-bold text-purple-900 mb-3">Berufshaftpflichtversicherung</h3>
-                      <p className="text-purple-800">
-                        <strong>Name und Sitz der Gesellschaft:</strong><br />
-                        SV-Sparkassenversicherung<br />
-                        Postfach 3120<br />
-                        65021 Wiesbaden<br /><br />
-                        <strong>Geltungsraum der Versicherung:</strong> EU
-                      </p>
-                    </div>
                   </div>
                 </div>
 
@@ -131,7 +112,7 @@ export default function ImpressumPage() {
                     <div className="w-8 h-8 flex items-center justify-center bg-purple-600 rounded-full mr-3">
                       <i className="ri-user-star-line text-white"></i>
                     </div>
-                    Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV
+                    Verantwortlich für den Inhalt
                   </h2>
 
                   <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
@@ -158,8 +139,8 @@ export default function ImpressumPage() {
                     <div>
                       <h3 className="text-lg font-bold text-[#1A1A1A] mb-3">Haftung für Inhalte</h3>
                       <p className="text-gray-700 leading-relaxed">
-                        Als Diensteanbieter sind wir gemäß § 7 Abs.1 TMG für eigene Inhalte auf diesen Seiten nach den 
-                        allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 TMG sind wir als Diensteanbieter jedoch nicht 
+                        Als Diensteanbieter sind wir für eigene Inhalte auf diesen Seiten nach den 
+                        allgemeinen Gesetzen verantwortlich. Wir sind jedoch nicht 
                         unter der Verpflichtung, übermittelte oder gespeicherte fremde Informationen zu überwachen oder nach 
                         Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen.
                       </p>
