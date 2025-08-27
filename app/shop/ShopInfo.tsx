@@ -81,18 +81,18 @@ export default function ShopInfo() {
               </div>
 
               <div className="mt-8 space-y-4">
-                <button className="w-full md:w-auto bg-[#C04020] text-white px-8 py-4 rounded-lg font-bold hover:bg-[#A03318] transition-colors whitespace-nowrap cursor-pointer">
-                  <div className="w-5 h-5 flex items-center justify-center mr-2 inline-block">
+                <a href="tel:+4917671085234" className="w-full md:w-auto bg-[#C04020] text-white px-8 py-4 rounded-lg font-bold hover:bg-[#A03318] transition-colors whitespace-nowrap cursor-pointer inline-flex items-center justify-center">
+                  <div className="w-5 h-5 flex items-center justify-center mr-2">
                     <i className="ri-phone-line"></i>
                   </div>
-                  Jetzt anrufen: 0661 / 123 456 78
-                </button>
-                <button className="w-full md:w-auto bg-white text-[#C04020] border-2 border-[#C04020] px-8 py-4 rounded-lg font-bold hover:bg-gray-50 transition-colors whitespace-nowrap cursor-pointer ml-0 md:ml-4">
-                  <div className="w-5 h-5 flex items-center justify-center mr-2 inline-block">
+                  Jetzt anrufen: +49 176 71085234
+                </a>
+                <a href="mailto:info@brennholz-koenig.de" className="w-full md:w-auto bg-white text-[#C04020] border-2 border-[#C04020] px-8 py-4 rounded-lg font-bold hover:bg-gray-50 transition-colors whitespace-nowrap cursor-pointer ml-0 md:ml-4 inline-flex items-center justify-center">
+                  <div className="w-5 h-5 flex items-center justify-center mr-2">
                     <i className="ri-mail-line"></i>
                   </div>
                   E-Mail senden
-                </button>
+                </a>
               </div>
             </div>
 

@@ -355,14 +355,14 @@ export default function ProcessSection() {
                 />
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="bg-[#C04020] text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#A03318] transition-all duration-300 whitespace-nowrap cursor-pointer shadow-xl transform hover:scale-105">
+                <a href="/shop" className="bg-[#C04020] text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#A03318] transition-all duration-300 whitespace-nowrap cursor-pointer shadow-xl transform hover:scale-105 text-center">
                   <i className="ri-shopping-cart-line mr-3"></i>
                   Jetzt bestellen & sparen
-                </button>
-                <button className="border-2 border-[#C04020] text-[#C04020] px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#C04020] hover:text-white transition-all duration-300 whitespace-nowrap cursor-pointer transform hover:scale-105">
+                </a>
+                <a href="tel:+4917671085234" className="border-2 border-[#C04020] text-[#C04020] px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#C04020] hover:text-white transition-all duration-300 whitespace-nowrap cursor-pointer transform hover:scale-105 text-center">
                   <i className="ri-phone-line mr-3"></i>
-                  Kostenlose Beratung
-                </button>
+                  +49 176 71085234
+                </a>
               </div>
               <div className="flex flex-wrap justify-center gap-4 mt-4 text-xs md:text-sm opacity-80">
                 <span className="flex items-center transform transition-all duration-300 hover:scale-110">
