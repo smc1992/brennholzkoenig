@@ -82,21 +82,41 @@ export default function ProductsTab() {
   const [editImageUrl, setEditImageUrl] = useState<string>('');
   const [showHistory, setShowHistory] = useState<string | null>(null);
 
-  const categories = [
-    "Alle",
-    "Premium Buche",
-    "Standard Buche",
-    "Scheitholz",
-    "Mix-Sortiment",
-    "Nadelholz",
-  ];
+  const [categories, setCategories] = useState<string[]>(["Alle"]);
 
   // -------------------------------------------------------------------------
   // Data loading
   // -------------------------------------------------------------------------
   useEffect(() => {
     loadProducts();
+    loadCategories();
   }, []);
+
+  const loadCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('product_categories')
+        .select('name')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      
+      const categoryNames = data?.map((cat: any) => cat.name as string) || [];
+      setCategories(["Alle", ...categoryNames]);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      // Fallback to existing categories if database fails
+      setCategories([
+        "Alle",
+        "Premium Buche",
+        "Standard Buche",
+        "Scheitholz",
+        "Mix-Sortiment",
+        "Nadelholz",
+      ]);
+    }
+  };
 
   useEffect(() => {
     filterProducts();

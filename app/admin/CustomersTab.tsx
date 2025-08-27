@@ -71,6 +71,17 @@ export default function CustomersTab() {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [billingSameAsDelivery, setBillingSameAsDelivery] = useState(false);
+  const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+  const [newCustomerData, setNewCustomerData] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    street: '',
+    house_number: '',
+    postal_code: '',
+    city: ''
+  });
 
   // Using the centralized Supabase client from lib/supabase.ts
 
@@ -110,13 +121,13 @@ export default function CustomersTab() {
         .order('is_deleted', { ascending: true });
 
       if (error) throw error;
-      setCustomers(data || []);
+      setCustomers((data as unknown as Customer[]) || []);
 
       const lastUpdate = localStorage.getItem('last_customer_update');
       const currentTime = new Date().toISOString();
 
       if (lastUpdate && data && data.length > 0) {
-        const recentUpdates = data.filter((customer) =>
+        const recentUpdates = data.filter((customer: any) =>
           new Date(customer.updated_at || customer.created_at) > new Date(lastUpdate)
         );
 
@@ -287,7 +298,7 @@ export default function CustomersTab() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCustomerOrders(data || []);
+         setCustomerOrders((data as unknown as Order[]) || []);
     } catch (error) {
       console.error('Error loading customer orders:', error);
       setCustomerOrders([]);
@@ -368,6 +379,40 @@ export default function CustomersTab() {
     } catch (error) {
       console.error('Error permanently deleting customer:', error);
       alert('Fehler beim endgültigen Löschen des Kunden');
+    }
+  };
+
+  const createCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .insert({
+          ...newCustomerData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setNewCustomerData({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        street: '',
+        house_number: '',
+        postal_code: '',
+        city: ''
+      });
+      setShowAddCustomerModal(false);
+      loadCustomers();
+      alert('Kunde erfolgreich erstellt!');
+    } catch (error: any) {
+      console.error('Error creating customer:', error);
+      alert('Fehler beim Erstellen des Kunden: ' + error.message);
     }
   };
 
@@ -532,6 +577,13 @@ export default function CustomersTab() {
           </div>
 
           <div className="flex gap-2">
+            <button
+              onClick={() => setShowAddCustomerModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-bold transition-colors cursor-pointer whitespace-nowrap"
+            >
+              <i className="ri-user-add-line mr-2"></i>
+              Neuer Kunde
+            </button>
             <button
               onClick={exportCustomers}
               className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-bold transition-colors cursor-pointer whitespace-nowrap"
@@ -1331,6 +1383,135 @@ export default function CustomersTab() {
                 >
                   <i className="ri-save-line mr-2"></i>
                   Änderungen speichern
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Customer Modal */}
+      {showAddCustomerModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-4">Neuen Kunden anlegen</h3>
+            
+            <form onSubmit={createCustomer} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Vorname *
+                  </label>
+                  <input
+                    type="text"
+                    value={newCustomerData.first_name}
+                    onChange={(e) => setNewCustomerData({...newCustomerData, first_name: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nachname *
+                  </label>
+                  <input
+                    type="text"
+                    value={newCustomerData.last_name}
+                    onChange={(e) => setNewCustomerData({...newCustomerData, last_name: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  E-Mail *
+                </label>
+                <input
+                  type="email"
+                  value={newCustomerData.email}
+                  onChange={(e) => setNewCustomerData({...newCustomerData, email: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Telefon
+                </label>
+                <input
+                  type="tel"
+                  value={newCustomerData.phone}
+                  onChange={(e) => setNewCustomerData({...newCustomerData, phone: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Straße
+                  </label>
+                  <input
+                    type="text"
+                    value={newCustomerData.street}
+                    onChange={(e) => setNewCustomerData({...newCustomerData, street: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Hausnummer
+                  </label>
+                  <input
+                    type="text"
+                    value={newCustomerData.house_number}
+                    onChange={(e) => setNewCustomerData({...newCustomerData, house_number: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    PLZ
+                  </label>
+                  <input
+                    type="text"
+                    value={newCustomerData.postal_code}
+                    onChange={(e) => setNewCustomerData({...newCustomerData, postal_code: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Stadt
+                  </label>
+                  <input
+                    type="text"
+                    value={newCustomerData.city}
+                    onChange={(e) => setNewCustomerData({...newCustomerData, city: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAddCustomerModal(false)}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  Abbrechen
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  Kunde erstellen
                 </button>
               </div>
             </form>

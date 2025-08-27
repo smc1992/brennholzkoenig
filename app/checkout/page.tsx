@@ -43,12 +43,6 @@ interface BillingData {
   company: string;
 }
 
-// Lieferoptionen - identisch mit Warenkorb
-const getDeliveryOptions = () => [
-  { type: 'standard', name: 'Standard Lieferung (1-3 Wochen)', price: 43.5 },
-  { type: 'express', name: 'Express Lieferung (24-48h)', price: 139 },
-];
-
 export default function CheckoutPage() {
   const router = useRouter();
   const { products, subscribeToChanges, unsubscribeFromChanges } = useRealtimeSync();
@@ -62,6 +56,13 @@ export default function CheckoutPage() {
   const [selectedDelivery, setSelectedDelivery] = useState('standard');
   const [minOrderQuantity, setMinOrderQuantity] = useState(3);
   const [pricingTiers, setPricingTiers] = useState<any[]>([]);
+  const [shippingCosts, setShippingCosts] = useState({ standard: 43.5, express: 139 });
+
+  // Lieferoptionen - werden dynamisch aus der Datenbank geladen
+  const getDeliveryOptions = () => [
+    { type: 'standard', name: 'Standard Lieferung (1-3 Wochen)', price: shippingCosts.standard },
+    { type: 'express', name: 'Express Lieferung (24-48h)', price: shippingCosts.express },
+  ];
   const [deliveryData, setDeliveryData] = useState<DeliveryData>({
     firstName: '',
     lastName: '',
@@ -91,16 +92,27 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      // Lade Mindestbestellmenge und Preisstaffeln aus dem Backend
+      // Lade Mindestbestellmenge und Versandkosten aus dem Backend
       const { data: settingsData } = await supabase
         .from('app_settings')
-        .select('setting_value')
-        .eq('setting_key', 'minimum_order_quantity')
-        .single();
+        .select('setting_key, setting_value')
+        .in('setting_key', ['minimum_order_quantity', 'shipping_cost_standard', 'shipping_cost_express']);
 
-      if (settingsData?.setting_value) {
-        const parsed = parseInt(settingsData.setting_value as string, 10);
-        setMinOrderQuantity(isNaN(parsed) ? 3 : parsed);
+      if (settingsData) {
+        const settings: any = {};
+        settingsData.forEach((item: any) => {
+          settings[item.setting_key] = item.setting_value;
+        });
+
+        if (settings.minimum_order_quantity) {
+          const parsed = parseInt(settings.minimum_order_quantity, 10);
+          setMinOrderQuantity(isNaN(parsed) ? 3 : parsed);
+        }
+
+        setShippingCosts({
+          standard: parseFloat(settings.shipping_cost_standard) || 43.5,
+          express: parseFloat(settings.shipping_cost_express) || 139
+        });
       }
 
       // Lade Preisstaffeln
@@ -490,10 +502,11 @@ export default function CheckoutPage() {
         billing_house_number: billingData.sameBilling ? deliveryData.houseNumber : billingData.houseNumber,
         billing_postal_code: billingData.sameBilling ? deliveryData.postalCode : billingData.postalCode,
         billing_city: billingData.sameBilling ? deliveryData.city : billingData.city,
-        subtotal: parseFloat(subtotal.toFixed(2)),
-        shipping_cost: parseFloat(shipping.toFixed(2)),
+        subtotal_amount: parseFloat(subtotal.toFixed(2)),
+        delivery_price: parseFloat(shipping.toFixed(2)),
         total_amount: parseFloat(total.toFixed(2)),
         delivery_method: selectedDelivery,
+        delivery_type: selectedDelivery,
         created_at: new Date().toISOString(),
       };
 
@@ -515,11 +528,12 @@ export default function CheckoutPage() {
       // Add order items
       const orderItems = cartItems.map((item) => ({
         order_id: order.id,
-        product_id: parseInt(item.id),
         product_name: item.name,
+        product_category: 'Brennholz', // Default category, could be enhanced to get from product data
         quantity: item.quantity,
         unit_price: parseFloat(item.price.toFixed(2)),
         total_price: parseFloat((item.price * item.quantity).toFixed(2)),
+        created_at: new Date().toISOString(),
       }));
 
       console.log('Bestellpositionen:', orderItems);

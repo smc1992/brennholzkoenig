@@ -26,14 +26,6 @@ interface Tier {
   adjustment_value: number;
 }
 
-/**
- * Returns static delivery options.
- */
-const getDeliveryOptions = () => [
-  { type: 'standard', name: 'Standard Lieferung (1-3 Wochen)', price: 43.5 },
-  { type: 'express', name: 'Express Lieferung (24-48h)', price: 139 },
-];
-
 export default function WarenkorbPage() {
   const { products, subscribeToChanges, unsubscribeFromChanges } = useRealtimeSync();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -41,6 +33,15 @@ export default function WarenkorbPage() {
   const [minOrderQuantity, setMinOrderQuantity] = useState(3);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDelivery, setSelectedDelivery] = useState('standard');
+  const [shippingCosts, setShippingCosts] = useState({ standard: 43.5, express: 139 });
+
+  /**
+   * Returns dynamic delivery options from database.
+   */
+  const getDeliveryOptions = () => [
+    { type: 'standard', name: 'Standard Lieferung (1-3 Wochen)', price: shippingCosts.standard },
+    { type: 'express', name: 'Express Lieferung (24-48h)', price: shippingCosts.express },
+  ];
   // Using the centralized Supabase client from lib/supabase.ts
 
   /* -------------------------------------------------
@@ -150,19 +151,30 @@ export default function WarenkorbPage() {
       if (tiersError) throw tiersError;
       const tiers = (tiersData as unknown as Tier[]) ?? [];
 
-      // 2️⃣ Load minimum order quantity
+      // 2️⃣ Load minimum order quantity and shipping costs
       const {
         data: settingsData,
         error: settingsError,
       } = await supabase
         .from('app_settings')
-        .select('setting_value')
-        .eq('setting_key', 'minimum_order_quantity')
-        .single();
+        .select('setting_key, setting_value')
+        .in('setting_key', ['minimum_order_quantity', 'shipping_cost_standard', 'shipping_cost_express']);
 
-      if (!settingsError && settingsData?.setting_value) {
-        const parsed = parseInt(settingsData.setting_value as string, 10);
-        setMinOrderQuantity(isNaN(parsed) ? 3 : parsed);
+      if (!settingsError && settingsData) {
+        const settings: any = {};
+        settingsData.forEach((item: any) => {
+          settings[item.setting_key] = item.setting_value;
+        });
+
+        if (settings.minimum_order_quantity) {
+          const parsed = parseInt(settings.minimum_order_quantity, 10);
+          setMinOrderQuantity(isNaN(parsed) ? 3 : parsed);
+        }
+
+        setShippingCosts({
+          standard: parseFloat(settings.shipping_cost_standard) || 43.5,
+          express: parseFloat(settings.shipping_cost_express) || 139
+        });
       }
 
       setPricingTiers(tiers);
@@ -177,7 +189,7 @@ export default function WarenkorbPage() {
             basePrice,
             item.quantity,
             tiers,
-            parseInt((settingsData?.setting_value as string) ?? '3', 10)
+            minOrderQuantity
           );
           return { ...item, price: pricing.price.toString() };
         });

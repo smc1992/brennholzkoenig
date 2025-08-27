@@ -33,6 +33,8 @@ import SEOManagementTab from './SEOManagementTab';
 import BlogManagementTab from './BlogManagementTab';
 import GoogleAdsTrackingTab from './GoogleAdsTrackingTab';
 import InventoryTab from './InventoryTab';
+import CategoriesTab from './CategoriesTab';
+import ShopSettingsTab from './ShopSettingsTab';
 // PWA functionality removed
 import SupportTab from './SupportTab';
 import FAQManagementTab from './FAQManagementTab';
@@ -135,8 +137,10 @@ export default function AdminDashboard({ adminUser, onLogout }: AdminDashboardPr
       title: 'Produktverwaltung',
       items: [
         { id: 'products', label: 'Produkte', icon: 'ri-stack-line' },
+        { id: 'categories', label: 'Kategorien', icon: 'ri-folder-line' },
         { id: 'inventory', label: 'Lager', icon: 'ri-archive-line' },
-        { id: 'suppliers', label: 'Lieferanten', icon: 'ri-truck-line' }
+        { id: 'suppliers', label: 'Lieferanten', icon: 'ri-truck-line' },
+        { id: 'shop-settings', label: 'Shop-Einstellungen', icon: 'ri-settings-3-line' }
       ]
     },
     {
@@ -208,6 +212,8 @@ export default function AdminDashboard({ adminUser, onLogout }: AdminDashboardPr
       case 'orders': return <OrdersTab onStatsUpdate={loadStats} />;
       case 'customers': return <CustomersTab />;
       case 'products': return <ProductsTab />;
+      case 'categories': return <CategoriesTab />;
+      case 'shop-settings': return <ShopSettingsTab />;
       case 'inventory': return <InventoryTab />;
       case 'suppliers': return <SuppliersTab />;
       case 'support': return <SupportTab />;
