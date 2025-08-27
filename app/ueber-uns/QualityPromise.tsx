@@ -28,7 +28,7 @@ export default function QualityPromise() {
               <i className="ri-temp-hot-line text-white text-2xl"></i>
             </div>
             <h3 className="text-lg font-bold mb-3">Optimale Trocknung</h3>
-            <p className="text-gray-200 text-sm" style={{ fontFamily: 'Barlow, sans-serif' }}>6 % Restfeuchte garantiert</p>
+            <p className="text-gray-200 text-sm" style={{ fontFamily: 'Barlow, sans-serif' }}>6-8 % Restfeuchte garantiert</p>
           </div>
 
           <div className="text-center">
@@ -56,14 +56,14 @@ export default function QualityPromise() {
               <p className="text-gray-200 mb-4" style={{ fontFamily: 'Barlow, sans-serif' }}>Durch optimierte Trocknung und Holzauswahl erreichen wir deutlich bessere Brennwerte als handelsübliches Holz.</p>
               
               <h4 className="font-bold text-[#D4A520] mb-3">✓ Königliche Sauberkeit</h4>
-              <p className="text-gray-200 mb-4" style={{ fontFamily: 'Barlow, sans-serif' }}>Unser Holz ist frei von Schmutz, Steinen und Fremdstoffen. Sauber gespalten und sortiert.</p>
+              <p className="text-gray-200 mb-4" style={{ fontFamily: 'Barlow, sans-serif' }}>Unser Holz ist frei von Schmutz, Steinen und Fremdstoffen.</p>
             </div>
             <div>
               <h4 className="font-bold text-[#D4A520] mb-3">✓ Termingerechte Lieferung</h4>
-              <p className="text-gray-200 mb-4" style={{ fontFamily: 'Barlow, sans-serif' }}>Pünktlichkeit ist für uns selbstverständlich. Bei Verzögerungen erhalten Sie 10% Rabatt.</p>
+              <p className="text-gray-200 mb-4" style={{ fontFamily: 'Barlow, sans-serif' }}>Pünktlichkeit ist für uns selbstverständlich.</p>
               
-              <h4 className="font-bold text-[#D4A520] mb-3">✓ 100% Zufriedenheitsgarantie</h4>
-              <p className="text-gray-200 mb-4" style={{ fontFamily: 'Barlow, sans-serif' }}>Nicht zufrieden? Wir nehmen das Holz zurück und erstatten den vollen Betrag.</p>
+              <h4 className="font-bold text-[#D4A520] mb-3">✓ Eigene Prüfung vor Abladung</h4>
+              <p className="text-gray-200 mb-4" style={{ fontFamily: 'Barlow, sans-serif' }}>Sie dürfen das Holz vor der Abladung begutachten und prüfen, ob es Ihren Erwartungen entspricht.</p>
             </div>
           </div>
         </div>

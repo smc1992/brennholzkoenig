@@ -10,6 +10,7 @@ export default function Header() {
   const [isMounted, setIsMounted] = useState(false);
   const [cartItemCount, setCartItemCount] = useState(0);
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const isMountedRef = useRef(false);
   const accountDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -17,8 +18,30 @@ export default function Header() {
     isMountedRef.current = true;
     setIsMounted(true);
 
+    // Check login status
+    const checkLoginStatus = () => {
+      try {
+        const userToken = localStorage.getItem('userToken');
+        const userData = localStorage.getItem('userData');
+        setIsLoggedIn(!!(userToken && userData));
+      } catch (error) {
+        console.warn('Fehler beim Überprüfen des Login-Status:', error);
+        setIsLoggedIn(false);
+      }
+    };
+
+    checkLoginStatus();
+
+    // Listen for login/logout events
+    const handleAuthChange = () => {
+      checkLoginStatus();
+    };
+
+    window.addEventListener('authChanged', handleAuthChange);
+
     return () => {
       isMountedRef.current = false;
+      window.removeEventListener('authChanged', handleAuthChange);
     };
   }, []);
 
@@ -218,31 +241,40 @@ export default function Header() {
                 {/* Dropdown Menu */}
                 {isAccountDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
-                    <div className="px-4 py-3 border-b border-gray-100">
-                      <Link
-                        href="/konto"
-                        className="block text-sm font-semibold text-gray-900 hover:text-orange-600 transition-colors"
-                        onClick={() => setIsAccountDropdownOpen(false)}
-                      >
-                        Anmelden / Registrieren
-                      </Link>
-                      <p className="text-xs text-gray-500 mt-1">Zugang zu Ihrem Konto</p>
-                    </div>
-                    <div className="py-2">
-                      {accountMenuItems.map((item) => (
+                    {!isLoggedIn ? (
+                      <div className="px-4 py-3">
                         <Link
-                          key={item.href}
-                          href={item.href}
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-orange-600 transition-colors cursor-pointer"
+                          href="/konto"
+                          className="block text-sm font-semibold text-gray-900 hover:text-orange-600 transition-colors"
                           onClick={() => setIsAccountDropdownOpen(false)}
                         >
-                          <div className="w-5 h-5 flex items-center justify-center mr-3">
-                            <i className={`${item.icon} text-gray-400`}></i>
-                          </div>
-                          {item.name}
+                          Anmelden / Registrieren
                         </Link>
-                      ))}
-                    </div>
+                        <p className="text-xs text-gray-500 mt-1">Zugang zu Ihrem Konto</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <p className="text-sm font-semibold text-gray-900">Willkommen zurück!</p>
+                          <p className="text-xs text-gray-500 mt-1">Verwalten Sie Ihr Konto</p>
+                        </div>
+                        <div className="py-2">
+                          {accountMenuItems.map((item) => (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-orange-600 transition-colors cursor-pointer"
+                              onClick={() => setIsAccountDropdownOpen(false)}
+                            >
+                              <div className="w-5 h-5 flex items-center justify-center mr-3">
+                                <i className={`${item.icon} text-gray-400`}></i>
+                              </div>
+                              {item.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -337,7 +369,7 @@ export default function Header() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-[#1A1A1A] break-words">Kostengünstige Lieferung</p>
-                      <p className="text-xs text-gray-600 break-words">ab 7 Schüttraummeter</p>
+                      <p className="text-xs text-gray-600 break-words">ab 3 Schüttraummeter</p>
                     </div>
                   </div>
                   <div className="flex items-center bg-white rounded-lg p-3 min-w-0">

@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 
 interface LoyaltyMember {
   id: string;
@@ -37,10 +37,7 @@ export default function LoyaltyProgramTab() {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('settings');
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // Using the centralized Supabase client from lib/supabase.ts
 
   const [members, setMembers] = useState<LoyaltyMember[]>([]);
   const [settings, setSettings] = useState({

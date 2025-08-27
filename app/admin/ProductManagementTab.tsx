@@ -1,7 +1,8 @@
-
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { supabase } from '../../lib/supabase';
+import ProductImageUploader from '@/components/ProductImageUploader';
+import ProductImageGallery from '@/components/ProductImageGallery';
 
 export default function ProductManagementTab() {
   interface Product {
@@ -36,7 +37,64 @@ export default function ProductManagementTab() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [mainImageUrl, setMainImageUrl] = useState<string>('');
   const [bulkAction, setBulkAction] = useState('');
+  const [currentProductData, setCurrentProductData] = useState({
+    name: '',
+    category: '',
+    wood_type: 'Buche',
+    size: '25cm'
+  });
+
+  // Intelligente Daten-Extraktion
+  const extractWoodType = (productName: string): string => {
+    const name = productName.toLowerCase();
+    if (name.includes('buche')) return 'Buche';
+    if (name.includes('eiche')) return 'Eiche';
+    if (name.includes('birke')) return 'Birke';
+    if (name.includes('kiefer')) return 'Kiefer';
+    if (name.includes('fichte')) return 'Fichte';
+    return 'Buche'; // Default
+  };
+
+  const extractSize = (productName: string): string => {
+    const sizeMatch = productName.match(/(\d+)\s*cm/i);
+    return sizeMatch ? `${sizeMatch[1]}cm` : '25cm';
+  };
+
+  // Automatische Produktdaten-Updates
+  const updateProductData = (name: string, category: string) => {
+    const newProductData = {
+      name: name || '',
+      category: category || '',
+      wood_type: extractWoodType(name),
+      size: extractSize(name)
+    };
+    console.log('ProductManagementTab: updateProductData aufgerufen mit:', { name, category });
+    console.log('ProductManagementTab: Neue currentProductData:', newProductData);
+    setCurrentProductData(newProductData);
+  };
+
+  // Initial Formularwerte lesen
+  useEffect(() => {
+    const readFormValues = () => {
+      const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
+      const categorySelect = document.querySelector('select[name="category"]') as HTMLSelectElement;
+      
+      if (nameInput && categorySelect) {
+        const name = nameInput.value || '';
+        const category = categorySelect.value || '';
+        
+        if (name || category) {
+          updateProductData(name, category);
+        }
+      }
+    };
+
+    // Kurze Verzögerung, damit die DOM-Elemente verfügbar sind
+    const timer = setTimeout(readFormValues, 100);
+    return () => clearTimeout(timer);
+  }, []);
   const [bulkValue, setBulkValue] = useState('');
   interface InventoryMovement {
     id: string;
@@ -78,11 +136,14 @@ export default function ProductManagementTab() {
 
       if (productsError) throw productsError;
 
+      // Typisierte Daten mit korrekter Type-Assertion
+      const typedProducts = (productsData || []) as unknown as Product[];
+      
       // Kategorien aus vorhandenen Produkten extrahieren
-      const uniqueCategories = [...new Set(productsData?.map(p => p.category) || [])];
+      const uniqueCategories = [...new Set(typedProducts.map(p => p.category))];
       const allCategories = [...new Set([...defaultCategories, ...uniqueCategories])];
 
-      setProducts(productsData || []);
+      setProducts(typedProducts);
       setCategories(['Alle', ...allCategories]);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -139,6 +200,7 @@ export default function ProductManagementTab() {
       if (error) throw error;
 
       setIsAddModalOpen(false);
+      setMainImageUrl('');
       loadData();
       alert('Produkt erfolgreich hinzugefügt!');
     } catch (error) {
@@ -348,7 +410,8 @@ export default function ProductManagementTab() {
       if (error) throw error;
 
       // Lagerbestandshistorie im Modal anzeigen
-      setInventoryHistory({ productId, movements: data || [] });
+      const typedMovements = (data || []) as unknown as InventoryMovement[];
+      setInventoryHistory({ productId, movements: typedMovements });
     } catch (error) {
       console.error('Error loading inventory movements:', error);
       alert('Lagerbestandshistorie konnte nicht geladen werden');
@@ -360,6 +423,9 @@ export default function ProductManagementTab() {
     const formData = new FormData(e.currentTarget);
     const formEntries = Object.fromEntries(formData.entries());
     const data: Record<string, string | FormDataEntryValue> = formEntries;
+    
+    // Use the state value for image_url instead of form data
+    data.image_url = mainImageUrl;
 
     const featuresValue = formData.get('features');
     const features = typeof featuresValue === 'string' ? featuresValue.split(',').map(f => f.trim()).filter(f => f) : [];
@@ -797,6 +863,12 @@ export default function ProductManagementTab() {
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
                     required
                     placeholder="z.B. Premium Buchenholz"
+                    onChange={(e) => {
+                      const newName = e.target.value;
+                      const categorySelect = document.querySelector('select[name="category"]') as HTMLSelectElement;
+                      const currentCategory = categorySelect?.value || '';
+                      updateProductData(newName, currentCategory);
+                    }}
                   />
                 </div>
 
@@ -806,6 +878,12 @@ export default function ProductManagementTab() {
                     name="category"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] cursor-pointer pr-8"
                     required
+                    onChange={(e) => {
+                      const newCategory = e.target.value;
+                      const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
+                      const currentName = nameInput?.value || '';
+                      updateProductData(currentName, newCategory);
+                    }}
                   >
                     <option value="">Kategorie wählen...</option>
                     {categories.slice(1).map(category => (
@@ -876,97 +954,36 @@ export default function ProductManagementTab() {
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Produktbilder</label>
-                  <div className="space-y-4 border border-gray-300 rounded-lg p-4">
-                    {/* Hauptbild */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-2">
-                        Hauptbild URL *
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="url"
-                          name="image_url"
-                          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
-                          required
-                          placeholder="https://readdy.ai/api/search-image?query=..."
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const input = document.querySelector('input[name="image_url"]') as HTMLInputElement;
-                            const categorySelect = document.querySelector('select[name="category"]') as HTMLSelectElement;
-                            if (input && categorySelect) {
-                              const category = categorySelect.value.toLowerCase();
-                              input.value = `https://readdy.ai/api/search-image?query=premium%20${category}%20brennholz%20gestapelt%20sauber%20naturbelassen%20kammergetrocknet&width=800&height=600&seq=${Date.now()}&orientation=landscape`;
-                            }
-                          }}
-                          className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer whitespace-nowrap"
-                        >
-                          <i className="ri-image-line mr-1"></i>Auto
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Zusätzliche Bilder */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-2">
-                        Zusätzliche Bilder (optional)
-                      </label>
-                      <textarea
-                        name="additional_images"
-                        rows={4}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
-                        placeholder="https://beispiel.com/bild2.jpg&#10;https://beispiel.com/bild3.jpg&#10;Eine URL pro Zeile für Produktgalerie"
-                      />
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const textarea = document.querySelector('textarea[name="additional_images"]') as HTMLTextAreaElement;
-                            const categorySelect = document.querySelector('select[name="category"]') as HTMLSelectElement;
-                            if (textarea && categorySelect) {
-                              const category = categorySelect.value.toLowerCase();
-                              const additionalUrls = [
-                                `https://readdy.ai/api/search-image?query=${category}%20brennholz%20nahaufnahme%20textur%20holzmaserung%20details&width=600&height=600&seq=${Date.now()}&orientation=squarish`,
-                                `https://readdy.ai/api/search-image?query=${category}%20kaminholz%20gestapelt%20ordentlich%20lager%20trocken&width=600&height=600&seq=${Date.now() + 1}&orientation=squarish`,
-                                `https://readdy.ai/api/search-image?query=${category}%20scheitholz%20querschnitt%20rinde%20nat%C3%BCrlich%20premium&width=600&height=600&seq=${Date.now() + 2}&orientation=squarish`,
-                                `https://readdy.ai/api/search-image?query=${category}%20brennholz%20stapel%20outdoor%20nat%C3%BCrlich%20umgebung&width=600&height=600&seq=${Date.now() + 3}&orientation=squarish`
-                              ];
-                              textarea.value = additionalUrls.join('\n');
-                            }
-                          }}
-                          className="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded text-xs font-medium transition-colors cursor-pointer whitespace-nowrap"
-                        >
-                          <i className="ri-gallery-line mr-1"></i>Galerie generieren (4 Bilder)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const textarea = document.querySelector('textarea[name="additional_images"]') as HTMLTextAreaElement;
-                            if (textarea) textarea.value = '';
-                          }}
-                          className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs font-medium transition-colors cursor-pointer whitespace-nowrap"
-                        >
-                          <i className="ri-delete-bin-line mr-1"></i>Leeren
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="text-xs text-gray-500 bg-blue-50 p-3 rounded">
-                      <div className="flex items-start">
-                        <i className="ri-information-line text-blue-600 mr-2 mt-0.5"></i>
-                        <div>
-                          <strong>Bild-Tipps:</strong>
-                          <ul className="mt-1 space-y-1">
-                            <li>• Hauptbild wird auf Startseite und in Listen angezeigt</li>
-                            <li>• Zusätzliche Bilder erscheinen in der Produktdetailansicht</li>
-                            <li>• Verwenden Sie hochauflösende Bilder (min. 800x600px)</li>
-                            <li>• Alle Bilder werden automatisch synchronisiert</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <ProductImageGallery
+                    productData={currentProductData}
+                    onImagesChange={(images) => {
+                      // Update main image URL
+                      const mainImage = images.find(img => img.isMain) || images[0];
+                      if (mainImage) {
+                        setMainImageUrl(mainImage.url);
+                      }
+                      
+                      // Update additional images for form submission
+                      const additionalUrls = images
+                        .filter(img => !img.isMain)
+                        .map(img => img.url);
+                      
+                      const textarea = document.querySelector('textarea[name="additional_images"]') as HTMLTextAreaElement;
+                      if (textarea) {
+                        textarea.value = additionalUrls.join('\n');
+                      }
+                      
+                      console.log('Bilder aktualisiert:', { mainImage: mainImage?.url, additional: additionalUrls });
+                    }}
+                    maxImages={6}
+                  />
+                  
+                  {/* Hidden textarea for form submission */}
+                  <textarea
+                    name="additional_images"
+                    className="hidden"
+                    readOnly
+                  />
                 </div>
 
                 <div className="md:col-span-2">
@@ -1008,10 +1025,17 @@ export default function ProductManagementTab() {
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] font-mono text-sm"
                     placeholder={`{"Holzart": "Buche", "Restfeuchte": "< 20%", "Scheitlänge": "25-33 cm"}`}
                   />
-                  <div className="text-xs text-gray-500 mt-1">
-                    Beispiel: {`{"Holzart": "Buche", "Restfeuchte": "< 20%"}`}
+                  <div className="text-xs text-gray-500 mt-1 space-y-1">
+                    <div><strong>Beispiel:</strong> {`{"Holzart": "Buche", "Restfeuchte": "< 20%"}`}</div>
+                    <div><strong>E-Commerce Tipp:</strong> Nur relevante, messbare Daten eingeben (Heizwert, Feuchtigkeit, Abmessungen)</div>
+                    <div><strong>Automatisch:</strong> Holzart und Größe werden aus Produktname extrahiert</div>
                   </div>
                 </div>
+
+                {/* Hidden fields for wood_type and size - automatically filled */}
+                <input type="hidden" name="wood_type" value={currentProductData.wood_type} />
+                <input type="hidden" name="size" value={currentProductData.size} />
+                <input type="hidden" name="image_url" value={mainImageUrl} />
               </div>
 
               <div className="flex gap-4 pt-4 border-t border-gray-200">

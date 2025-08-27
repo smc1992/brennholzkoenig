@@ -80,15 +80,15 @@ export default function SafetySection() {
                 <div className="relative">
                   <img 
                     src="https://readdy.ai/api/search-image?query=Premium%20dried%20square%20timber%20kantholz%20with%20moisture%20meter%20showing%206%20percent%20humidity%2C%20perfectly%20seasoned%20rectangular%20wood%20pieces%2C%20professional%20wood%20preparation%2C%20clean%20simple%20background%20highlighting%20the%20wood%20quality%20measurement&width=400&height=350&seq=kantholz-6-percent&orientation=landscape"
-                    alt="Kantholz mit 6% Restfeuchte"
+                    alt="Industrieholz Buche mit 6% Restfeuchte"
                     className="rounded-xl shadow-lg object-cover object-top w-full h-60 md:h-72"
                   />
                   <div className="absolute top-4 left-4 bg-[#2C5545] text-white px-3 py-2 rounded-lg font-bold text-xs">
                     <i className="ri-temp-hot-line mr-1"></i>
-                    6% Restfeuchte
+                    6-8% Restfeuchte
                   </div>
                   <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-2">
-                    <p className="text-xs font-bold text-[#2C5545]">Kantholz</p>
+                    <p className="text-xs font-bold text-[#2C5545]">Industrieholz Buche</p>
                   </div>
                 </div>
               </div>
@@ -108,10 +108,10 @@ export default function SafetySection() {
                 <div className="space-y-4">
                   <div className="bg-white/80 rounded-lg p-4 border-l-4 border-[#2C5545]">
                     <div className="flex justify-between items-start mb-2">
-                      <h5 className="font-bold text-[#2C5545]">Kantholz Premium</h5>
-                      <span className="text-xs bg-[#2C5545] text-white px-2 py-1 rounded">6% Feuchtigkeit</span>
+                      <h5 className="font-bold text-[#2C5545]">Industrieholz Buche</h5>
+                      <span className="text-xs bg-[#2C5545] text-white px-2 py-1 rounded">6-8% Feuchtigkeit</span>
                     </div>
-                    <p className="text-sm text-gray-700">Höchste Qualität für maximale Heizleistung</p>
+                    <p className="text-sm text-gray-700">70% höherer Heizwert: Weniger Holz nötig = weniger Emissionen insgesamt</p>
                   </div>
                   <div className="bg-white/80 rounded-lg p-4 border-l-4 border-[#D4A520]">
                     <div className="flex justify-between items-start mb-2">
@@ -124,14 +124,7 @@ export default function SafetySection() {
               </div>
 
               <ul className="space-y-3 md:space-y-4 text-sm md:text-base text-gray-700">
-                <li className="flex items-start">
-                  <i className="ri-check-line text-[#D4A520] mr-3 mt-1 flex-shrink-0 text-lg"></i>
-                  <span><strong>Unter 20% Restfeuchte:</strong> Optimal getrocknetes Holz verbrennt sauberer und heißer</span>
-                </li>
-                <li className="flex items-start">
-                  <i className="ri-check-line text-[#D4A520] mr-3 mt-1 flex-shrink-0 text-lg"></i>
-                  <span><strong>70% höherer Heizwert:</strong> Weniger Holz nötig = weniger Emissionen insgesamt</span>
-                </li>
+
                 <li className="flex items-start">
                   <i className="ri-check-line text-[#D4A520] mr-3 mt-1 flex-shrink-0 text-lg"></i>
                   <span><strong>Hartholz aus nachhaltiger Forstwirtschaft:</strong> CO₂-neutraler Kreislauf durch Aufforstung</span>

@@ -2,8 +2,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import { getCDNUrl } from '@/utils/cdn';
 
 interface Product {
   id: number;
@@ -46,10 +47,7 @@ export default function ProductSection() {
   const [loading, setLoading] = useState<boolean>(true);
   const [mounted, setMounted] = useState<boolean>(false);
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // Using the centralized Supabase client from lib/supabase.ts
 
   useEffect(() => {
     setMounted(true);
@@ -66,10 +64,10 @@ export default function ProductSection() {
           .eq('is_active', true)
           .eq('in_stock', true)
           .limit(6)
-          .order('name');
+          .order('id');
 
         if (error) throw error;
-        setProducts(data || []);
+        setProducts((data as unknown as Product[]) || []);
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
         console.error('Fehler beim Laden der Produkte:', errorMessage);
@@ -79,6 +77,22 @@ export default function ProductSection() {
     };
 
     fetchProducts();
+    
+    // Real-time Updates für Produktänderungen
+    const channel = supabase
+      .channel('homepage-product-changes')
+      .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'products' }, 
+          (payload) => {
+            console.log('Homepage: Produktänderung erkannt, aktualisiere Daten...');
+            fetchProducts();
+          })
+      .subscribe();
+    
+    // Cleanup bei Komponentenabbau
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [mounted, supabase]);
 
   const addToCart = (product: Product, quantity: number = 1): void => {
@@ -168,7 +182,7 @@ export default function ProductSection() {
                 {/* Product Image */}
                 <div className="relative">
                   <img 
-                    src={product.image_url} 
+                    src={getCDNUrl(product.image_url)} 
                     alt={product.name}
                     className="w-full h-48 object-cover object-top"
                   />

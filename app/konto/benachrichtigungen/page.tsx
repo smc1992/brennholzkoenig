@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 
 interface NotificationSettings {
@@ -14,10 +14,7 @@ interface NotificationSettings {
 }
 
 export default function NotificationsPage() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // Using the centralized Supabase client from lib/supabase.ts
 
   const [user, setUser] = useState<any>(null);
   const [settings, setSettings] = useState<NotificationSettings>({

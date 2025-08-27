@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import { safeJsonParse, safeJsonStringify } from '../../lib/jsonHelper';
 
 export default function BackupTab() {
@@ -23,10 +23,7 @@ export default function BackupTab() {
   const [exportTable, setExportTable] = useState('all');
   const [isExporting, setIsExporting] = useState(false);
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // Using the centralized Supabase client from lib/supabase.ts
 
   const tables = [
     { key: 'all', name: 'Alle Daten' },

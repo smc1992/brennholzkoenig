@@ -1,5 +1,33 @@
 
 import { supabase } from './supabase';
+import { invalidateContentCache } from '@/components/DynamicContent';
+
+// Rate-Limiting-Schutz
+const API_REQUESTS = new Map<string, number[]>();
+const MAX_REQUESTS_PER_MINUTE = 50; // Maximale Anfragen pro Minute
+const REQUEST_WINDOW = 60 * 1000; // 1 Minute Fenster
+
+// Rate-Limiting-Prüfung
+const checkRateLimit = (key: string): boolean => {
+  if (typeof window === 'undefined') return true; // Server-side immer erlauben
+  
+  const now = Date.now();
+  const requests = API_REQUESTS.get(key) || [];
+  
+  // Alte Anfragen entfernen (älter als 1 Minute)
+  const recentRequests = requests.filter(time => now - time < REQUEST_WINDOW);
+  
+  // Prüfen, ob wir das Limit überschreiten würden
+  if (recentRequests.length >= MAX_REQUESTS_PER_MINUTE) {
+    console.warn(`Rate-Limit erreicht für ${key}: ${recentRequests.length} Anfragen in der letzten Minute`);
+    return false;
+  }
+  
+  // Neue Anfrage hinzufügen
+  recentRequests.push(now);
+  API_REQUESTS.set(key, recentRequests);
+  return true;
+};
 
 interface PageContent {
   id: string;
@@ -23,6 +51,13 @@ interface SupabaseResponse<T> {
 export class ContentManager {
   async getPageContent(pageSlug: string): Promise<PageContent[]> {
     try {
+      // Rate-Limiting-Prüfung
+      const apiKey = 'supabase-content-api';
+      if (!checkRateLimit(apiKey)) {
+        console.warn(`Rate-Limit überschritten für getPageContent(${pageSlug}), Anfrage wird abgebrochen`);
+        throw new Error('Rate limit exceeded');
+      }
+      
       const { data, error }: SupabaseResponse<PageContent[]> = await supabase
         .from('page_contents')
         .select('*')
@@ -59,6 +94,11 @@ export class ContentManager {
         console.error('Error updating page content:', error.message);
         return false;
       }
+      
+      // Cache für diese Seite invalidieren
+      if (typeof window !== 'undefined') {
+        invalidateContentCache(pageSlug);
+      }
 
       return data !== null;
     } catch (error: unknown) {
@@ -85,6 +125,11 @@ export class ContentManager {
         console.error('Error creating page content:', error.message);
         return null;
       }
+      
+      // Cache für diese Seite invalidieren
+      if (typeof window !== 'undefined') {
+        invalidateContentCache(pageSlug);
+      }
 
       return data;
     } catch (error: unknown) {
@@ -105,6 +150,11 @@ export class ContentManager {
       if (error) {
         console.error('Error deleting page content:', error.message);
         return false;
+      }
+      
+      // Cache für diese Seite invalidieren
+      if (typeof window !== 'undefined') {
+        invalidateContentCache(pageSlug);
       }
 
       return true;

@@ -79,7 +79,7 @@ export default function ComparisonSection() {
                     icon: 'ri-drop-line',
                     title: 'Feuchtigkeit',
                     desc: 'Restfeuchtigkeit %',
-                    other: '25-35%',
+                    other: '20%',
                     us: '6-8 %',
                     delay: 600
                   }, {
@@ -87,7 +87,7 @@ export default function ComparisonSection() {
                     title: 'Lieferung',
                     desc: 'Kosten & Service',
                     other: '80-150€ Lieferkosten\n5-10 Tage',
-                    us: 'KOSTENLOS ab 3 SRM\n24-48h Express',
+                    us: '42,50€\n139€ Express',
                     delay: 800
                   }, {
                     icon: 'ri-shield-check-line',
@@ -104,12 +104,19 @@ export default function ComparisonSection() {
                     us: '27 JAHRE EXPERTISE',
                     delay: 1200
                   }, {
+                    icon: 'ri-home-warehouse-line',
+                    title: 'Lagerbedingungen',
+                    desc: 'Perfekte Lagerung',
+                    other: 'Outdoor-Lagerung',
+                    us: 'PERFEKT LAGERBEDINGUNGEN',
+                    delay: 1400
+                  }, {
                     icon: 'ri-award-line',
                     title: 'Erfahrung',
                     desc: 'Jahre am Markt',
                     other: '2-8 Jahre',
-                    us: 'SEIT 1998',
-                    delay: 1400
+                    us: 'SEIT 1997',
+                    delay: 1600
                   }].map((row, index) => (
                     <tr key={index} className={`hover:bg-gray-50 transition-all duration-600 ${isVisible ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: `${row.delay}ms` }}>
                       <td className="px-4 md:px-6 py-4 md:py-6">
@@ -136,7 +143,7 @@ export default function ComparisonSection() {
                     </tr>
                   ))}
 
-                  <tr className={`hover:bg-gray-50 transition-all duration-600 bg-gray-100 font-bold ${isVisible ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: '1600ms' }}>
+                  <tr className={`hover:bg-gray-50 transition-all duration-600 bg-gray-100 font-bold ${isVisible ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: '1800ms' }}>
                     <td className="px-4 md:px-6 py-4 md:py-6">
                       <div className="flex items-center">
                         <i className="ri-money-euro-circle-line text-[#C04020] mr-3 text-lg"></i>
@@ -149,7 +156,7 @@ export default function ComparisonSection() {
                     </td>
                     <td className="px-4 md:px-6 py-4 md:py-6 text-center bg-[#F5F0E0]">
                       <div className="text-lg md:text-xl font-black text-[#1A1A1A]">115€</div>
-                      <span className="text-xs text-[#C04020]">Lieferung 42,50€ (7 SRM)</span>
+                      <span className="text-xs text-[#C04020]">Lieferung 42,50€ (3 SRM)</span>
                     </td>
                   </tr>
                 </tbody>
@@ -184,14 +191,14 @@ export default function ComparisonSection() {
               </div>
               <div className={`text-center transition-all duration-600 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`} style={{ transitionDelay: '2400ms' }}>
                 <div className="text-xl sm:text-2xl lg:text-3xl font-black mb-1">43,50€</div>
-                <p className="text-xs sm:text-sm font-bold leading-tight">Lieferkosten ab 7 SRM</p>
+                <p className="text-xs sm:text-sm font-bold leading-tight">Lieferkosten ab 3 SRM</p>
               </div>
             </div>
 
-            <button className="w-full sm:w-auto bg-[#C04020] text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg hover:bg-[#A03318] transition-all duration-300 whitespace-nowrap cursor-pointer shadow-xl transform hover:scale-105">
+            <a href="/shop" className="w-full sm:w-auto bg-[#C04020] text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg hover:bg-[#A03318] transition-all duration-300 whitespace-nowrap cursor-pointer shadow-xl transform hover:scale-105 inline-block text-center">
               <i className="ri-award-line mr-2 sm:mr-3"></i>
               <span className="break-words">Jetzt Premium-Qualität bestellen</span>
-            </button>
+            </a>
           </div>
 
           {/* Customer Quote - vertrauensvolle Präsentation */}

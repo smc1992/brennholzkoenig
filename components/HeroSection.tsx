@@ -41,7 +41,7 @@ export default function HeroSection() {
   };
 
   const openWhatsApp = () => {
-    const phoneNumber = "4956143071895";
+    const phoneNumber = "4917671085234";
     const message = "Hallo, ich interessiere mich für Ihr Premium Brennholz und hätte gerne eine kostenlose Beratung.";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
@@ -118,7 +118,7 @@ export default function HeroSection() {
                 <div className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0 mt-0.5 sm:mt-0">
                   <i className="ri-truck-line text-[#2C5545] text-xl sm:text-2xl"></i>
                 </div>
-                <span className="font-bold leading-tight">Kostengünstige 24-48h Lieferung ab 7 SRM</span>
+                <span className="font-bold leading-tight">Kostengünstige 24-48h Lieferung ab 3 SRM</span>
               </div>
               <div className="flex items-start sm:items-center">
                 <div className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0 mt-0.5 sm:mt-0">
@@ -152,7 +152,7 @@ export default function HeroSection() {
                 tag="span"
               />
             </button>
-            <button className="bg-white text-[#C04020] px-8 sm:px-10 py-5 sm:py-6 text-lg sm:text-xl font-black rounded-2xl hover:bg-gray-50 transition-all duration-300 whitespace-nowrap cursor-pointer shadow-2xl border-2 border-[#C04020] transform hover:scale-105 w-full sm:w-auto">
+            <Link href="/kontakt" className="bg-white text-[#C04020] px-8 sm:px-10 py-5 sm:py-6 text-lg sm:text-xl font-black rounded-2xl hover:bg-gray-50 transition-all duration-300 whitespace-nowrap cursor-pointer shadow-2xl border-2 border-[#C04020] transform hover:scale-105 w-full sm:w-auto inline-flex items-center justify-center">
               <div className="w-6 h-6 inline-flex items-center justify-center mr-3">
                 <i className="ri-phone-fill text-xl"></i>
               </div>
@@ -163,7 +163,7 @@ export default function HeroSection() {
                 fallback="KOSTENLOSE BERATUNG"
                 tag="span"
               />
-            </button>
+            </Link>
           </div>
 
           {/* Stats Grid */}
@@ -248,28 +248,7 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Customer Testimonial */}
-      <div className={`absolute bottom-4 right-4 sm:bottom-8 sm:right-8 max-w-xs sm:max-w-sm bg-white/95 backdrop-blur-sm rounded-2xl p-4 sm:p-5 shadow-2xl border border-gray-100 transition-all duration-1500 delay-2500 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'} hidden sm:block`}>
-        <div className="flex items-start gap-3">
-          <div className="w-12 h-12 bg-[#C04020] rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">MK</div>
-          <div>
-            <div className="flex items-center mb-2">
-              <span className="text-sm font-bold text-[#1A1A1A] mr-2">Maria K.</span>
-              <div className="flex">
-                <i className="ri-star-fill text-[#D4A520] text-sm"></i>
-                <i className="ri-star-fill text-[#D4A520] text-sm"></i>
-                <i className="ri-star-fill text-[#D4A520] text-sm"></i>
-                <i className="ri-star-fill text-[#D4A520] text-sm"></i>
-                <i className="ri-star-fill text-[#D4A520] text-sm"></i>
-              </div>
-            </div>
-            <p className="text-sm text-gray-700 leading-tight">
-              "Spare jetzt 900€ pro Winter! Das Holz ist so sauber - endlich kein Dreck mehr in der Wohnung."
-            </p>
-            <p className="text-xs text-gray-500 mt-2">vor 2 Tagen</p>
-          </div>
-        </div>
-      </div>
+
     </section>
   );
 }

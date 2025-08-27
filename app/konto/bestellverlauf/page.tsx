@@ -2,11 +2,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 interface Order {
   id: string;
@@ -30,9 +27,6 @@ export default function OrderHistoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
-
-  // Supabase‑Client nur einmal erzeugen
-  const supabase = createClient(supabaseUrl, supabaseKey);
 
   useEffect(() => {
     fetchOrders();

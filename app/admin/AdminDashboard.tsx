@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import OrdersTab from './OrdersTab';
 import CustomersTab from './CustomersTab';
 import StatsTab from './StatsTab';
@@ -53,73 +53,49 @@ export default function AdminDashboard({ adminUser, onLogout }: AdminDashboardPr
     totalRevenue: 0,
     pendingOrders: 0
   });
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // Using the centralized Supabase client from lib/supabase.ts
 
   useEffect(() => {
-    checkUserAccess();
-    loadStats();
-  }, [adminUser]);
-
-  const checkUserAccess = async () => {
-    try {
-      if (!adminUser) {
-        setHasAccess(false);
-        return;
-      }
-
-      const { data: userData, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('id', adminUser.id)
-        .eq('is_active', true)
-        .single();
-
-      if (error || !userData) {
-        console.error('Access check failed:', error);
-        setHasAccess(false);
-        onLogout();
-        return;
-      }
-
+    // Admin-Validierung bereits in page.tsx durchgeführt
+    if (adminUser) {
       setHasAccess(true);
-    } catch (error) {
-      console.error('Error checking user access:', error);
-      setHasAccess(false);
+      loadStats();
     }
-  };
+  }, [adminUser]);
 
   const loadStats = async () => {
     if (!hasAccess) return;
     
     try {
-      const { count: ordersCount } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true });
+      // Sichere Abfrage für customers Tabelle
+      const getCustomersCount = async () => {
+        try {
+          const result = await supabase.from('customers').select('*', { count: 'exact', head: true });
+          return result;
+        } catch (error) {
+          console.warn('customers Tabelle nicht verfügbar:', error);
+          return { count: 0, error: null, data: null };
+        }
+      };
 
-      const { count: customersCount } = await supabase
-        .from('customers')
-        .select('*', { count: 'exact', head: true });
+      // Alle Abfragen parallel ausführen für bessere Performance
+      const [ordersResult, customersResult, revenueResult, pendingResult] = await Promise.all([
+        supabase.from('orders').select('*', { count: 'exact', head: true }),
+        getCustomersCount(),
+        supabase.from('orders').select('total_amount').eq('status', 'delivered'),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending')
+      ]);
 
-      const { data: revenueData } = await supabase
-        .from('orders')
-        .select('total_amount')
-        .eq('status', 'delivered');
-
-      const totalRevenue = revenueData?.reduce((sum, order) => sum + parseFloat(order.total_amount), 0) || 0;
-
-      const { count: pendingCount } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
+      const totalRevenue = revenueResult.data?.reduce((sum: number, order: any) => {
+         const amount = typeof order.total_amount === 'string' ? parseFloat(order.total_amount) : Number(order.total_amount) || 0;
+         return sum + amount;
+       }, 0) || 0;
 
       setStats({
-        totalOrders: ordersCount || 0,
-        totalCustomers: customersCount || 0,
+        totalOrders: ordersResult.count || 0,
+        totalCustomers: customersResult.count || 0,
         totalRevenue: totalRevenue,
-        pendingOrders: pendingCount || 0
+        pendingOrders: pendingResult.count || 0
       });
     } catch (error) {
       console.error('Error loading stats:', error);

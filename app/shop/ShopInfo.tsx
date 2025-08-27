@@ -14,7 +14,7 @@ export default function ShopInfo() {
             </div>
             <h3 className="text-xl font-bold text-[#1A1A1A] mb-4">Günstige Lieferung</h3>
             <p className="text-gray-700 leading-relaxed">
-              Ab 7 Schüttraummeter liefern wir für nur 43,50€ in einem Umkreis von 150km um Fulda. 
+              Ab 3 Schüttraummeter liefern wir für nur 43,50€ in einem Umkreis von 150km um Fulda. 
               Kleinere Mengen gegen höheren Aufpreis möglich.
             </p>
           </div>
@@ -149,7 +149,7 @@ export default function ShopInfo() {
                   Was kostet die Lieferung?
                 </h4>
                 <p className="text-gray-700 text-sm leading-relaxed">
-                  Die Lieferung kostet 43,50€ ab einer Bestellung von 7 Schüttraummeter. 
+                  Die Lieferung kostet 43,50€ ab einer Bestellung von 3 Schüttraummeter. 
                   Bei kleineren Mengen können höhere Lieferkosten anfallen.
                 </p>
               </div>

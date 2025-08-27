@@ -15,7 +15,7 @@ export default function USPSection() {
           setIsVisible(true);
         }
       },
-      { threshold: 0.3 }
+      { threshold: 0.1 }
     );
 
     if (sectionRef.current) {
@@ -153,7 +153,7 @@ export default function USPSection() {
               icon: 'ri-truck-line',
               bg: 'from-[#C04020] to-[#A03318]',
               title: 'GÜNSTIGE LIEFERUNG',
-              desc: 'ab 7 Schüttraummeter für nur 43,50€',
+              desc: 'ab 3 Schüttraummeter für nur 43,50€',
               detail: '✓ 150km Lieferradius',
               delay: 800
             },

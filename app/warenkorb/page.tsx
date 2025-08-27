@@ -2,7 +2,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
+import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { calculatePriceWithTiers, getPriceInfoForQuantity } from '../../lib/pricing';
 import Link from 'next/link';
 
@@ -34,15 +35,13 @@ const getDeliveryOptions = () => [
 ];
 
 export default function WarenkorbPage() {
+  const { products, subscribeToChanges, unsubscribeFromChanges } = useRealtimeSync();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [pricingTiers, setPricingTiers] = useState<Tier[]>([]);
   const [minOrderQuantity, setMinOrderQuantity] = useState(3);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDelivery, setSelectedDelivery] = useState('standard');
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // Using the centralized Supabase client from lib/supabase.ts
 
   /* -------------------------------------------------
    *  Side‑effects
@@ -53,6 +52,57 @@ export default function WarenkorbPage() {
     trackCartView();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Real-time Synchronisation
+  useEffect(() => {
+    subscribeToChanges();
+    return () => {
+      unsubscribeFromChanges();
+    };
+  }, [subscribeToChanges, unsubscribeFromChanges]);
+
+  // Synchronisiere Warenkorb-Artikel mit Real-time Produktdaten
+  useEffect(() => {
+    if (products.length > 0 && cartItems.length > 0 && pricingTiers.length > 0) {
+      const updatedCartItems = cartItems.map(cartItem => {
+        const realtimeProduct = products.find(p => p.id.toString() === cartItem.id.toString());
+        if (realtimeProduct) {
+          // Berechne aktuellen Preis mit Staffelpreisen
+          const basePrice = realtimeProduct.price;
+          const pricing = calculatePriceWithTiers(
+            basePrice,
+            cartItem.quantity,
+            pricingTiers.filter(tier => tier.id === cartItem.id),
+            minOrderQuantity
+          );
+          
+          console.log(`Aktualisiere Warenkorb-Artikel: ${cartItem.name} -> ${realtimeProduct.name}, Preis: ${cartItem.price} -> ${pricing.price}`);
+          return {
+            ...cartItem,
+            name: realtimeProduct.name,
+            price: pricing.price.toString(),
+            basePrice: basePrice.toString(),
+            image: realtimeProduct.image_url,
+            category: realtimeProduct.category
+          };
+        }
+        return cartItem;
+      });
+      
+      // Nur aktualisieren wenn sich etwas geändert hat
+      const hasChanges = updatedCartItems.some((item, index) => 
+        item.name !== cartItems[index]?.name || 
+        item.price !== cartItems[index]?.price ||
+        item.image !== cartItems[index]?.image ||
+        item.category !== cartItems[index]?.category
+      );
+      
+      if (hasChanges) {
+        setCartItems(updatedCartItems);
+        localStorage.setItem('cart', JSON.stringify(updatedCartItems));
+      }
+    }
+  }, [products, cartItems, pricingTiers, minOrderQuantity]);
 
   /* -------------------------------------------------
    *  Tracking
@@ -98,7 +148,7 @@ export default function WarenkorbPage() {
         .order('min_quantity');
 
       if (tiersError) throw tiersError;
-      const tiers = (tiersData as Tier[]) ?? [];
+      const tiers = (tiersData as unknown as Tier[]) ?? [];
 
       // 2️⃣ Load minimum order quantity
       const {
@@ -111,7 +161,7 @@ export default function WarenkorbPage() {
         .single();
 
       if (!settingsError && settingsData?.setting_value) {
-        const parsed = parseInt(settingsData.setting_value, 10);
+        const parsed = parseInt(settingsData.setting_value as string, 10);
         setMinOrderQuantity(isNaN(parsed) ? 3 : parsed);
       }
 
@@ -127,7 +177,7 @@ export default function WarenkorbPage() {
             basePrice,
             item.quantity,
             tiers,
-            parseInt(settingsData?.setting_value ?? '3', 10)
+            parseInt((settingsData?.setting_value as string) ?? '3', 10)
           );
           return { ...item, price: pricing.price.toString() };
         });
@@ -343,7 +393,7 @@ export default function WarenkorbPage() {
                                   <div className="font-bold text-xl min-w-[2.5rem] text-center px-2 py-1">
                                     {item.quantity}
                                   </div>
-                                  <div className="text-xs text-gray-500 font-medium">SRM</div>
+                                  <div className="text-xs text-gray-500 font-medium">{item.unit}</div>
                                 </div>
                                 <button
                                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
@@ -398,7 +448,7 @@ export default function WarenkorbPage() {
                                   {item.quantity}
                                 </span>
                                 <span className="text-xs text-gray-500 font-medium mt-1 block">
-                                  SRM
+                                  {item.unit}
                                 </span>
                               </div>
                               <button

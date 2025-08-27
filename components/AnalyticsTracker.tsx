@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 
 export default function AnalyticsTracker() {
   useEffect(() => {
@@ -11,10 +11,7 @@ export default function AnalyticsTracker() {
       return;
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
+    // Using the centralized Supabase client from lib/supabase.ts
 
     // Prüfe Cookie-Einstellungen
     const cookieConsent = localStorage.getItem('cookie-consent');

@@ -1,5 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
+// Singleton-Pattern für Supabase-Client
+let supabaseInstance: ReturnType<typeof createClient> | null = null;
+
 // Supabase-Konfiguration für Entwicklung und Produktion
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tmxhamdyrjuxwnskgfka.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRteGhhbWR5cmp1eHduc2tnZmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MTgyMjksImV4cCI6MjA3MDQ5NDIyOX0.Nj4plTbNMvPF1fqEXffWXnS6TBJUpHETM1JE6BK7odk'
@@ -12,30 +15,40 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Verbesserte Fehlerbehandlung für Produktionsumgebung
 const isProduction = process.env.NODE_ENV === 'production'
 
-// Supabase Client erstellen mit verbesserten Optionen
-export const supabase = createClient(
-  supabaseUrl,
-  supabaseAnonKey,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true
-    },
-    global: {
-      headers: {
-        'X-Client-Info': 'brennholzkoenig-website',
+// Singleton-Funktion, um sicherzustellen, dass nur eine Instanz existiert
+const getSupabaseClient = () => {
+  if (supabaseInstance) return supabaseInstance;
+  
+  // Supabase Client erstellen mit verbesserten Optionen
+  supabaseInstance = createClient(
+    supabaseUrl,
+    supabaseAnonKey,
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
       },
-    },
-    // Verbesserte Timeout-Einstellungen für Produktionsumgebung
-    realtime: {
-      timeout: 60000, // 60 Sekunden Timeout
-      params: {
-        eventsPerSecond: 10
+      global: {
+        headers: {
+          'X-Client-Info': 'brennholzkoenig-website',
+        },
+      },
+      // Verbesserte Timeout-Einstellungen für Produktionsumgebung
+      realtime: {
+        timeout: 60000, // 60 Sekunden Timeout
+        params: {
+          eventsPerSecond: 10
+        }
       }
     }
-  }
-)
+  );
+  
+  return supabaseInstance;
+};
+
+// Exportiere eine einzige Instanz des Supabase-Clients
+export const supabase = getSupabaseClient();
 
 export type Database = {
   public: {

@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 
 interface ConversionEvent {
   event_type: string;
@@ -22,10 +22,7 @@ export default function GoogleAdsTrackingTab() {
   const [isSaving, setIsSaving] = useState(false);
   const [conversionEvents, setConversionEvents] = useState<ConversionEvent[]>([]);
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // Using the centralized Supabase client from lib/supabase.ts
 
   useEffect(() => {
     loadSettings();

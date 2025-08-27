@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import AdminLogin from './AdminLogin';
 import AdminDashboard from './AdminDashboard';
 
@@ -21,10 +21,7 @@ export default function AdminPage() {
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [error, setError] = useState('');
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // Using the centralized Supabase client from lib/supabase.ts
 
   useEffect(() => {
     checkAuthStatus();
@@ -73,7 +70,8 @@ export default function AdminPage() {
         }
 
         if (adminData) {
-          setAdminUser(adminData);
+          const typedAdminData = adminData as unknown as AdminUser;
+          setAdminUser(typedAdminData);
           setIsAuthenticated(true);
 
           // Update last login
@@ -81,13 +79,18 @@ export default function AdminPage() {
             .from('admin_users')
             .update({ 
               last_login: new Date().toISOString(),
-              login_count: (adminData.login_count || 0) + 1
+              login_count: (typedAdminData.login_count || 0) + 1
             })
-            .eq('id', adminData.id);
+            .eq('id', typedAdminData.id);
         } else {
           setError('Keine Admin-Berechtigung für diese E-Mail-Adresse');
           await supabase.auth.signOut();
         }
+      } else {
+        // Keine Session vorhanden - zeige Login-Bildschirm
+        console.log('Keine aktive Session gefunden - zeige Login');
+        setIsAuthenticated(false);
+        setAdminUser(null);
       }
     } catch (error) {
       console.error('Auth check error:', error);
@@ -100,18 +103,21 @@ export default function AdminPage() {
   const handleLogin = async (user: AdminUser) => {
     try {
       // Nochmalige Validierung nach Login
+      const { data: { session } } = await supabase.auth.getSession();
       const { data: validatedUser, error } = await supabase
         .from('admin_users')
         .select('*')
-        .eq('id', user.id)
+        .eq('email', session?.user?.email || '')
         .eq('is_active', true)
         .single();
 
       if (error || !validatedUser) {
-        throw new Error('Benutzer-Validierung fehlgeschlagen');
+        setError('Validierung fehlgeschlagen');
+        return;
       }
 
-      setAdminUser(validatedUser);
+      const typedValidatedUser = validatedUser as unknown as AdminUser;
+      setAdminUser(typedValidatedUser);
       setIsAuthenticated(true);
       setError('');
     } catch (error) {
@@ -134,12 +140,42 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 flex items-center justify-center bg-[#C04020] rounded-full mx-auto mb-4 animate-pulse">
-            <i className="ri-admin-line text-2xl text-white"></i>
+      <div className="min-h-screen bg-gray-100">
+        {/* Header Skeleton */}
+        <div className="bg-white shadow-sm border-b border-gray-200 p-4">
+          <div className="flex items-center justify-between">
+            <div className="h-8 bg-gray-200 rounded w-48 animate-pulse"></div>
+            <div className="h-8 bg-gray-200 rounded w-32 animate-pulse"></div>
           </div>
-          <p className="text-lg font-medium text-gray-700">Lade Admin-Bereich...</p>
+        </div>
+        
+        {/* Content Skeleton */}
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div className="h-4 bg-gray-200 rounded w-24 mb-2 animate-pulse"></div>
+                <div className="h-8 bg-gray-200 rounded w-16 animate-pulse"></div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="h-6 bg-gray-200 rounded w-32 mb-4 animate-pulse"></div>
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-4 bg-gray-200 rounded animate-pulse"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        {/* Loading indicator */}
+        <div className="fixed bottom-4 right-4">
+          <div className="bg-[#C04020] text-white px-4 py-2 rounded-lg shadow-lg flex items-center">
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+            <span className="text-sm font-medium">Lade Admin-Bereich...</span>
+          </div>
         </div>
       </div>
     );

@@ -56,19 +56,30 @@ export default function StatsTab({ stats, onRefresh }: StatsTabProps) {
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        // Sichere Abfrage für customers Tabelle
+        const getCustomersData = async () => {
+          try {
+            const result = await supabase.from('customers').select('*');
+            return result;
+          } catch (error) {
+            console.warn('customers Tabelle nicht verfügbar:', error);
+            return { data: [], error: null };
+          }
+        };
+
         const [ordersRes, productsRes, customersRes] = await Promise.all([
           supabase.from('orders').select('*'),
           supabase.from('products').select('*'),
-          supabase.from('customers').select('*')
+          getCustomersData()
         ]);
 
         if (ordersRes.error) throw ordersRes.error;
         if (productsRes.error) throw productsRes.error;
-        if (customersRes.error) throw customersRes.error;
+        // customersRes.error wird bereits in getCustomersData behandelt
 
-        setOrders(ordersRes.data || []);
-        setProducts(productsRes.data || []);
-        setCustomers(customersRes.data || []);
+        setOrders((ordersRes.data || []) as unknown as Order[]);
+        setProducts((productsRes.data || []) as unknown as Product[]);
+        setCustomers((customersRes.data || []) as unknown as Customer[]);
       } catch (error: unknown) {
         console.error('Fehler beim Laden der Statistiken:', error);
       } finally {

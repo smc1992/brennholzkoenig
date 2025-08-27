@@ -1,7 +1,8 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
+import { cdnUrl } from '@/utils/cdn';
 
 interface MediaFile {
   id: string;
@@ -30,8 +31,6 @@ export default function MediaManager({
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-
-  const supabase = createClient('https://your-supabase-instance.supabase.co', 'your-anon-key');
 
   useEffect(() => {
     loadMediaFiles();
@@ -70,9 +69,8 @@ export default function MediaManager({
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('media')
-          .getPublicUrl(filePath);
+        // Verwende cdnUrl statt direkter Supabase-URL
+        const publicUrl = cdnUrl(`/media/${fileName}`);
 
         await supabase
           .from('media_files')

@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Image-Domains für CDN
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'cdn.brennholz-koenig.de' }
+    ]
+  },
   // Basic configuration
   reactStrictMode: false,
   swcMinify: true,

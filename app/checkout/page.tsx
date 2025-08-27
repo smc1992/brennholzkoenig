@@ -3,13 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
+import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { calculatePriceWithTiers } from '../../lib/pricing';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Using the centralized Supabase client from lib/supabase.ts
 
 interface CartItem {
   id: string;
@@ -17,6 +15,7 @@ interface CartItem {
   price: number;
   quantity: number;
   image: string;
+  unit: string;
 }
 
 interface DeliveryData {
@@ -29,6 +28,8 @@ interface DeliveryData {
   postalCode: string;
   city: string;
   deliveryNotes: string;
+  preferredDeliveryMonth: string;
+  preferredDeliveryYear: string;
 }
 
 interface BillingData {
@@ -50,6 +51,7 @@ const getDeliveryOptions = () => [
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { products, subscribeToChanges, unsubscribeFromChanges } = useRealtimeSync();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -70,6 +72,8 @@ export default function CheckoutPage() {
     postalCode: '',
     city: '',
     deliveryNotes: '',
+    preferredDeliveryMonth: '',
+    preferredDeliveryYear: new Date().getFullYear().toString(),
   });
   const [billingData, setBillingData] = useState<BillingData>({
     sameBilling: true,
@@ -95,7 +99,7 @@ export default function CheckoutPage() {
         .single();
 
       if (settingsData?.setting_value) {
-        const parsed = parseInt(settingsData.setting_value, 10);
+        const parsed = parseInt(settingsData.setting_value as string, 10);
         setMinOrderQuantity(isNaN(parsed) ? 3 : parsed);
       }
 
@@ -128,20 +132,20 @@ export default function CheckoutPage() {
         const { data: customer } = await supabase
           .from('customers')
           .select('*')
-          .eq('email', user.email)
+          .eq('email', user.email as string)
           .single();
 
         if (customer) {
           setDeliveryData((prev) => ({
             ...prev,
-            firstName: customer.first_name || '',
-            lastName: customer.last_name || '',
-            email: customer.email || '',
-            phone: customer.phone || '',
-            street: customer.street || '',
-            houseNumber: customer.house_number || '',
-            postalCode: customer.postal_code || '',
-            city: customer.city || '',
+            firstName: String(customer.first_name || ''),
+            lastName: String(customer.last_name || ''),
+            email: String(customer.email || ''),
+            phone: String(customer.phone || ''),
+            street: String(customer.street || ''),
+            houseNumber: String(customer.house_number || ''),
+            postalCode: String(customer.postal_code || ''),
+            city: String(customer.city || ''),
           }));
         }
       }
@@ -149,6 +153,46 @@ export default function CheckoutPage() {
 
     getCurrentUser();
   }, []);
+
+  // Real-time Synchronisation für Checkout
+  useEffect(() => {
+    subscribeToChanges();
+    return () => {
+      unsubscribeFromChanges();
+    };
+  }, [subscribeToChanges, unsubscribeFromChanges]);
+
+  // Synchronisiere Checkout-Artikel mit Real-time Produktdaten
+  useEffect(() => {
+    if (products.length > 0 && cartItems.length > 0) {
+      const updatedCartItems = cartItems.map(cartItem => {
+        const realtimeProduct = products.find(p => p.id.toString() === cartItem.id.toString());
+        if (realtimeProduct) {
+          console.log(`Aktualisiere Checkout-Artikel: ${cartItem.name} -> ${realtimeProduct.name}, Preis: ${cartItem.price} -> ${realtimeProduct.price}`);
+          return {
+            ...cartItem,
+            name: realtimeProduct.name,
+            price: realtimeProduct.price,
+            image: realtimeProduct.image_url
+          };
+        }
+        return cartItem;
+      });
+      
+      // Nur aktualisieren wenn sich etwas geändert hat
+      const hasChanges = updatedCartItems.some((item, index) => 
+        item.name !== cartItems[index]?.name || 
+        item.price !== cartItems[index]?.price ||
+        item.image !== cartItems[index]?.image
+      );
+      
+      if (hasChanges) {
+        setCartItems(updatedCartItems);
+        // Auch localStorage aktualisieren für Konsistenz
+        localStorage.setItem('cart', JSON.stringify(updatedCartItems));
+      }
+    }
+  }, [products, cartItems]);
 
   const calculateTotal = () => {
     const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -168,7 +212,8 @@ export default function CheckoutPage() {
     
     // Prüfe Mindestbestellmenge
     if (!validateMinimumOrderQuantity()) {
-      newErrors.minQuantity = `Die Mindestbestellmenge beträgt ${minOrderQuantity} SRM. Ihre aktuelle Bestellung enthält nur ${cartItems.reduce((total, item) => total + item.quantity, 0)} SRM.`;
+      const unit = cartItems.length > 0 ? cartItems[0].unit : 'SRM';
+      newErrors.minQuantity = `Die Mindestbestellmenge beträgt ${minOrderQuantity} ${unit}. Ihre aktuelle Bestellung enthält nur ${cartItems.reduce((total, item) => total + item.quantity, 0)} ${unit}.`;
     }
 
     if (!deliveryData.firstName.trim()) {
@@ -181,7 +226,7 @@ export default function CheckoutPage() {
       newErrors.email = 'E-Mail ist erforderlich';
     } else {
       // Robuste E-Mail-Validierung - einfache und zuverlässige RegEx
-      const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(deliveryData.email.trim())) {
         newErrors.email = 'Bitte geben Sie eine gültige E-Mail-Adresse ein';
       }
@@ -264,20 +309,20 @@ export default function CheckoutPage() {
       const { data: customer } = await supabase
         .from('customers')
         .select('*')
-        .eq('email', data.user.email)
+        .eq('email', (data.user.email as string))
         .single();
 
       if (customer) {
         setDeliveryData((prev) => ({
           ...prev,
-          firstName: customer.first_name || '',
-          lastName: customer.last_name || '',
-          email: customer.email || '',
-          phone: customer.phone || '',
-          street: customer.street || '',
-          houseNumber: customer.house_number || '',
-          postalCode: customer.postal_code || '',
-          city: customer.city || '',
+          firstName: (customer.first_name as string) || '',
+          lastName: (customer.last_name as string) || '',
+          email: (customer.email as string) || '',
+          phone: (customer.phone as string) || '',
+          street: (customer.street as string) || '',
+          houseNumber: (customer.house_number as string) || '',
+          postalCode: (customer.postal_code as string) || '',
+          city: (customer.city as string) || '',
         }));
       }
     } catch (error: any) {
@@ -319,6 +364,8 @@ export default function CheckoutPage() {
       house_number: deliveryData.houseNumber,
       postal_code: deliveryData.postalCode,
       city: deliveryData.city,
+      preferred_delivery_month: deliveryData.preferredDeliveryMonth,
+      preferred_delivery_year: deliveryData.preferredDeliveryYear,
       billing_same_as_delivery: billingData.sameBilling,
       billing_company: billingData.company,
       billing_first_name: billingData.sameBilling ? deliveryData.firstName : billingData.firstName,
@@ -380,7 +427,7 @@ export default function CheckoutPage() {
           .single();
 
         if (existingCustomer) {
-          customerId = existingCustomer.id;
+          customerId = String(existingCustomer.id);
           await saveCustomerData(customerId);
         } else {
           const { data: newCustomer, error: customerError } = await saveCustomerData();
@@ -399,7 +446,7 @@ export default function CheckoutPage() {
           .single();
 
         if (existingCustomer) {
-          customerId = existingCustomer.id;
+          customerId = String(existingCustomer.id);
           await saveCustomerData(customerId);
         } else {
           const { data: newCustomer, error: customerError } = await saveCustomerData();
@@ -433,6 +480,8 @@ export default function CheckoutPage() {
         delivery_postal_code: deliveryData.postalCode,
         delivery_city: deliveryData.city,
         delivery_notes: deliveryData.deliveryNotes || '',
+        preferred_delivery_month: deliveryData.preferredDeliveryMonth,
+        preferred_delivery_year: deliveryData.preferredDeliveryYear,
         billing_same_as_delivery: billingData.sameBilling,
         billing_company: billingData.company || '',
         billing_first_name: billingData.sameBilling ? deliveryData.firstName : billingData.firstName,
@@ -786,6 +835,45 @@ export default function CheckoutPage() {
                         } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
                       />
                       {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Wunschliefermonat (optional)
+                      </label>
+                      <select
+                        value={deliveryData.preferredDeliveryMonth}
+                        onChange={(e) => setDeliveryData({ ...deliveryData, preferredDeliveryMonth: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      >
+                        <option value="">Bitte wählen...</option>
+                        <option value="Januar">Januar</option>
+                        <option value="Februar">Februar</option>
+                        <option value="März">März</option>
+                        <option value="April">April</option>
+                        <option value="Mai">Mai</option>
+                        <option value="Juni">Juni</option>
+                        <option value="Juli">Juli</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="Oktober">Oktober</option>
+                        <option value="November">November</option>
+                        <option value="Dezember">Dezember</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Wunschlieferjahr (optional)
+                      </label>
+                      <select
+                        value={deliveryData.preferredDeliveryYear}
+                        onChange={(e) => setDeliveryData({ ...deliveryData, preferredDeliveryYear: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      >
+                        <option value={new Date().getFullYear().toString()}>{new Date().getFullYear()}</option>
+                        <option value={(new Date().getFullYear() + 1).toString()}>{new Date().getFullYear() + 1}</option>
+                      </select>
                     </div>
 
                     <div className="md:col-span-2">

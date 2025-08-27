@@ -136,7 +136,7 @@ export default function ProcessSection() {
                       page="home"
                       section="process"
                       contentType="step2_description"
-                      fallback="Wir kontaktieren Sie innerhalb von 2 Stunden zur Terminabsprache - ganz nach Ihrem Wunsch!"
+                      fallback="Wir kontaktieren Sie zur Terminabsprache - ganz nach Ihrem Wunsch!"
                     />
                   </p>
                   <ul className="text-xs md:text-sm text-gray-600 space-y-1">
@@ -178,7 +178,7 @@ export default function ProcessSection() {
                       page="home"
                       section="process"
                       contentType="step3_description"
-                      fallback="Pünktliche Lieferung direkt vor Ihr Haus. Nur 43,50€ ab 7 SRM im 150km Umkreis."
+                      fallback="Pünktliche Lieferung direkt vor Ihr Haus. Nur 43,50€ ab 3 SRM im 150km Umkreis."
                     />
                   </p>
                   <ul className="text-xs md:text-sm text-gray-600 space-y-1">
@@ -188,7 +188,7 @@ export default function ProcessSection() {
                     </li>
                     <li className="flex items-center transform transition-all duration-300 hover:translate-x-2">
                       <i className="ri-check-line text-green-600 mr-2"></i>
-                      Nur 43,50€ ab 7 SRM
+                      Nur 43,50€ ab 3 SRM
                     </li>
                     <li className="flex items-center transform transition-all duration-300 hover:translate-x-2">
                       <i className="ri-check-line text-green-600 mr-2"></i>
@@ -288,7 +288,7 @@ export default function ProcessSection() {
                   </div>
                   <div>
                     <p className="font-bold mb-1 text-[#1A1A1A]">Lieferkosten berechnen</p>
-                    <p className="text-sm text-gray-600">43,50€ ab 7 SRM - bei kleineren Mengen individuelle Berechnung</p>
+                    <p className="text-sm text-gray-600">43,50€ ab 3 SRM - bei kleineren Mengen individuelle Berechnung</p>
                   </div>
                 </div>
                 <div className="flex items-start">
@@ -309,8 +309,8 @@ export default function ProcessSection() {
                     <i className="ri-message-line text-white text-sm"></i>
                   </div>
                   <div>
-                    <p className="font-bold mb-1 text-[#1A1A1A]">SMS-Benachrichtigung</p>
-                    <p className="text-sm text-gray-600">Sie erhalten eine SMS 1h vor der Ankunft</p>
+                    <p className="font-bold mb-1 text-[#1A1A1A]">SMS, Anruf oder WhatsApp</p>
+                <p className="text-sm text-gray-600">Sie erhalten eine Benachrichtigung vor der Anlieferung</p>
                   </div>
                 </div>
                 <div className="flex items-start">
@@ -375,7 +375,7 @@ export default function ProcessSection() {
                 </span>
                 <span className="flex items-center transform transition-all duration-300 hover:scale-110">
                   <i className="ri-check-line mr-1"></i>
-                  Lieferung ab 7 SRM nur 43,50€
+                  Lieferung ab 3 SRM nur 43,50€
                 </span>
                 <span className="flex items-center transform transition-all duration-300 hover:scale-110">
                   <i className="ri-check-line mr-1"></i>

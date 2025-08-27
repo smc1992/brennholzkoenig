@@ -2,16 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
-// Lokale Implementierung des Supabase-Clients für den Build-Prozess
-const createClientComponentClient = () => ({ 
-  from: (table: string) => ({ 
-    select: (columns: string) => ({ 
-      eq: (column: string, value: string) => ({ 
-        single: () => ({ data: null }) 
-      }) 
-    }) 
-  }) 
-});
+import { supabase } from '@/lib/supabase';
 
 interface SEOMetadata {
   title?: string;
@@ -50,8 +41,6 @@ export default function SEOManager({
 }: SEOManagerProps) {
   const [seoData, setSeoData] = useState<SEOMetadata | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  const supabase = createClientComponentClient();
 
   useEffect(() => {
     loadSEOData();

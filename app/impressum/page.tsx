@@ -69,7 +69,7 @@ export default function ImpressumPage() {
                       <div>
                         <h4 className="text-lg font-bold text-[#1A1A1A] mb-3">Kontakt</h4>
                         <p className="text-gray-700 mb-4">
-                          <strong>Telefon:</strong> 0176-22572100<br />
+                          <strong>Telefon:</strong> +49 176 71085234<br />
                           <strong>E-Mail:</strong> info@brennholz-koenig.de<br />
                           <strong>Website:</strong> www.brennholzkoenig.de
                         </p>

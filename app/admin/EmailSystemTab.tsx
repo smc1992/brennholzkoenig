@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 
 interface EmailTemplate {
   id: number;
@@ -60,10 +60,7 @@ export default function EmailSystemTab() {
   const [activeTab, setActiveTab] = useState('smtp');
   const [showPassword, setShowPassword] = useState(false);
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // Using the centralized Supabase client from lib/supabase.ts
 
   useEffect(() => {
     loadEmailSettings();

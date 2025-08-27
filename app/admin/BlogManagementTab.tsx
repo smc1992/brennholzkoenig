@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import RichTextEditor from '../../components/RichTextEditor';
 import MediaManager from '../../components/MediaManager';
 import SEOOptimizer from '../../components/SEOOptimizer';
@@ -70,10 +70,7 @@ export default function BlogManagementTab() {
     comments_enabled: true
   });
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // Using the centralized Supabase client from lib/supabase.ts
 
   useEffect(() => {
     loadBlogPosts();

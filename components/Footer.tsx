@@ -30,12 +30,15 @@ export default function Footer() {
               27 Jahre Erfahrung und königliche Qualität.
             </p>
             <div className="flex space-x-4">
-              <div className="w-10 h-10 flex items-center justify-center bg-[#C04020] rounded-full cursor-pointer">
+              <a href="tel:+4917671085234" className="w-10 h-10 flex items-center justify-center bg-[#C04020] rounded-full cursor-pointer hover:bg-[#A03318] transition-colors">
                 <i className="ri-phone-line text-white"></i>
-              </div>
-              <div className="w-10 h-10 flex items-center justify-center bg-[#C04020] rounded-full cursor-pointer">
+              </a>
+              <a href="mailto:info@brennholzkoenig.de" className="w-10 h-10 flex items-center justify-center bg-[#C04020] rounded-full cursor-pointer hover:bg-[#A03318] transition-colors">
                 <i className="ri-mail-line text-white"></i>
-              </div>
+              </a>
+              <a href="https://wa.me/4917671085234" target="_blank" rel="noopener noreferrer" className="w-10 h-10 flex items-center justify-center bg-[#25D366] rounded-full cursor-pointer hover:bg-[#1DA851] transition-colors">
+                <i className="ri-whatsapp-line text-white"></i>
+              </a>
             </div>
           </div>
 
@@ -58,6 +61,8 @@ export default function Footer() {
               <li>Kaminholz trocken</li>
               <li>Ofenholz gespalten</li>
               <li>Brennholz gemischt</li>
+              <li>Brennholz geliefert</li>
+              <li>Kaminholz geliefert</li>
             </ul>
           </div>
 
@@ -65,7 +70,7 @@ export default function Footer() {
             <h4 className="text-lg font-bold mb-4 text-[#C04020]">Kontakt</h4>
             <div className="text-gray-300 space-y-2">
               <p>Frankfurter Straße 3, 36419 Buttlar</p>
-              <p>0176-22572100</p>
+              <p>+49 176 71085234</p>
               <p>info@brennholz-koenig.de</p>
               <p>Mo-Fr: 8:00-18:00 Uhr</p>
             </div>

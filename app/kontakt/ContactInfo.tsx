@@ -46,26 +46,6 @@ export default function ContactInfo() {
 
           {/* Contact Options */}
           <div className={`space-y-6 transition-all duration-1000 delay-300 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
-            {/* Phone */}
-            <div className="bg-gradient-to-r from-[#F5F0E0] to-white rounded-2xl p-6 shadow-lg border border-[#D4A520]/20">
-              <div className="flex items-center">
-                <div className="w-16 h-16 flex items-center justify-center bg-[#C04020] rounded-full mr-6 flex-shrink-0">
-                  <i className="ri-phone-fill text-white text-2xl"></i>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-black text-[#1A1A1A] mb-2" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-                    TELEFON
-                  </h3>
-                  <a href="tel:0561-43071895" className="text-2xl font-bold text-[#C04020] hover:text-[#A03318] transition-colors duration-300 cursor-pointer">
-                    0561-43071895
-                  </a>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Mo-Fr: 7:00-18:00 Uhr | Sa: 8:00-14:00 Uhr
-                  </p>
-                </div>
-              </div>
-            </div>
-
             {/* Mobile */}
             <div className="bg-gradient-to-r from-[#F5F0E0] to-white rounded-2xl p-6 shadow-lg border border-[#D4A520]/20">
               <div className="flex items-center">
@@ -76,8 +56,8 @@ export default function ContactInfo() {
                   <h3 className="text-xl font-black text-[#1A1A1A] mb-2" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
                     MOBIL - EXPRESS HOTLINE
                   </h3>
-                  <a href="tel:0176-22572100" className="text-2xl font-bold text-[#C04020] hover:text-[#A03318] transition-colors duration-300 cursor-pointer">
-                    0176-22572100
+                  <a href="tel:+4917671085234" className="text-2xl font-bold text-[#C04020] hover:text-[#A03318] transition-colors duration-300 cursor-pointer">
+                    +49 176 71085234
                   </a>
                   <p className="text-sm text-gray-600 mt-1">
                     Für Express-Lieferungen und dringende Anfragen

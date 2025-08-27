@@ -96,9 +96,9 @@ export default function TeamSection() {
             <p className="text-lg mb-6" style={{ fontFamily: 'Barlow, sans-serif' }}>
               Das ist Brennholzkönig. Das ist Thorsten Vey.
             </p>
-            <button className="bg-[#C04020] text-white px-8 py-3 rounded-lg font-bold hover:bg-[#A03318] transition-colors whitespace-nowrap cursor-pointer">
+            <a href="https://wa.me/4917671085234" target="_blank" rel="noopener noreferrer" className="bg-[#C04020] text-white px-8 py-3 rounded-lg font-bold hover:bg-[#A03318] transition-colors whitespace-nowrap cursor-pointer inline-block text-center">
               Jetzt Thorsten kontaktieren
-            </button>
+            </a>
           </div>
         </div>
       </div>

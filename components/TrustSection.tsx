@@ -15,7 +15,7 @@ export default function TrustSection() {
           setIsVisible(true);
         }
       },
-      { threshold: 0.2 }
+      { threshold: 0.05 }
     );
 
     if (sectionRef.current) {
@@ -99,7 +99,7 @@ export default function TrustSection() {
                 page="home"
                 section="trust"
                 contentType="experience_description"
-                fallback="Seit 1997 beliefern wir Familien mit Premium-Brennholz. 27 Jahre Erfahrung garantieren höchste Qualität."
+                fallback="Persönlich, leidenschaftlich & zuverlässig"
               />
             </p>
           </div>
@@ -173,7 +173,7 @@ export default function TrustSection() {
             </h3>
             <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
               Jedes Holzstück wird vor der Auslieferung geprüft. 
-              <strong className="text-[#C04020]">6 % Restfeuchte garantiert</strong> - 
+              <strong className="text-[#C04020]">6-8 % Restfeuchte garantiert</strong> - 
               gemessen mit professionellen Geräten. So brennt Ihr Holz perfekt ab dem ersten Tag.
             </p>
           </div>
@@ -212,7 +212,7 @@ export default function TrustSection() {
               <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center bg-[#D4A520] rounded-full mx-auto mb-3 sm:mb-4">
                 <i className="ri-tree-line text-white text-xl sm:text-2xl"></i>
               </div>
-              <h4 className="font-black text-base sm:text-lg mb-2">6% RESTFEUCHTE</h4>
+              <h4 className="font-black text-base sm:text-lg mb-2">6-8% RESTFEUCHTE</h4>
               <p className="text-xs sm:text-sm opacity-80">Industrieholz garantiert</p>
             </div>
 
@@ -228,8 +228,8 @@ export default function TrustSection() {
               <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center bg-[#D4A520] rounded-full mx-auto mb-3 sm:mb-4">
                 <i className="ri-recycle-line text-white text-xl sm:text-2xl"></i>
               </div>
-              <h4 className="font-black text-base sm:text-lg mb-2">GESIEBT & SAUBER</h4>
-              <p className="text-xs sm:text-sm opacity-80">Kein Dreck, keine Späne</p>
+              <h4 className="font-black text-base sm:text-lg mb-2">SAUBER</h4>
+            <p className="text-xs sm:text-sm opacity-80">Keine Rinde, kein Ungeziefer</p>
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
-
 'use client';
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
+import ProductImageManager from '@/components/ProductImageManager';
 
 interface Product {
   id: string;
@@ -48,6 +48,23 @@ export default function ProductsTab() {
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
+  const [newProductData, setNewProductData] = useState({
+    name: '',
+    category: '',
+    wood_type: 'Buche',
+    size: '25cm'
+  });
+  const [newProductImages, setNewProductImages] = useState<any[]>([]);
+  const [newProductMainImage, setNewProductMainImage] = useState<string>('');
+  const [editProductData, setEditProductData] = useState({
+    name: '',
+    category: '',
+    wood_type: 'Buche',
+    size: '25cm'
+  });
+  const [editProductImages, setEditProductImages] = useState<any[]>([]);
+  const [editProductMainImage, setEditProductMainImage] = useState<string>('');
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -62,12 +79,8 @@ export default function ProductsTab() {
     notes: "",
   });
   const [inventoryHistory, setInventoryHistory] = useState<InventoryMovement[]>([]);
+  const [editImageUrl, setEditImageUrl] = useState<string>('');
   const [showHistory, setShowHistory] = useState<string | null>(null);
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
-  );
 
   const categories = [
     "Alle",
@@ -98,7 +111,9 @@ export default function ProductsTab() {
         .order("name");
 
       if (error) throw error;
-      setProducts(data || []);
+      const typedData = data as unknown as Product[];
+      setProducts(typedData || []);
+      setFilteredProducts(typedData || []);
     } catch (err) {
       console.error("Error loading products:", err);
     } finally {
@@ -133,18 +148,29 @@ export default function ProductsTab() {
   // -------------------------------------------------------------------------
   const updateProduct = async (productData: Partial<Product>) => {
     try {
+      // Use images from ProductImageGallery
+      const updatedData = {
+        ...productData,
+        image_url: editProductMainImage,
+        additional_images: editProductImages.filter(img => !img.isMain).map(img => img.url),
+        wood_type: editProductData.wood_type,
+        size: editProductData.size,
+        updated_at: new Date().toISOString(),
+      };
+
       const { error } = await supabase
         .from("products")
-        .update({
-          ...productData,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updatedData)
         .eq("id", editingProduct?.id || '');
 
       if (error) throw error;
 
       setIsEditModalOpen(false);
       setEditingProduct(null);
+      setEditImageUrl('');
+      setEditProductData({ name: '', category: '', wood_type: 'Buche', size: '25cm' });
+      setEditProductImages([]);
+      setEditProductMainImage('');
       await loadProducts();
       alert("Produkt erfolgreich aktualisiert!");
     } catch (err) {
@@ -218,7 +244,8 @@ export default function ProductsTab() {
         .limit(20);
 
       if (error) throw error;
-      setInventoryHistory(data || []);
+      const typedData = data as unknown as InventoryMovement[];
+      setInventoryHistory(typedData || []);
       setShowHistory(productId);
     } catch (err) {
       console.error("Error loading inventory history:", err);
@@ -280,7 +307,7 @@ export default function ProductsTab() {
 
       // Generate unique slug by adding timestamp
       const timestamp = Date.now();
-      const baseSlug = originalProduct.slug || originalProduct.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const baseSlug = originalProduct.slug || (originalProduct.name as string).toLowerCase().replace(/[^a-z0-9]+/g, '-');
       const newSlug = `${baseSlug}-kopie-${timestamp}`;
 
       const { id, created_at, updated_at, ...productData } = originalProduct;
@@ -431,6 +458,13 @@ export default function ProductsTab() {
           </div>
 
           <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap mr-2"
+          >
+            <i className="ri-add-line mr-2"></i>Neues Produkt
+          </button>
+          
+          <button
             onClick={loadProducts}
             className="bg-[#C04020] hover:bg-[#A03318] text-white px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
           >
@@ -550,6 +584,39 @@ export default function ProductsTab() {
                           <button
                             onClick={() => {
                               setEditingProduct(product);
+                              setEditImageUrl(product.image_url?.toString() || '');
+                              setEditProductData({
+                                name: product.name,
+                                category: product.category,
+                                wood_type: product.name.toLowerCase().includes('eiche') ? 'Eiche' : 
+                                          product.name.toLowerCase().includes('birke') ? 'Birke' :
+                                          product.name.toLowerCase().includes('fichte') ? 'Fichte' : 'Buche',
+                                size: product.name.match(/(\d+)\s*cm/i)?.[1] + 'cm' || '25cm'
+                              });
+                              // Initialize images for gallery
+                              const initialImages = [];
+                              if (product.image_url) {
+                                initialImages.push({
+                                  id: 'main-' + Date.now(),
+                                  url: product.image_url,
+                                  seoSlug: '',
+                                  storageFilename: '',
+                                  isMain: true
+                                });
+                              }
+                              if (product.additional_images) {
+                                product.additional_images.forEach((url, index) => {
+                                  initialImages.push({
+                                    id: 'additional-' + index + '-' + Date.now(),
+                                    url: url,
+                                    seoSlug: '',
+                                    storageFilename: '',
+                                    isMain: false
+                                  });
+                                });
+                              }
+                              setEditProductImages(initialImages);
+                              setEditProductMainImage(product.image_url?.toString() || '');
                               setIsEditModalOpen(true);
                             }}
                             className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors cursor-pointer whitespace-nowrap"
@@ -622,6 +689,7 @@ export default function ProductsTab() {
                 onClick={() => {
                   setIsEditModalOpen(false);
                   setEditingProduct(null);
+                  setEditImageUrl('');
                 }}
                 className="text-gray-400 hover:text-gray-600 cursor-pointer"
               >
@@ -659,12 +727,13 @@ export default function ProductsTab() {
               const stockQuantityValue = data.stock_quantity?.toString() || "0";
               const minStockLevelValue = data.min_stock_level?.toString() || "0";
               
+              // Use the state value for image_url
               updateProduct({
                 name: data.name?.toString() || "",
                 category: data.category?.toString() || "",
                 description: data.description?.toString(),
                 detailed_description: data.detailed_description?.toString(),
-                image_url: data.image_url?.toString() || "",
+                image_url: editImageUrl,
                 price: parseFloat(priceValue),
                 original_price: originalPriceValue ? parseFloat(originalPriceValue) : null,
                 stock_quantity: parseInt(stockQuantityValue, 10),
@@ -685,7 +754,18 @@ export default function ProductsTab() {
                 <input
                   type="text"
                   name="name"
-                  defaultValue={editingProduct.name}
+                  value={editProductData.name}
+                  onChange={(e) => {
+                    const newName = e.target.value;
+                    setEditProductData(prev => ({
+                      ...prev,
+                      name: newName,
+                      wood_type: newName.toLowerCase().includes('eiche') ? 'Eiche' : 
+                                 newName.toLowerCase().includes('birke') ? 'Birke' :
+                                 newName.toLowerCase().includes('fichte') ? 'Fichte' : 'Buche',
+                      size: newName.match(/(\d+)\s*cm/i)?.[1] + 'cm' || '25cm'
+                    }));
+                  }}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
                   required
                 />
@@ -697,7 +777,8 @@ export default function ProductsTab() {
                 </label>
                 <select
                   name="category"
-                  defaultValue={editingProduct.category}
+                  value={editProductData.category}
+                  onChange={(e) => setEditProductData(prev => ({ ...prev, category: e.target.value }))}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] cursor-pointer pr-8"
                   required
                 >
@@ -738,7 +819,26 @@ export default function ProductsTab() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Lagerbestand (SRM)
+                  Einheit
+                </label>
+                <select
+                  name="unit"
+                  defaultValue={editingProduct.unit || "SRM"}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                >
+                  <option value="SRM">SRM</option>
+                  <option value="RM">RM</option>
+                  <option value="FM">FM</option>
+                  <option value="kg">kg</option>
+                  <option value="Stück">Stück</option>
+                  <option value="Palette">Palette</option>
+                  <option value="m³">m³</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Lagerbestand ({editingProduct.unit || "SRM"})
                 </label>
                 <input
                   type="number"
@@ -751,7 +851,7 @@ export default function ProductsTab() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mindestbestand (SRM)
+                  Mindestbestand ({editingProduct.unit || "SRM"})
                 </label>
                 <input
                   type="number"
@@ -763,32 +863,21 @@ export default function ProductsTab() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Bild-URL
-              </label>
-              <input
-                type="text"
-                name="image_url"
-                defaultValue={editingProduct.image_url}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Produktbilder</label>
+              <ProductImageManager
+                productData={editProductData}
+                onImagesChange={(images: any) => {
+                  setEditProductImages(images);
+                  const mainImage = images.find((img: any) => img.isMain) || images[0];
+                  if (mainImage) {
+                    setEditProductMainImage(mainImage.url);
+                    setEditImageUrl(mainImage.url);
+                  }
+                }}
+                maxImages={6}
+                showMainImageSelector={true}
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Zusätzliche Bilder (optional)
-              </label>
-              <textarea
-                name="additional_images"
-                rows={3}
-                defaultValue={editingProduct.additional_images ? editingProduct.additional_images.join("\\n") : ""}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
-                placeholder="https://beispiel.com/bild2.jpg\nhttps://beispiel.com/bild3.jpg\nhttps://beispiel.com/bild4.jpg"
-              />
-              <div className="text-xs text-gray-500 mt-1">
-                Ein Bild-URL pro Zeile. Diese werden in der Produktgalerie angezeigt.
-              </div>
             </div>
 
             <div>
@@ -858,6 +947,7 @@ export default function ProductsTab() {
                 onClick={() => {
                   setIsEditModalOpen(false);
                   setEditingProduct(null);
+                  setEditImageUrl('');
                 }}
                 className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-bold transition-colors cursor-pointer whitespace-nowrap"
               >
@@ -1081,8 +1171,447 @@ export default function ProductsTab() {
               )}
             </div>
           </div>
+      </div>
+    )}
+
+    {/* Add Product Modal */}
+    {isAddModalOpen && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-[#1A1A1A]">Neues Produkt hinzufügen</h2>
+              <button
+                onClick={() => {
+                  setIsAddModalOpen(false);
+                  setNewProductData({ name: '', category: '', wood_type: 'Buche', size: '25cm' });
+                  setNewProductImages([]);
+                  setNewProductMainImage('');
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <i className="ri-close-line text-2xl"></i>
+              </button>
+            </div>
+          </div>
+
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target as HTMLFormElement);
+              
+              try {
+                const productData = {
+                  name: formData.get('name') as string,
+                  category: formData.get('category') as string,
+                  description: formData.get('description') as string,
+                  detailed_description: formData.get('detailed_description') as string,
+                  price: parseFloat(formData.get('price') as string),
+                  original_price: formData.get('original_price') ? parseFloat(formData.get('original_price') as string) : null,
+                  unit: formData.get('unit') as string,
+                  stock_quantity: parseInt(formData.get('stock_quantity') as string),
+                  min_stock_level: parseInt(formData.get('min_stock_level') as string),
+                  image_url: newProductMainImage,
+                  additional_images: newProductImages.filter(img => !img.isMain).map(img => img.url),
+                  features: (formData.get('features') as string).split('\n').filter(f => f.trim()),
+                  specifications: formData.get('specifications') ? JSON.parse(formData.get('specifications') as string) : {},
+                  wood_type: formData.get('wood_type') as string,
+                   size: formData.get('size') as string,
+                   in_stock: true,
+                   is_active: true,
+                  slug: (formData.get('name') as string).toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+                };
+
+                const { error } = await supabase.from('products').insert([productData]);
+                if (error) throw error;
+
+                alert('Produkt erfolgreich erstellt!');
+                setIsAddModalOpen(false);
+                setNewProductData({ name: '', category: '', wood_type: 'Buche', size: '25cm' });
+                setNewProductImages([]);
+                setNewProductMainImage('');
+                await loadProducts();
+              } catch (error) {
+                console.error('Error creating product:', error);
+                alert('Fehler beim Erstellen des Produkts');
+              }
+            }}
+            className="p-6 space-y-6"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Produktname *</label>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  value={newProductData.name}
+                  onChange={(e) => {
+                    const newName = e.target.value;
+                    setNewProductData(prev => ({
+                      ...prev,
+                      name: newName,
+                      wood_type: newName.toLowerCase().includes('eiche') ? 'Eiche' : 
+                                 newName.toLowerCase().includes('birke') ? 'Birke' :
+                                 newName.toLowerCase().includes('fichte') ? 'Fichte' : 'Buche',
+                      size: newName.match(/(\d+)\s*cm/i)?.[1] + 'cm' || '25cm'
+                    }));
+                  }}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                  placeholder="z.B. Premium Buchenholz"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Kategorie *</label>
+                <select
+                  name="category"
+                  required
+                  value={newProductData.category}
+                  onChange={(e) => setNewProductData(prev => ({ ...prev, category: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                >
+                  <option value="">Kategorie wählen...</option>
+                  <option value="Premium Buche">Premium Buche</option>
+                  <option value="Premium Eiche">Premium Eiche</option>
+                  <option value="Premium Birke">Premium Birke</option>
+                  <option value="Mischholz">Mischholz</option>
+                  <option value="Anzündholz">Anzündholz</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Preis (€) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  name="price"
+                  required
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                  placeholder="29.90"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Ursprungspreis (€)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  name="original_price"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                  placeholder="39.90"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Einheit *</label>
+                <select
+                  name="unit"
+                  defaultValue="pro SRM"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                >
+                  <option value="pro SRM">pro SRM</option>
+                  <option value="pro Tonne">pro Tonne</option>
+                  <option value="pro Stück">pro Stück</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Lagerbestand (SRM) *</label>
+                <input
+                  type="number"
+                  name="stock_quantity"
+                  required
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                  placeholder="100"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Mindestbestand (SRM) *</label>
+                <input
+                  type="number"
+                  name="min_stock_level"
+                  required
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                  placeholder="10"
+                />
+              </div>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Produktbilder</label>
+              <ProductImageManager
+                productData={newProductData}
+                onImagesChange={(images: any) => {
+                  setNewProductImages(images);
+                  const mainImage = images.find((img: any) => img.isMain) || images[0];
+                  if (mainImage) {
+                    setNewProductMainImage(mainImage.url);
+                  }
+                }}
+                maxImages={6}
+                showMainImageSelector={true}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Kurzbeschreibung *</label>
+              <textarea
+                name="description"
+                rows={3}
+                required
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                placeholder="Kurze Produktbeschreibung..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Detailbeschreibung</label>
+              <textarea
+                name="detailed_description"
+                rows={4}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                placeholder="Ausführliche Produktbeschreibung..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Eigenschaften (eine pro Zeile)</label>
+              <textarea
+                name="features"
+                rows={4}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                placeholder="Kammergetrocknet\nRestfeuchte < 20%\nNachhaltiger Anbau\n..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Technische Daten (JSON Format)</label>
+              <textarea
+                name="specifications"
+                rows={4}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] font-mono text-sm"
+                placeholder='{"Holzart": "Buche", "Restfeuchte": "< 20%", "Scheitlänge": "25-33 cm"}'
+              />
+            </div>
+
+            {/* Hidden fields */}
+            <input type="hidden" name="wood_type" value={newProductData.wood_type} />
+            <input type="hidden" name="size" value={newProductData.size} />
+
+            <div className="flex gap-4 pt-4 border-t border-gray-200">
+              <button
+                type="submit"
+                className="bg-[#C04020] hover:bg-[#A03318] text-white px-6 py-3 rounded-lg font-bold transition-colors flex-1"
+              >
+                Produkt erstellen
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddModalOpen(false);
+                  setNewProductData({ name: '', category: '', wood_type: 'Buche', size: '25cm' });
+                  setNewProductImages([]);
+                  setNewProductMainImage('');
+                }}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-bold transition-colors"
+              >
+                Abbrechen
+              </button>
+            </div>
+          </form>
         </div>
-      )}
+      </div>
+    )}
+
+    {/* Product Details Modal */}
+    {selectedProduct && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-[#1A1A1A]">Produktdetails: {selectedProduct.name}</h2>
+              <button
+                onClick={() => setSelectedProduct(null)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <i className="ri-close-line text-2xl"></i>
+              </button>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <img
+                  src={selectedProduct.image_url}
+                  alt={selectedProduct.name}
+                  className="w-full h-64 object-cover rounded-lg"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/placeholder-image.jpg';
+                  }}
+                />
+                {selectedProduct.additional_images && selectedProduct.additional_images.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Zusätzliche Bilder:</h4>
+                    <div className="grid grid-cols-3 gap-2">
+                      {selectedProduct.additional_images.map((url, index) => (
+                        <img
+                          key={index}
+                          src={url}
+                          alt={`${selectedProduct.name} ${index + 1}`}
+                          className="w-full h-20 object-cover rounded"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/placeholder-image.jpg';
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">{selectedProduct.name}</h3>
+                  <p className="text-sm text-gray-600">{selectedProduct.category}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-sm text-gray-500">Preis:</span>
+                    <p className="font-bold text-lg text-[#C04020]">€{selectedProduct.price} {selectedProduct.unit}</p>
+                    {selectedProduct.original_price && (
+                      <p className="text-sm text-gray-500 line-through">€{selectedProduct.original_price}</p>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500">Lagerbestand:</span>
+                    <p className="font-bold">{selectedProduct.stock_quantity} {selectedProduct.unit}</p>
+                    <p className="text-xs text-gray-500">Min: {selectedProduct.min_stock_level} {selectedProduct.unit}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-sm text-gray-500">Status:</span>
+                  <span
+                    className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ml-2 ${
+                      selectedProduct.is_active ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'
+                    }`}
+                  >
+                    {selectedProduct.is_active ? 'Aktiv' : 'Inaktiv'}
+                  </span>
+                </div>
+
+                {selectedProduct.slug && (
+                  <div>
+                    <span className="text-sm text-gray-500">SEO-Slug:</span>
+                    <p className="font-mono text-sm">{selectedProduct.slug}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {selectedProduct.description && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Beschreibung:</h4>
+                <p className="text-gray-600">{selectedProduct.description}</p>
+              </div>
+            )}
+
+            {selectedProduct.detailed_description && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Detailbeschreibung:</h4>
+                <p className="text-gray-600">{selectedProduct.detailed_description}</p>
+              </div>
+            )}
+
+            {selectedProduct.features && selectedProduct.features.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Eigenschaften:</h4>
+                <ul className="list-disc list-inside space-y-1">
+                  {selectedProduct.features.map((feature, index) => (
+                    <li key={index} className="text-gray-600">{feature}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {selectedProduct.specifications && Object.keys(selectedProduct.specifications).length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Technische Daten:</h4>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <pre className="text-sm text-gray-600 whitespace-pre-wrap">
+                    {JSON.stringify(selectedProduct.specifications, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-4 pt-4 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  setSelectedProduct(null);
+                  setEditingProduct(selectedProduct);
+                  setEditImageUrl(selectedProduct.image_url?.toString() || '');
+                  setEditProductData({
+                    name: selectedProduct.name,
+                    category: selectedProduct.category,
+                    wood_type: selectedProduct.name.toLowerCase().includes('eiche') ? 'Eiche' : 
+                              selectedProduct.name.toLowerCase().includes('birke') ? 'Birke' :
+                              selectedProduct.name.toLowerCase().includes('fichte') ? 'Fichte' : 'Buche',
+                    size: selectedProduct.name.match(/(\d+)\s*cm/i)?.[1] + 'cm' || '25cm'
+                  });
+                  const initialImages = [];
+                  if (selectedProduct.image_url) {
+                    initialImages.push({
+                      id: 'main-' + Date.now(),
+                      url: selectedProduct.image_url,
+                      seoSlug: '',
+                      storageFilename: '',
+                      isMain: true
+                    });
+                  }
+                  if (selectedProduct.additional_images) {
+                    selectedProduct.additional_images.forEach((url, index) => {
+                      initialImages.push({
+                        id: 'additional-' + index + '-' + Date.now(),
+                        url: url,
+                        seoSlug: '',
+                        storageFilename: '',
+                        isMain: false
+                      });
+                    });
+                  }
+                  setEditProductImages(initialImages);
+                  setEditProductMainImage(selectedProduct.image_url?.toString() || '');
+                  setIsEditModalOpen(true);
+                }}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                <i className="ri-edit-line mr-2"></i>Bearbeiten
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedProduct(null);
+                  duplicateProduct(selectedProduct.id);
+                }}
+                className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                <i className="ri-file-copy-line mr-2"></i>Duplizieren
+              </button>
+              <button
+                onClick={() => setSelectedProduct(null)}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Schließen
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 }

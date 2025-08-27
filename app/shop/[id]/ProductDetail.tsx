@@ -4,9 +4,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { SEOMetadata } from '@/components/SEOMetadata';
 import WishlistButton from '@/components/WishlistButton';
 import CartNotification from '@/components/CartNotification';
+import ProductImageGalleryDisplay from '@/components/ProductImageGalleryDisplay';
 
 interface Product {
   id: string;
@@ -138,6 +140,7 @@ function getPriceInfoForQuantity(quantity: number, tiers: PricingTier[], minOrde
 
 export default function ProductDetail({ productId }: ProductDetailProps) {
   const router = useRouter();
+  const { products, subscribeToChanges, unsubscribeFromChanges } = useRealtimeSync();
   const [productData, setProductData] = useState<Product | null>(null);
   const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([]);
   const [quantity, setQuantity] = useState<number>(1);
@@ -298,16 +301,35 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
       if (productRes.error) throw productRes.error;
       if (pricingRes.error) throw pricingRes.error;
 
-      setProductData(productRes.data);
-      setPricingTiers(pricingRes.data || []);
+      setProductData(productRes.data as unknown as Product);
+        setPricingTiers((pricingRes.data || []) as unknown as PricingTier[]);
       setQuantity(minOrderQuantity);
     } catch (error: unknown) {
       console.error('Fehler beim Laden des Produkts:', error);
       
-      // Fallback-Produkt verwenden, wenn Datenbank nicht erreichbar ist
+      // Fallback-Produkt verwenden, aber mit aktualisierter Bild-URL aus Datenbank falls verfügbar
       if (fallbackProducts[actualProductId]) {
         console.log(`Verwende Fallback-Produkt für ID ${actualProductId}`);
-        setProductData(fallbackProducts[actualProductId]);
+        const fallbackProduct = { ...fallbackProducts[actualProductId] };
+        
+        // Versuche, die aktuelle Bild-URL aus der Datenbank zu holen
+        try {
+          const { data: imageData } = await supabase
+            .from('products')
+            .select('image_url, additional_images')
+            .eq('id', actualProductId)
+            .single();
+          
+          if (imageData && (imageData as any).image_url) {
+             fallbackProduct.image_url = (imageData as any).image_url;
+             fallbackProduct.additional_images = (imageData as any).additional_images || [];
+            console.log('Bild-URL aus Datenbank aktualisiert:', (imageData as any).image_url);
+          }
+        } catch (imageError) {
+          console.log('Konnte Bild-URL nicht aus Datenbank laden, verwende Fallback-Bild');
+        }
+        
+        setProductData(fallbackProduct);
         
         // Passende Preisstufen für dieses Produkt filtern
         const relevantTiers = fallbackPricingTiers.filter(tier => tier.product_id === actualProductId);
@@ -318,6 +340,44 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
       setIsLoading(false);
     }
   };
+
+  // Real-time Synchronisation mit zentralem Hook
+  useEffect(() => {
+    subscribeToChanges();
+    return () => {
+      unsubscribeFromChanges();
+    };
+  }, [subscribeToChanges, unsubscribeFromChanges]);
+
+  // Reagiere auf Änderungen in den Real-time Produktdaten
+  useEffect(() => {
+    const realtimeProduct = products.find(p => p.id.toString() === actualProductId);
+    if (realtimeProduct && productData) {
+      // Konvertiere Real-time Produkt zu lokalem Format
+      const updatedProduct: Product = {
+        id: realtimeProduct.id.toString(),
+        name: realtimeProduct.name,
+        description: realtimeProduct.description,
+        price: realtimeProduct.price,
+        image_url: realtimeProduct.image_url,
+        category: realtimeProduct.category,
+        stock_quantity: realtimeProduct.stock_quantity,
+        unit: realtimeProduct.unit,
+        features: realtimeProduct.features,
+        specifications: realtimeProduct.specifications,
+        delivery_info: productData.delivery_info,
+        meta_title: productData.meta_title,
+        meta_description: productData.meta_description,
+        detailed_description: productData.detailed_description,
+        technical_specs: productData.technical_specs,
+        additional_images: productData.additional_images,
+        original_price: realtimeProduct.original_price
+      };
+      
+      console.log(`Real-time Update für Produkt ${actualProductId}:`, updatedProduct.name);
+      setProductData(updatedProduct);
+    }
+  }, [products, actualProductId, productData]);
 
   useEffect(() => {
     // Initial data fetch
@@ -369,7 +429,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
 
     const pricing = getCurrentPricing();
     if (!pricing.canOrder) {
-      alert(`Mindestbestellung ${minOrderQuantity} SRM`);
+      alert(`Mindestbestellung ${minOrderQuantity} ${productData.unit}`);
       return;
     }
 
@@ -526,36 +586,10 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
               {productData.stock_quantity} SRM verfügbar
             </div>
 
-            <div className="mb-4">
-              <img
-                src={productData.image_url}
-                alt={`${productData.name} - Premium ${productData.category} Brennholz`}
-                className="main-product-image w-full h-[500px] object-cover object-top rounded-2xl shadow-lg"
-              />
-            </div>
-
-            {productData.additional_images && productData.additional_images.length > 0 && (
-              <div className="grid grid-cols-4 gap-2">
-                {productData.additional_images.slice(0, 4).map((imageUrl: string, index: number) => (
-                  <div key={index} className="relative group cursor-pointer">
-                    <img
-                      src={imageUrl}
-                      alt={`${productData.name} - Detailansicht ${index + 1}`}
-                      className="w-full h-24 object-cover rounded-lg shadow-sm group-hover:shadow-md transition-shadow"
-                      onClick={(event) => {
-                        const mainImg = document.querySelector('.main-product-image') as HTMLImageElement;
-                        if (mainImg) {
-                          const tempSrc = mainImg.src;
-                          mainImg.src = imageUrl;
-                          (event.target as HTMLImageElement).src = tempSrc;
-                        }
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded-lg transition-all"></div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <ProductImageGalleryDisplay
+              productName={productData.name}
+              productId={parseInt(urlToProductId[productId] || '0')}
+            />
           </div>
 
           <div className="space-y-6">
@@ -576,20 +610,20 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
               <div className="space-y-3">
                 <div className="text-sm text-blue-700">
                   <p>
-                    <strong>Mindestbestellung:</strong> {minOrderQuantity} SRM
+                    <strong>Mindestbestellung:</strong> {minOrderQuantity} {productData.unit}
                   </p>
                 </div>
                 <div className="text-sm text-red-600 flex justify-between">
-                  <span>3-5 SRM</span>
-                  <span className="font-medium">30% Zuschlag je SRM</span>
+                  <span>3-5 {productData.unit}</span>
+                  <span className="font-medium">30% Zuschlag je {productData.unit}</span>
                 </div>
                 <div className="text-sm text-blue-700 flex justify-between">
-                  <span>6-24 SRM</span>
+                  <span>6-24 {productData.unit}</span>
                   <span className="font-medium">Normalpreis</span>
                 </div>
                 <div className="text-sm text-green-600 flex justify-between">
-                  <span>ab 25 SRM</span>
-                  <span className="font-medium">€2,50 Rabatt je SRM</span>
+                  <span>ab 25 {productData.unit}</span>
+                  <span className="font-medium">€2,50 Rabatt je {productData.unit}</span>
                 </div>
               </div>
             </div>
@@ -637,7 +671,16 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
                   <div className="text-3xl font-black text-[#C04020]">
                     €{currentPricing.price.toFixed(2)}
                   </div>
-                  <div className="text-sm text-gray-600">{productData.unit}</div>
+                  <div className="text-sm text-gray-600">
+                    {productData.unit === 'SRM' ? 'pro Schüttraummeter' : 
+                     productData.unit === 'RM' ? 'pro Raummeter' :
+                     productData.unit === 'FM' ? 'pro Festmeter' :
+                     productData.unit === 'kg' ? 'pro Kilogramm' :
+                     productData.unit === 'Stück' ? 'pro Stück' :
+                     productData.unit === 'Palette' ? 'pro Palette' :
+                     productData.unit === 'm³' ? 'pro Kubikmeter' :
+                     productData.unit || 'pro Schüttraummeter'}
+                  </div>
                   <div className={`text-sm font-medium ${priceInfo.color}`}>
                     {priceInfo.info}
                   </div>
@@ -645,7 +688,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
               </div>
 
               <div className="flex items-center space-x-4 mb-6">
-                <label className="text-sm font-bold text-[#1A1A1A]">Menge (SRM):</label>
+                <label className="text-sm font-bold text-[#1A1A1A]">Menge ({productData.unit}):</label>
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => setQuantity(Math.max(minOrderQuantity, quantity - 1))}

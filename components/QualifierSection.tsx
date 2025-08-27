@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import Link from 'next/link';
 
 export default function QualifierSection() {
   const [isVisible, setIsVisible] = useState(false);
@@ -14,7 +15,7 @@ export default function QualifierSection() {
           setIsVisible(true);
         }
       },
-      { threshold: 0.2 }
+      { threshold: 0.1 }
     );
 
     if (sectionRef.current) {
@@ -61,13 +62,13 @@ export default function QualifierSection() {
                 {[{
                   icon: 'ri-home-line',
                   title: 'Sauberkeitsfanatiker',
-                  desc: 'Sie wollen KEIN DRECK IN DER WOHNUNG und schätzen sauberes, gleichmäßiges Holz ohne Rinde und Schmutz',
+                  desc: 'Sie wollen KEIN DRECK IN DER WOHNUNG und schätzen sauberes Holz ohne Rinde und Schmutz',
                   delay: 400
                 },
                 {
                   icon: 'ri-hammer-line',
                   title: 'Praktische & nachhaltige Menschen',
-                  desc: 'Sie verstehen, dass Möbelholz mit kleinen Fehlern genauso gut brennt wie perfektes Holz - nur günstiger',
+                  desc: 'Sie verstehen, dass Möbelholz mit kleinen Fehlern genauso gut brennt wie perfektes Holz',
                   delay: 600
                 },
                 {
@@ -77,27 +78,15 @@ export default function QualifierSection() {
                   delay: 800
                 },
                 {
-                  icon: 'ri-fire-line',
-                  title: 'Heizprofis',
-                  desc: 'Sie heizen regelmäßig (nicht nur gelegentlich) und verbrauchen mehr als 2 SRM pro Saison',
-                  delay: 1000
-                },
-                {
                   icon: 'ri-hand-coin-line',
                   title: 'Handlichkeitsliebhaber',
-                  desc: 'Sie wollen gleichmäßige, rechteckige Stücke, die viel handlicher und einfacher zu stapeln sind',
+                    desc: 'Sie wollen rechteckige Stücke, die viel handlicher und einfacher zu stapeln sind',
                   delay: 1200
-                },
-                {
-                  icon: 'ri-warehouse-line',
-                  title: 'Großmengen-Vorratskäufer',
-                  desc: 'Sie kaufen alle 2-3 Jahre große Mengen auf Vorrat, haben aber keine optimalen Lagerbedingungen',
-                  delay: 800
                 },
                 {
                   icon: 'ri-stack-line',
                   title: 'Platzsparliebhaber',
-                  desc: 'Ca. 25% weniger Platzbedarf beim Stapeln von Industrieholz',
+                    desc: 'Ca. 50% weniger Platzbedarf beim Stapeln von Industrieholz',
                   delay: 1200
                 }].map((item, index) => (
                   <div key={index} className={`flex items-start bg-white rounded-lg p-3 sm:p-4 shadow-sm transition-all duration-500 transform hover:translate-x-1 sm:hover:translate-x-2 hover:shadow-lg ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ transitionDelay: `${item.delay}ms` }}>
@@ -143,7 +132,7 @@ export default function QualifierSection() {
                 {
                   icon: 'ri-fire-fill',
                   title: 'Zentrale Holzvergaserheizungen',
-                  desc: 'Sie haben eine zentrale Holzvergaserheizung - dort entsteht zu hohe Hitzeentwicklung durch Industrieholz',
+                    desc: 'Bei modernen Holzvergasern kann es durch das Industrieholz zu einer zu hohen Hitzeentwicklung kommen.',
                   delay: 900
                 },
                 {
@@ -151,12 +140,6 @@ export default function QualifierSection() {
                   title: 'Spezielle Größenanforderungen',
                   desc: 'Ihr Ofen braucht sehr spezifische Holzmaße (→ unser Scheitholz in 25cm/33cm ist besser)',
                   delay: 1000
-                },
-                {
-                  icon: 'ri-money-dollar-circle-line',
-                  title: 'Preisunempfindliche',
-                  desc: 'Sie wollen das Allerbeste ohne Rücksicht auf Kosten (→ unser Premium Scheitholz Buche)',
-                  delay: 1200
                 },
                 {
                   icon: 'ri-time-line',
@@ -217,24 +200,13 @@ export default function QualifierSection() {
 
             {/* Mobile-optimierte Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-              <button className="bg-white text-[#C04020] px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-lg font-bold hover:bg-gray-100 transition-all duration-300 whitespace-nowrap cursor-pointer text-sm sm:text-base w-full sm:w-auto transform hover:scale-105 hover:-translate-y-1">
+              <Link href="/kontakt" className="bg-white text-[#C04020] px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-lg font-bold hover:bg-gray-100 transition-all duration-300 whitespace-nowrap cursor-pointer text-sm sm:text-base w-full sm:w-auto transform hover:scale-105 hover:-translate-y-1 inline-flex items-center justify-center">
                 <div className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center mr-2 inline-flex">
                   <i className="ri-phone-line"></i>
                 </div>
                 <span>Kostenlose Beratung</span>
-              </button>
-              <button className="border-2 border-white text-white px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-lg font-bold hover:bg-white hover:text-[#C04020] transition-all duration-300 whitespace-nowrap cursor-pointer text-sm sm:text-base w-full sm:w-auto transform hover:scale-105 hover:-translate-y-1">
-                <div className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center mr-2 inline-flex">
-                  <i className="ri-mail-line"></i>
-                </div>
-                <span>Testkarton per Post</span>
-              </button>
+              </Link>
             </div>
-            
-            <p className="text-xs sm:text-sm opacity-75 mt-3 sm:mt-4 px-2">
-              <i className="ri-information-line mr-1"></i>
-              Testkarton: Kleine Probemenge wird Ihnen bequem per Post zugesandt
-            </p>
           </div>
         </div>
       </div>

@@ -69,7 +69,7 @@ export default function DatenschutzPage() {
                       Frankfurter Straße 3<br />
                       36419 Buttlar<br />
                       Deutschland<br /><br />
-                      <strong>Telefon:</strong> 0176-22572100<br />
+                      <strong>Telefon:</strong> +49 176 71085234<br />
                       <strong>E-Mail:</strong> info@brennholz-koenig.de<br />
                       <strong>Website:</strong> www.brennholzkoenig.de
                     </p>

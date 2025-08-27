@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 
 export default function AccountPage() {
@@ -15,10 +15,7 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // Using the centralized Supabase client from lib/supabase.ts
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
