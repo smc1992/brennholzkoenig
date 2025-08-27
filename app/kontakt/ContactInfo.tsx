@@ -65,6 +65,46 @@ export default function ContactInfo() {
                 </div>
               </div>
             </div>
+
+            {/* WhatsApp */}
+            <div className="bg-gradient-to-r from-[#F5F0E0] to-white rounded-2xl p-6 shadow-lg border border-[#D4A520]/20">
+              <div className="flex items-center">
+                <div className="w-16 h-16 flex items-center justify-center bg-[#25D366] rounded-full mr-6 flex-shrink-0">
+                  <i className="ri-whatsapp-fill text-white text-2xl"></i>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-black text-[#1A1A1A] mb-2" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+                    WHATSAPP
+                  </h3>
+                  <a href="https://wa.me/4917671085234" className="text-2xl font-bold text-[#C04020] hover:text-[#A03318] transition-colors duration-300 cursor-pointer">
+                    +49 176 71085234
+                  </a>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Schnelle Nachrichten und Bilder senden
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="bg-gradient-to-r from-[#F5F0E0] to-white rounded-2xl p-6 shadow-lg border border-[#D4A520]/20">
+              <div className="flex items-center">
+                <div className="w-16 h-16 flex items-center justify-center bg-[#1A1A1A] rounded-full mr-6 flex-shrink-0">
+                  <i className="ri-mail-fill text-white text-2xl"></i>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-black text-[#1A1A1A] mb-2" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+                    E-MAIL
+                  </h3>
+                  <a href="mailto:info@brennholz-koenig.de" className="text-xl font-bold text-[#C04020] hover:text-[#A03318] transition-colors duration-300 cursor-pointer break-all">
+                    info@brennholz-koenig.de
+                  </a>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Für ausführliche Anfragen und Informationen
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -34,22 +34,6 @@ export default function LocationMap() {
               </div>
 
               <div className="flex items-start">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center bg-[#D4A520] rounded-full mr-4 sm:mr-6 flex-shrink-0">
-                  <i className="ri-phone-line text-white text-lg sm:text-2xl"></i>
-                </div>
-                <div>
-                  <h3 className="text-lg sm:text-xl font-black text-[#1A1A1A] mb-2" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-                    TELEFON
-                  </h3>
-                  <div className="space-y-1">
-                    <p className="font-bold text-base sm:text-lg text-[#C04020]">0561-43071895</p>
-                    <p className="text-xs sm:text-sm text-gray-600">Montag bis Freitag: 7:00 - 18:00 Uhr</p>
-                    <p className="text-xs sm:text-sm text-gray-600">Samstag: 8:00 - 14:00 Uhr</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center bg-[#1A1A1A] rounded-full mr-4 sm:mr-6 flex-shrink-0">
                   <i className="ri-smartphone-line text-white text-lg sm:text-2xl"></i>
                 </div>
@@ -100,30 +84,7 @@ export default function LocationMap() {
           </div>
         </div>
 
-        <div className="mt-8 sm:mt-12 text-center">
-          <div className="bg-gradient-to-r from-[#1A1A1A] to-[#2A2A2A] text-white rounded-2xl p-6 sm:p-8 inline-block">
-            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-              <div className="w-16 h-16 flex items-center justify-center bg-[#D4A520] rounded-full flex-shrink-0">
-                <i className="ri-customer-service-line text-2xl"></i>
-              </div>
-              <div className="text-center sm:text-left">
-                <h3 className="text-xl sm:text-2xl font-black mb-2" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-                  Persönliche Beratung vor Ort
-                </h3>
-                <p className="text-sm sm:text-base opacity-90">
-                  Vereinbaren Sie einen Termin und lassen Sie sich vor Ort von der Qualität 
-                  unseres Premium-Brennholzes überzeugen.
-                </p>
-              </div>
-              <a 
-                href="tel:0561-43071895"
-                className="bg-[#C04020] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#A03318] transition-all duration-300 whitespace-nowrap cursor-pointer"
-              >
-                Termin vereinbaren
-              </a>
-            </div>
-          </div>
-        </div>
+
       </div>
     </section>
   );
