@@ -279,9 +279,9 @@ Eingegangen am: ${new Date().toLocaleString('de-DE')}
   };
 
   return (
-    <section ref={sectionRef} className="py-8 sm:py-12 lg:py-16 bg-gradient-to-br from-[#F5F0E0] to-white">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto lg:mx-0">
+    <section ref={sectionRef} className="py-8 sm:py-12 lg:py-16 bg-gradient-to-br from-[#F5F0E0] to-white overflow-hidden">
+      <div className="w-full max-w-full px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto lg:mx-0 w-full">
           {/* Premium Badge */}
           <div className={`inline-flex items-center bg-[#D4A520] text-[#1A1A1A] px-3 sm:px-4 py-2 rounded-full font-bold text-xs sm:text-sm mb-4 sm:mb-6 transition-all duration-1000 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
             <i className="ri-fire-line mr-2 flex-shrink-0"></i>

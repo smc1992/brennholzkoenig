@@ -3,8 +3,8 @@
 
 export default function LocationMap() {
   return (
-    <section className="py-12 sm:py-16 bg-gradient-to-br from-[#F5F0E0] to-white">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-12 sm:py-16 bg-gradient-to-br from-[#F5F0E0] to-white overflow-hidden">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-full">
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#1A1A1A] mb-4" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
             UNSER <span className="text-[#C04020]">STANDORT</span>
@@ -14,8 +14,8 @@ export default function LocationMap() {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-start">
-          <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-start w-full max-w-full overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 w-full max-w-full">
             <div className="space-y-6">
               <div className="flex items-start">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center bg-[#C04020] rounded-full mr-4 sm:mr-6 flex-shrink-0">
