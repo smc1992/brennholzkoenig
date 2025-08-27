@@ -63,7 +63,7 @@ export default function ProductSection() {
           .select('*')
           .eq('is_active', true)
           .eq('in_stock', true)
-          .limit(6)
+          .limit(3)
           .order('id');
 
         if (error) throw error;
@@ -192,7 +192,14 @@ export default function ProductSection() {
                     </div>
                   )}
                   <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                    {product.stock_quantity} {product.unit} verfügbar
+                    {product.stock_quantity} {product.unit === 'SRM' ? 'SRM' : 
+                     product.unit === 'RM' ? 'RM' :
+                     product.unit === 'FM' ? 'FM' :
+                     product.unit === 'kg' ? 'kg' :
+                     product.unit === 'Stück' ? 'Stück' :
+                     product.unit === 'Palette' ? 'Palette' :
+                     product.unit === 'm³' ? 'm³' :
+                     product.unit} verfügbar
                   </div>
                 </div>
 
@@ -236,7 +243,16 @@ export default function ProductSection() {
                       <div className="text-2xl font-black text-[#C04020]">
                         €{formatPrice(product.price)}
                       </div>
-                      <div className="text-xs text-gray-500">pro {product.unit}</div>
+                      <div className="text-xs text-gray-500">
+                         {product.unit === 'SRM' ? 'pro Schüttraummeter' : 
+                          product.unit === 'RM' ? 'pro Raummeter' :
+                          product.unit === 'FM' ? 'pro Festmeter' :
+                          product.unit === 'kg' ? 'pro Kilogramm' :
+                          product.unit === 'Stück' ? 'pro Stück' :
+                          product.unit === 'Palette' ? 'pro Palette' :
+                          product.unit === 'm³' ? 'pro Kubikmeter' :
+                          product.unit || 'pro Schüttraummeter'}
+                       </div>
                     </div>
                     {product.original_price && (
                       <div className="text-right">

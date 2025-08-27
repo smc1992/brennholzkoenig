@@ -243,18 +243,16 @@ export default function ProductGrid() {
                       <div className="text-2xl font-bold text-[#C04020]">
                         {formatPrice(product.price)}
                       </div>
-                      {product.unit && (
-                        <div className="text-sm text-gray-500">
-                          {product.unit === 'SRM' ? 'pro Schüttraummeter' : 
-                           product.unit === 'RM' ? 'pro Raummeter' :
-                           product.unit === 'FM' ? 'pro Festmeter' :
-                           product.unit === 'kg' ? 'pro Kilogramm' :
-                           product.unit === 'Stück' ? 'pro Stück' :
-                           product.unit === 'Palette' ? 'pro Palette' :
-                           product.unit === 'm³' ? 'pro Kubikmeter' :
-                           product.unit}
-                        </div>
-                      )}
+                      <div className="text-sm text-gray-500">
+                        {product.unit === 'SRM' ? 'pro Schüttraummeter' : 
+                         product.unit === 'RM' ? 'pro Raummeter' :
+                         product.unit === 'FM' ? 'pro Festmeter' :
+                         product.unit === 'kg' ? 'pro Kilogramm' :
+                         product.unit === 'Stück' ? 'pro Stück' :
+                         product.unit === 'Palette' ? 'pro Palette' :
+                         product.unit === 'm³' ? 'pro Kubikmeter' :
+                         product.unit || 'pro Schüttraummeter'}
+                      </div>
                     </div>
                     
                     <Link 
