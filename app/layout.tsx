@@ -12,6 +12,8 @@ import FacebookPixel from '../components/FacebookPixel';
 import GoogleAdsTracking from '../components/GoogleAdsTracking';
 // PWA functionality removed
 import AnalyticsTracker from '@/components/AnalyticsTracker';
+import { QueryProvider } from '@/components/QueryProvider';
+import PerformanceMonitor from '@/components/PerformanceMonitor';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -102,14 +104,17 @@ export default function RootLayout({
         <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet" />
       </head>
       <body className={`${inter.className} min-h-dvh bg-pergament text-tiefschwarz antialiased`}>
-        <CookieBanner />
-        <Header />
-        <main>{children}</main>
-        <Footer />
-        <GoogleAnalytics />
-        <FacebookPixel pixelId="123456789012345" />
-        <GoogleAdsTracking />
-        <AnalyticsTracker />
+        <QueryProvider>
+          <CookieBanner />
+          <Header />
+          <main>{children}</main>
+          <Footer />
+          <GoogleAnalytics />
+          <FacebookPixel pixelId="123456789012345" />
+          <GoogleAdsTracking />
+          <AnalyticsTracker />
+          <PerformanceMonitor />
+        </QueryProvider>
       </body>
     </html>
   )

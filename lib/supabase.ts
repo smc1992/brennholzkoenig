@@ -19,7 +19,7 @@ const isProduction = process.env.NODE_ENV === 'production'
 const getSupabaseClient = () => {
   if (supabaseInstance) return supabaseInstance;
   
-  // Supabase Client erstellen mit verbesserten Optionen
+  // Supabase Client erstellen mit Performance-Optimierungen
   supabaseInstance = createClient(
     supabaseUrl,
     supabaseAnonKey,
@@ -27,18 +27,22 @@ const getSupabaseClient = () => {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: true
+        detectSessionInUrl: true,
+        flowType: 'pkce'
       },
       global: {
         headers: {
           'X-Client-Info': 'brennholzkoenig-website',
         },
       },
-      // Verbesserte Timeout-Einstellungen für Produktionsumgebung
+      // Optimierte Realtime-Einstellungen
       realtime: {
-        timeout: 60000, // 60 Sekunden Timeout
+        timeout: 30000, // 30 Sekunden Timeout
+        heartbeatIntervalMs: 30000, // 30 Sekunden Heartbeat
+        reconnectAfterMs: (tries: number) => Math.min(tries * 1000, 10000),
         params: {
-          eventsPerSecond: 10
+          eventsPerSecond: 20, // Erhöht für bessere Performance
+          log_level: isProduction ? 'error' : 'info'
         }
       }
     }

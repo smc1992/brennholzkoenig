@@ -229,6 +229,36 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
 
         <button
           type="button"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
+          className={`px-3 py-1 rounded text-sm font-medium ${
+            editor.isActive('heading', { level: 4 }) ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          H4
+        </button>
+
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 5 }).run()}
+          className={`px-3 py-1 rounded text-sm font-medium ${
+            editor.isActive('heading', { level: 5 }) ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          H5
+        </button>
+
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 6 }).run()}
+          className={`px-3 py-1 rounded text-sm font-medium ${
+            editor.isActive('heading', { level: 6 }) ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          H6
+        </button>
+
+        <button
+          type="button"
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           className={`px-3 py-1 rounded text-sm font-medium ${
             editor.isActive('blockquote') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'

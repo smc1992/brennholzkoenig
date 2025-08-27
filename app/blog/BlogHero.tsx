@@ -2,7 +2,7 @@
 
 export default function BlogHero() {
   return (
-    <section className="relative bg-gradient-to-br from-green-50 to-green-100 py-20">
+    <section className="relative bg-gradient-to-br from-orange-50 to-orange-100 py-20">
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10"
         style={{
@@ -14,7 +14,7 @@ export default function BlogHero() {
         <div className="max-w-3xl">
           <h1 className="text-5xl md:text-6xl font-bold text-[#1A1A1A] mb-6 leading-tight">
             Brennholz
-            <span className="text-green-600 block">Ratgeber</span>
+            <span className="text-[#C04020] block">Ratgeber</span>
           </h1>
           
           <p className="text-xl text-gray-700 mb-8 leading-relaxed">
@@ -24,17 +24,17 @@ export default function BlogHero() {
           
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-sm">
-              <i className="ri-book-open-line text-green-600 mr-3 text-xl"></i>
+              <i className="ri-book-open-line text-[#C04020] mr-3 text-xl"></i>
               <span className="font-medium text-gray-800">Expertenwissen</span>
             </div>
             
             <div className="flex items-center bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-sm">
-              <i className="ri-leaf-line text-green-600 mr-3 text-xl"></i>
+              <i className="ri-leaf-line text-[#C04020] mr-3 text-xl"></i>
               <span className="font-medium text-gray-800">Nachhaltigkeit</span>
             </div>
             
             <div className="flex items-center bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-sm">
-              <i className="ri-fire-line text-green-600 mr-3 text-xl"></i>
+              <i className="ri-fire-line text-[#C04020] mr-3 text-xl"></i>
               <span className="font-medium text-gray-800">Praxis-Tipps</span>
             </div>
           </div>

@@ -59,8 +59,8 @@ export default function BlogGrid() {
       }
 
       const { data } = await query;
-      setPosts(data || []);
-      setFilteredPosts(data || []);
+      setPosts((data as unknown as BlogPost[]) || []);
+      setFilteredPosts((data as unknown as BlogPost[]) || []);
     } catch (error) {
       console.error('Error loading blog posts:', error);
     } finally {
@@ -77,7 +77,7 @@ export default function BlogGrid() {
         .eq('status', 'published')
         .eq('is_active', true);
 
-      const uniqueCategories = [...new Set(data?.map(item => item.category).filter(Boolean))];
+      const uniqueCategories = [...new Set(data?.map((item: any) => item.category).filter(Boolean))] as string[];
       setCategories(uniqueCategories);
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -126,7 +126,7 @@ export default function BlogGrid() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Blog durchsuchen..."
-              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C04020] focus:border-transparent text-sm"
             />
           </div>
 
@@ -135,7 +135,7 @@ export default function BlogGrid() {
               onClick={() => setSelectedCategory('Alle')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer whitespace-nowrap ${
                 selectedCategory === 'Alle'
-                  ? 'bg-green-600 text-white'
+                  ? 'bg-[#C04020] text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -147,7 +147,7 @@ export default function BlogGrid() {
                 onClick={() => setSelectedCategory(category)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer whitespace-nowrap ${
                   selectedCategory === category
-                    ? 'bg-green-600 text-white'
+                    ? 'bg-[#C04020] text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -183,7 +183,7 @@ export default function BlogGrid() {
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   {post.category && (
-                    <span className="absolute top-4 left-4 bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold">
+                    <span className="absolute top-4 left-4 bg-[#C04020] text-white px-3 py-1 rounded-full text-xs font-bold">
                       {post.category}
                     </span>
                   )}
@@ -200,7 +200,7 @@ export default function BlogGrid() {
                 </div>
 
                 <Link href={`/blog/${post.slug}`}>
-                  <h3 className="text-xl font-bold text-[#1A1A1A] mb-3 group-hover:text-green-600 transition-colors leading-tight">
+                  <h3 className="text-xl font-bold text-[#1A1A1A] mb-3 group-hover:text-[#C04020] transition-colors leading-tight">
                     {post.title}
                   </h3>
                 </Link>
@@ -212,7 +212,7 @@ export default function BlogGrid() {
                 <div className="flex items-center justify-between">
                   <Link
                     href={`/blog/${post.slug}`}
-                    className="inline-flex items-center text-green-600 hover:text-green-700 font-medium transition-colors cursor-pointer"
+                    className="inline-flex items-center text-[#C04020] hover:text-[#A03318] font-medium transition-colors cursor-pointer"
                   >
                     Weiterlesen
                     <i className="ri-arrow-right-line ml-2"></i>
@@ -235,7 +235,7 @@ export default function BlogGrid() {
       {/* Load More */}
       {posts.length > 0 && posts.length % 9 === 0 && (
         <div className="text-center mt-12">
-          <button className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold transition-colors cursor-pointer whitespace-nowrap">
+          <button className="bg-[#C04020] hover:bg-[#A03318] text-white px-8 py-3 rounded-xl font-bold transition-colors cursor-pointer whitespace-nowrap">
             Mehr Artikel laden
           </button>
         </div>
