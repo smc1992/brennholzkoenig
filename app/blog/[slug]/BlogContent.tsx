@@ -1,44 +1,8 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import SocialShare from '../../../components/SocialShare';
 import Link from 'next/link';
-
-interface SocialShareProps {
-  url: string;
-  title: string;
-}
-
-const SocialShare = ({ url, title }: SocialShareProps) => {
-  return (
-    <div className="flex gap-2">
-      <a 
-        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full transition-colors"
-      >
-        <i className="ri-facebook-fill"></i>
-      </a>
-      <a 
-        href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="bg-sky-500 hover:bg-sky-600 text-white p-2 rounded-full transition-colors"
-      >
-        <i className="ri-twitter-fill"></i>
-      </a>
-      <a 
-        href={`https://wa.me/?text=${encodeURIComponent(title + ' ' + url)}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="bg-[#C04020] hover:bg-[#A03318] text-white p-2 rounded-full transition-colors"
-      >
-        <i className="ri-whatsapp-fill"></i>
-      </a>
-    </div>
-  );
-};
 
 interface BlogPost {
   id: string;
@@ -78,12 +42,11 @@ export default function BlogContent({ slug }: BlogContentProps) {
       'Tipps & Tricks': 'bg-blue-100 text-blue-800',
       'Produkte': 'bg-purple-100 text-purple-800'
     };
-    
     return colors[category] || 'bg-gray-100 text-gray-800';
   };
 
   useEffect(() => {
-    loadBlogPost();
+    loadPost();
   }, [slug]);
 
   useEffect(() => {
@@ -102,7 +65,6 @@ export default function BlogContent({ slug }: BlogContentProps) {
       const text = heading.textContent || '';
       const id = `heading-${index}`;
       
-      // Add ID to heading for anchor links
       heading.id = id;
       
       return {
@@ -136,7 +98,7 @@ export default function BlogContent({ slug }: BlogContentProps) {
     return doc.body.innerHTML;
   };
 
-  const loadBlogPost = async () => {
+  const loadPost = async () => {
     try {
       const { data } = await supabase
         .from('page_contents')
@@ -268,65 +230,69 @@ export default function BlogContent({ slug }: BlogContentProps) {
               Home
             </Link>
           </li>
-          <i className="ri-arrow-right-s-line text-gray-300"></i>
+          <li className="text-gray-400">/</li>
           <li>
             <Link href="/blog" className="text-gray-500 hover:text-[#C04020] transition-colors">
-              <i className="ri-article-line mr-1"></i>
               Blog
             </Link>
           </li>
-          <i className="ri-arrow-right-s-line text-gray-300"></i>
-          <li className="text-gray-800 font-medium">{post.title}</li>
+          <li className="text-gray-400">/</li>
+          <li className="text-gray-900 font-medium truncate">{post.title}</li>
         </ol>
       </nav>
 
       {/* Article Header */}
       <header className="mb-16">
-        <div className="text-center max-w-4xl mx-auto">
-          {post.category && (
-            <div className="mb-6">
-              <span className="inline-flex items-center bg-gradient-to-r from-orange-100 to-red-50 text-[#C04020] px-6 py-3 rounded-full text-sm font-bold border border-orange-200">
-                <i className="ri-bookmark-line mr-2"></i>
-                {post.category}
-              </span>
-            </div>
-          )}
-
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-[#1A1A1A] mb-8 leading-tight tracking-tight">
-            {post.title}
-          </h1>
-
-          {post.excerpt && (
-            <p className="text-xl md:text-2xl text-gray-600 mb-10 leading-relaxed font-light">
-              {post.excerpt}
-            </p>
-          )}
-
-          <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-gray-500 mb-12">
-            <div className="flex items-center bg-gray-50 px-4 py-2 rounded-full">
-              <i className="ri-calendar-line mr-2 text-[#C04020]"></i>
-              <time className="font-medium">{formatDate(post.created_at)}</time>
-            </div>
-            <div className="flex items-center bg-gray-50 px-4 py-2 rounded-full">
-              <i className="ri-time-line mr-2 text-[#C04020]"></i>
-              <span className="font-medium">{post.reading_time || '5'} Min. Lesezeit</span>
-            </div>
-            <div className="flex items-center bg-gray-50 px-4 py-2 rounded-full">
-              <i className="ri-eye-line mr-2 text-[#C04020]"></i>
-              <span className="font-medium">{post.views || 0} Aufrufe</span>
-            </div>
-          </div>
+        <div className="mb-6">
+          <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-bold ${getCategoryColor(post.category)}`}>
+            <i className="ri-bookmark-line mr-2"></i>
+            {post.category}
+          </span>
         </div>
 
-        {/* Featured Image */}
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 leading-tight mb-8">
+          {post.title}
+        </h1>
+
+        {post.excerpt && (
+          <p className="text-xl text-gray-600 leading-relaxed mb-8 max-w-4xl">
+            {post.excerpt}
+          </p>
+        )}
+
+        <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 mb-12">
+          {post.author && (
+            <div className="flex items-center">
+              <i className="ri-user-line mr-2"></i>
+              <span>{post.author}</span>
+            </div>
+          )}
+          <div className="flex items-center">
+            <i className="ri-calendar-line mr-2"></i>
+            <time>{formatDate(post.created_at)}</time>
+          </div>
+          {post.reading_time && (
+            <div className="flex items-center">
+              <i className="ri-time-line mr-2"></i>
+              <span>{post.reading_time} Min. Lesezeit</span>
+            </div>
+          )}
+          {post.views && (
+            <div className="flex items-center">
+              <i className="ri-eye-line mr-2"></i>
+              <span>{post.views} Aufrufe</span>
+            </div>
+          )}
+        </div>
+
         {post.featured_image && (
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl mb-16">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10"></div>
+          <div className="relative overflow-hidden rounded-3xl shadow-2xl mb-16">
             <img
               src={post.featured_image}
               alt={post.title}
-              className="w-full h-[60vh] object-cover"
+              className="w-full h-96 md:h-[500px] object-cover"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
           </div>
         )}
       </header>
@@ -466,7 +432,7 @@ export default function BlogContent({ slug }: BlogContentProps) {
 
       {/* Article Footer */}
       <footer className="mt-20 pt-12 border-t border-gray-200">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-3xl p-8 md:p-12">
             <div className="flex flex-col lg:flex-row gap-8 items-center justify-between">
               <div className="text-center lg:text-left">
@@ -500,42 +466,44 @@ export default function BlogContent({ slug }: BlogContentProps) {
       {/* Related Posts */}
       {relatedPosts.length > 0 && (
         <section className="mt-16 pt-12 border-t border-gray-200">
-          <h3 className="text-2xl font-bold text-[#1A1A1A] mb-8">Ähnliche Artikel</h3>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h3 className="text-2xl font-bold text-[#1A1A1A] mb-8">Ähnliche Artikel</h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {relatedPosts.map((relatedPost) => (
-              <article key={relatedPost.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow group">
-                <Link href={`/blog/${relatedPost.slug}`}>
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={
-                        relatedPost.featured_image ||
-                        `https://readdy.ai/api/search-image?query=cozy%20fireplace%20with%20burning%20seasoned%20hardwood%20logs%20warm%20orange%20glow%20comfortable%20living%20room&width=300&height=200&seq=related-${relatedPost.id}&orientation=landscape`
-                      }
-                      alt={relatedPost.title}
-                      className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                </Link>
-
-                <div className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {relatedPosts.map((relatedPost) => (
+                <article key={relatedPost.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow group">
                   <Link href={`/blog/${relatedPost.slug}`}>
-                    <h4 className="font-bold text-[#1A1A1A] mb-2 group-hover:text-[#C04020] transition-colors leading-tight">
-                      {relatedPost.title}
-                    </h4>
+                    <div className="relative overflow-hidden">
+                      <img
+                        src={
+                          relatedPost.featured_image ||
+                          `https://readdy.ai/api/search-image?query=cozy%20fireplace%20with%20burning%20seasoned%20hardwood%20logs%20warm%20orange%20glow%20comfortable%20living%20room&width=300&height=200&seq=related-${relatedPost.id}&orientation=landscape`
+                        }
+                        alt={relatedPost.title}
+                        className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
                   </Link>
 
-                  <p className="text-sm text-gray-600 mb-3 leading-relaxed">
-                    {relatedPost.excerpt?.substring(0, 100)}...
-                  </p>
+                  <div className="p-4">
+                    <Link href={`/blog/${relatedPost.slug}`}>
+                      <h4 className="font-bold text-[#1A1A1A] mb-2 group-hover:text-[#C04020] transition-colors leading-tight">
+                        {relatedPost.title}
+                      </h4>
+                    </Link>
 
-                  <div className="flex items-center text-xs text-gray-500">
-                    <i className="ri-calendar-line mr-1"></i>
-                    <time>{formatDate(relatedPost.created_at)}</time>
+                    <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                      {relatedPost.excerpt?.substring(0, 100)}...
+                    </p>
+
+                    <div className="flex items-center text-xs text-gray-500">
+                      <i className="ri-calendar-line mr-1"></i>
+                      <time>{formatDate(relatedPost.created_at)}</time>
+                    </div>
                   </div>
-                </div>
-              </article>
-            ))}
+                </article>
+              ))}
+            </div>
           </div>
         </section>
       )}

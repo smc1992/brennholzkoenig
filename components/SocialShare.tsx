@@ -26,7 +26,7 @@ export default function SocialShare({ url, title, compact = false }: SocialShare
     },
     {
       name: 'LinkedIn',
-      icon: 'ri-linkedin-fill',
+      icon: 'ri-linkedin-box-fill',
       color: 'bg-blue-700 hover:bg-blue-800',
       url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`
     },
