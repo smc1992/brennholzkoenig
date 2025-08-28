@@ -224,7 +224,7 @@ export default function Header() {
               </Link>
 
               {/* Account Dropdown */}
-              <div className="relative" ref={accountDropdownRef}>
+              <div className="relative z-50" ref={accountDropdownRef}>
                 <button
                   onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
                   className={`flex items-center space-x-2 hover:text-orange-600 transition-colors cursor-pointer ${isScrolled ? 'text-gray-700' : 'text-white'}`}
@@ -240,7 +240,7 @@ export default function Header() {
 
                 {/* Dropdown Menu */}
                 {isAccountDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-[9999] transform translate-y-0">
                     {!isLoggedIn ? (
                       <div className="px-4 py-3">
                         <Link
