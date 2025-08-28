@@ -182,9 +182,8 @@ if (typeof window !== 'undefined') {
     queryKey: queryKeys.settings.shop(),
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('shop_settings')
-        .select('*')
-        .single();
+        .from('app_settings')
+        .select('*');
       
       if (error) {
         console.error('Prefetch settings error:', error);

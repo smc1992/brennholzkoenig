@@ -2,6 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile-optimized form inputs */
+@layer components {
+  .checkout-input {
+    @apply w-full px-4 py-3 md:py-3 border rounded-lg text-base md:text-sm;
+    @apply focus:ring-2 focus:ring-amber-500 focus:border-transparent;
+    @apply transition-colors duration-200;
+    /* Prevent zoom on iOS */
+    font-size: 16px;
+  }
+  
+  .checkout-input.error {
+    @apply border-red-500;
+  }
+  
+  .checkout-input:not(.error) {
+    @apply border-gray-300;
+  }
+  
+  .checkout-select {
+    @apply w-full px-4 py-3 md:py-3 border rounded-lg text-base md:text-sm;
+    @apply focus:ring-2 focus:ring-amber-500 focus:border-transparent;
+    @apply transition-colors duration-200 bg-white;
+    /* Prevent zoom on iOS */
+    font-size: 16px;
+  }
+  
+  .checkout-button-primary {
+    @apply w-full sm:w-auto px-6 md:px-8 py-3 md:py-3 rounded-lg;
+    @apply font-medium text-center transition-colors duration-200;
+    @apply text-base md:text-sm;
+  }
+  
+  .checkout-button-secondary {
+    @apply w-full sm:w-auto px-6 md:px-8 py-3 md:py-3 rounded-lg;
+    @apply font-medium text-center transition-colors duration-200;
+    @apply text-base md:text-sm;
+  }
+}
+
 /* Ensure Remix Icon is loaded properly */
 @import url('https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.5.0/remixicon.min.css');
 

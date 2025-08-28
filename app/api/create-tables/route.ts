@@ -85,6 +85,8 @@ export async function POST(request: NextRequest) {
               delivery_postal_code TEXT NOT NULL,
               delivery_city TEXT NOT NULL,
               delivery_notes TEXT,
+              preferred_delivery_month TEXT,
+              preferred_delivery_year TEXT,
               
               -- Rechnungsadresse
               billing_same_as_delivery BOOLEAN DEFAULT true,
@@ -97,10 +99,11 @@ export async function POST(request: NextRequest) {
               billing_city TEXT,
               
               -- Preise
-              subtotal DECIMAL(10,2) NOT NULL,
-              shipping_cost DECIMAL(10,2) NOT NULL,
+              subtotal_amount DECIMAL(10,2) NOT NULL,
+              delivery_price DECIMAL(10,2) NOT NULL,
               total_amount DECIMAL(10,2) NOT NULL,
               delivery_method TEXT,
+              delivery_type TEXT,
               
               created_at TIMESTAMPTZ DEFAULT NOW(),
               updated_at TIMESTAMPTZ DEFAULT NOW()

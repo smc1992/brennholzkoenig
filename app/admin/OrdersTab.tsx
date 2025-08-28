@@ -12,11 +12,38 @@ interface Order {
   order_number: string;
   status: string;
   total_amount: string;
+  subtotal_amount?: string;
   delivery_price: string;
   delivery_type: string;
+  delivery_method?: string;
+  payment_method?: string;
   notes?: string;
   created_at: string;
   updated_at?: string;
+  
+  // Lieferadresse
+  delivery_first_name?: string;
+  delivery_last_name?: string;
+  delivery_email?: string;
+  delivery_phone?: string;
+  delivery_street?: string;
+  delivery_house_number?: string;
+  delivery_postal_code?: string;
+  delivery_city?: string;
+  delivery_notes?: string;
+  preferred_delivery_month?: string;
+  preferred_delivery_year?: string;
+  
+  // Rechnungsadresse
+  billing_same_as_delivery?: boolean;
+  billing_company?: string;
+  billing_first_name?: string;
+  billing_last_name?: string;
+  billing_street?: string;
+  billing_house_number?: string;
+  billing_postal_code?: string;
+  billing_city?: string;
+  
   customers?: {
     id: string;
     first_name: string;
@@ -86,7 +113,7 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrders(data || []);
+      setOrders((data as any[]) || []);
     } catch (error) {
       console.error('Error loading orders:', error);
     } finally {
@@ -552,29 +579,66 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
 
             <div className="p-6 space-y-6">
               {/* Customer Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Kundeninformationen</h3>
+                  <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Lieferadresse</h3>
                   <div className="space-y-2 text-sm">
                     <p>
-                      <span className="font-medium">Name:</span> {selectedOrder.customers?.first_name}{' '}
-                      {selectedOrder.customers?.last_name}
+                      <span className="font-medium">Name:</span> {selectedOrder.delivery_first_name || selectedOrder.customers?.first_name}{' '}
+                      {selectedOrder.delivery_last_name || selectedOrder.customers?.last_name}
                     </p>
                     <p>
-                      <span className="font-medium">E-Mail:</span> {selectedOrder.customers?.email}
+                      <span className="font-medium">E-Mail:</span> {selectedOrder.delivery_email || selectedOrder.customers?.email}
                     </p>
-                    {selectedOrder.customers?.phone && (
+                    {(selectedOrder.delivery_phone || selectedOrder.customers?.phone) && (
                       <p>
-                        <span className="font-medium">Telefon:</span> {selectedOrder.customers.phone}
+                        <span className="font-medium">Telefon:</span> {selectedOrder.delivery_phone || selectedOrder.customers?.phone}
                       </p>
                     )}
                     <p>
                       <span className="font-medium">Adresse:</span>{' '}
-                      {selectedOrder.customers?.street} {selectedOrder.customers?.house_number}
+                      {selectedOrder.delivery_street || selectedOrder.customers?.street} {selectedOrder.delivery_house_number || selectedOrder.customers?.house_number}
                     </p>
                     <p>
-                      {selectedOrder.customers?.postal_code} {selectedOrder.customers?.city}
+                      {selectedOrder.delivery_postal_code || selectedOrder.customers?.postal_code} {selectedOrder.delivery_city || selectedOrder.customers?.city}
                     </p>
+                    {selectedOrder.delivery_notes && (
+                      <p>
+                        <span className="font-medium">Liefernotizen:</span> {selectedOrder.delivery_notes}
+                      </p>
+                    )}
+                    {(selectedOrder.preferred_delivery_month || selectedOrder.preferred_delivery_year) && (
+                      <p>
+                        <span className="font-medium">Gewünschter Liefertermin:</span> {selectedOrder.preferred_delivery_month} {selectedOrder.preferred_delivery_year}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Rechnungsadresse</h3>
+                  <div className="space-y-2 text-sm">
+                    {selectedOrder.billing_same_as_delivery ? (
+                      <p className="text-gray-600 italic">Gleich wie Lieferadresse</p>
+                    ) : (
+                      <>
+                        {selectedOrder.billing_company && (
+                          <p>
+                            <span className="font-medium">Firma:</span> {selectedOrder.billing_company}
+                          </p>
+                        )}
+                        <p>
+                          <span className="font-medium">Name:</span> {selectedOrder.billing_first_name} {selectedOrder.billing_last_name}
+                        </p>
+                        <p>
+                          <span className="font-medium">Adresse:</span>{' '}
+                          {selectedOrder.billing_street} {selectedOrder.billing_house_number}
+                        </p>
+                        <p>
+                          {selectedOrder.billing_postal_code} {selectedOrder.billing_city}
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -593,13 +657,33 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
                         {getStatusText(selectedOrder.status)}
                       </span>
                     </p>
+                    {selectedOrder.payment_method && (
+                      <p>
+                        <span className="font-medium">Zahlungsmethode:</span> {selectedOrder.payment_method === 'bar' ? 'Barzahlung bei Lieferung' : selectedOrder.payment_method}
+                      </p>
+                    )}
                     <p>
                       <span className="font-medium">Lieferart:</span>{' '}
                       {selectedOrder.delivery_type === 'express' ? 'Express (24-48h)' : 'Standard (1-3 Wochen)'}
                     </p>
+                    {selectedOrder.delivery_method && (
+                      <p>
+                        <span className="font-medium">Liefermethode:</span> {selectedOrder.delivery_method}
+                      </p>
+                    )}
+                    {selectedOrder.subtotal_amount && (
+                      <p>
+                        <span className="font-medium">Zwischensumme:</span> €
+                        {parseFloat(selectedOrder.subtotal_amount).toFixed(2)}
+                      </p>
+                    )}
                     <p>
                       <span className="font-medium">Lieferkosten:</span> €
                       {parseFloat(selectedOrder.delivery_price).toFixed(2)}
+                    </p>
+                    <p>
+                      <span className="font-medium font-bold">Gesamtsumme:</span> €
+                      {parseFloat(selectedOrder.total_amount).toFixed(2)}
                     </p>
                     {selectedOrder.notes && (
                       <p>

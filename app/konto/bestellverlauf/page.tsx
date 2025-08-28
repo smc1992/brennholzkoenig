@@ -10,8 +10,36 @@ interface Order {
   order_number: string;
   status: string;
   total_amount: number;
+  subtotal_amount?: number;
+  delivery_price?: number;
   created_at: string;
   delivery_type: string;
+  delivery_method?: string;
+  payment_method?: string;
+  
+  // Lieferadresse
+  delivery_first_name?: string;
+  delivery_last_name?: string;
+  delivery_email?: string;
+  delivery_phone?: string;
+  delivery_street?: string;
+  delivery_house_number?: string;
+  delivery_postal_code?: string;
+  delivery_city?: string;
+  delivery_notes?: string;
+  preferred_delivery_month?: string;
+  preferred_delivery_year?: string;
+  
+  // Rechnungsadresse
+  billing_same_as_delivery?: boolean;
+  billing_company?: string;
+  billing_first_name?: string;
+  billing_last_name?: string;
+  billing_street?: string;
+  billing_house_number?: string;
+  billing_postal_code?: string;
+  billing_city?: string;
+  
   order_items: {
     id: string;
     product_name: string;
@@ -53,11 +81,11 @@ export default function OrderHistoryPage() {
             total_price
           )
         `)
-        .eq('customer_email', user.email)
+        .eq('delivery_email', user.email)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrders(orders || []);
+      setOrders((orders as any[]) || []);
     } catch (error) {
       console.error('Fehler beim Laden der Bestellungen:', error);
     } finally {

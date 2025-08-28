@@ -129,7 +129,14 @@ export default function CheckoutPage() {
       // Lade Warenkorb
       const savedCart = localStorage.getItem('cart');
       if (savedCart) {
-        setCartItems(JSON.parse(savedCart));
+        const parsedCart = JSON.parse(savedCart);
+        // Stelle sicher, dass price als number behandelt wird
+        const normalizedCart = parsedCart.map((item: any) => ({
+          ...item,
+          price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
+          quantity: typeof item.quantity === 'string' ? parseInt(item.quantity) : item.quantity
+        }));
+        setCartItems(normalizedCart);
       }
     };
 
@@ -184,7 +191,7 @@ export default function CheckoutPage() {
           return {
             ...cartItem,
             name: realtimeProduct.name,
-            price: realtimeProduct.price,
+            price: typeof realtimeProduct.price === 'string' ? parseFloat(realtimeProduct.price) : realtimeProduct.price,
             image: realtimeProduct.image_url
           };
         }
@@ -204,7 +211,7 @@ export default function CheckoutPage() {
         localStorage.setItem('cart', JSON.stringify(updatedCartItems));
       }
     }
-  }, [products, cartItems]);
+  }, [products]); // Entferne cartItems aus Dependencies um Loop zu vermeiden
 
   const calculateTotal = () => {
     const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -454,7 +461,9 @@ export default function CheckoutPage() {
             // Fallback: Versuche Bestellung ohne Kundenerstellung
             if (customerError.code === '42501' || customerError.code === '401') {
               console.warn('RLS-Policy-Problem erkannt, verwende Fallback-Mechanismus');
-              customerId = 'anonymous_' + Date.now();
+              // Setze customer_id auf null für anonyme Bestellungen
+              customerId = null;
+              console.log('Anonyme Bestellung ohne Customer-ID');
             } else {
               throw new Error(`Fehler beim Speichern der Kundendaten: ${customerError.message}`);
             }
@@ -486,7 +495,9 @@ export default function CheckoutPage() {
             // Fallback: Versuche Bestellung ohne Kundenerstellung
             if (customerError.code === '42501' || customerError.code === '401') {
               console.warn('RLS-Policy-Problem erkannt, verwende Fallback-Mechanismus');
-              customerId = 'anonymous_' + Date.now();
+              // Setze customer_id auf null für anonyme Bestellungen
+              customerId = null;
+              console.log('Anonyme Bestellung ohne Customer-ID');
             } else {
               throw new Error(`Fehler beim Speichern der Kundendaten: ${customerError.message}`);
             }
@@ -496,7 +507,8 @@ export default function CheckoutPage() {
         }
       }
 
-      if (!customerId) {
+      // customerId kann null sein für anonyme Bestellungen
+      if (customerId === undefined) {
         throw new Error('Kunde konnte nicht erstellt oder gefunden werden');
       }
 
@@ -660,8 +672,30 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* Fortschrittsanzeige */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <div className="flex items-center justify-between">
+        <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6 md:mb-8">
+          {/* Mobile Progress Indicator */}
+          <div className="block md:hidden">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm font-medium text-gray-600">
+                Schritt {currentStep} von 4
+              </div>
+              <div className="text-sm font-medium text-amber-600">
+                {currentStep === 1 && 'Lieferadresse'}
+                {currentStep === 2 && 'Rechnungsadresse'}
+                {currentStep === 3 && 'Lieferart & Zahlungsart'}
+                {currentStep === 4 && 'Bestätigung'}
+              </div>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-amber-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${(currentStep / 4) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+          
+          {/* Desktop Progress Indicator */}
+          <div className="hidden md:flex items-center justify-between">
             {[1, 2, 3, 4].map((step, index) => (
               <div key={step} className="flex items-center">
                 <div
@@ -685,10 +719,10 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Checkout Formular */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="lg:col-span-2 order-2 lg:order-1">
+            <div className="bg-white rounded-lg shadow-sm p-4 md:p-6">
               {/* Login-Option */}
               {!user && currentStep === 1 && (
                 <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -765,7 +799,7 @@ export default function CheckoutPage() {
                         type="text"
                         value={deliveryData.firstName}
                         onChange={(e) => setDeliveryData({ ...deliveryData, firstName: e.target.value })}
-                        className={`w-full px-4 py-3 border rounded-lg text-sm ${
+                        className={`w-full px-4 py-3 md:py-3 border rounded-lg text-base md:text-sm ${
                           errors.firstName ? 'border-red-500' : 'border-gray-300'
                         } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
                       />
@@ -1068,16 +1102,16 @@ export default function CheckoutPage() {
                     </div>
                   )}
 
-                  <div className="flex justify-between mt-8">
+                  <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4 mt-6 md:mt-8">
                     <button
                       onClick={handlePrevStep}
-                      className="bg-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-400 transition-colors whitespace-nowrap"
+                      className="w-full sm:w-auto bg-gray-300 text-gray-700 px-6 md:px-8 py-3 md:py-3 rounded-lg hover:bg-gray-400 transition-colors font-medium text-center order-2 sm:order-1"
                     >
                       Zurück
                     </button>
                     <button
                       onClick={handleNextStep}
-                      className="bg-amber-600 text-white px-8 py-3 rounded-lg hover:bg-amber-700 transition-colors whitespace-nowrap"
+                      className="w-full sm:w-auto bg-amber-600 text-white px-6 md:px-8 py-3 md:py-3 rounded-lg hover:bg-amber-700 transition-colors font-medium text-center order-1 sm:order-2"
                     >
                       Weiter
                     </button>
@@ -1283,19 +1317,24 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <div className="flex justify-between mt-8">
+                  <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4 mt-6 md:mt-8">
                     <button
                       onClick={handlePrevStep}
-                      className="bg-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-400 transition-colors whitespace-nowrap"
+                      className="w-full sm:w-auto bg-gray-300 text-gray-700 px-6 md:px-8 py-3 md:py-3 rounded-lg hover:bg-gray-400 transition-colors font-medium text-center order-2 sm:order-1"
                     >
                       Zurück
                     </button>
                     <button
                       onClick={handleSubmitOrder}
                       disabled={isProcessing}
-                      className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+                      className="w-full sm:w-auto bg-green-600 text-white px-6 md:px-8 py-4 md:py-3 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 font-medium text-center order-1 sm:order-2 text-sm md:text-base"
                     >
-                      {isProcessing ? 'Verarbeitung...' : 'Jetzt kostenpflichtig bestellen'}
+                      {isProcessing ? 'Verarbeitung...' : (
+                        <>
+                          <span className="block sm:hidden">Jetzt bestellen</span>
+                          <span className="hidden sm:block">Jetzt kostenpflichtig bestellen</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -1304,13 +1343,58 @@ export default function CheckoutPage() {
           </div>
 
           {/* Bestellübersicht */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Ihre Bestellung</h3>
+          <div className="lg:col-span-1 order-1 lg:order-2">
+            <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 lg:sticky lg:top-8">
+              <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4 md:mb-6">Ihre Bestellung</h3>
 
-              <div className="space-y-4 mb-6">
+              {/* Mobile: Kompakte Darstellung */}
+              <div className="block md:hidden mb-4">
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-600">
+                      {cartItems.length} {cartItems.length === 1 ? 'Artikel' : 'Artikel'}
+                    </span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {cartItems.reduce((total, item) => total + item.quantity, 0)} SRM
+                    </span>
+                  </div>
+                  <div className="text-lg font-bold text-amber-600">
+                    {subtotal.toFixed(2)} €
+                  </div>
+                </div>
+                
+                {/* Expandable Items List */}
+                <details className="mt-3">
+                  <summary className="text-sm text-amber-600 cursor-pointer hover:text-amber-700">
+                    Details anzeigen
+                  </summary>
+                  <div className="mt-3 space-y-3">
+                    {cartItems.map((item) => (
+                      <div key={`mobile-${item.id}`} className="flex items-center space-x-3 text-sm">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-10 h-10 object-cover rounded"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 truncate">{item.name}</p>
+                          <p className="text-gray-600">{item.quantity} × {item.price.toFixed(2)} €</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-gray-900">
+                            {(item.price * item.quantity).toFixed(2)} €
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              </div>
+
+              {/* Desktop: Vollständige Darstellung */}
+              <div className="hidden md:block space-y-4 mb-6">
                 {cartItems.map((item) => (
-                  <div key={item.id} className="flex items-center space-x-4">
+                  <div key={`desktop-${item.id}`} className="flex items-center space-x-4">
                     <img
                       src={item.image}
                       alt={item.name}
