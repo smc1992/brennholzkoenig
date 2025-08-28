@@ -5,37 +5,58 @@ import { QueryClient } from '@tanstack/react-query';
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Cache für 5 Minuten (statische Daten wie Produkte)
-      staleTime: 5 * 60 * 1000, // 5 Minuten
-      gcTime: 10 * 60 * 1000, // 10 Minuten (früher cacheTime)
+      // Aggressiveres Caching für bessere Performance
+      staleTime: 10 * 60 * 1000, // 10 Minuten (erhöht von 5)
+      gcTime: 30 * 60 * 1000, // 30 Minuten (erhöht von 10)
       
-      // Retry-Strategie
+      // Optimierte Retry-Strategie
       retry: (failureCount, error: any) => {
-        // Keine Retries bei 404 oder Auth-Fehlern
-        if (error?.status === 404 || error?.status === 401) {
+        // Keine Retries bei 404, 401 oder 403
+        if (error?.status === 404 || error?.status === 401 || error?.status === 403) {
           return false;
         }
-        // Maximal 3 Retries für andere Fehler
-        return failureCount < 3;
+        // Maximal 2 Retries für bessere Performance
+        return failureCount < 2;
       },
       
-      // Retry-Delay mit exponential backoff
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      // Schnellere Retry-Delays
+      retryDelay: (attemptIndex) => Math.min(500 * 2 ** attemptIndex, 5000),
       
-      // Background-Updates aktivieren
-      refetchOnWindowFocus: true,
+      // Optimierte Background-Updates
+      refetchOnWindowFocus: false, // Deaktiviert für bessere Performance
       refetchOnReconnect: true,
       
-      // Prefetching-Strategien
-      refetchOnMount: 'always',
+      // Intelligenteres Refetching
+      refetchOnMount: (query) => {
+        // Nur refetch wenn Daten älter als 5 Minuten
+        return (Date.now() - (query.state.dataUpdatedAt || 0)) > 5 * 60 * 1000;
+      },
+      
+      // Network Mode für bessere Offline-Unterstützung
+       networkMode: 'offlineFirst'
     },
     mutations: {
-      // Retry für Mutations
-      retry: 1,
-      retryDelay: 1000,
+      // Optimierte Mutation-Einstellungen
+       retry: 2,
+       retryDelay: 500
     },
   },
 });
+
+// Prefetch kritische Daten beim App-Start
+if (typeof window !== 'undefined') {
+  // Prefetch Produkte
+  queryClient.prefetchQuery({
+    queryKey: ['products', 'list', { active: true }],
+    staleTime: 10 * 60 * 1000,
+  });
+  
+  // Prefetch Shop-Einstellungen
+  queryClient.prefetchQuery({
+    queryKey: ['settings', 'shop'],
+    staleTime: 15 * 60 * 1000,
+  });
+}
 
 // Query Keys für konsistente Caching-Strategien
 export const queryKeys = {

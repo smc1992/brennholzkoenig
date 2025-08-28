@@ -3,39 +3,56 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { queryKeys, performanceMonitor } from '@/lib/queryClient';
 
-// Optimierte Produkt-Queries
+// Optimierte Produkt-Queries mit verbessertem Caching
 export const useProducts = (filters?: { category?: string; active?: boolean }) => {
   return useQuery({
     queryKey: queryKeys.products.list(filters || {}),
     queryFn: async () => {
       const startTime = performance.now();
       
-      let query = supabase
-        .from('products')
-        .select('*')
-        .order('id', { ascending: true });
-      
-      if (filters?.category) {
-        query = query.eq('category', filters.category);
+      try {
+        // Verwende page_contents Tabelle für bessere Performance
+        let query = supabase
+          .from('page_contents')
+          .select('*')
+          .eq('content_type', 'product')
+          .eq('status', 'published')
+          .order('id', { ascending: true });
+        
+        if (filters?.category) {
+          query = query.eq('category', filters.category);
+        }
+        
+        if (filters?.active !== undefined) {
+          query = query.eq('is_active', filters.active);
+        } else {
+          // Standard: nur aktive Produkte
+          query = query.eq('is_active', true);
+        }
+        
+        const { data, error } = await query;
+        
+        const duration = performance.now() - startTime;
+        performanceMonitor.logQueryPerformance(['products', 'list'], duration);
+        
+        if (error) {
+          console.error('Products query error:', error);
+          throw error;
+        }
+        
+        return data || [];
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+        // Fallback zu leerer Liste statt Fehler
+        return [];
       }
-      
-      if (filters?.active !== undefined) {
-        query = query.eq('is_active', filters.active);
-      } else {
-        // Standard: nur aktive Produkte
-        query = query.eq('is_active', true);
-      }
-      
-      const { data, error } = await query;
-      
-      const duration = performance.now() - startTime;
-      performanceMonitor.logQueryPerformance(['products', 'list'], duration);
-      
-      if (error) throw error;
-      return data || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 Minuten
-    gcTime: 10 * 60 * 1000, // 10 Minuten
+    staleTime: 10 * 60 * 1000, // Erhöht auf 10 Minuten
+    gcTime: 30 * 60 * 1000, // Erhöht auf 30 Minuten
+    retry: 2,
+    retryDelay: 500,
+    refetchOnWindowFocus: false,
+    networkMode: 'offlineFirst',
   });
 };
 

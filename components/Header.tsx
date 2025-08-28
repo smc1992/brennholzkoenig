@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { safeJsonParse } from '@/lib/jsonHelper';
 
 export default function Header() {
@@ -125,21 +126,25 @@ export default function Header() {
   useEffect(() => {
     if (!isMountedRef.current || typeof document === 'undefined') return;
 
-    if (isMenuOpen) {
+    // Account dropdown has priority over mobile menu
+    if (isAccountDropdownOpen) {
+      document.body.style.overflow = 'unset'; // Allow scrolling for dropdown
+    } else if (isMenuOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
+    
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isMenuOpen]);
+  }, [isMenuOpen, isAccountDropdownOpen]);
 
   if (!isMounted) {
     return (
       <header className="sticky top-0 z-50 transition-all duration-300 w-full bg-black/30 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center h-16 md:h-20">
+        <div className="container mx-auto px-4" style={{overflow: 'visible'}}>
+          <div className="flex justify-between items-center h-16 md:h-20" style={{overflow: 'visible'}}>
             <Link href="/" className="flex items-center flex-shrink-0">
               <img
                 src="https://public.readdy.ai/ai/img_res/86db7336-c7fd-4211-8615-9dceb4ceb922.jpg"
@@ -147,7 +152,7 @@ export default function Header() {
                 className="h-12 md:h-20 w-auto object-contain"
               />
             </Link>
-            <nav className="hidden md:flex items-center space-x-8">
+            <nav className="hidden xl:flex items-center space-x-8">
               <Link
                 href="/"
                 className="text-white hover:text-white/80 transition-colors cursor-pointer font-medium"
@@ -174,7 +179,7 @@ export default function Header() {
               </Link>
             </nav>
             <button
-              className="md:hidden flex flex-col space-y-1 cursor-pointer p-2 z-50 relative flex-shrink-0"
+              className="lg:hidden flex flex-col space-y-1 cursor-pointer p-2 z-50 relative flex-shrink-0"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               <span className="block w-6 h-0.5 bg-white drop-shadow-lg transition-all duration-300"></span>
@@ -189,7 +194,7 @@ export default function Header() {
 
   return (
     <>
-      <header className={`sticky top-0 z-50 transition-all duration-300 w-full ${isScrolled ? 'bg-[#F5F0E0] shadow-lg' : 'bg-black/30 backdrop-blur-sm'}`}>
+      <header className={`sticky top-0 z-[9999] transition-all duration-300 w-full ${isScrolled ? 'bg-[#F5F0E0] shadow-lg' : 'bg-black/30 backdrop-blur-sm'}`} style={{overflow: 'visible'}}>
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16 md:h-20">
             <Link href="/" className="flex items-center flex-shrink-0">
@@ -199,7 +204,7 @@ export default function Header() {
                 className="h-12 md:h-20 w-auto object-contain"
               />
             </Link>
-            <nav className="hidden md:flex items-center space-x-8">
+            <nav className="hidden xl:flex items-center space-x-8">
               {navigation.map((item) => (
                 <Link
                   key={item.href}
@@ -224,7 +229,7 @@ export default function Header() {
               </Link>
 
               {/* Account Dropdown */}
-              <div className="relative z-50" ref={accountDropdownRef}>
+              <div className="relative z-[9999]" ref={accountDropdownRef}>
                 <button
                   onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
                   className={`flex items-center space-x-2 hover:text-orange-600 transition-colors cursor-pointer ${isScrolled ? 'text-gray-700' : 'text-white'}`}
@@ -238,49 +243,11 @@ export default function Header() {
                   </div>
                 </button>
 
-                {/* Dropdown Menu */}
-                {isAccountDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-[9999] transform translate-y-0 origin-top-right animate-in fade-in-0 zoom-in-95 duration-100">
-                    {!isLoggedIn ? (
-                      <div className="px-4 py-3">
-                        <Link
-                          href="/konto"
-                          className="block text-sm font-semibold text-gray-900 hover:text-orange-600 transition-colors"
-                          onClick={() => setIsAccountDropdownOpen(false)}
-                        >
-                          Anmelden / Registrieren
-                        </Link>
-                        <p className="text-xs text-gray-500 mt-1">Zugang zu Ihrem Konto</p>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="px-4 py-3 border-b border-gray-100">
-                          <p className="text-sm font-semibold text-gray-900">Willkommen zurück!</p>
-                          <p className="text-xs text-gray-500 mt-1">Verwalten Sie Ihr Konto</p>
-                        </div>
-                        <div className="py-2">
-                          {accountMenuItems.map((item) => (
-                            <Link
-                              key={item.href}
-                              href={item.href}
-                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-orange-600 transition-colors cursor-pointer"
-                              onClick={() => setIsAccountDropdownOpen(false)}
-                            >
-                              <div className="w-5 h-5 flex items-center justify-center mr-3">
-                                <i className={`${item.icon} text-gray-400`}></i>
-                              </div>
-                              {item.name}
-                            </Link>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
+
               </div>
 
               <button
-                className="md:hidden flex flex-col space-y-1 cursor-pointer p-2 z-50 relative flex-shrink-0"
+                className="xl:hidden flex flex-col space-y-1 cursor-pointer p-2 z-50 relative flex-shrink-0"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
               >
                 <span className={`block w-6 h-0.5 transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-1.5' : ''} ${isScrolled ? 'bg-[#C04020]' : 'bg-white drop-shadow-lg'}`}></span>
@@ -292,9 +259,18 @@ export default function Header() {
         </div>
       </header>
 
+
+
       {isMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm">
-          <div className="bg-[#F5F0E0] h-full overflow-y-auto pt-20 max-w-full">
+        <div className="xl:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm">
+          <div className="bg-[#F5F0E0] h-full overflow-y-auto pt-20 max-w-full relative">
+            {/* Schließen Button */}
+            <button
+              onClick={() => setIsMenuOpen(false)}
+              className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-lg hover:bg-gray-50 transition-colors z-50"
+            >
+              <i className="ri-close-line text-xl text-gray-600"></i>
+            </button>
             <div className="px-6 py-8 max-w-full overflow-x-hidden">
               <div className="mb-8">
                 <h3 className="text-xs font-bold text-[#C04020] uppercase tracking-wider mb-4">Navigation</h3>
@@ -414,7 +390,7 @@ export default function Header() {
         </div>
       )}
       {isMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-[#C04020] border-t border-white/20">
+        <div className="xl:hidden absolute top-full left-0 right-0 bg-[#C04020] border-t border-white/20">
           <div className="px-4 py-4 space-y-4">
             {navigation.map((item) => (
               <Link
@@ -428,6 +404,114 @@ export default function Header() {
             ))}
           </div>
         </div>
+      )}
+      
+      {/* PORTAL DROPDOWN - GARANTIERT SICHTBAR */}
+      {isAccountDropdownOpen && typeof window !== 'undefined' && createPortal(
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 999999,
+            pointerEvents: 'none'
+          }}
+        >
+          <div 
+            style={{
+              position: 'absolute',
+              top: '80px',
+              right: '16px',
+              width: '256px',
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              border: '1px solid #e5e7eb',
+              padding: '8px 0',
+              zIndex: 999999,
+              pointerEvents: 'auto'
+            }}
+          >
+            {!isLoggedIn ? (
+              <div style={{padding: '12px 16px'}}>
+                <a
+                  href="/konto"
+                  style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: '#111827',
+                    textDecoration: 'none',
+                    cursor: 'pointer'
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsAccountDropdownOpen(false);
+                    window.location.href = '/konto';
+                  }}
+                  onMouseEnter={(e) => {
+                    const target = e.target as HTMLElement;
+                    target.style.color = '#ea580c';
+                  }}
+                  onMouseLeave={(e) => {
+                    const target = e.target as HTMLElement;
+                    target.style.color = '#111827';
+                  }}
+                >
+                  Anmelden / Registrieren
+                </a>
+                <p style={{fontSize: '12px', color: '#6b7280', marginTop: '4px'}}>Zugang zu Ihrem Konto</p>
+              </div>
+            ) : (
+              <>
+                <div style={{padding: '12px 16px', borderBottom: '1px solid #f3f4f6'}}>
+                  <p style={{fontSize: '14px', fontWeight: '600', color: '#111827'}}>Willkommen zurück!</p>
+                  <p style={{fontSize: '12px', color: '#6b7280', marginTop: '4px'}}>Verwalten Sie Ihr Konto</p>
+                </div>
+                <div style={{padding: '8px 0'}}>
+                  {accountMenuItems.map((item) => (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '8px 16px',
+                        fontSize: '14px',
+                        color: '#374151',
+                        textDecoration: 'none',
+                        cursor: 'pointer'
+                      }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setIsAccountDropdownOpen(false);
+                        window.location.href = item.href;
+                      }}
+                      onMouseEnter={(e) => {
+                         const target = e.target as HTMLElement;
+                         target.style.backgroundColor = '#f9fafb';
+                         target.style.color = '#ea580c';
+                       }}
+                       onMouseLeave={(e) => {
+                         const target = e.target as HTMLElement;
+                         target.style.backgroundColor = 'transparent';
+                         target.style.color = '#374151';
+                       }}
+                    >
+                      <div style={{width: '20px', height: '20px', marginRight: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                        <i className={`${item.icon}`} style={{color: '#9ca3af'}}></i>
+                      </div>
+                      {item.name}
+                    </a>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>,
+        document.body
       )}
     </>
   );

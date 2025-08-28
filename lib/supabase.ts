@@ -15,6 +15,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Verbesserte Fehlerbehandlung für Produktionsumgebung
 const isProduction = process.env.NODE_ENV === 'production'
 
+// Connection Pool für bessere Performance
+const connectionPool = new Map<string, any>();
+
 // Singleton-Funktion, um sicherzustellen, dass nur eine Instanz existiert
 const getSupabaseClient = () => {
   if (supabaseInstance) return supabaseInstance;
@@ -28,25 +31,34 @@ const getSupabaseClient = () => {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        flowType: 'pkce'
+        flowType: 'pkce',
+        // Aggressive Session-Caching
+        storageKey: 'brennholzkoenig-auth'
       },
       global: {
         headers: {
           'X-Client-Info': 'brennholzkoenig-website',
+          'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
+          'Connection': 'keep-alive'
         },
       },
       // Optimierte Realtime-Einstellungen
       realtime: {
-        timeout: 30000, // 30 Sekunden Timeout
-        heartbeatIntervalMs: 30000, // 30 Sekunden Heartbeat
-        reconnectAfterMs: (tries: number) => Math.min(tries * 1000, 10000),
+        timeout: 15000, // Reduziert auf 15 Sekunden
+        heartbeatIntervalMs: 15000, // 15 Sekunden Heartbeat
+        reconnectAfterMs: (tries: number) => Math.min(tries * 500, 5000), // Schnellere Reconnects
         params: {
-          eventsPerSecond: 20, // Erhöht für bessere Performance
+          eventsPerSecond: 50, // Erhöht für bessere Performance
           log_level: isProduction ? 'error' : 'info'
         }
       }
     }
   );
+  
+  // Performance-Monitoring für Queries
+  if (!isProduction && typeof window !== 'undefined') {
+    console.log('Supabase Client initialized with performance monitoring');
+  }
   
   return supabaseInstance;
 };

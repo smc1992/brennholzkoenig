@@ -70,16 +70,16 @@ export default function LocationMap() {
             </div>
           </div>
 
-          <div className="relative h-96 sm:h-[500px] bg-gray-100 rounded-2xl overflow-hidden shadow-xl">
+          <div className="relative h-96 sm:h-[500px] bg-gray-100 rounded-2xl overflow-hidden shadow-xl w-full">
             <iframe 
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2497.8!2d9.9!3d50.8!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTDCsDQ4JzAwLjAiTiA5wrA1NCcwMC4wIkU!5e0!3m2!1sde!2sde!4v1234567890123"
               width="100%" 
               height="100%" 
-              style={{ border: 0 }} 
+              style={{ border: 0, width: '100%', height: '100%', display: 'block' }} 
               allowFullScreen={true} 
               loading="lazy" 
               referrerPolicy="no-referrer-when-downgrade"
-              className="rounded-2xl"
+              className="rounded-2xl w-full h-full"
             ></iframe>
           </div>
         </div>

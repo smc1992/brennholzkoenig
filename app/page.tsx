@@ -22,19 +22,17 @@ export default function Home() {
         defaultDescription="Bestellen Sie hochwertiges Brennholz und Kaminholz beim Brennholz König. Schnelle Lieferung, faire Preise und erstklassige Qualität für Ihren Kamin und Ofen."
       />
       <div className="min-h-dvh bg-pergament w-full">
-        <main>
-          <HeroSection />
-          <USPSection />
-          <QualifierSection />
-          <TrustSection />
-          <TestimonialSection />
-          <CostCalculatorSection />
-          <ComparisonSection />
-          <ProcessSection />
-          <SafetySection />
-          <ProductSection />
-          <RegionSection />
-        </main>
+        <HeroSection />
+        <USPSection />
+        <QualifierSection />
+        <TrustSection />
+        <TestimonialSection />
+        <CostCalculatorSection />
+        <ComparisonSection />
+        <ProcessSection />
+        <SafetySection />
+        <ProductSection />
+        <RegionSection />
       </div>
     </>
   );

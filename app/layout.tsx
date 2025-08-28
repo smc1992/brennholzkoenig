@@ -14,6 +14,7 @@ import GoogleAdsTracking from '../components/GoogleAdsTracking';
 import AnalyticsTracker from '@/components/AnalyticsTracker';
 import { QueryProvider } from '@/components/QueryProvider';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
+import DataPreloader from '@/components/DataPreloader';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -105,6 +106,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} min-h-dvh bg-pergament text-tiefschwarz antialiased`}>
         <QueryProvider>
+          <DataPreloader />
           <CookieBanner />
           <Header />
           <main>{children}</main>

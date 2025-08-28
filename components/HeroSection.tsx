@@ -56,14 +56,13 @@ export default function HeroSection() {
         backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3)), url('${heroImageUrl}')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed'
+        backgroundRepeat: 'no-repeat'
       }}
     >
       <div className="container mx-auto px-6 sm:px-8 lg:px-12 w-full relative z-10" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: '2rem', paddingBottom: '4rem' }}>
         <div className="max-w-6xl mx-auto w-full">
           {/* Trust Badge */}
-          <div className={`inline-flex items-center bg-[#C04020] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-sm sm:text-base mb-6 sm:mb-8 shadow-2xl transition-all duration-800 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'} mx-auto sm:mx-0`}>
+          <div className="inline-flex items-center bg-[#C04020] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-sm sm:text-base mb-6 sm:mb-8 shadow-2xl mx-auto sm:mx-0">
             <div className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center mr-2 sm:mr-3">
               <i className="ri-award-fill text-lg"></i>
             </div>
@@ -78,7 +77,7 @@ export default function HeroSection() {
               contentType="title"
               fallback="KÖNIGLICH WARM DURCH DEN WINTER"
               tag="span"
-              className={`text-[#D4A520] drop-shadow-2xl block transition-all duration-1200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+              className="text-[#D4A520] drop-shadow-2xl block"
             />
           </h1>
 
@@ -89,11 +88,11 @@ export default function HeroSection() {
             contentType="subtitle"
             fallback="Premium Brennholz mit 70% höherem Heizwert - Sparen Sie durchschnittlich 721€ jährlich"
             tag="p"
-            className={`text-lg sm:text-xl lg:text-2xl text-white/95 font-bold mb-6 sm:mb-8 drop-shadow-lg leading-tight text-center sm:text-left max-w-3xl transition-all duration-1000 delay-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}
+            className="text-lg sm:text-xl lg:text-2xl text-white/95 font-bold mb-6 sm:mb-8 drop-shadow-lg leading-tight text-center sm:text-left max-w-3xl"
           />
 
           {/* Benefits Box */}
-          <div className={`bg-white/95 backdrop-blur-sm rounded-2xl p-5 sm:p-6 lg:p-8 mb-8 sm:mb-10 border-2 border-[#D4A520] max-w-full sm:max-w-2xl xl:max-w-3xl mx-auto sm:mx-0 shadow-2xl transition-all duration-1000 delay-900 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-5 sm:p-6 lg:p-8 mb-8 sm:mb-10 border-2 border-[#D4A520] max-w-full sm:max-w-2xl xl:max-w-3xl mx-auto sm:mx-0 shadow-2xl">
             <div className="flex items-center justify-center sm:justify-start mb-4 sm:mb-5">
               <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-[#C04020] rounded-full mr-3 sm:mr-4">
                 <i className="ri-fire-fill text-white text-xl sm:text-2xl"></i>

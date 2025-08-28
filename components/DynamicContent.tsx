@@ -113,25 +113,25 @@ export default function DynamicContent({
   className = '',
   tag: Tag = 'span'
 }: DynamicContentProps) {
+  // Verwende Fallback als initialen Wert um Blinken zu vermeiden
   const [content, setContent] = useState(fallback);
-  const [loading, setLoading] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const retryCount = useRef(0);
   const maxRetries = 2;
 
   useEffect(() => {
     let mounted = true;
+    setIsHydrated(true);
 
     const loadContent = async () => {
       // Parameter-Validierung
       if (!page?.trim() || !section?.trim()) {
-        if (mounted) setContent(fallback);
-        return;
+        return; // Behalte Fallback
       }
 
       const effectiveContentType = contentType || key;
       if (!effectiveContentType?.trim()) {
-        if (mounted) setContent(fallback);
-        return;
+        return; // Behalte Fallback
       }
 
       const cacheKey = `${page}-${section}-${effectiveContentType}`;
@@ -142,16 +142,17 @@ export default function DynamicContent({
       if (cached && 
           (now - cached.timestamp < CACHE_DURATION) && 
           cached.version === globalVersion) {
-        if (mounted) setContent(cached.content);
+        if (mounted && cached.content !== fallback) {
+          setContent(cached.content);
+        }
         return;
       }
 
-      // Sofort Fallback anzeigen während wir laden
-      if (mounted) setContent(fallback);
+      // Lade Content nur wenn nicht bereits der Fallback verwendet wird
       
       // Nur laden wenn nicht im Cache
       try {
-        if (mounted) setLoading(true);
+        // Content wird geladen
         
         // Gemeinsamer Loader für alle Komponenten, die die gleiche Seite abfragen
         const pageKey = `page-${page}`;
@@ -224,7 +225,7 @@ export default function DynamicContent({
           setTimeout(loadContent, delay);
         }
       } finally {
-        if (mounted) setLoading(false);
+        // Content geladen
       }
     };
 
@@ -234,14 +235,6 @@ export default function DynamicContent({
       mounted = false;
     };
   }, [page, section, contentType, key, fallback]);
-
-  if (loading) {
-    return (
-      <Tag className={`${className} animate-pulse bg-gray-200 rounded min-h-[1em] inline-block`}>
-        {content}
-      </Tag>
-    );
-  }
 
   return <Tag className={className}>{content}</Tag>;
 }
