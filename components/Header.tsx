@@ -240,7 +240,7 @@ export default function Header() {
 
                 {/* Dropdown Menu */}
                 {isAccountDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-[9999] transform translate-y-0">
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-[9999] transform translate-y-0 origin-top-right animate-in fade-in-0 zoom-in-95 duration-100">
                     {!isLoggedIn ? (
                       <div className="px-4 py-3">
                         <Link
