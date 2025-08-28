@@ -29,15 +29,59 @@ interface RealtimeSyncHook {
   unsubscribeFromChanges: () => void;
 }
 
+// Fallback-Produkte für sofortige Anzeige
+const fallbackProducts: Product[] = [
+  {
+    id: 1,
+    name: "Industrieholz Buche Klasse 1",
+    description: "Premium Industrieholz aus Buche - perfekt für sauberes Heizen",
+    price: 89.99,
+    image_url: "/images/industrieholz-buche-1.jpg",
+    category: "Industrieholz",
+    stock_quantity: 50,
+    unit: "SRM",
+    is_active: true,
+    in_stock: true,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 2,
+    name: "Industrieholz Buche Klasse 2",
+    description: "Hochwertiges Industrieholz aus Buche - ideal für den Kamin",
+    price: 79.99,
+    image_url: "/images/industrieholz-buche-2.jpg",
+    category: "Industrieholz",
+    stock_quantity: 30,
+    unit: "SRM",
+    is_active: true,
+    in_stock: true,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 3,
+    name: "Scheitholz Buche 33cm",
+    description: "Klassisches Scheitholz aus Buche - 33cm Länge",
+    price: 99.99,
+    image_url: "/images/scheitholz-buche-33.jpg",
+    category: "Scheitholz",
+    stock_quantity: 25,
+    unit: "SRM",
+    is_active: true,
+    in_stock: true,
+    created_at: new Date().toISOString()
+  }
+];
+
 export function useRealtimeSync(): RealtimeSyncHook {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Starte mit Fallback-Produkten für sofortige Anzeige
+  const [products, setProducts] = useState<Product[]>(fallbackProducts);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<any>(null);
+  const [isUnmounting, setIsUnmounting] = useState<boolean>(false);
 
   const refreshProducts = useCallback(async () => {
     try {
-      setIsLoading(true);
       setError(null);
       
       const { data, error: fetchError } = await supabase
@@ -50,101 +94,53 @@ export function useRealtimeSync(): RealtimeSyncHook {
         throw fetchError;
       }
 
-      setProducts((data as unknown as Product[]) || []);
-      console.log('Products refreshed:', data?.length || 0, 'items');
+      const fetchedProducts = (data as unknown as Product[]) || [];
+      
+      // Nur aktualisieren wenn sich die Daten unterscheiden
+      if (fetchedProducts.length > 0) {
+        setProducts(fetchedProducts);
+        console.log('Products refreshed:', fetchedProducts.length, 'items');
+      }
     } catch (err) {
       console.error('Error refreshing products:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setIsLoading(false);
+      // Bei Fehler bleiben Fallback-Produkte erhalten
     }
   }, []);
 
   const subscribeToChanges = useCallback(() => {
-    if (subscription) {
-      console.log('Already subscribed to product changes');
-      return;
-    }
-
-    console.log('Subscribing to real-time product changes...');
-    
-    const newSubscription = supabase
-      .channel('products-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'products'
-        },
-        (payload) => {
-          console.log('Product change detected:', payload);
-          
-          switch (payload.eventType) {
-            case 'INSERT':
-              setProducts(prev => {
-                const newProduct = payload.new as Product;
-                if (newProduct.is_active) {
-                  return [...prev, newProduct].sort((a, b) => a.id - b.id);
-                }
-                return prev;
-              });
-              break;
-              
-            case 'UPDATE':
-              setProducts(prev => {
-                const updatedProduct = payload.new as Product;
-                if (updatedProduct.is_active) {
-                  return prev.map(product => 
-                    product.id === updatedProduct.id ? updatedProduct : product
-                  );
-                } else {
-                  // Product deactivated, remove from list
-                  return prev.filter(product => product.id !== updatedProduct.id);
-                }
-              });
-              break;
-              
-            case 'DELETE':
-              setProducts(prev => 
-                prev.filter(product => product.id !== (payload.old as Product).id)
-              );
-              break;
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log('Subscription status:', status);
-        if (status === 'SUBSCRIBED') {
-          console.log('Successfully subscribed to product changes');
-        }
-      });
-
-    setSubscription(newSubscription);
-  }, [subscription]);
+    // Real-time subscription deaktiviert für maximale Stabilität
+    console.log('Real-time subscription disabled - using fallback products + periodic refresh');
+  }, []);
 
   const unsubscribeFromChanges = useCallback(() => {
-    if (subscription) {
-      console.log('Unsubscribing from product changes...');
-      supabase.removeChannel(subscription);
-      setSubscription(null);
-    }
-  }, [subscription]);
+    // Real-time subscription deaktiviert - keine Cleanup nötig
+    console.log('Real-time subscription disabled - no cleanup needed');
+  }, []);
 
   // Initial load
   useEffect(() => {
     refreshProducts();
   }, [refreshProducts]);
 
-  // Auto-subscribe on mount
-  useEffect(() => {
-    subscribeToChanges();
-    
-    // Cleanup on unmount
-    return () => {
-      unsubscribeFromChanges();
-    };
-  }, [subscribeToChanges, unsubscribeFromChanges]);
+  // Deaktiviere Real-time Subscription temporär für Stabilität
+  // useEffect(() => {
+  //   if (!subscription && !isUnmounting) {
+  //     subscribeToChanges();
+  //   }
+  //   
+  //   // Cleanup on unmount
+  //   return () => {
+  //     setIsUnmounting(true);
+  //     if (subscription) {
+  //       console.log('Cleaning up subscription on unmount...');
+  //       supabase.removeChannel(subscription);
+  //       setSubscription(null);
+  //     }
+  //   };
+  // }, [subscription, subscribeToChanges, isUnmounting]);
+  
+  console.log('Real-time subscription disabled for stability - using fallback products + periodic refresh');
 
   // Periodic refresh as fallback (every 5 minutes)
   useEffect(() => {

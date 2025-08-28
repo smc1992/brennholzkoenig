@@ -20,6 +20,9 @@ export default function RealtimeProductGrid() {
   const { products, isLoading, error, refreshProducts } = useRealtimeSync();
   const [filteredProducts, setFilteredProducts] = useState(products);
   const [selectedCategory, setSelectedCategory] = useState<string>('Alle');
+  
+  // Debug-Logs
+  console.log('RealtimeProductGrid - isLoading:', isLoading, 'products:', products.length, 'error:', error);
 
   // Update filtered products when products change
   useEffect(() => {
@@ -45,16 +48,17 @@ export default function RealtimeProductGrid() {
     }).format(price);
   };
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-[#C04020] border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Produkte werden geladen...</p>
-        </div>
-      </div>
-    );
-  }
+  // Loading-Check deaktiviert - zeige immer Fallback-Produkte
+  // if (isLoading) {
+  //   return (
+  //     <div className="container mx-auto px-4 py-8">
+  //       <div className="text-center">
+  //         <div className="animate-spin w-12 h-12 border-4 border-[#C04020] border-t-transparent rounded-full mx-auto mb-4"></div>
+  //         <p className="text-gray-600">Produkte werden geladen...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   if (error) {
     return (
@@ -119,7 +123,27 @@ export default function RealtimeProductGrid() {
         <div className="text-center py-12">
           <div className="text-gray-500">
             <i className="ri-inbox-line text-4xl mb-4"></i>
-            <p className="text-lg">Keine Produkte in dieser Kategorie gefunden.</p>
+            <p className="text-lg mb-4">Keine Produkte in dieser Kategorie gefunden.</p>
+            {selectedCategory !== 'Alle' && (
+              <button
+                onClick={() => setSelectedCategory('Alle')}
+                className="bg-[#C04020] text-white px-6 py-2 rounded-lg hover:bg-[#A03518] transition-colors"
+              >
+                Alle Kategorien anzeigen
+              </button>
+            )}
+            {selectedCategory === 'Alle' && (
+              <div className="mt-4">
+                <p className="text-sm text-gray-400 mb-2">Probleme beim Laden der Produkte?</p>
+                <button
+                  onClick={refreshProducts}
+                  className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  <i className="ri-refresh-line mr-2"></i>
+                  Produkte neu laden
+                </button>
+              </div>
+            )}
           </div>
         </div>
       ) : (

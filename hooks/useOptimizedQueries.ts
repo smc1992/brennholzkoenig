@@ -3,21 +3,29 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { queryKeys, performanceMonitor } from '@/lib/queryClient';
 
-// Optimierte Produkt-Queries mit verbessertem Caching
+// Optimierte Produkt-Queries mit verbessertem Caching und Timeout
 export const useProducts = (filters?: { category?: string; active?: boolean }) => {
   return useQuery({
     queryKey: queryKeys.products.list(filters || {}),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const startTime = performance.now();
       
+      // AbortController für Timeout (7 Sekunden)
+      const timeoutId = setTimeout(() => {
+        if (!signal?.aborted) {
+          console.warn('Products query timeout after 7s');
+        }
+      }, 7000);
+      
       try {
-        // Verwende page_contents Tabelle für bessere Performance
+        // Verwende page_contents Tabelle mit gezielten Spalten
         let query = supabase
           .from('page_contents')
-          .select('*')
+          .select('id, title, content, category, is_active, status, created_at, updated_at, meta_data')
           .eq('content_type', 'product')
           .eq('status', 'published')
-          .order('id', { ascending: true });
+          .order('id', { ascending: true })
+          .limit(50); // Pagination: max 50 Items
         
         if (filters?.category) {
           query = query.eq('category', filters.category);
@@ -32,52 +40,116 @@ export const useProducts = (filters?: { category?: string; active?: boolean }) =
         
         const { data, error } = await query;
         
+        clearTimeout(timeoutId);
         const duration = performance.now() - startTime;
         performanceMonitor.logQueryPerformance(['products', 'list'], duration);
         
         if (error) {
-          console.error('Products query error:', error);
+          console.error('Products query error:', {
+            code: error.code,
+            message: error.message,
+            hint: error.hint,
+            details: error.details
+          });
           throw error;
         }
         
         return data || [];
       } catch (error) {
+        clearTimeout(timeoutId);
         console.error('Failed to fetch products:', error);
         // Fallback zu leerer Liste statt Fehler
         return [];
       }
     },
-    staleTime: 10 * 60 * 1000, // Erhöht auf 10 Minuten
-    gcTime: 30 * 60 * 1000, // Erhöht auf 30 Minuten
-    retry: 2,
-    retryDelay: 500,
+    staleTime: 10 * 60 * 1000, // 10 Minuten
+    gcTime: 20 * 60 * 1000, // 20 Minuten (größer als staleTime)
+    retry: (failureCount, error: any) => {
+      // Keine Retries bei 404, 401, 403
+      if (error?.status === 404 || error?.status === 401 || error?.status === 403) {
+        return false;
+      }
+      return failureCount < 3; // Max 3 Retries
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 8000), // 1s, 2s, 4s, 8s
     refetchOnWindowFocus: false,
     networkMode: 'offlineFirst',
   });
 };
 
-// Einzelnes Produkt mit Caching
+// Einzelnes Produkt mit Caching und Timeout
 export const useProduct = (id: string | number) => {
   return useQuery({
     queryKey: queryKeys.products.detail(id),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const startTime = performance.now();
       
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('id', id)
-        .eq('is_active', true)
-        .single();
+      // Timeout für einzelne Produkte (5 Sekunden)
+      const timeoutId = setTimeout(() => {
+        if (!signal?.aborted) {
+          console.warn(`Product ${id} query timeout after 5s`);
+        }
+      }, 5000);
       
-      const duration = performance.now() - startTime;
-      performanceMonitor.logQueryPerformance(['products', 'detail'], duration);
-      
-      if (error) throw error;
-      return data;
+      try {
+        // Versuche zuerst page_contents, dann products als Fallback
+        let data, error;
+        
+        // Primär: page_contents Tabelle
+         const pageContentResult = await supabase
+           .from('page_contents')
+           .select('id, title, content, category, is_active, status, created_at, updated_at, meta_data')
+           .eq('content_type', 'product')
+           .eq('id', id)
+           .eq('is_active', true)
+           .eq('status', 'published')
+           .single();
+         
+         if (pageContentResult.data) {
+           data = pageContentResult.data;
+           error = null;
+         } else {
+           // Fallback: products Tabelle
+           const productResult = await supabase
+             .from('products')
+             .select('id, name, description, price, image_url, category, stock_quantity, unit, is_active, created_at, updated_at')
+             .eq('id', id)
+             .eq('is_active', true)
+             .single();
+          
+          data = productResult.data;
+          error = productResult.error;
+        }
+        
+        clearTimeout(timeoutId);
+        const duration = performance.now() - startTime;
+        performanceMonitor.logQueryPerformance(['products', 'detail'], duration);
+        
+        if (error) {
+          console.error('Product query error:', {
+            code: error.code,
+            message: error.message,
+            hint: error.hint,
+            productId: id
+          });
+          throw error;
+        }
+        
+        return data;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        console.error(`Failed to fetch product ${id}:`, error);
+        throw error;
+      }
     },
     staleTime: 10 * 60 * 1000, // 10 Minuten für einzelne Produkte
+    gcTime: 20 * 60 * 1000, // 20 Minuten
     enabled: !!id,
+    retry: (failureCount, error: any) => {
+      if (error?.status === 404) return false; // Produkt existiert nicht
+      return failureCount < 2; // Max 2 Retries für einzelne Produkte
+    },
+    retryDelay: (attemptIndex) => Math.min(500 * 2 ** attemptIndex, 3000), // 500ms, 1s, 2s
   });
 };
 

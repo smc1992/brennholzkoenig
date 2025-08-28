@@ -1,5 +1,6 @@
 'use client';
 import { QueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 
 // Optimierte Query Client Konfiguration für Performance
 export const queryClient = new QueryClient({
@@ -43,20 +44,7 @@ export const queryClient = new QueryClient({
   },
 });
 
-// Prefetch kritische Daten beim App-Start
-if (typeof window !== 'undefined') {
-  // Prefetch Produkte
-  queryClient.prefetchQuery({
-    queryKey: ['products', 'list', { active: true }],
-    staleTime: 10 * 60 * 1000,
-  });
-  
-  // Prefetch Shop-Einstellungen
-  queryClient.prefetchQuery({
-    queryKey: ['settings', 'shop'],
-    staleTime: 15 * 60 * 1000,
-  });
-}
+// Prefetch wird nach queryKeys-Definition ausgeführt
 
 // Query Keys für konsistente Caching-Strategien
 export const queryKeys = {
@@ -149,6 +137,7 @@ export const prefetchQueries = {
 // Performance Monitoring
 export const performanceMonitor = {
   logQueryPerformance: (queryKey: string[], duration: number) => {
+    console.log(`Query ${queryKey.join('.')} took ${duration}ms`);
     if (duration > 1000) {
       console.warn(`Slow query detected: ${queryKey.join('.')} took ${duration}ms`);
     }
@@ -162,3 +151,48 @@ export const performanceMonitor = {
     console.log(`Cache miss: ${queryKey.join('.')}`);
   },
 };
+
+// Prefetch kritische Daten beim App-Start
+if (typeof window !== 'undefined') {
+  // Prefetch Produkte mit konsistenten Query Keys
+  queryClient.prefetchQuery({
+    queryKey: queryKeys.products.list({ active: true }),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('page_contents')
+        .select('*')
+        .eq('content_type', 'product')
+        .eq('status', 'published')
+        .eq('is_active', true)
+        .order('id', { ascending: true })
+        .limit(50);
+      
+      if (error) {
+        console.error('Prefetch products error:', error);
+        return [];
+      }
+      return data || [];
+    },
+    staleTime: 10 * 60 * 1000,
+    gcTime: 20 * 60 * 1000,
+  });
+  
+  // Prefetch Shop-Einstellungen
+  queryClient.prefetchQuery({
+    queryKey: queryKeys.settings.shop(),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('shop_settings')
+        .select('*')
+        .single();
+      
+      if (error) {
+        console.error('Prefetch settings error:', error);
+        return null;
+      }
+      return data;
+    },
+    staleTime: 15 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
+}

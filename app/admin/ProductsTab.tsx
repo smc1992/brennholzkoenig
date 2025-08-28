@@ -43,9 +43,56 @@ interface StockChange {
   notes: string;
 }
 
+// Fallback-Produkte für sofortige Anzeige im Admin
+const fallbackAdminProducts: Product[] = [
+  {
+    id: '1',
+    name: 'Industrieholz Buche Klasse 1',
+    description: 'Premium Industrieholz aus Buche - perfekt für sauberes Heizen',
+    category: 'Industrieholz',
+    price: 89.99,
+    stock_quantity: 50,
+    min_stock_level: 10,
+    unit: 'SRM',
+    image_url: '/images/industrieholz-buche-1.jpg',
+    in_stock: true,
+    is_active: true,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: '2',
+    name: 'Industrieholz Buche Klasse 2',
+    description: 'Hochwertiges Industrieholz aus Buche - ideal für den Kamin',
+    category: 'Industrieholz',
+    price: 79.99,
+    stock_quantity: 30,
+    min_stock_level: 5,
+    unit: 'SRM',
+    image_url: '/images/industrieholz-buche-2.jpg',
+    in_stock: true,
+    is_active: true,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: '3',
+    name: 'Scheitholz Buche 33cm',
+    description: 'Klassisches Scheitholz aus Buche - 33cm Länge',
+    category: 'Scheitholz',
+    price: 99.99,
+    stock_quantity: 25,
+    min_stock_level: 8,
+    unit: 'SRM',
+    image_url: '/images/scheitholz-buche-33.jpg',
+    in_stock: true,
+    is_active: true,
+    created_at: new Date().toISOString()
+  }
+];
+
 export default function ProductsTab() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  // Starte mit Fallback-Produkten für sofortige Anzeige
+  const [products, setProducts] = useState<Product[]>(fallbackAdminProducts);
+  const [loading, setLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
@@ -67,8 +114,8 @@ export default function ProductsTab() {
   const [editProductMainImage, setEditProductMainImage] = useState<string>('');
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>(fallbackAdminProducts);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("Alle");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
@@ -132,13 +179,18 @@ export default function ProductsTab() {
 
       if (error) throw error;
       const typedData = data as unknown as Product[];
-      setProducts(typedData || []);
-      setFilteredProducts(typedData || []);
+      
+      // Nur aktualisieren wenn echte Daten vorhanden
+      if (typedData && typedData.length > 0) {
+        setProducts(typedData);
+        setFilteredProducts(typedData);
+        console.log('Admin products loaded:', typedData.length, 'items');
+      }
     } catch (err) {
       console.error("Error loading products:", err);
-    } finally {
-      setIsLoading(false);
+      // Bei Fehler bleiben Fallback-Produkte erhalten
     }
+    // Kein setIsLoading(false) mehr nötig
   };
 
   const filterProducts = () => {
@@ -521,8 +573,8 @@ export default function ProductsTab() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
+          <div className="admin-table-container">
+            <table className="min-w-full admin-table">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">

@@ -72,9 +72,8 @@ export const usePreloadData = () => {
 
     // Preload nur im Browser und wenn noch nicht geladen
     if (typeof window !== 'undefined') {
-      // Verzögerung für bessere Initial Page Load Performance
-      const timer = setTimeout(preloadCriticalData, 100);
-      return () => clearTimeout(timer);
+      // Sofortiges Preload für bessere Performance
+      preloadCriticalData();
     }
   }, [queryClient]);
 };
@@ -152,8 +151,8 @@ export const usePrefetchPageData = (page: string) => {
     };
 
     if (typeof window !== 'undefined') {
-      const timer = setTimeout(prefetchPageData, 50);
-      return () => clearTimeout(timer);
+      // Sofortiges Prefetch für bessere Performance
+      prefetchPageData();
     }
   }, [page, queryClient]);
 };

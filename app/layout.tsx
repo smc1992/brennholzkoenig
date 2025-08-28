@@ -15,6 +15,7 @@ import AnalyticsTracker from '@/components/AnalyticsTracker';
 import { QueryProvider } from '@/components/QueryProvider';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
 import DataPreloader from '@/components/DataPreloader';
+import ConditionalLayout from '../components/ConditionalLayout';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -108,9 +109,9 @@ export default function RootLayout({
         <QueryProvider>
           <DataPreloader />
           <CookieBanner />
-          <Header />
-          <main>{children}</main>
-          <Footer />
+          <ConditionalLayout>
+            {children}
+          </ConditionalLayout>
           <GoogleAnalytics />
           <FacebookPixel pixelId="123456789012345" />
           <GoogleAdsTracking />

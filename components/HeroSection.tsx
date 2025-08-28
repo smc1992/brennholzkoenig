@@ -17,12 +17,31 @@ export default function HeroSection() {
     // Standard Fallback-URL
     const fallbackUrl = 'https://readdy.ai/api/search-image?query=Premium%20firewood%20warehouse%20with%20stacked%20dry%20oak%20wood%20logs%2C%20professional%20firewood%20business%20setting%2C%20wooden%20atmosphere%20with%20natural%20lighting%2C%20cozy%20rustic%20wood%20storage%20facility%2C%20organized%20firewood%20display%20in%20German%20countryside%2C%20warm%20wood%20textures%20and%20timber%20stacks%2C%20professional%20lumber%20yard%20environment%20with%20golden%20hour%20lighting%20creating%20warm%20wood%20tones&width=1920&height=1080&seq=hero-firewood-v2&orientation=landscape';
 
-    // Dynamisches Bild laden
+    // Dynamisches Bild laden mit verbessertem Error-Handling
     const loadHeroImage = async () => {
       try {
         const response = await fetch('/api/content?page=home&section=hero&type=background_image');
+        
+        // Prüfe ob Response OK ist
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        // Prüfe Content-Type
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error(`Expected JSON, got ${contentType}`);
+        }
+        
         const data = await response.json();
-        setHeroImageUrl(data.content || fallbackUrl);
+        
+        // Validiere Response-Struktur
+        if (data && typeof data === 'object' && data.content) {
+          setHeroImageUrl(data.content);
+        } else {
+          console.warn('Invalid API response structure:', data);
+          setHeroImageUrl(fallbackUrl);
+        }
       } catch (error) {
         console.error('Fehler beim Laden des Hero-Bildes:', error);
         setHeroImageUrl(fallbackUrl);

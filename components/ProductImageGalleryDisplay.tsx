@@ -60,7 +60,7 @@ export default function ProductImageGalleryDisplay({
     } finally {
       setIsLoading(false);
     }
-  }, [productName, productId, getProductImages, invalidateCache, selectedImage]);
+  }, [productName, productId, getProductImages, invalidateCache]);
 
   // Initial load
   useEffect(() => {

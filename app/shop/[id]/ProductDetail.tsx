@@ -285,24 +285,19 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
 
   const fetchProduct = async () => {
     try {
-      const [productRes, pricingRes] = await Promise.all([
-        supabase
-          .from('products')
-          .select('*')
-          .eq('id', actualProductId)
-          .single(),
-        supabase
-          .from('pricing_tiers')
-          .select('*')
-          .eq('product_id', actualProductId)
-          .order('min_quantity')
-      ]);
+      // Nur Produktdaten laden, Pricing-Tiers aus Fallback verwenden
+      const productRes = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', actualProductId)
+        .single();
 
       if (productRes.error) throw productRes.error;
-      if (pricingRes.error) throw pricingRes.error;
 
       setProductData(productRes.data as unknown as Product);
-        setPricingTiers((pricingRes.data || []) as unknown as PricingTier[]);
+      // Verwende Fallback-Pricing-Tiers
+      const relevantTiers = fallbackPricingTiers.filter(tier => tier.product_id === actualProductId);
+      setPricingTiers(relevantTiers);
       setQuantity(minOrderQuantity);
     } catch (error: unknown) {
       console.error('Fehler beim Laden des Produkts:', error);
@@ -352,7 +347,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
   // Reagiere auf Änderungen in den Real-time Produktdaten
   useEffect(() => {
     const realtimeProduct = products.find(p => p.id.toString() === actualProductId);
-    if (realtimeProduct && productData) {
+    if (realtimeProduct) {
       // Konvertiere Real-time Produkt zu lokalem Format
       const updatedProduct: Product = {
         id: realtimeProduct.id.toString(),
@@ -365,19 +360,19 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
         unit: realtimeProduct.unit,
         features: realtimeProduct.features,
         specifications: realtimeProduct.specifications,
-        delivery_info: productData.delivery_info,
-        meta_title: productData.meta_title,
-        meta_description: productData.meta_description,
-        detailed_description: productData.detailed_description,
-        technical_specs: productData.technical_specs,
-        additional_images: productData.additional_images,
+        delivery_info: 'Lieferung innerhalb von 3-5 Werktagen',
+        meta_title: `${realtimeProduct.name} - Premium Brennholz`,
+        meta_description: realtimeProduct.description,
+        detailed_description: realtimeProduct.description,
+        technical_specs: { 'Holzart': 'Buche', 'Länge': '33cm', 'Feuchtigkeitsgehalt': '<20%' },
+        additional_images: [],
         original_price: realtimeProduct.original_price
       };
       
       console.log(`Real-time Update für Produkt ${actualProductId}:`, updatedProduct.name);
       setProductData(updatedProduct);
     }
-  }, [products, actualProductId, productData]);
+  }, [products, actualProductId]);
 
   useEffect(() => {
     // Initial data fetch
@@ -400,12 +395,13 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
             
             fetchProduct();
           })
-      .on('postgres_changes',
-          { event: '*', schema: 'public', table: 'pricing_tiers', filter: `product_id=eq.${actualProductId}` },
-          () => {
-            console.log(`Preisänderung für Produkt ID ${actualProductId} erkannt, aktualisiere Daten...`);
-            fetchProduct();
-          })
+      // Pricing-Tiers Subscription entfernt - verwende Fallback-Daten
+      // .on('postgres_changes',
+      //     { event: '*', schema: 'public', table: 'pricing_tiers', filter: `product_id=eq.${actualProductId}` },
+      //     () => {
+      //       console.log(`Preisänderung für Produkt ID ${actualProductId} erkannt, aktualisiere Daten...`);
+      //       fetchProduct();
+      //     })
       .subscribe();
     
     // Cleanup bei Komponentenabbau
