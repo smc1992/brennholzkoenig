@@ -28,8 +28,8 @@ export default function ProcessSection() {
   return (
     <section ref={sectionRef} className="py-16 md:py-20 bg-gradient-to-b from-[#F5F0E0] to-white">
       <div className="container mx-auto px-4">
-        <div className={`text-center mb-12 md:mb-16 transition-all duration-1000 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <div className="inline-flex items-center bg-[#C04020] text-white px-6 py-3 rounded-full font-bold text-sm md:text-base mb-6 transform hover:scale-105 transition-all duration-300">
+        <div className="text-center mb-12 md:mb-16">
+          <div className="inline-flex items-center bg-[#C04020] text-white px-6 py-3 rounded-full font-bold text-sm md:text-base mb-6">
             <i className="ri-route-line mr-2"></i>
             <DynamicContent
               page="home"
@@ -73,11 +73,11 @@ export default function ProcessSection() {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-4 relative z-20">
               {/* Step 1 */}
-              <div className={`text-center transition-all duration-700 delay-200 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-                <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 border border-gray-100 group">
-                  <div className="w-20 h-20 flex items-center justify-center bg-gradient-to-br from-[#C04020] to-[#A03318] rounded-2xl mx-auto mb-6 shadow-lg relative transition-all duration-300 group-hover:rotate-6">
-                    <i className="ri-shopping-cart-line text-white text-3xl transition-all duration-300 group-hover:scale-110"></i>
-                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#D4A520] rounded-full flex items-center justify-center text-white font-black text-sm animate-pulse">
+              <div className="text-center">
+                <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-gray-100">
+                  <div className="w-20 h-20 flex items-center justify-center bg-gradient-to-br from-[#C04020] to-[#A03318] rounded-2xl mx-auto mb-6 shadow-lg relative">
+                    <i className="ri-shopping-cart-line text-white text-3xl"></i>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#D4A520] rounded-full flex items-center justify-center text-white font-black text-sm">
                       1
                     </div>
                   </div>
@@ -98,11 +98,11 @@ export default function ProcessSection() {
                     />
                   </p>
                   <ul className="text-xs md:text-sm text-gray-600 space-y-1">
-                    <li className="flex items-center transform transition-all duration-300 hover:translate-x-2">
+                    <li className="flex items-center">
                       <i className="ri-check-line text-green-600 mr-2"></i>
                       Online oder per Telefon
                     </li>
-                    <li className="flex items-center transform transition-all duration-300 hover:translate-x-2">
+                    <li className="flex items-center">
                       <i className="ri-check-line text-green-600 mr-2"></i>
                       Kostenlose Beratung
                     </li>
@@ -115,11 +115,11 @@ export default function ProcessSection() {
               </div>
 
               {/* Step 2 */}
-              <div className={`text-center transition-all duration-700 delay-400 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-                <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 border border-gray-100 group">
-                  <div className="w-20 h-20 flex items-center justify-center bg-gradient-to-br from-[#D4A520] to-[#B8941A] rounded-2xl mx-auto mb-6 shadow-lg relative transition-all duration-300 group-hover:rotate-6">
-                    <i className="ri-calendar-check-line text-white text-3xl transition-all duration-300 group-hover:scale-110"></i>
-                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#C04020] rounded-full flex items-center justify-center text-white font-black text-sm animate-pulse">
+              <div className="text-center">
+                <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-gray-100">
+                  <div className="w-20 h-20 flex items-center justify-center bg-gradient-to-br from-[#D4A520] to-[#B8941A] rounded-2xl mx-auto mb-6 shadow-lg relative">
+                    <i className="ri-calendar-check-line text-white text-3xl"></i>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#C04020] rounded-full flex items-center justify-center text-white font-black text-sm">
                       2
                     </div>
                   </div>
@@ -157,11 +157,11 @@ export default function ProcessSection() {
               </div>
 
               {/* Step 3 */}
-              <div className={`text-center transition-all duration-700 delay-600 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-                <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 border border-gray-100 group">
-                  <div className="w-20 h-20 flex items-center justify-center bg-gradient-to-br from-[#2C5545] to-[#1A3A2E] rounded-2xl mx-auto mb-6 shadow-lg relative transition-all duration-300 group-hover:rotate-6">
-                    <i className="ri-truck-line text-white text-3xl transition-all duration-300 group-hover:scale-110"></i>
-                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#D4A520] rounded-full flex items-center justify-center text-white font-black text-sm animate-pulse">
+              <div className="text-center">
+                <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-gray-100">
+                  <div className="w-20 h-20 flex items-center justify-center bg-gradient-to-br from-[#C04020] to-[#A03318] rounded-2xl mx-auto mb-6 shadow-lg relative">
+                    <i className="ri-truck-line text-white text-3xl"></i>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#D4A520] rounded-full flex items-center justify-center text-white font-black text-sm">
                       3
                     </div>
                   </div>
@@ -199,11 +199,11 @@ export default function ProcessSection() {
               </div>
 
               {/* Step 4 */}
-              <div className={`text-center transition-all duration-700 delay-800 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-                <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 border border-gray-100 group">
-                  <div className="w-20 h-20 flex items-center justify-center bg-gradient-to-br from-[#C04020] to-[#A03318] rounded-2xl mx-auto mb-6 shadow-lg relative transition-all duration-300 group-hover:rotate-6">
-                    <i className="ri-fire-line text-white text-3xl transition-all duration-300 group-hover:scale-110"></i>
-                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#C04020] rounded-full flex items-center justify-center text-white font-black text-sm animate-pulse">
+              <div className="text-center">
+                <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-gray-100">
+                  <div className="w-20 h-20 flex items-center justify-center bg-gradient-to-br from-[#C04020] to-[#A03318] rounded-2xl mx-auto mb-6 shadow-lg relative">
+                    <i className="ri-fire-line text-white text-3xl"></i>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#C04020] rounded-full flex items-center justify-center text-white font-black text-sm">
                       4
                     </div>
                   </div>
@@ -336,8 +336,8 @@ export default function ProcessSection() {
           </div>
 
           {/* CTA */}
-          <div className={`text-center mt-12 transition-all duration-1000 delay-1000 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-            <div className="bg-gradient-to-r from-[#D4A520] to-[#FFD700] text-[#1A1A1A] rounded-2xl p-6 md:p-8 shadow-2xl max-w-2xl mx-auto hover:shadow-3xl transition-all duration-500 transform hover:scale-105">
+          <div className="text-center mt-12">
+            <div className="bg-gradient-to-r from-[#D4A520] to-[#FFD700] text-[#1A1A1A] rounded-2xl p-6 md:p-8 shadow-2xl max-w-2xl mx-auto">
               <h3 className="text-2xl md:text-3xl font-black mb-4" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
                 <DynamicContent
                   page="home"
@@ -355,17 +355,17 @@ export default function ProcessSection() {
                 />
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="/shop" className="bg-[#C04020] text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#A03318] transition-all duration-300 whitespace-nowrap cursor-pointer shadow-xl transform hover:scale-105 text-center">
+                <a href="/shop" className="bg-[#C04020] text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#A03318] transition-colors duration-300 whitespace-nowrap cursor-pointer shadow-xl text-center">
                   <i className="ri-shopping-cart-line mr-3"></i>
                   Jetzt bestellen & sparen
                 </a>
-                <a href="tel:+4917671085234" className="border-2 border-[#C04020] text-[#C04020] px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#C04020] hover:text-white transition-all duration-300 whitespace-nowrap cursor-pointer transform hover:scale-105 text-center">
+                <a href="tel:+4917671085234" className="border-2 border-[#C04020] text-[#C04020] px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#C04020] hover:text-white transition-colors duration-300 whitespace-nowrap cursor-pointer text-center">
                   <i className="ri-phone-line mr-3"></i>
                   +49 176 71085234
                 </a>
               </div>
               <div className="flex flex-wrap justify-center gap-4 mt-4 text-xs md:text-sm opacity-80">
-                <span className="flex items-center transform transition-all duration-300 hover:scale-110">
+                <span className="flex items-center">
                   <i className="ri-phone-line mr-1"></i>
                   Kostenlose Beratung
                 </span>

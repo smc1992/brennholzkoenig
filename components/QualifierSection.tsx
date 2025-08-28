@@ -28,8 +28,8 @@ export default function QualifierSection() {
   return (
     <section ref={sectionRef} className="py-12 sm:py-16 lg:py-20 bg-gradient-to-b from-[#F5F0E0] to-white overflow-x-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className={`text-center mb-8 sm:mb-12 lg:mb-16 transition-all duration-1000 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <div className="inline-flex items-center bg-[#C04020] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-sm sm:text-base mb-4 sm:mb-6 hover:scale-105 transition-all duration-300">
+        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+          <div className="inline-flex items-center bg-[#C04020] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-sm sm:text-base mb-4 sm:mb-6">
             <i className="ri-question-line mr-2 flex-shrink-0"></i>
             <span className="whitespace-nowrap">EHRLICHE BERATUNG</span>
           </div>
@@ -45,9 +45,9 @@ export default function QualifierSection() {
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
             {/* Geeignet für - Mobile optimiert */}
-            <div className={`bg-gradient-to-br from-[#F5F0E0] to-[#F0E8D0] border-2 border-[#D4A520] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl transition-all duration-1000 delay-200 transform hover:scale-105 hover:shadow-2xl ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
+            <div className="bg-gradient-to-br from-[#F5F0E0] to-[#F0E8D0] border-2 border-[#D4A520] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl">
               <div className="text-center mb-4 sm:mb-6 lg:mb-8">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 flex items-center justify-center bg-[#D4A520] rounded-full mx-auto mb-3 sm:mb-4 shadow-lg animate-bounce">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 flex items-center justify-center bg-[#D4A520] rounded-full mx-auto mb-3 sm:mb-4 shadow-lg">
                   <i className="ri-check-line text-white text-lg sm:text-2xl lg:text-3xl"></i>
                 </div>
                 <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#1A1A1A] mb-2 leading-tight" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
@@ -89,8 +89,8 @@ export default function QualifierSection() {
                     desc: 'Ca. 50% weniger Platzbedarf beim Stapeln von Industrieholz',
                   delay: 1200
                 }].map((item, index) => (
-                  <div key={index} className={`flex items-start bg-white rounded-lg p-3 sm:p-4 shadow-sm transition-all duration-500 transform hover:translate-x-1 sm:hover:translate-x-2 hover:shadow-lg ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ transitionDelay: `${item.delay}ms` }}>
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center bg-[#D4A520] rounded-full mr-3 sm:mr-4 flex-shrink-0 mt-0.5 hover:rotate-12 transition-all duration-300">
+                  <div key={index} className="flex items-start bg-white rounded-lg p-3 sm:p-4 shadow-sm">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center bg-[#D4A520] rounded-full mr-3 sm:mr-4 flex-shrink-0 mt-0.5">
                       <i className={`${item.icon} text-white text-xs sm:text-sm`}></i>
                     </div>
                     <div className="min-w-0 flex-1">
@@ -103,9 +103,9 @@ export default function QualifierSection() {
             </div>
 
             {/* Nicht geeignet für - Mobile optimiert */}
-            <div className={`bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-300 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl transition-all duration-1000 delay-400 transform hover:scale-105 hover:shadow-2xl ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
+            <div className="bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-300 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl">
               <div className="text-center mb-4 sm:mb-6 lg:mb-8">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 flex items-center justify-center bg-red-500 rounded-full mx-auto mb-3 sm:mb-4 shadow-lg animate-bounce">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 flex items-center justify-center bg-red-500 rounded-full mx-auto mb-3 sm:mb-4 shadow-lg">
                   <i className="ri-close-line text-white text-lg sm:text-2xl lg:text-3xl"></i>
                 </div>
                 <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-red-800 mb-2 leading-tight" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
@@ -153,8 +153,8 @@ export default function QualifierSection() {
                   desc: 'Sie haben noch nie mit Industrieholz geheizt (→ starten Sie zum Testen mit 3,5 SRM Industrieholz + 3,5 SRM Buche)',
                   delay: 1400
                 }].map((item, index) => (
-                  <div key={index} className={`flex items-start bg-white rounded-lg p-3 sm:p-4 shadow-sm transition-all duration-500 transform hover:translate-x-1 sm:hover:translate-x-2 hover:shadow-lg ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ transitionDelay: `${item.delay}ms` }}>
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center bg-red-500 rounded-full mr-3 sm:mr-4 flex-shrink-0 mt-0.5 hover:rotate-12 transition-all duration-300">
+                  <div key={index} className="flex items-start bg-white rounded-lg p-3 sm:p-4 shadow-sm">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center bg-red-500 rounded-full mr-3 sm:mr-4 flex-shrink-0 mt-0.5">
                       <i className={`${item.icon} text-white text-xs sm:text-sm`}></i>
                     </div>
                     <div className="min-w-0 flex-1">
@@ -168,7 +168,7 @@ export default function QualifierSection() {
           </div>
 
           {/* Call-to-Action - Mobile optimiert */}
-          <div className={`bg-gradient-to-r from-[#C04020] to-[#A03318] text-white rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 text-center shadow-2xl mt-6 sm:mt-8 lg:mt-12 transition-all duration-1000 delay-1600 transform hover:scale-105 hover:shadow-3xl ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <div className="bg-gradient-to-r from-[#C04020] to-[#A03318] text-white rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 text-center shadow-2xl mt-6 sm:mt-8 lg:mt-12">
             <h3 className="text-xl sm:text-2xl lg:text-3xl font-black mb-3 sm:mb-4 leading-tight" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
               NOCH UNSICHER? KOSTENLOSE BERATUNG!
             </h3>
@@ -200,7 +200,7 @@ export default function QualifierSection() {
 
             {/* Mobile-optimierte Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-              <Link href="/kontakt" className="bg-white text-[#C04020] px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-lg font-bold hover:bg-gray-100 transition-all duration-300 whitespace-nowrap cursor-pointer text-sm sm:text-base w-full sm:w-auto transform hover:scale-105 hover:-translate-y-1 inline-flex items-center justify-center">
+              <Link href="/kontakt" className="bg-white text-[#C04020] px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-lg font-bold hover:bg-gray-100 transition-colors duration-300 whitespace-nowrap cursor-pointer text-sm sm:text-base w-full sm:w-auto inline-flex items-center justify-center">
                 <div className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center mr-2 inline-flex">
                   <i className="ri-phone-line"></i>
                 </div>
