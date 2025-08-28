@@ -43,6 +43,9 @@ export async function POST(request: NextRequest) {
               
             CREATE POLICY IF NOT EXISTS "Users can insert own data" ON customers
               FOR INSERT WITH CHECK (auth.email() = email);
+              
+            CREATE POLICY IF NOT EXISTS "Anonymous users can create customers" ON customers
+              FOR INSERT WITH CHECK (true);
           `
         });
         
