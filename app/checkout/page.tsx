@@ -196,7 +196,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (products.length > 0 && cartItems.length > 0) {
       const updatedCartItems = cartItems.map(cartItem => {
-        const realtimeProduct = products.find(p => p.id.toString() === cartItem.id.toString());
+        const realtimeProduct = products.find(p => p.id && cartItem.id && p.id.toString() === cartItem.id.toString());
         if (realtimeProduct) {
           console.log(`Aktualisiere Checkout-Artikel: ${cartItem.name} -> ${realtimeProduct.name}, Preis: ${cartItem.price} -> ${realtimeProduct.price}`);
           return {
@@ -430,12 +430,15 @@ export default function CheckoutPage() {
 
       return { data, error };
     } else {
-      // Create new customer
+      // Create new customer with UPSERT logic
       const { data, error } = await supabase
         .from('customers')
-        .insert({
+        .upsert({
           ...customerData,
           created_at: new Date().toISOString(),
+        }, {
+          onConflict: 'email',
+          ignoreDuplicates: false
         })
         .select()
         .single();
@@ -468,7 +471,7 @@ export default function CheckoutPage() {
           .eq('email', user.email)
           .single();
 
-        if (existingCustomer) {
+        if (existingCustomer && existingCustomer.id) {
           customerId = String(existingCustomer.id);
           await saveCustomerData(customerId);
         } else {
@@ -502,7 +505,7 @@ export default function CheckoutPage() {
           .eq('email', deliveryData.email)
           .single();
 
-        if (existingCustomer) {
+        if (existingCustomer && existingCustomer.id) {
           customerId = String(existingCustomer.id);
           await saveCustomerData(customerId);
         } else {
@@ -531,47 +534,58 @@ export default function CheckoutPage() {
       }
 
       // customerId kann null sein für anonyme Bestellungen
-      if (customerId === undefined) {
-        throw new Error('Kunde konnte nicht erstellt oder gefunden werden');
-      }
+      // Konvertiere undefined zu null für UUID-Kompatibilität
+      const finalCustomerId = customerId === undefined ? null : customerId;
+      
+      console.log('Final Customer ID:', finalCustomerId, 'Type:', typeof finalCustomerId);
 
       // Create order
       const orderNumber = 'BK-' + Date.now();
       const { subtotal, discountAmount, shipping, total } = calculateTotal();
 
+      // Validiere und bereinige alle Datenfelder für UUID-Kompatibilität
       const orderData = {
-        order_number: orderNumber,
-        customer_id: customerId,
+        order_number: orderNumber || `BK-${Date.now()}`,
+        customer_id: finalCustomerId, // Bereits validiert: undefined → null
         status: 'pending',
-        payment_method: paymentMethod,
-        delivery_first_name: deliveryData.firstName,
-        delivery_last_name: deliveryData.lastName,
-        delivery_email: deliveryData.email,
-        delivery_phone: deliveryData.phone,
-        delivery_street: deliveryData.street,
-        delivery_house_number: deliveryData.houseNumber,
-        delivery_postal_code: deliveryData.postalCode,
-        delivery_city: deliveryData.city,
+        payment_method: paymentMethod || 'bar', // Fallback für undefined
+        delivery_first_name: deliveryData.firstName || '',
+        delivery_last_name: deliveryData.lastName || '',
+        delivery_email: deliveryData.email || '',
+        delivery_phone: deliveryData.phone || '',
+        delivery_street: deliveryData.street || '',
+        delivery_house_number: deliveryData.houseNumber || '',
+        delivery_postal_code: deliveryData.postalCode || '',
+        delivery_city: deliveryData.city || '',
         delivery_notes: deliveryData.deliveryNotes || '',
-        preferred_delivery_month: deliveryData.preferredDeliveryMonth,
-        preferred_delivery_year: deliveryData.preferredDeliveryYear,
-        billing_same_as_delivery: billingData.sameBilling,
+        preferred_delivery_month: deliveryData.preferredDeliveryMonth || '',
+        preferred_delivery_year: deliveryData.preferredDeliveryYear || new Date().getFullYear().toString(),
+        billing_same_as_delivery: billingData.sameBilling !== undefined ? billingData.sameBilling : true,
         billing_company: billingData.company || '',
-        billing_first_name: billingData.sameBilling ? deliveryData.firstName : billingData.firstName,
-        billing_last_name: billingData.sameBilling ? deliveryData.lastName : billingData.lastName,
-        billing_street: billingData.sameBilling ? deliveryData.street : billingData.street,
-        billing_house_number: billingData.sameBilling ? deliveryData.houseNumber : billingData.houseNumber,
-        billing_postal_code: billingData.sameBilling ? deliveryData.postalCode : billingData.postalCode,
-        billing_city: billingData.sameBilling ? deliveryData.city : billingData.city,
-        subtotal_amount: parseFloat(subtotal.toFixed(2)),
-        discount_amount: parseFloat((discountAmount || 0).toFixed(2)),
-        discount_code_id: appliedDiscount?.id || null,
-        delivery_price: parseFloat(shipping.toFixed(2)),
-        total_amount: parseFloat(total.toFixed(2)),
-        delivery_method: selectedDelivery,
-        delivery_type: selectedDelivery,
-        created_at: new Date().toISOString(),
+        billing_first_name: billingData.sameBilling ? (deliveryData.firstName || '') : (billingData.firstName || ''),
+        billing_last_name: billingData.sameBilling ? (deliveryData.lastName || '') : (billingData.lastName || ''),
+        billing_street: billingData.sameBilling ? (deliveryData.street || '') : (billingData.street || ''),
+        billing_house_number: billingData.sameBilling ? (deliveryData.houseNumber || '') : (billingData.houseNumber || ''),
+        billing_postal_code: billingData.sameBilling ? (deliveryData.postalCode || '') : (billingData.postalCode || ''),
+        billing_city: billingData.sameBilling ? (deliveryData.city || '') : (billingData.city || ''),
+        subtotal_amount: isNaN(subtotal) ? 0 : parseFloat(subtotal.toFixed(2)),
+        discount_amount: isNaN(discountAmount) ? 0 : parseFloat((discountAmount || 0).toFixed(2)),
+        discount_code_id: (appliedDiscount && appliedDiscount.id !== undefined && appliedDiscount.id !== null) ? appliedDiscount.id : null,
+        delivery_price: isNaN(shipping) ? 0 : parseFloat(shipping.toFixed(2)),
+        total_amount: isNaN(total) ? 0 : parseFloat(total.toFixed(2)),
+        delivery_method: selectedDelivery || 'standard', // Fallback für undefined
+        delivery_type: selectedDelivery || 'standard', // Fallback für undefined
+        // created_at wird von der Datenbank automatisch gesetzt - nicht manuell überschreiben
       };
+      
+      // Debug-Logging für alle kritischen Felder
+      console.log('🔍 Order Data Validation:');
+      console.log('customer_id:', finalCustomerId, 'Type:', typeof finalCustomerId);
+      console.log('discount_code_id:', orderData.discount_code_id, 'Type:', typeof orderData.discount_code_id);
+      console.log('payment_method:', orderData.payment_method, 'Type:', typeof orderData.payment_method);
+      console.log('delivery_method:', orderData.delivery_method, 'Type:', typeof orderData.delivery_method);
+      console.log('delivery_type:', orderData.delivery_type, 'Type:', typeof orderData.delivery_type);
+      console.log('Complete orderData:', orderData);
 
       console.log('Bestelldaten:', orderData);
 
@@ -584,6 +598,11 @@ export default function CheckoutPage() {
       if (orderError) {
         console.error('Bestellfehler:', orderError);
         throw new Error(`Fehler beim Erstellen der Bestellung: ${orderError.message}`);
+      }
+
+      if (!order || !order.id) {
+        console.error('Bestellung konnte nicht erstellt werden: order ist null oder hat keine ID');
+        throw new Error('Bestellung konnte nicht erstellt werden: Keine gültige Bestell-ID erhalten');
       }
 
       console.log('Bestellung erstellt:', order);
@@ -643,7 +662,7 @@ export default function CheckoutPage() {
       }
 
       // Update discount usage count if discount was applied
-      if (appliedDiscount) {
+      if (appliedDiscount && appliedDiscount.id) {
         try {
           await supabase
             .from('discount_codes')

@@ -417,13 +417,31 @@ export default function AdminDashboardClient({
               <button
                 onClick={async () => {
                   try {
-                    await supabase.auth.signOut();
-                    // Redirect to login page
-                    window.location.href = '/admin/login';
+                    console.log('🔐 Starting logout process...');
+                    
+                    // Vollständiger Logout mit Session-Bereinigung
+                    await supabase.auth.signOut({ scope: 'global' });
+                    
+                    // Browser-Cache und Session-Storage leeren
+                    if (typeof window !== 'undefined') {
+                      localStorage.clear();
+                      sessionStorage.clear();
+                      
+                      // Cookies löschen
+                      document.cookie.split(";").forEach(function(c) { 
+                        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                      });
+                    }
+                    
+                    console.log('✅ Logout successful, redirecting...');
+                    
+                    // Hard redirect um Cache zu umgehen
+                    window.location.replace('/admin/login');
+                    
                   } catch (error) {
-                    console.error('Logout error:', error);
-                    // Fallback redirect on error
-                    window.location.href = '/admin/login';
+                    console.error('❌ Logout error:', error);
+                    // Fallback: Force redirect auch bei Fehlern
+                    window.location.replace('/admin/login');
                   }
                 }}
                 className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"

@@ -17,7 +17,7 @@ export async function middleware(req: NextRequest) {
     const startTime = Date.now()
     
     try {
-      // Safari-kompatible direkte Session-Abfrage
+      // Safari-kompatible direkte Session-Abfrage mit Validierung
       const { data: { session }, error } = await supabase.auth.getSession()
       const authDuration = Date.now() - startTime
       
@@ -28,10 +28,25 @@ export async function middleware(req: NextRequest) {
         console.log(`✅ Fast auth check: ${authDuration.toFixed(0)}ms`)
       }
       
-      // Redirect zu Login wenn keine Session
-      if (!session && req.nextUrl.pathname !== '/admin/login') {
-        const loginUrl = new URL('/admin/login', req.url)
-        return NextResponse.redirect(loginUrl)
+      // Redirect zu Login wenn keine Session oder Session abgelaufen
+      if (!session || error || !session.user || !session.access_token) {
+        if (req.nextUrl.pathname !== '/admin/login') {
+          console.log('🔐 No valid session, redirecting to login')
+          const loginUrl = new URL('/admin/login', req.url)
+          return NextResponse.redirect(loginUrl)
+        }
+      }
+      
+      // Zusätzliche Session-Validierung: Prüfe ob Token noch gültig ist
+      if (session && session.expires_at) {
+        const now = Math.floor(Date.now() / 1000)
+        if (session.expires_at < now) {
+          console.log('🔐 Session expired, redirecting to login')
+          if (req.nextUrl.pathname !== '/admin/login') {
+            const loginUrl = new URL('/admin/login', req.url)
+            return NextResponse.redirect(loginUrl)
+          }
+        }
       }
       
       // Admin-Berechtigung prüfen (nur wenn Session vorhanden)
@@ -79,9 +94,11 @@ export async function middleware(req: NextRequest) {
   return res
 }
 
-// Middleware nur für Admin-Routen aktivieren, aber Login-Seite ausschließen
+// Middleware für alle Admin-Routen aktivieren, aber Login-Seite ausschließen
 export const config = {
   matcher: [
-    '/admin/((?!login).*)'
+    '/admin',
+    '/admin/((?!login).*)',
+    '/admin/login/((?!page).*)'  // Schütze auch Login-Unterseiten außer der Login-Seite selbst
   ]
 }

@@ -111,7 +111,7 @@ export default function HeroSection() {
           />
 
           {/* Benefits Box */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-5 sm:p-6 lg:p-8 mb-8 sm:mb-10 border-2 border-[#D4A520] max-w-full sm:max-w-2xl xl:max-w-3xl mx-auto sm:mx-0 shadow-2xl">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-5 sm:p-6 lg:p-8 mb-8 sm:mb-10 border-2 border-[#D4A520] max-w-full sm:max-w-2xl xl:max-w-3xl shadow-2xl">
             <div className="flex items-center justify-center sm:justify-start mb-4 sm:mb-5">
               <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-[#C04020] rounded-full mr-3 sm:mr-4">
                 <i className="ri-fire-fill text-white text-xl sm:text-2xl"></i>
