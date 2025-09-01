@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
+import { cookies } from 'next/headers'
 
-// Lazy initialization für Build-Kompatibilität
+// Supabase SSR-kompatible Admin-Client-Erstellung
 function getSupabaseAdmin() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -10,12 +12,39 @@ function getSupabaseAdmin() {
     throw new Error('Missing Supabase environment variables')
   }
   
+  // Service Role Client für Admin-Operationen
   return createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
     }
   })
+}
+
+// SSR-kompatible Session-Verwaltung
+function getSupabaseSSR() {
+  const cookieStore = cookies()
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          } catch (error) {
+            console.warn('Cookie setting failed in API route:', error)
+          }
+        },
+      },
+    }
+  )
 }
 
 export async function POST(request: NextRequest) {
@@ -32,9 +61,10 @@ export async function POST(request: NextRequest) {
     console.log('🔐 API Admin Login attempt for:', email)
     
     const supabaseAdmin = getSupabaseAdmin()
+    const supabaseSSR = getSupabaseSSR()
     
-    // Server-Side Authentifizierung mit Service Role
-    const { data: authData, error: authError } = await supabaseAdmin.auth.signInWithPassword({
+    // Erste Authentifizierung mit SSR-Client für Session-Management
+    const { data: authData, error: authError } = await supabaseSSR.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password: password
     })

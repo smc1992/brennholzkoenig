@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { adminQueries } from '@/lib/supabase-server';
 import OrdersTab from './OrdersTab';
 import CustomersTab from './CustomersTab';
 import StatsTab from './StatsTab';
@@ -72,12 +71,34 @@ export default function AdminDashboardClient({
   // Using the centralized Supabase client from lib/supabase.ts
 
   useEffect(() => {
-    // Admin-Validierung bereits in page.tsx durchgeführt
-    if (adminUser) {
-      setHasAccess(true);
-      loadStats();
-    }
-  }, [adminUser]);
+    // Session-Validierung und Admin-Zugriff prüfen
+    const checkSessionAndLoadData = async () => {
+      try {
+        // Prüfe aktuelle Session
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!session || error) {
+          console.warn('❌ Keine gültige Session im Admin Dashboard:', error);
+          setHasAccess(false);
+          // Redirect zur Login-Seite
+          window.location.href = '/admin/login';
+          return;
+        }
+        
+        console.log('✅ Gültige Session gefunden:', session.user.email);
+        
+        if (adminUser) {
+          setHasAccess(true);
+          loadStats();
+        }
+      } catch (error) {
+        console.error('❌ Session-Prüfung fehlgeschlagen:', error);
+        setHasAccess(false);
+      }
+    };
+    
+    checkSessionAndLoadData();
+   }, [adminUser]);
 
   // URL-Parameter für Tab-Switching verarbeiten
   useEffect(() => {
@@ -98,8 +119,44 @@ export default function AdminDashboardClient({
     if (!hasAccess) return;
     
     try {
-      // Verwende produktionsreife adminQueries
-      const statsData = await adminQueries.getAdminStats();
+      // Session erneut prüfen vor API-Aufrufen
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (!session || sessionError) {
+        console.error('❌ Keine gültige Session für API-Aufrufe:', sessionError);
+        setHasAccess(false);
+        window.location.href = '/admin/login';
+        return;
+      }
+      
+      console.log('🔄 Lade Admin-Statistiken mit Session:', session.user.email);
+      
+      // Client-seitige Stats-Abfrage mit Session-Validierung
+      const [productsCount, ordersCount, categoriesCount] = await Promise.all([
+        supabase.from('products').select('id', { count: 'exact', head: true }),
+        supabase.from('orders').select('id', { count: 'exact', head: true }),
+        supabase.from('product_categories').select('id', { count: 'exact', head: true })
+      ]);
+      
+      // Prüfe auf Fehler in den Abfragen
+      if (productsCount.error) {
+        console.error('❌ Products query failed:', productsCount.error);
+        throw new Error(`Products query failed: ${productsCount.error.message}`);
+      }
+      if (ordersCount.error) {
+        console.error('❌ Orders query failed:', ordersCount.error);
+        throw new Error(`Orders query failed: ${ordersCount.error.message}`);
+      }
+      if (categoriesCount.error) {
+        console.error('❌ Categories query failed:', categoriesCount.error);
+        throw new Error(`Categories query failed: ${categoriesCount.error.message}`);
+      }
+      
+      const statsData = {
+        products: productsCount.count || 0,
+        orders: ordersCount.count || 0,
+        categories: categoriesCount.count || 0
+      };
       
       // Zusätzliche Revenue-Berechnung
       const revenueResult = await supabase

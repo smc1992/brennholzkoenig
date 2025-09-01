@@ -1,16 +1,44 @@
+import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
-// Performance-optimierter Server-side Supabase Client
+// Supabase-empfohlener Server-side Client mit SSR-Support
 export const createServerSupabase = () => {
+  const cookieStore = cookies()
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          } catch (error) {
+            // Server Component에서는 Cookie 설정이 제한될 수 있음
+            console.warn('Cookie setting failed in Server Component:', error)
+          }
+        },
+      },
+    }
+  )
+}
+
+// Fallback für Legacy-Code - wird schrittweise ersetzt
+export const createLegacyServerSupabase = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   
   return createClient(supabaseUrl, supabaseKey, {
     auth: {
-      persistSession: false, // Server-side braucht keine Session-Persistierung
-      autoRefreshToken: false, // Server-side Auto-Refresh deaktivieren
-      detectSessionInUrl: false, // Server-side URL-Detection deaktivieren
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
       flowType: 'pkce'
     },
     global: {
@@ -18,18 +46,14 @@ export const createServerSupabase = () => {
         'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',
         'X-Client-Info': 'brennholzkoenig-admin-server'
       },
-      // Server-side Fetch-Optimierungen
       fetch: (input: RequestInfo | URL, init?: RequestInit) => {
         return fetch(input, {
           ...init,
-          // Timeout für Server-side Requests
           signal: AbortSignal.timeout(10000),
-          // Keep-alive für bessere Performance
           keepalive: true
         })
       }
     },
-    // Realtime für Server-side deaktivieren
     realtime: {
       timeout: 5000,
       params: {

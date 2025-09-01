@@ -1,23 +1,28 @@
+import { createBrowserClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// Safari-kompatible Supabase-Konfiguration
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+// Supabase-empfohlener Browser Client mit SSR-Support
+export const supabase = createBrowserClient(
+  supabaseUrl,
+  supabaseAnonKey
+)
+
+// Legacy Safari-kompatible Konfiguration (Fallback)
+export const supabaseLegacy = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: false, // Safari-Workaround
+    detectSessionInUrl: false,
     flowType: 'pkce'
   },
-  // Realtime komplett deaktiviert für Safari-Kompatibilität
   realtime: {
     params: {
       eventsPerSecond: 0
     }
   },
-  // Safari-optimierte Fetch-Konfiguration
   global: {
      headers: {
        'X-Client-Info': 'brennholz-admin',
@@ -26,21 +31,17 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
        'apikey': supabaseAnonKey
      },
      fetch: (url, options = {}) => {
-       // Safari-spezifische Fetch-Optimierungen mit korrekten Headers
        const safariOptions = {
          ...options,
-         // Safari-kompatible Headers mit API-Key
          headers: {
            'Content-Type': 'application/json',
            'Accept': 'application/json',
            'apikey': supabaseAnonKey,
            ...options.headers
          },
-         // Safari-optimierte Einstellungen
          mode: 'cors' as RequestMode,
          credentials: 'same-origin' as RequestCredentials,
          cache: 'no-cache' as RequestCache,
-         // Längerer Timeout für Safari
          signal: AbortSignal.timeout(30000)
        }
        
@@ -51,7 +52,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
            console.error('🍎 Safari fetch error:', error)
            throw error
          })
-     }
+    }
    }
 })
 

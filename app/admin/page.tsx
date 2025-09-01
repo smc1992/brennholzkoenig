@@ -2,24 +2,37 @@
 import { createServerSupabase, adminQueries } from '@/lib/supabase-server'
 import AdminDashboardClient from './AdminDashboardClient'
 import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
 
-// Server-side Admin Dashboard mit SSR-Optimierung
+// Server-side Admin Dashboard mit Supabase SSR-Optimierung
 export default async function AdminPage() {
   const supabase = createServerSupabase()
   
   try {
+    // Supabase-empfohlene Session-Prüfung
+    const { data: { session }, error } = await supabase.auth.getSession()
+    
+    // Redirect zu Login wenn keine Session
+    if (!session || error) {
+      redirect('/admin/login')
+    }
+    
     // Server-side Daten parallel vorladen für bessere Performance
-    const [statsData, batchData, session] = await Promise.all([
+    const [statsData, batchData] = await Promise.all([
       adminQueries.getAdminStats(),
-      adminQueries.getBatchData(),
-      supabase.auth.getSession()
+      adminQueries.getBatchData()
     ])
     
     // Admin-User-Daten laden
     let adminUser = null
-    if (session.data.session?.user) {
-      const { user } = await adminQueries.validateAdminUser(session.data.session.user.email!)
+    if (session?.user?.email) {
+      const { user } = await adminQueries.validateAdminUser(session.user.email)
       adminUser = user
+      
+      // Redirect wenn kein Admin-Zugriff
+      if (!user) {
+        redirect('/admin/login?error=access_denied')
+      }
     }
     
     console.log(`📊 Dashboard data preloaded:`, {
