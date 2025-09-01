@@ -4,7 +4,7 @@
 export default function TestimonialSection() {
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-b from-white to-[#F5F0E0]">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         <div className="text-center mb-12 sm:mb-16 lg:mb-20">
           <div className="inline-flex items-center bg-[#D4A520] text-[#1A1A1A] px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-sm sm:text-base mb-6 sm:mb-8">
             <i className="ri-star-line mr-2"></i>

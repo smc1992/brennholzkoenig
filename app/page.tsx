@@ -1,5 +1,3 @@
-'use client';
-
 import HeroSection from '@/components/HeroSection';
 import USPSection from '@/components/USPSection';
 import QualifierSection from '@/components/QualifierSection';
@@ -9,11 +7,37 @@ import CostCalculatorSection from '@/components/CostCalculatorSection';
 import ComparisonSection from '@/components/ComparisonSection';
 import ProcessSection from '@/components/ProcessSection';
 import SafetySection from '@/components/SafetySection';
-import ProductSection from '@/components/ProductSection';
+import OptimizedProductSection from '../components/OptimizedProductSection';
 import RegionSection from '@/components/RegionSection';
 import SEOMetadata from '../components/SEOMetadata';
+import { createServerSupabase } from '@/lib/supabase-server';
 
-export default function Home() {
+export default async function Home() {
+  const startTime = Date.now();
+  
+  // Server-Side Product Preloading für Homepage
+  const supabase = createServerSupabase();
+  let products = [];
+  let error = null;
+  
+  try {
+    const { data, error: fetchError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('is_active', true)
+      .eq('in_stock', true)
+      .limit(3)
+      .order('id');
+    
+    if (fetchError) throw fetchError;
+    products = data || [];
+  } catch (err: any) {
+    error = err.message;
+    console.error('Homepage: Fehler beim Laden der Produkte:', err);
+  }
+  
+  const loadTime = Date.now() - startTime;
+  console.log(`🏠 Homepage products preloaded in ${loadTime}ms: { productCount: ${products.length}, loadTime: ${loadTime}, hasError: ${!!error} }`);
   return (
     <>
       <SEOMetadata 
@@ -31,7 +55,11 @@ export default function Home() {
         <ComparisonSection />
         <ProcessSection />
         <SafetySection />
-        <ProductSection />
+        <OptimizedProductSection 
+          initialProducts={products}
+          loadTime={loadTime}
+          error={error}
+        />
         <RegionSection />
       </div>
     </>

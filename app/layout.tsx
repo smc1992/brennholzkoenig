@@ -9,6 +9,7 @@ import Footer from '@/components/Footer';
 import CookieBanner from '@/components/CookieBanner';
 import GoogleAnalytics from '../components/GoogleAnalytics';
 import FacebookPixel from '../components/FacebookPixel';
+import PushNotifications from '@/components/PushNotifications';
 import GoogleAdsTracking from '../components/GoogleAdsTracking';
 // PWA functionality removed
 import AnalyticsTracker from '@/components/AnalyticsTracker';
@@ -117,6 +118,7 @@ export default function RootLayout({
           <GoogleAdsTracking />
           <AnalyticsTracker />
           <PerformanceMonitor />
+          <PushNotifications />
         </QueryProvider>
       </body>
     </html>

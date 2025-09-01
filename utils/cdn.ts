@@ -21,12 +21,15 @@ export const getCDNUrl = (filename: string, seoSlug?: string): string => {
     return filename;
   }
   
-  // Bereinige den Dateinamen von führenden Slashes und /images/ Prefix
+  // Wenn der Pfad bereits mit /images/ beginnt, verwende ihn direkt
+  if (filename.startsWith('/images/')) {
+    return filename;
+  }
+  
+  // Bereinige den Dateinamen von führenden Slashes
   let cleanFilename = filename;
-  if (cleanFilename.startsWith('/images/')) {
-    cleanFilename = cleanFilename.substring(8); // Entferne '/images/'
-  } else if (cleanFilename.startsWith('/')) {
-    cleanFilename = cleanFilename.substring(1); // Entferne führenden Slash
+  if (cleanFilename.startsWith('/')) {
+    cleanFilename = cleanFilename.substring(1);
   }
   
   // Prüfen, ob es sich um einen SEO-Slug handelt (enthält Produktname)
@@ -37,7 +40,6 @@ export const getCDNUrl = (filename: string, seoSlug?: string): string => {
     return `/images/${seoSlug}`;
   }
   
-  // Immer lokale API-Routen verwenden um ORB-Probleme zu vermeiden
   // Wenn es ein SEO-Slug ist, verwende saubere /images/ Route
   if (isSEOSlug) {
     return `/images/${cleanFilename}`;

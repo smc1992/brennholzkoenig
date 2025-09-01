@@ -9,6 +9,7 @@ interface TrackingConfig {
   google_analytics_enabled: boolean;
   google_tag_manager_enabled: boolean;
   facebook_pixel_enabled: boolean;
+  tracking_active?: boolean;
 }
 
 export default function GoogleAnalyticsTab() {
@@ -18,7 +19,8 @@ export default function GoogleAnalyticsTab() {
     facebook_pixel_id: '',
     google_analytics_enabled: false,
     google_tag_manager_enabled: false,
-    facebook_pixel_enabled: false
+    facebook_pixel_enabled: false,
+    tracking_active: false
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -38,7 +40,8 @@ export default function GoogleAnalyticsTab() {
         facebook_pixel_id: data.facebook_pixel_id || '',
         google_analytics_enabled: data.google_analytics_enabled || false,
         google_tag_manager_enabled: data.google_tag_manager_enabled || false,
-        facebook_pixel_enabled: data.facebook_pixel_enabled || false
+        facebook_pixel_enabled: data.facebook_pixel_enabled || false,
+        tracking_active: data.tracking_active || false
       });
     } catch (error) {
       console.error('Fehler beim Laden der Tracking-Konfiguration:', error);
@@ -48,28 +51,30 @@ export default function GoogleAnalyticsTab() {
   const saveConfig = async () => {
     setSaving(true);
     setMessage('');
-
+    
     try {
       const response = await fetch('/api/tracking-config', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(config)
+        body: JSON.stringify(config),
       });
-
+      
       const result = await response.json();
-
+      
       if (response.ok) {
         setMessage('✅ Tracking-Konfiguration erfolgreich gespeichert!');
+        await loadTrackingConfig();
       } else {
-        setMessage('❌ Fehler beim Speichern: ' + result.error);
+        setMessage(`❌ Fehler: ${result.error || 'Unbekannter Fehler'}`);
       }
     } catch (error) {
-      setMessage('❌ Server-Fehler beim Speichern');
+      console.error('Fehler beim Speichern der Tracking-Konfiguration:', error);
+      setMessage('❌ Fehler beim Speichern der Konfiguration');
     } finally {
       setSaving(false);
-      setTimeout(() => setMessage(''), 3000);
+      setTimeout(() => setMessage(''), 5000);
     }
   };
 
@@ -102,7 +107,7 @@ export default function GoogleAnalyticsTab() {
         </div>
       </div>
 
-      {/* Status Nachricht */}
+      {/* Message */}
       {message && (
         <div className={`p-4 rounded-lg ${
           message.includes('✅') ? 'bg-green-50 text-green-700 border border-green-200' :
@@ -113,7 +118,29 @@ export default function GoogleAnalyticsTab() {
         </div>
       )}
 
-      {/* Google Analytics GA4 */}
+      {/* Master Switch */}
+      <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <i className="ri-toggle-line text-2xl text-green-600"></i>
+            <div>
+              <h4 className="font-semibold text-gray-900">Tracking aktivieren</h4>
+              <p className="text-sm text-gray-600">Master-Schalter für alle Tracking-Dienste</p>
+            </div>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={config.tracking_active}
+              onChange={(e) => setConfig({...config, tracking_active: e.target.checked})}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+          </label>
+        </div>
+      </div>
+
+      {/* Google Analytics */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -233,10 +260,14 @@ export default function GoogleAnalyticsTab() {
         </div>
       </div>
 
-      {/* Tracking Status */}
+      {/* Status */}
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
         <h4 className="font-semibold text-amber-900 mb-3">📊 Tracking Status:</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <div className={`w-3 h-3 rounded-full ${config.tracking_active ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+            <span>Master Switch</span>
+          </div>
           <div className="flex items-center gap-2">
             <div className={`w-3 h-3 rounded-full ${config.google_analytics_enabled && config.google_analytics_id ? 'bg-green-500' : 'bg-gray-300'}`}></div>
             <span>Google Analytics GA4</span>
@@ -252,7 +283,7 @@ export default function GoogleAnalyticsTab() {
         </div>
       </div>
 
-      {/* DSGVO Hinweis */}
+      {/* GDPR Notice */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex items-start gap-3">
           <i className="ri-shield-check-line text-xl text-blue-600 mt-0.5"></i>
@@ -263,7 +294,7 @@ export default function GoogleAnalyticsTab() {
         </div>
       </div>
 
-      {/* Aktionen */}
+      {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-3">
         <button
           onClick={saveConfig}
@@ -288,7 +319,7 @@ export default function GoogleAnalyticsTab() {
         </button>
       </div>
 
-      {/* Anleitung */}
+      {/* Setup Guide */}
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <h4 className="font-semibold text-gray-900 mb-3">🚀 Einrichtung:</h4>
         <div className="text-sm text-gray-700 space-y-2">
@@ -296,7 +327,8 @@ export default function GoogleAnalyticsTab() {
           <div><strong>2. Tag Manager:</strong> Container erstellen → Container-ID kopieren</div>
           <div><strong>3. Facebook:</strong> Business Manager → Events Manager → Pixel-ID kopieren</div>
           <div><strong>4.</strong> IDs hier eintragen und aktivieren</div>
-          <div><strong>5.</strong> Test-Event senden zur Überprüfung</div>
+          <div><strong>5.</strong> Master-Switch aktivieren für Live-Betrieb</div>
+          <div><strong>6.</strong> Test-Event senden zur Überprüfung</div>
         </div>
       </div>
     </div>

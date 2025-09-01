@@ -1,70 +1,62 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Singleton-Pattern für Supabase-Client
-let supabaseInstance: ReturnType<typeof createClient> | null = null;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// Supabase-Konfiguration für Entwicklung und Produktion
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tmxhamdyrjuxwnskgfka.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRteGhhbWR5cmp1eHduc2tnZmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MTgyMjksImV4cCI6MjA3MDQ5NDIyOX0.Nj4plTbNMvPF1fqEXffWXnS6TBJUpHETM1JE6BK7odk'
-
-// Validierung der Umgebungsvariablen
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Supabase Umgebungsvariablen fehlen. Bitte .env.local Datei überprüfen.')
-}
-
-// Verbesserte Fehlerbehandlung für Produktionsumgebung
-const isProduction = process.env.NODE_ENV === 'production'
-
-// Connection Pool für bessere Performance
-const connectionPool = new Map<string, any>();
-
-// Singleton-Funktion, um sicherzustellen, dass nur eine Instanz existiert
-const getSupabaseClient = () => {
-  if (supabaseInstance) return supabaseInstance;
-  
-  // Supabase Client erstellen mit Performance-Optimierungen
-  supabaseInstance = createClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        flowType: 'pkce',
-        // Aggressive Session-Caching
-        storageKey: 'brennholzkoenig-auth'
-      },
-      global: {
-        headers: {
-          'X-Client-Info': 'brennholzkoenig-website',
-          'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
-          'Connection': 'keep-alive'
-        },
-      },
-      // Optimierte Realtime-Einstellungen
-      realtime: {
-        timeout: 15000, // Reduziert auf 15 Sekunden
-        heartbeatIntervalMs: 15000, // 15 Sekunden Heartbeat
-        reconnectAfterMs: (tries: number) => Math.min(tries * 500, 5000), // Schnellere Reconnects
-        params: {
-          eventsPerSecond: 50, // Erhöht für bessere Performance
-          log_level: isProduction ? 'error' : 'info'
-        }
-      }
+// Safari-kompatible Supabase-Konfiguration
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false, // Safari-Workaround
+    flowType: 'pkce'
+  },
+  // Realtime komplett deaktiviert für Safari-Kompatibilität
+  realtime: {
+    params: {
+      eventsPerSecond: 0
     }
-  );
-  
-  // Performance-Monitoring für Queries
-  if (!isProduction && typeof window !== 'undefined') {
-    console.log('Supabase Client initialized with performance monitoring');
-  }
-  
-  return supabaseInstance;
-};
+  },
+  // Safari-optimierte Fetch-Konfiguration
+  global: {
+     headers: {
+       'X-Client-Info': 'brennholz-admin',
+       'Content-Type': 'application/json',
+       'Accept': 'application/json',
+       'apikey': supabaseAnonKey
+     },
+     fetch: (url, options = {}) => {
+       // Safari-spezifische Fetch-Optimierungen mit korrekten Headers
+       const safariOptions = {
+         ...options,
+         // Safari-kompatible Headers mit API-Key
+         headers: {
+           'Content-Type': 'application/json',
+           'Accept': 'application/json',
+           'apikey': supabaseAnonKey,
+           ...options.headers
+         },
+         // Safari-optimierte Einstellungen
+         mode: 'cors' as RequestMode,
+         credentials: 'same-origin' as RequestCredentials,
+         cache: 'no-cache' as RequestCache,
+         // Längerer Timeout für Safari
+         signal: AbortSignal.timeout(30000)
+       }
+       
+       console.log('🍎 Safari-optimized fetch with API key:', url, safariOptions)
+       
+       return fetch(url, safariOptions)
+         .catch(error => {
+           console.error('🍎 Safari fetch error:', error)
+           throw error
+         })
+     }
+   }
+})
 
-// Exportiere eine einzige Instanz des Supabase-Clients
-export const supabase = getSupabaseClient();
+// Alias für Kompatibilität - verwendet denselben Client
+export const supabaseSafari = supabase
 
 export type Database = {
   public: {

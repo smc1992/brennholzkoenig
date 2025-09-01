@@ -78,7 +78,7 @@ export default function CostCalculatorSection() {
 
   return (
     <section className="py-16 md:py-20 bg-gradient-to-b from-[#F5F0E0] to-white">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         <div className="text-center mb-12 md:mb-16">
           <div className="inline-flex items-center bg-[#D4A520] text-[#1A1A1A] px-6 py-3 rounded-full font-bold text-sm md:text-base mb-6">
             <i className="ri-calculator-line mr-2"></i>

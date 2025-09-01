@@ -78,7 +78,7 @@ export default function HeroSection() {
         backgroundRepeat: 'no-repeat'
       }}
     >
-      <div className="container mx-auto px-6 sm:px-8 lg:px-12 w-full relative z-10" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: '2rem', paddingBottom: '4rem' }}>
+      <div className="container mx-auto px-6 sm:px-8 lg:px-12 w-full relative z-10 max-w-7xl" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: '2rem', paddingBottom: '4rem' }}>
         <div className="max-w-6xl mx-auto w-full">
           {/* Trust Badge */}
           <div className="inline-flex items-center bg-[#C04020] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-sm sm:text-base mb-6 sm:mb-8 shadow-2xl mx-auto sm:mx-0">

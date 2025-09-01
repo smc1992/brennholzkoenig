@@ -79,15 +79,40 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
     
-    // Image-Mapping in der Datenbank speichern
-    const imageMapping = createImageMapping(product, storageFilename, file.name);
+    // Bestimme die nächste Bildnummer für dieses Produkt
+    let imageIndex = 1;
+    let isMainImage = true; // Erstes Bild ist standardmäßig Hauptbild
     
+    if (product.id) {
+      const { data: existingImages, error: countError } = await supabase
+        .from('image_mappings')
+        .select('image_index, is_main_image')
+        .eq('product_id', product.id)
+        .order('image_index', { ascending: false })
+        .limit(1);
+      
+      if (!countError && existingImages && existingImages.length > 0) {
+        imageIndex = (existingImages[0].image_index || 0) + 1;
+        isMainImage = false; // Weitere Bilder sind nicht automatisch Hauptbilder
+      }
+    }
+    
+    // SEO-Slug mit Nummerierung generieren
+    const baseSlug = generateImageSlug(product, file.name);
+    const numberedSlug = imageIndex === 1 ? baseSlug : baseSlug.replace(/\.(\w+)$/, `-${imageIndex}.$1`);
+    
+    console.log(`API: Generierter nummerierter SEO-Slug: ${numberedSlug} (Index: ${imageIndex})`);
+    
+    // Image-Mapping in der Datenbank speichern
     const { data: mappingData, error: mappingError } = await supabase
       .from('image_mappings')
       .insert({
-        seo_slug: imageMapping.seoSlug,
-        storage_filename: imageMapping.storageFilename,
-        product_id: product.id || null
+        seo_slug: numberedSlug,
+        storage_filename: storageFilename,
+        product_id: product.id || null,
+        image_order: imageIndex,
+        image_index: imageIndex,
+        is_main_image: isMainImage
       })
       .select()
       .single();
@@ -105,13 +130,46 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
     
+    // Automatische Aktualisierung der products-Tabelle (nur für Hauptbilder)
+    if (product.id && isMainImage) {
+      const imageUrl = `/images/${numberedSlug}`;
+      
+      // Prüfe, ob das Produkt bereits ein Hauptbild hat
+      const { data: existingProduct, error: fetchError } = await supabase
+        .from('products')
+        .select('image_url')
+        .eq('id', product.id)
+        .single();
+      
+      // Aktualisiere das Hauptbild nur wenn es das erste Bild ist
+      const { error: updateError } = await supabase
+        .from('products')
+        .update({ 
+          image_url: imageUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', product.id);
+      
+      if (updateError) {
+        console.error('Product update error:', updateError);
+        // Warnung loggen, aber Upload nicht fehlschlagen lassen
+      } else {
+        const wasEmpty = !existingProduct?.image_url || existingProduct.image_url === '';
+        console.log(`Product ${product.id} main image updated to: ${imageUrl} ${wasEmpty ? '(first image)' : '(replaced existing)'}`);
+      }
+    } else if (product.id && !isMainImage) {
+      console.log(`Product ${product.id} additional image uploaded: ${numberedSlug} (Index: ${imageIndex})`);
+    } else {
+      console.warn('No product.id provided - automatic image_url update skipped');
+    }
+    
     // Erfolgreiche Response mit allen URLs
     return Response.json({
       success: true,
       data: {
         storageFilename,
-        seoSlug: imageMapping.seoSlug,
-        seoUrl: `/images/${imageMapping.seoSlug}`,
+        seoSlug: numberedSlug,
+        seoUrl: `/images/${numberedSlug}`,
         cdnUrl: `/api/cdn/products/${storageFilename}`,
         mappingId: mappingData.id,
         fileSize: file.size,

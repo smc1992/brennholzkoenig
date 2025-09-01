@@ -11,6 +11,8 @@ interface ImageItem {
   url: string;
   mappingId?: number;
   isMain?: boolean;
+  imageOrder?: number;
+  imageIndex?: number;
 }
 
 interface ProductImageManagerProps {
@@ -22,6 +24,7 @@ interface ProductImageManagerProps {
     size?: string;
   };
   onImagesChange?: (images: ImageItem[]) => void;
+  onImageUpdate?: (imageUrl: string) => void;
   maxImages?: number;
   showMainImageSelector?: boolean;
 }
@@ -29,6 +32,7 @@ interface ProductImageManagerProps {
 export default function ProductImageManager({
   productData,
   onImagesChange,
+  onImageUpdate,
   maxImages = 6,
   showMainImageSelector = true
 }: ProductImageManagerProps) {
@@ -53,31 +57,90 @@ export default function ProductImageManager({
 
   const loadExistingImages = async () => {
     if (!productData.id) return;
-
+    
     try {
       const { data, error } = await supabase
         .from('image_mappings')
-        .select('*')
+        .select('id, seo_slug, storage_filename, is_main_image, image_order, image_index')
         .eq('product_id', productData.id)
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('Fehler beim Laden der Bilder:', error);
-        return;
-      }
-
-      const loadedImages: ImageItem[] = data.map((mapping: any, index: number) => ({
+        .order('image_order', { ascending: true }); // Sortiere nach Reihenfolge
+      
+      if (error) throw error;
+      
+      const loadedImages: ImageItem[] = data.map((mapping: any) => ({
         id: `mapping-${mapping.id}`,
         seoSlug: mapping.seo_slug as string,
         storageFilename: mapping.storage_filename as string,
         url: `/images/${mapping.seo_slug}`,
         mappingId: mapping.id as number,
-        isMain: index === 0
+        isMain: mapping.is_main_image || false,
+        imageOrder: mapping.image_order || 1,
+        imageIndex: mapping.image_index || 1
       }));
-
-      setImages(loadedImages);
+      
+      // Sortiere Bilder: Hauptbild zuerst, dann nach image_order
+      const sortedImages = loadedImages.sort((a, b) => {
+        if (a.isMain && !b.isMain) return -1;
+        if (!a.isMain && b.isMain) return 1;
+        return (a.imageOrder || 1) - (b.imageOrder || 1);
+      });
+      
+      setImages(sortedImages);
+      console.log(`Loaded ${sortedImages.length} images for product ${productData.id}:`, {
+        mainImage: sortedImages.find(img => img.isMain)?.url,
+        totalImages: sortedImages.length
+      });
     } catch (error) {
-      console.error('Fehler beim Laden der Bilder:', error);
+      console.error('Error loading existing images:', error);
+    }
+  };
+
+  const setAsMainImage = async (imageId: string) => {
+    if (!productData.id) return;
+    
+    try {
+      // Finde das Bild in der lokalen Liste
+      const targetImage = images.find(img => img.id === imageId);
+      if (!targetImage || !targetImage.mappingId) {
+        console.error('Image not found or missing mapping ID');
+        return;
+      }
+      
+      // Verwende die Set-Main-Image API
+      const response = await fetch('/api/set-main-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId: productData.id,
+          imageId: targetImage.mappingId
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        console.error('Error setting main image:', result.error);
+        return;
+      }
+      
+      // Aktualisiere lokalen State
+      setImages(prevImages => 
+        prevImages.map(img => ({
+          ...img,
+          isMain: img.id === imageId
+        }))
+      );
+      
+      // Callback für Parent-Komponente
+      if (onImageUpdate) {
+        onImageUpdate(targetImage.url);
+      }
+      
+      console.log('Main image updated successfully:', result.data.newMainImageUrl);
+    } catch (error) {
+      console.error('Error setting main image:', error);
     }
   };
 
@@ -127,9 +190,22 @@ export default function ProductImageManager({
       });
 
       const uploadedImages = await Promise.all(uploadPromises);
-      setImages(prev => [...prev, ...uploadedImages]);
+      const newImages = [...images, ...uploadedImages];
+      setImages(newImages);
+
+      // Sofortiges Callback-Feedback für Parent-Komponenten
+      if (onImagesChange) {
+        onImagesChange(newImages);
+      }
+      
+      // Benachrichtige Parent über Hauptbild-Update
+      if (onImageUpdate && uploadedImages.length > 0) {
+        const mainImage = uploadedImages.find(img => img.isMain) || uploadedImages[0];
+        onImageUpdate(mainImage.url);
+      }
 
       console.log('Bilder erfolgreich hochgeladen:', uploadedImages);
+      console.log('✅ Sofortiges UI-Feedback gesendet');
     } catch (error) {
       console.error('Upload error:', error);
       alert(`Fehler beim Hochladen: ${error}`);
@@ -182,12 +258,7 @@ export default function ProductImageManager({
     }
   };
 
-  const setAsMainImage = (imageId: string) => {
-    setImages(prev => prev.map(img => ({
-      ...img,
-      isMain: img.id === imageId
-    })));
-  };
+  // Die setAsMainImage-Funktion wurde bereits oben definiert - entferne diese Duplikation
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();

@@ -4,7 +4,7 @@
 export default function RegionSection() {
   return (
     <section className="py-16 bg-[#1A1A1A] text-white">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-black mb-6" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
             REGIONAL & <span className="text-[#D4A520]">NACHHALTIG</span>

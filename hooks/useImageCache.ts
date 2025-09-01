@@ -24,6 +24,10 @@ export function useImageCache(): ImageCacheHook {
   const [cacheVersion, setCacheVersion] = useState(0);
 
   const getCacheKey = useCallback((productName: string) => {
+    if (!productName || typeof productName !== 'string') {
+      console.warn('Invalid productName provided to getCacheKey:', productName);
+      return 'fallback-product';
+    }
     return productName
       .toLowerCase()
       .trim()
@@ -38,6 +42,10 @@ export function useImageCache(): ImageCacheHook {
   }, []);
 
   const getProductImages = useCallback(async (productName: string, productId?: number): Promise<string[]> => {
+    if (!productName || typeof productName !== 'string') {
+      console.error('Error loading product images: Invalid productName provided:', productName);
+      return [];
+    }
     const cacheKey = getCacheKey(productName);
     const cachedItem = imageCache.get(cacheKey);
 
@@ -50,45 +58,109 @@ export function useImageCache(): ImageCacheHook {
     console.log(`Cache miss for ${productName}, loading from Supabase`);
 
     try {
-      // Lade Bilder aus Supabase
-      const searchTerm = getCacheKey(productName);
-      
-      const { data, error } = await supabase
-        .from('image_mappings')
-        .select('seo_slug, created_at')
-        .like('seo_slug', `%${searchTerm}%`)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error loading product images:', error);
-        return [];
-      }
-
       let images: string[] = [];
-
-      if (data && data.length > 0) {
-        images = data.map((item: any) => `/images/${item.seo_slug}`);
-      } else if (productId) {
-        // Fallback: Hauptbild aus products-Tabelle
-        const { data: productData } = await supabase
-          .from('products')
-          .select('image_url')
-          .eq('id', productId)
-          .single();
+      
+      // Lade Bilder aus Supabase mit Multi-Bild-Support
+      if (productId) {
+        // Primär: Lade Bilder aus image_mappings mit Multi-Bild-Support
+        const { data, error } = await supabase
+          .from('image_mappings')
+          .select('seo_slug, is_main_image, image_order, image_index')
+          .eq('product_id', productId)
+          .order('image_order', { ascending: true }); // Sortiere nach Reihenfolge
         
-        if (productData && typeof productData.image_url === 'string') {
-          images = [productData.image_url];
+        if (error) {
+          console.error('Error loading product images:', error);
+          return [];
+        }
+        
+        if (data && data.length > 0) {
+          // Sortiere Bilder: Hauptbild zuerst, dann nach image_order
+          const sortedData = data.sort((a: any, b: any) => {
+            // Hauptbild hat immer Priorität
+            if (a.is_main_image && !b.is_main_image) return -1;
+            if (!a.is_main_image && b.is_main_image) return 1;
+            
+            // Ansonsten nach image_order sortieren
+            return (a.image_order || 1) - (b.image_order || 1);
+          });
+          
+          images = sortedData.map((item: any) => `/images/${item.seo_slug}`);
+          
+          console.log(`Loaded ${images.length} images for product ${productId}:`, {
+            mainImage: sortedData.find((item: any) => item.is_main_image)?.seo_slug,
+            totalImages: images.length,
+            imageOrder: sortedData.map((item: any) => `${item.seo_slug} (${item.image_order})`)
+          });
+        } else {
+          // Fallback: Versuche image_url aus products-Tabelle
+          const { data: productData } = await supabase
+            .from('products')
+            .select('image_url')
+            .eq('id', productId)
+            .single();
+          
+          if (productData && typeof productData.image_url === 'string') {
+            images = [productData.image_url];
+            console.log(`Fallback: Using product.image_url for product ${productId}:`, productData.image_url);
+          }
+        }
+      } else {
+        // Fallback: Verbesserte Suche nach SEO-Slug wenn keine productId vorhanden
+        console.log(`Fallback: Searching for images by product name: ${productName}`);
+        
+        // Versuche verschiedene Suchstrategien
+        const searchStrategies = [
+          // 1. Exakte Übereinstimmung mit normalisiertem Namen
+          productName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-'),
+          // 2. Erste Wörter des Produktnamens
+          productName.toLowerCase().split(' ').slice(0, 3).join('-'),
+          // 3. Produktname ohne Sonderzeichen
+          productName.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-')
+        ];
+        
+        for (const searchTerm of searchStrategies) {
+          console.log(`Trying search strategy: ${searchTerm}`);
+          
+          const { data, error } = await supabase
+            .from('image_mappings')
+            .select('seo_slug, is_main_image, image_order, product_id')
+            .like('seo_slug', `%${searchTerm}%`)
+            .order('image_order', { ascending: true });
+
+          if (error) {
+            console.error('Error loading product images:', error);
+            continue;
+          }
+
+          if (data && data.length > 0) {
+            console.log(`Found ${data.length} images with search term: ${searchTerm}`);
+            
+            // Sortiere Bilder: Hauptbild zuerst, dann nach image_order
+            const sortedData = data.sort((a: any, b: any) => {
+              if (a.is_main_image && !b.is_main_image) return -1;
+              if (!a.is_main_image && b.is_main_image) return 1;
+              return (a.image_order || 1) - (b.image_order || 1);
+            });
+            
+            images = sortedData.map((item: any) => `/images/${item.seo_slug}`);
+            break; // Erfolgreiche Suche, beende Loop
+          }
+        }
+        
+        if (images.length === 0) {
+          console.warn(`No images found for product: ${productName} with any search strategy`);
         }
       }
 
-      // Cache aktualisieren
-      imageCache.set(cacheKey, {
-        images,
-        timestamp: Date.now(),
-        productId
-      });
+       // Cache die Ergebnisse
+       imageCache.set(cacheKey, {
+         images,
+         timestamp: Date.now(),
+         productId
+       });
 
-      return images;
+       return images;
     } catch (error) {
       console.error('Error in getProductImages:', error);
       return [];

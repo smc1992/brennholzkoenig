@@ -43,60 +43,24 @@ interface StockChange {
   notes: string;
 }
 
-// Fallback-Produkte für sofortige Anzeige im Admin
-const fallbackAdminProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Industrieholz Buche Klasse 1',
-    description: 'Premium Industrieholz aus Buche - perfekt für sauberes Heizen',
-    category: 'Industrieholz',
-    price: 89.99,
-    stock_quantity: 50,
-    min_stock_level: 10,
-    unit: 'SRM',
-    image_url: '/images/industrieholz-buche-1.jpg',
-    in_stock: true,
-    is_active: true,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: '2',
-    name: 'Industrieholz Buche Klasse 2',
-    description: 'Hochwertiges Industrieholz aus Buche - ideal für den Kamin',
-    category: 'Industrieholz',
-    price: 79.99,
-    stock_quantity: 30,
-    min_stock_level: 5,
-    unit: 'SRM',
-    image_url: '/images/industrieholz-buche-2.jpg',
-    in_stock: true,
-    is_active: true,
-    created_at: new Date().toISOString()
-  },
-  {
-    id: '3',
-    name: 'Scheitholz Buche 33cm',
-    description: 'Klassisches Scheitholz aus Buche - 33cm Länge',
-    category: 'Scheitholz',
-    price: 99.99,
-    stock_quantity: 25,
-    min_stock_level: 8,
-    unit: 'SRM',
-    image_url: '/images/scheitholz-buche-33.jpg',
-    in_stock: true,
-    is_active: true,
-    created_at: new Date().toISOString()
-  }
-];
+interface ProductFormData {
+  id?: number;
+  name: string;
+  category: string;
+  wood_type: string;
+  size: string;
+}
+
+// Produktionsreife ProductsTab - keine Fallback-Daten mehr
 
 export default function ProductsTab() {
-  // Starte mit Fallback-Produkten für sofortige Anzeige
-  const [products, setProducts] = useState<Product[]>(fallbackAdminProducts);
+  // Starte mit leerem Array - werden durch echte Daten geladen
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
-  const [newProductData, setNewProductData] = useState({
+  const [newProductData, setNewProductData] = useState<ProductFormData>({
     name: '',
     category: '',
     wood_type: 'Buche',
@@ -104,7 +68,7 @@ export default function ProductsTab() {
   });
   const [newProductImages, setNewProductImages] = useState<any[]>([]);
   const [newProductMainImage, setNewProductMainImage] = useState<string>('');
-  const [editProductData, setEditProductData] = useState({
+  const [editProductData, setEditProductData] = useState<ProductFormData>({
     name: '',
     category: '',
     wood_type: 'Buche',
@@ -114,7 +78,7 @@ export default function ProductsTab() {
   const [editProductMainImage, setEditProductMainImage] = useState<string>('');
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(fallbackAdminProducts);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("Alle");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -152,16 +116,9 @@ export default function ProductsTab() {
       const categoryNames = data?.map((cat: any) => cat.name as string) || [];
       setCategories(["Alle", ...categoryNames]);
     } catch (error) {
-      console.error('Error loading categories:', error);
-      // Fallback to existing categories if database fails
-      setCategories([
-        "Alle",
-        "Premium Buche",
-        "Standard Buche",
-        "Scheitholz",
-        "Mix-Sortiment",
-        "Nadelholz",
-      ]);
+      console.error('❌ Error loading categories:', error);
+      // Keine Fallback-Kategorien - zeige nur "Alle"
+      setCategories(["Alle"]);
     }
   };
 
@@ -170,6 +127,7 @@ export default function ProductsTab() {
   }, [products, searchTerm, selectedCategory]);
 
   const loadProducts = async () => {
+    setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from("products")
@@ -177,20 +135,24 @@ export default function ProductsTab() {
         .eq("is_active", true)
         .order("name");
 
-      if (error) throw error;
-      const typedData = data as unknown as Product[];
-      
-      // Nur aktualisieren wenn echte Daten vorhanden
-      if (typedData && typedData.length > 0) {
+      if (error) {
+        console.error('❌ Error loading products:', error);
+        setProducts([]);
+        setFilteredProducts([]);
+      } else {
+        const typedData = (data || []) as unknown as Product[];
         setProducts(typedData);
         setFilteredProducts(typedData);
-        console.log('Admin products loaded:', typedData.length, 'items');
+        console.log('✅ Production products loaded:', typedData.length, 'items');
       }
     } catch (err) {
-      console.error("Error loading products:", err);
-      // Bei Fehler bleiben Fallback-Produkte erhalten
+      console.error("❌ Error loading production products:", err);
+      // Keine Fallback-Daten - zeige leere Arrays
+      setProducts([]);
+      setFilteredProducts([]);
+    } finally {
+      setIsLoading(false);
     }
-    // Kein setIsLoading(false) mehr nötig
   };
 
   const filterProducts = () => {
@@ -658,6 +620,7 @@ export default function ProductsTab() {
                               setEditingProduct(product);
                               setEditImageUrl(product.image_url?.toString() || '');
                               setEditProductData({
+                                id: parseInt(product.id),
                                 name: product.name,
                                 category: product.category,
                                 wood_type: product.name.toLowerCase().includes('eiche') ? 'Eiche' : 
@@ -1628,6 +1591,7 @@ export default function ProductsTab() {
                   setEditingProduct(selectedProduct);
                   setEditImageUrl(selectedProduct.image_url?.toString() || '');
                   setEditProductData({
+                    id: parseInt(selectedProduct.id),
                     name: selectedProduct.name,
                     category: selectedProduct.category,
                     wood_type: selectedProduct.name.toLowerCase().includes('eiche') ? 'Eiche' : 

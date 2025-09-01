@@ -4,7 +4,7 @@
 export default function SafetySection() {
   return (
     <section className="py-16 md:py-20 bg-gradient-to-b from-white to-[#F5F0E0]">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         <div className="text-center mb-12 md:mb-16">
           <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-[#1A1A1A] mb-6" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
             SAUBERES HEIZEN MIT <span className="text-[#2C5545]">VERANTWORTUNG</span>

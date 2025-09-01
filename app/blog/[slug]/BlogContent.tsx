@@ -100,7 +100,8 @@ export default function BlogContent({ slug }: BlogContentProps) {
 
   const loadPost = async () => {
     try {
-      const { data } = await supabase
+      console.log('Loading blog post for slug:', slug);
+      const { data, error } = await supabase
         .from('page_contents')
         .select('*')
         .eq('content_type', 'blog_post')
@@ -109,28 +110,43 @@ export default function BlogContent({ slug }: BlogContentProps) {
         .eq('is_active', true)
         .single();
 
-      if (data) {
+      if (error) {
+        console.error('Supabase error:', error);
+      }
+
+      console.log('Blog post data received:', data);
+      console.log('Raw data object:', JSON.stringify(data, null, 2));
+      
+      // Handle both array and single object responses
+      const postData = Array.isArray(data) ? data[0] : data;
+      
+      if (postData) {
+        console.log('Content value length:', postData.content_value?.length || 0);
+        console.log('Content value preview:', postData.content_value?.substring(0, 100) + '...');
         const blogPost: BlogPost = {
-          id: String(data.id || ''),
-          title: String(data.title || ''),
-          content: data.content ? String(data.content) : undefined,
-          content_value: data.content_value ? String(data.content_value) : undefined,
-          excerpt: String(data.excerpt || ''),
-          slug: String(data.slug || ''),
-          featured_image: String(data.featured_image || ''),
-          author: data.author ? String(data.author) : undefined,
-          category: String(data.category || ''),
-          tags: Array.isArray(data.tags) ? data.tags : [],
-          published_at: data.published_at ? String(data.published_at) : undefined,
-          created_at: String(data.created_at || ''),
-          updated_at: String(data.updated_at || ''),
-          meta_title: data.meta_title ? String(data.meta_title) : undefined,
-          meta_description: data.meta_description ? String(data.meta_description) : undefined,
-          reading_time: data.reading_time ? String(data.reading_time) : undefined,
-          views: Number(data.views) || 0
+          id: String(postData.id || ''),
+          title: String(postData.title || ''),
+          content: postData.content ? String(postData.content) : undefined,
+          content_value: postData.content_value ? String(postData.content_value) : undefined,
+          excerpt: String(postData.excerpt || ''),
+          slug: String(postData.slug || ''),
+          featured_image: String(postData.featured_image || ''),
+          author: postData.author ? String(postData.author) : undefined,
+          category: String(postData.category || ''),
+          tags: Array.isArray(postData.tags) ? postData.tags : [],
+          published_at: postData.published_at ? String(postData.published_at) : undefined,
+          created_at: String(postData.created_at || ''),
+          updated_at: String(postData.updated_at || ''),
+          meta_title: postData.meta_title ? String(postData.meta_title) : undefined,
+          meta_description: postData.meta_description ? String(postData.meta_description) : undefined,
+          reading_time: postData.reading_time ? String(postData.reading_time) : undefined,
+          views: Number(postData.views) || 0
         };
+        console.log('Blog post object created:', blogPost);
         setPost(blogPost);
-        loadRelatedPosts(String(data.category || ''), String(data.id || ''));
+        loadRelatedPosts(String(postData.category || ''), String(postData.id || ''));
+      } else {
+        console.log('No blog post data found');
       }
     } catch (error) {
       console.error('Error loading blog post:', error);

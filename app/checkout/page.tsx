@@ -57,6 +57,7 @@ export default function CheckoutPage() {
   const [minOrderQuantity, setMinOrderQuantity] = useState(3);
   const [pricingTiers, setPricingTiers] = useState<any[]>([]);
   const [shippingCosts, setShippingCosts] = useState({ standard: 43.5, express: 139 });
+  const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
 
   // Lieferoptionen - werden dynamisch aus der Datenbank geladen
   const getDeliveryOptions = () => [
@@ -138,6 +139,16 @@ export default function CheckoutPage() {
         }));
         setCartItems(normalizedCart);
       }
+
+      // Lade angewendeten Rabattcode aus localStorage
+      const savedDiscount = localStorage.getItem('appliedDiscount');
+      if (savedDiscount) {
+        try {
+          setAppliedDiscount(JSON.parse(savedDiscount));
+        } catch (error) {
+          console.error('Error parsing saved discount:', error);
+        }
+      }
     };
 
     loadData();
@@ -215,9 +226,21 @@ export default function CheckoutPage() {
 
   const calculateTotal = () => {
     const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    
+    let discountAmount = 0;
+    if (appliedDiscount) {
+      if (appliedDiscount.discount_type === 'percentage') {
+        discountAmount = (subtotal * appliedDiscount.discount_value) / 100;
+      } else {
+        discountAmount = appliedDiscount.discount_value;
+      }
+    }
+    
     const selectedOption = getDeliveryOptions().find((opt) => opt.type === selectedDelivery);
     const shipping = selectedOption ? selectedOption.price : 43.5;
-    return { subtotal, shipping, total: subtotal + shipping };
+    const total = Math.max(0, subtotal - discountAmount + shipping);
+    
+    return { subtotal, discountAmount, shipping, total };
   };
 
   // Prüft, ob die Gesamtmenge der Bestellung die Mindestbestellmenge erfüllt
@@ -514,7 +537,7 @@ export default function CheckoutPage() {
 
       // Create order
       const orderNumber = 'BK-' + Date.now();
-      const { subtotal, shipping, total } = calculateTotal();
+      const { subtotal, discountAmount, shipping, total } = calculateTotal();
 
       const orderData = {
         order_number: orderNumber,
@@ -541,6 +564,8 @@ export default function CheckoutPage() {
         billing_postal_code: billingData.sameBilling ? deliveryData.postalCode : billingData.postalCode,
         billing_city: billingData.sameBilling ? deliveryData.city : billingData.city,
         subtotal_amount: parseFloat(subtotal.toFixed(2)),
+        discount_amount: parseFloat((discountAmount || 0).toFixed(2)),
+        discount_code_id: appliedDiscount?.id || null,
         delivery_price: parseFloat(shipping.toFixed(2)),
         total_amount: parseFloat(total.toFixed(2)),
         delivery_method: selectedDelivery,
@@ -617,8 +642,25 @@ export default function CheckoutPage() {
         // E-Mail Fehler ist nicht kritisch, Bestellung wird trotzdem fortgesetzt
       }
 
-      // Clear cart
+      // Update discount usage count if discount was applied
+      if (appliedDiscount) {
+        try {
+          await supabase
+            .from('discount_codes')
+            .update({ 
+              usage_count: (appliedDiscount.usage_count || 0) + 1,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', appliedDiscount.id);
+        } catch (error) {
+          console.error('Error updating discount usage:', error);
+          // Non-critical error, don't fail the order
+        }
+      }
+
+      // Clear cart and discount
       localStorage.removeItem('cart');
+      localStorage.removeItem('appliedDiscount');
 
       // Redirect to confirmation page with order number
       router.push(`/bestellbestaetigung?order=${orderNumber}`);

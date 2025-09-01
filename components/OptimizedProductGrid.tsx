@@ -21,12 +21,18 @@ interface OptimizedProductGridProps {
   initialCategory?: string;
   showFilters?: boolean;
   maxProducts?: number;
+  initialProducts?: Product[];
+  loadTime?: number;
+  error?: string | null;
 }
 
 export default function OptimizedProductGrid({ 
   initialCategory = 'Alle',
   showFilters = true,
-  maxProducts 
+  maxProducts,
+  initialProducts = [],
+  loadTime = 0,
+  error = null
 }: OptimizedProductGridProps) {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,7 +46,7 @@ export default function OptimizedProductGrid({
   
   // Optimierte Queries mit Caching
   const { 
-    data: products = [], 
+    data: realtimeProducts = [], 
     isLoading: productsLoading, 
     error: productsError 
   } = useProducts({ 
@@ -57,6 +63,18 @@ export default function OptimizedProductGrid({
     data: shopSettings,
     isLoading: settingsLoading 
   } = useShopSettings();
+  
+  // Kombiniere Server-Side und Client-Side Daten
+  const products = useMemo(() => {
+    // Verwende Server-Side Daten wenn verfügbar, sonst Real-time Daten
+    if (initialProducts.length > 0) {
+      return initialProducts;
+    }
+    return realtimeProducts;
+  }, [initialProducts, realtimeProducts]);
+  
+  // Kombiniere Fehler-States
+  const combinedError = error || productsError;
   
   // Memoized gefilterte Produkte für Performance
   const filteredProducts = useMemo(() => {
@@ -86,8 +104,8 @@ export default function OptimizedProductGrid({
     return ['Alle', ...categoryNames];
   }, [categories]);
   
-  // Loading State
-  if (productsLoading || categoriesLoading || settingsLoading) {
+  // Loading State (nur wenn keine Server-Side Daten verfügbar)
+  if ((productsLoading || categoriesLoading || settingsLoading) && initialProducts.length === 0) {
     return (
       <div className="space-y-6">
         {/* Loading Skeleton für Filter */}
@@ -117,14 +135,14 @@ export default function OptimizedProductGrid({
   }
   
   // Error State
-  if (productsError) {
+  if (combinedError && products.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="w-16 h-16 flex items-center justify-center bg-red-100 rounded-full mx-auto mb-4">
           <i className="ri-error-warning-line text-2xl text-red-600"></i>
         </div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Fehler beim Laden der Produkte</h3>
-        <p className="text-gray-600 mb-4">Die Produkte konnten nicht geladen werden.</p>
+        <p className="text-red-600 mb-4">Fehler beim Laden der Produkte: {typeof combinedError === 'string' ? combinedError : combinedError.message}</p>
         <button 
           onClick={() => window.location.reload()}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
@@ -149,6 +167,9 @@ export default function OptimizedProductGrid({
   
   return (
     <div className="space-y-6">
+      <div className="mb-6 flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-900">Unsere Produkte</h2>
+      </div>
       {/* Filter Section */}
       {showFilters && (
         <div className="space-y-4">

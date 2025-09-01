@@ -80,7 +80,19 @@ export default function CustomersTab() {
     street: '',
     house_number: '',
     postal_code: '',
-    city: ''
+    city: '',
+    date_of_birth: '',
+    country: 'Deutschland',
+    preferred_delivery_month: '',
+    preferred_delivery_year: new Date().getFullYear().toString(),
+    billing_same_as_delivery: true,
+    billing_company: '',
+    billing_first_name: '',
+    billing_last_name: '',
+    billing_street: '',
+    billing_house_number: '',
+    billing_postal_code: '',
+    billing_city: ''
   });
 
   // Using the centralized Supabase client from lib/supabase.ts
@@ -405,7 +417,19 @@ export default function CustomersTab() {
         street: '',
         house_number: '',
         postal_code: '',
-        city: ''
+        city: '',
+        date_of_birth: '',
+        country: 'Deutschland',
+        preferred_delivery_month: '',
+        preferred_delivery_year: new Date().getFullYear().toString(),
+        billing_same_as_delivery: true,
+        billing_company: '',
+        billing_first_name: '',
+        billing_last_name: '',
+        billing_street: '',
+        billing_house_number: '',
+        billing_postal_code: '',
+        billing_city: ''
       });
       setShowAddCustomerModal(false);
       loadCustomers();
@@ -1228,6 +1252,55 @@ export default function CustomersTab() {
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
                     />
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Land</label>
+                    <select
+                      name="country"
+                      defaultValue={editingCustomer.country || 'Deutschland'}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                    >
+                      <option value="Deutschland">Deutschland</option>
+                      <option value="Österreich">Österreich</option>
+                      <option value="Schweiz">Schweiz</option>
+                      <option value="Andere">Andere</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Bevorzugter Liefermonat</label>
+                    <select
+                      name="preferred_delivery_month"
+                      defaultValue={editingCustomer.preferred_delivery_month || ''}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                    >
+                      <option value="">Keine Präferenz</option>
+                      <option value="Januar">Januar</option>
+                      <option value="Februar">Februar</option>
+                      <option value="März">März</option>
+                      <option value="April">April</option>
+                      <option value="Mai">Mai</option>
+                      <option value="Juni">Juni</option>
+                      <option value="Juli">Juli</option>
+                      <option value="August">August</option>
+                      <option value="September">September</option>
+                      <option value="Oktober">Oktober</option>
+                      <option value="November">November</option>
+                      <option value="Dezember">Dezember</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Bevorzugtes Lieferjahr</label>
+                    <select
+                      name="preferred_delivery_year"
+                      defaultValue={editingCustomer.preferred_delivery_year || new Date().getFullYear().toString()}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                    >
+                      <option value={new Date().getFullYear().toString()}>{new Date().getFullYear()}</option>
+                      <option value={(new Date().getFullYear() + 1).toString()}>{new Date().getFullYear() + 1}</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -1497,6 +1570,184 @@ export default function CustomersTab() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Geburtsdatum
+                  </label>
+                  <input
+                    type="date"
+                    value={newCustomerData.date_of_birth}
+                    onChange={(e) => setNewCustomerData({...newCustomerData, date_of_birth: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Land
+                  </label>
+                  <select
+                    value={newCustomerData.country}
+                    onChange={(e) => setNewCustomerData({...newCustomerData, country: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="Deutschland">Deutschland</option>
+                    <option value="Österreich">Österreich</option>
+                    <option value="Schweiz">Schweiz</option>
+                    <option value="Andere">Andere</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-md font-semibold text-gray-800 mb-3">Lieferpräferenzen</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Bevorzugter Liefermonat
+                    </label>
+                    <select
+                      value={newCustomerData.preferred_delivery_month}
+                      onChange={(e) => setNewCustomerData({...newCustomerData, preferred_delivery_month: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Kein Präferenz</option>
+                      <option value="Januar">Januar</option>
+                      <option value="Februar">Februar</option>
+                      <option value="März">März</option>
+                      <option value="April">April</option>
+                      <option value="Mai">Mai</option>
+                      <option value="Juni">Juni</option>
+                      <option value="Juli">Juli</option>
+                      <option value="August">August</option>
+                      <option value="September">September</option>
+                      <option value="Oktober">Oktober</option>
+                      <option value="November">November</option>
+                      <option value="Dezember">Dezember</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Bevorzugtes Lieferjahr
+                    </label>
+                    <select
+                      value={newCustomerData.preferred_delivery_year}
+                      onChange={(e) => setNewCustomerData({...newCustomerData, preferred_delivery_year: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value={new Date().getFullYear().toString()}>{new Date().getFullYear()}</option>
+                      <option value={(new Date().getFullYear() + 1).toString()}>{new Date().getFullYear() + 1}</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-md font-semibold text-gray-800 mb-3">Rechnungsadresse</h4>
+                <div className="mb-4">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={newCustomerData.billing_same_as_delivery}
+                      onChange={(e) => setNewCustomerData({...newCustomerData, billing_same_as_delivery: e.target.checked})}
+                      className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="text-sm text-gray-700">Rechnungsadresse ist identisch mit Lieferadresse</span>
+                  </label>
+                </div>
+
+                {!newCustomerData.billing_same_as_delivery && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Firma (optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={newCustomerData.billing_company}
+                        onChange={(e) => setNewCustomerData({...newCustomerData, billing_company: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Vorname
+                        </label>
+                        <input
+                          type="text"
+                          value={newCustomerData.billing_first_name}
+                          onChange={(e) => setNewCustomerData({...newCustomerData, billing_first_name: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Nachname
+                        </label>
+                        <input
+                          type="text"
+                          value={newCustomerData.billing_last_name}
+                          onChange={(e) => setNewCustomerData({...newCustomerData, billing_last_name: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Straße
+                        </label>
+                        <input
+                          type="text"
+                          value={newCustomerData.billing_street}
+                          onChange={(e) => setNewCustomerData({...newCustomerData, billing_street: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Hausnummer
+                        </label>
+                        <input
+                          type="text"
+                          value={newCustomerData.billing_house_number}
+                          onChange={(e) => setNewCustomerData({...newCustomerData, billing_house_number: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          PLZ
+                        </label>
+                        <input
+                          type="text"
+                          value={newCustomerData.billing_postal_code}
+                          onChange={(e) => setNewCustomerData({...newCustomerData, billing_postal_code: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Stadt
+                        </label>
+                        <input
+                          type="text"
+                          value={newCustomerData.billing_city}
+                          onChange={(e) => setNewCustomerData({...newCustomerData, billing_city: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end space-x-3 pt-4">

@@ -21,36 +21,56 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
     setError('');
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // Optimierte Authentifizierung mit Timeout
+      const authPromise = Promise.race([
+        supabase.auth.signInWithPassword({ email, password }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Login timeout - Verbindung zu langsam')), 10000)
+        )
+      ]) as Promise<{ data: any, error: any }>;
+
+      const { data: authData, error: authError } = await authPromise;
 
       if (authError) {
         throw authError;
       }
 
-      const { data: adminData, error: adminError } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('email', email)
-        .eq('is_active', true)
-        .single();
+      // Parallele Admin-Prüfung mit Timeout
+      const adminPromise = Promise.race([
+        supabase
+          .from('admin_users')
+          .select('id, email, name, role, is_active')
+          .eq('email', email)
+          .eq('is_active', true)
+          .single(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Admin-Prüfung timeout')), 5000)
+        )
+      ]) as Promise<{ data: any, error: any }>;
+
+      const { data: adminData, error: adminError } = await adminPromise;
 
       if (adminError || !adminData) {
         await supabase.auth.signOut();
+        if (adminError?.message === 'Admin-Prüfung timeout') {
+          throw new Error('Datenbank-Verbindung zu langsam');
+        }
         throw new Error('Kein Admin-Zugang für diese E-Mail-Adresse');
       }
 
-      await supabase
-        .from('admin_users')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', adminData.id);
-
+      // Erfolgreicher Login - onLogin aufrufen
       onLogin(adminData);
+      
+      console.log('Admin login successful:', email);
     } catch (error: any) {
       console.error('Login error:', error);
-      setError(error.message || 'Login fehlgeschlagen');
+      if (error.message?.includes('timeout')) {
+        setError('Verbindung zu langsam - bitte erneut versuchen');
+      } else if (error.message?.includes('Invalid login credentials')) {
+        setError('Ungültige E-Mail oder Passwort');
+      } else {
+        setError(error.message || 'Login fehlgeschlagen');
+      }
     } finally {
       setIsLoading(false);
     }

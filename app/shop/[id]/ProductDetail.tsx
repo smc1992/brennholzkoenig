@@ -284,47 +284,63 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
   ];
 
   const fetchProduct = async () => {
+    let isMounted = true;
+    
     try {
-      // Nur Produktdaten laden, Pricing-Tiers aus Fallback verwenden
-      const productRes = await supabase
+      setIsLoading(true);
+      
+      // Einzige Datenquelle - alle existierenden Felder laden
+      const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select('id, slug, name, category, description, detailed_description, price, original_price, unit, stock_quantity, min_stock_level, features, specifications, availability, in_stock, image_url, additional_images, wood_type, size, sku, cost_price, max_stock_level, supplier_id, is_active, created_at, updated_at')
         .eq('id', actualProductId)
         .single();
+      
+      console.log('Produktdaten geladen:', data);
+      console.log('🔍 ProductDetail: Loaded product data for ID:', actualProductId, data);
+      console.log('🔍 ProductDetail: Data type:', typeof data, 'Is Array:', Array.isArray(data));
+      console.log('🔍 ProductDetail: Data content:', data);
 
-      if (productRes.error) throw productRes.error;
+      if (error) throw error;
 
-      setProductData(productRes.data as unknown as Product);
-      // Verwende Fallback-Pricing-Tiers
-      const relevantTiers = fallbackPricingTiers.filter(tier => tier.product_id === actualProductId);
-      setPricingTiers(relevantTiers);
-      setQuantity(minOrderQuantity);
+      // Behandle sowohl Array als auch Objekt
+      const productData = Array.isArray(data) ? data[0] : data;
+      console.log('🔍 ProductDetail: Extracted product data:', productData);
+
+      // Nur setzen wenn Komponente noch gemountet
+      if (isMounted && productData) {
+        // Explizite Datenkonvertierung für korrekte Typen
+        const convertedProduct: Product = {
+          id: productData.id?.toString() || '',
+          name: productData.name || '',
+          description: productData.description || '',
+          price: parseFloat(productData.price) || 0,
+          image_url: productData.image_url || '',
+          category: productData.category || '',
+          stock_quantity: productData.stock_quantity || 0,
+          unit: productData.unit || '',
+          specifications: productData.specifications,
+          features: productData.features,
+          detailed_description: productData.detailed_description,
+          additional_images: productData.additional_images,
+          original_price: productData.original_price ? parseFloat(productData.original_price) : undefined
+        };
+        
+        setProductData(convertedProduct);
+        console.log('🔍 ProductDetail: Set productData:', convertedProduct.name, 'ID:', convertedProduct.id);
+        console.log('🔍 ProductDetail: Converted product:', convertedProduct);
+        // Verwende Fallback-Pricing-Tiers
+        const relevantTiers = fallbackPricingTiers.filter(tier => tier.product_id === actualProductId);
+        setPricingTiers(relevantTiers);
+        setQuantity(minOrderQuantity);
+      }
     } catch (error: unknown) {
       console.error('Fehler beim Laden des Produkts:', error);
       
-      // Fallback-Produkt verwenden, aber mit aktualisierter Bild-URL aus Datenbank falls verfügbar
-      if (fallbackProducts[actualProductId]) {
+      // Fallback nur bei echtem Fehler und wenn Komponente gemountet
+      if (isMounted && fallbackProducts[actualProductId]) {
         console.log(`Verwende Fallback-Produkt für ID ${actualProductId}`);
-        const fallbackProduct = { ...fallbackProducts[actualProductId] };
-        
-        // Versuche, die aktuelle Bild-URL aus der Datenbank zu holen
-        try {
-          const { data: imageData } = await supabase
-            .from('products')
-            .select('image_url, additional_images')
-            .eq('id', actualProductId)
-            .single();
-          
-          if (imageData && (imageData as any).image_url) {
-             fallbackProduct.image_url = (imageData as any).image_url;
-             fallbackProduct.additional_images = (imageData as any).additional_images || [];
-            console.log('Bild-URL aus Datenbank aktualisiert:', (imageData as any).image_url);
-          }
-        } catch (imageError) {
-          console.log('Konnte Bild-URL nicht aus Datenbank laden, verwende Fallback-Bild');
-        }
-        
-        setProductData(fallbackProduct);
+        setProductData(fallbackProducts[actualProductId]);
         
         // Passende Preisstufen für dieses Produkt filtern
         const relevantTiers = fallbackPricingTiers.filter(tier => tier.product_id === actualProductId);
@@ -332,8 +348,14 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
         setQuantity(minOrderQuantity);
       }
     } finally {
-      setIsLoading(false);
+      if (isMounted) {
+        setIsLoading(false);
+      }
     }
+    
+    return () => {
+      isMounted = false;
+    };
   };
 
   // Real-time Synchronisation mit zentralem Hook
@@ -344,56 +366,98 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
     };
   }, [subscribeToChanges, unsubscribeFromChanges]);
 
-  // Reagiere auf Änderungen in den Real-time Produktdaten
+  // Optimierte Real-time Synchronisation ohne Race Conditions
   useEffect(() => {
-    const realtimeProduct = products.find(p => p.id.toString() === actualProductId);
-    if (realtimeProduct) {
-      // Konvertiere Real-time Produkt zu lokalem Format
-      const updatedProduct: Product = {
-        id: realtimeProduct.id.toString(),
-        name: realtimeProduct.name,
-        description: realtimeProduct.description,
-        price: realtimeProduct.price,
-        image_url: realtimeProduct.image_url,
-        category: realtimeProduct.category,
-        stock_quantity: realtimeProduct.stock_quantity,
-        unit: realtimeProduct.unit,
-        features: realtimeProduct.features,
-        specifications: realtimeProduct.specifications,
-        delivery_info: 'Lieferung innerhalb von 3-5 Werktagen',
-        meta_title: `${realtimeProduct.name} - Premium Brennholz`,
-        meta_description: realtimeProduct.description,
-        detailed_description: realtimeProduct.description,
-        technical_specs: { 'Holzart': 'Buche', 'Länge': '33cm', 'Feuchtigkeitsgehalt': '<20%' },
-        additional_images: [],
-        original_price: realtimeProduct.original_price
-      };
-      
-      console.log(`Real-time Update für Produkt ${actualProductId}:`, updatedProduct.name);
-      setProductData(updatedProduct);
+    const realtimeProduct = products.find(p => p.id && p.id.toString() === actualProductId);
+    
+    if (realtimeProduct && realtimeProduct.id && !isLoading) {
+      // Nur aktualisieren wenn nicht gerade geladen wird
+      setProductData(prevData => {
+        // Intelligentes Merging - behalte lokale Daten bei
+        if (!prevData) {
+          // Erste Ladung - verwende Real-time Daten
+          const newProduct: Product = {
+            id: realtimeProduct.id.toString(),
+            name: realtimeProduct.name,
+            description: realtimeProduct.description || 'Hochwertiges Brennholz für Ihren Kamin oder Ofen.',
+            price: realtimeProduct.price,
+            image_url: realtimeProduct.image_url,
+            category: realtimeProduct.category,
+            stock_quantity: realtimeProduct.stock_quantity,
+            unit: realtimeProduct.unit,
+            features: realtimeProduct.features || ['Kammergetrocknet', 'Sofort verfügbar'],
+            specifications: realtimeProduct.specifications,
+            delivery_info: 'Lieferung innerhalb von 3-5 Werktagen',
+            meta_title: `${realtimeProduct.name} - Premium Brennholz`,
+            meta_description: realtimeProduct.description || `${realtimeProduct.name} - Premium Brennholz`,
+            detailed_description: (realtimeProduct as any).detailed_description || realtimeProduct.description || 'Hochwertiges Brennholz für optimale Wärmeausbeute.',
+            technical_specs: { 'Holzart': 'Buche', 'Länge': '33cm', 'Feuchtigkeitsgehalt': '<20%' },
+            additional_images: [],
+            original_price: realtimeProduct.original_price
+          };
+          
+          console.log(`Real-time Initial Load für Produkt ${actualProductId}:`, newProduct.name);
+          return newProduct;
+        } else {
+          // Update alle relevanten Felder - besonders description und detailed_description
+          const hasImageChange = prevData.image_url !== realtimeProduct.image_url;
+          const hasPriceChange = prevData.price !== realtimeProduct.price;
+          const hasStockChange = prevData.stock_quantity !== realtimeProduct.stock_quantity;
+          const hasDescriptionChange = prevData.description !== realtimeProduct.description;
+          const hasDetailedDescriptionChange = prevData.detailed_description !== (realtimeProduct as any).detailed_description;
+          
+          if (hasImageChange || hasPriceChange || hasStockChange || hasDescriptionChange || hasDetailedDescriptionChange) {
+            console.log(`Real-time Update für Produkt ${actualProductId}:`, {
+              imageChange: hasImageChange,
+              priceChange: hasPriceChange,
+              stockChange: hasStockChange,
+              descriptionChange: hasDescriptionChange,
+              detailedDescriptionChange: hasDetailedDescriptionChange
+            });
+            
+            return {
+              ...prevData,
+              image_url: realtimeProduct.image_url,
+              price: realtimeProduct.price,
+              stock_quantity: realtimeProduct.stock_quantity,
+              description: realtimeProduct.description || prevData.description,
+              detailed_description: (realtimeProduct as any).detailed_description || prevData.detailed_description,
+              // Behalte andere Felder bei
+            };
+          }
+          
+          return prevData; // Keine Änderung
+        }
+      });
     }
-  }, [products, actualProductId]);
+  }, [products, actualProductId, isLoading]);
 
   useEffect(() => {
     // Initial data fetch
     fetchProduct();
     
-    // Echtzeit-Updates für Produktänderungen
+    // Optimierte Echtzeit-Updates für Produktänderungen
     const channel = supabase
       .channel('product-detail-changes')
       .on('postgres_changes', 
-          { event: '*', schema: 'public', table: 'products', filter: `id=eq.${actualProductId}` }, 
+          { event: 'UPDATE', schema: 'public', table: 'products', filter: `id=eq.${actualProductId}` }, 
           (payload: { new: Record<string, any>; old: Record<string, any> }) => {
-            console.log(`Produktänderung für ID ${actualProductId} erkannt, aktualisiere Daten...`);
+            console.log(`Produktänderung für ID ${actualProductId} erkannt`);
             
-            // Überprüfen, ob das Bild aktualisiert wurde
+            // Sofortige Bildaktualisierung ohne fetchProduct()
             if (payload.new && payload.old && 
                 'image_url' in payload.new && 'image_url' in payload.old && 
                 payload.new.image_url !== payload.old.image_url) {
-              console.log(`Produktbild wurde aktualisiert: ${payload.old.image_url} -> ${payload.new.image_url}`);
+              console.log(`Produktbild sofort aktualisiert: ${payload.old.image_url} -> ${payload.new.image_url}`);
+              
+              setProductData(prev => prev ? {
+                ...prev,
+                image_url: payload.new.image_url
+              } : null);
+            } else {
+              // Nur bei anderen Änderungen vollständige Datenladung
+              fetchProduct();
             }
-            
-            fetchProduct();
           })
       // Pricing-Tiers Subscription entfernt - verwende Fallback-Daten
       // .on('postgres_changes',
@@ -411,8 +475,9 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
   }, [actualProductId]);
 
   const getCurrentPricing = () => {
-    if (!productData) return { price: 0, adjustmentText: '', canOrder: false };
-    const basePrice = parseFloat(productData.price.toString());
+    if (!productData || !productData.price) return { price: 0, adjustmentText: '', canOrder: false };
+    const basePrice = typeof productData.price === 'string' ? parseFloat(productData.price) : productData.price;
+    if (isNaN(basePrice)) return { price: 0, adjustmentText: '', canOrder: false };
     return calculatePriceWithTiers(basePrice, quantity, pricingTiers, minOrderQuantity);
   };
 
@@ -438,7 +503,8 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
 
       if (existingItemIndex >= 0) {
         const newQuantity = currentCart[existingItemIndex].quantity + quantity;
-        const newPricing = calculatePriceWithTiers(parseFloat(productData.price.toString()), newQuantity, pricingTiers, minOrderQuantity);
+        const basePrice = typeof productData.price === 'string' ? parseFloat(productData.price) : productData.price;
+        const newPricing = calculatePriceWithTiers(basePrice, newQuantity, pricingTiers, minOrderQuantity);
 
         currentCart[existingItemIndex].quantity = newQuantity;
         currentCart[existingItemIndex].price = newPricing.price.toString();
@@ -582,10 +648,35 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
               {productData.stock_quantity} SRM verfügbar
             </div>
 
-            <ProductImageGalleryDisplay
-              productName={productData.name}
-              productId={parseInt(urlToProductId[productId] || '0')}
-            />
+            {(() => {
+              console.log('🔍 ProductDetail: Render check - productData:', !!productData, 'name:', productData?.name, 'actualProductId:', actualProductId);
+              
+              if (productData && productData.name) {
+                console.log('🔍 ProductDetail: Rendering ProductImageGalleryDisplay with:', {
+                  productName: productData.name,
+                  productId: parseInt(urlToProductId[productId] || '0'),
+                  urlProductId: productId,
+                  actualProductId
+                });
+                
+                return (
+                  <ProductImageGalleryDisplay
+                    productName={productData.name}
+                    productId={parseInt(urlToProductId[productId] || '0')}
+                  />
+                );
+              } else {
+                console.log('🔍 ProductDetail: Showing loading spinner - productData missing or no name');
+                return (
+                  <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+                    <div className="text-center text-gray-500">
+                      <div className="animate-spin w-8 h-8 border-2 border-[#C04020] border-t-transparent rounded-full mx-auto mb-2"></div>
+                      <div>Bilder werden geladen...</div>
+                    </div>
+                  </div>
+                );
+              }
+            })()}
           </div>
 
           <div className="space-y-6">

@@ -94,7 +94,28 @@ export function useRealtimeSync(): RealtimeSyncHook {
         throw fetchError;
       }
 
-      const fetchedProducts = (data as unknown as Product[]) || [];
+      console.log('🔍 useRealtimeSync: Raw data from database:', data);
+      
+      // Explizite Datenkonvertierung für korrekte Typen
+      const fetchedProducts: Product[] = (data || []).map((item: any) => ({
+        id: item.id || 0,
+        name: item.name || '',
+        description: item.description || '',
+        price: parseFloat(item.price) || 0,
+        image_url: item.image_url || '',
+        category: item.category || '',
+        stock_quantity: item.stock_quantity || 0,
+        features: item.features || [],
+        specifications: item.specifications || {},
+        unit: item.unit || '',
+        original_price: item.original_price ? parseFloat(item.original_price) : undefined,
+        is_active: item.is_active || false,
+        in_stock: item.in_stock || false,
+        created_at: item.created_at || new Date().toISOString(),
+        updated_at: item.updated_at
+      }));
+      
+      console.log('🔍 useRealtimeSync: Converted products:', fetchedProducts);
       
       // Nur aktualisieren wenn sich die Daten unterscheiden
       if (fetchedProducts.length > 0) {
@@ -109,38 +130,92 @@ export function useRealtimeSync(): RealtimeSyncHook {
   }, []);
 
   const subscribeToChanges = useCallback(() => {
-    // Real-time subscription deaktiviert für maximale Stabilität
-    console.log('Real-time subscription disabled - using fallback products + periodic refresh');
-  }, []);
+    if (subscription) {
+      console.log('Real-time subscription already active');
+      return;
+    }
+
+    console.log('🔄 Activating real-time subscription for products and images...');
+    
+    const channel = supabase
+      .channel('products_and_images_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'products'
+        },
+        (payload: any) => {
+          console.log('Product change detected:', payload);
+          // Refresh products when any product changes
+          refreshProducts();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'image_mappings'
+        },
+        (payload: any) => {
+          console.log('Image mapping change detected:', payload);
+          // Refresh products to get updated image URLs
+          refreshProducts();
+          
+          // Dispatch custom event for image components
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('imageChange', {
+              detail: { 
+                action: payload.eventType,
+                productId: payload.new?.product_id || payload.old?.product_id,
+                seoSlug: payload.new?.seo_slug || payload.old?.seo_slug
+              }
+            }));
+          }
+        }
+      )
+      .subscribe((status: string) => {
+        console.log('Real-time subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Real-time subscription active for products and images');
+        }
+      });
+    
+    setSubscription(channel);
+  }, [subscription, refreshProducts]);
 
   const unsubscribeFromChanges = useCallback(() => {
-    // Real-time subscription deaktiviert - keine Cleanup nötig
-    console.log('Real-time subscription disabled - no cleanup needed');
-  }, []);
+    if (subscription) {
+      console.log('🔄 Unsubscribing from real-time changes...');
+      supabase.removeChannel(subscription);
+      setSubscription(null);
+      console.log('✅ Real-time subscription cleaned up');
+    }
+  }, [subscription]);
 
   // Initial load
   useEffect(() => {
     refreshProducts();
   }, [refreshProducts]);
 
-  // Deaktiviere Real-time Subscription temporär für Stabilität
-  // useEffect(() => {
-  //   if (!subscription && !isUnmounting) {
-  //     subscribeToChanges();
-  //   }
-  //   
-  //   // Cleanup on unmount
-  //   return () => {
-  //     setIsUnmounting(true);
-  //     if (subscription) {
-  //       console.log('Cleaning up subscription on unmount...');
-  //       supabase.removeChannel(subscription);
-  //       setSubscription(null);
-  //     }
-  //   };
-  // }, [subscription, subscribeToChanges, isUnmounting]);
-  
-  console.log('Real-time subscription disabled for stability - using fallback products + periodic refresh');
+  // Aktiviere Real-time Subscription für automatische Updates
+  useEffect(() => {
+    if (!subscription && !isUnmounting) {
+      subscribeToChanges();
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      setIsUnmounting(true);
+      if (subscription) {
+        console.log('Cleaning up subscription on unmount...');
+        supabase.removeChannel(subscription);
+        setSubscription(null);
+      }
+    };
+  }, [subscription, subscribeToChanges, isUnmounting]);
 
   // Periodic refresh as fallback (every 5 minutes)
   useEffect(() => {

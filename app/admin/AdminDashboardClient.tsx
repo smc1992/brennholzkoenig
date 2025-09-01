@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { adminQueries } from '@/lib/supabase-server';
 import OrdersTab from './OrdersTab';
 import CustomersTab from './CustomersTab';
 import StatsTab from './StatsTab';
@@ -38,27 +39,36 @@ import ShopSettingsTab from './ShopSettingsTab';
 // PWA functionality removed
 import SupportTab from './SupportTab';
 import FAQManagementTab from './FAQManagementTab';
+import InvoiceTab from './InvoiceTab';
+import InvoiceSettingsTab from './InvoiceSettingsTab';
 
 interface AdminDashboardProps {
   adminUser: any;
   onLogout: () => void;
 }
 
-// Fallback-Stats für sofortige Anzeige
-const fallbackStats = {
-  totalOrders: 156,
-  totalCustomers: 89,
-  totalRevenue: 12450.75,
-  pendingOrders: 8
-};
+// Produktionsreife Stats - keine Fallback-Daten mehr
 
-export default function AdminDashboard({ adminUser, onLogout }: AdminDashboardProps) {
+export default function AdminDashboardClient({ 
+  adminUser, 
+  onLogout,
+  initialStats,
+  initialBatchData 
+}: Partial<AdminDashboardProps> & {
+  initialStats?: any;
+  initialBatchData?: any;
+}) {
   const [activeTab, setActiveTab] = useState('stats');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [hasAccess, setHasAccess] = useState(true);
-  // Starte mit Fallback-Stats für sofortige Anzeige
-  const [stats, setStats] = useState(fallbackStats);
+  // Starte mit leeren Stats - werden durch loadStats() geladen
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    totalCustomers: 0,
+    totalRevenue: 0,
+    pendingOrders: 0
+  });
   // Using the centralized Supabase client from lib/supabase.ts
 
   useEffect(() => {
@@ -69,50 +79,59 @@ export default function AdminDashboard({ adminUser, onLogout }: AdminDashboardPr
     }
   }, [adminUser]);
 
+  // URL-Parameter für Tab-Switching verarbeiten
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    if (tab) {
+      console.log('AdminDashboard: URL-Parameter tab =', tab);
+      setActiveTab(tab);
+    }
+  }, []);
+
+  // Debug-Log für aktiven Tab
+  useEffect(() => {
+    console.log('AdminDashboard: Aktiver Tab =', activeTab);
+  }, [activeTab]);
+
   const loadStats = async () => {
     if (!hasAccess) return;
     
     try {
-      // Sichere Abfrage für customers Tabelle
-      const getCustomersCount = async () => {
-        try {
-          const result = await supabase.from('customers').select('*', { count: 'exact', head: true });
-          return result;
-        } catch (error) {
-          console.warn('customers Tabelle nicht verfügbar:', error);
-          return { count: 0, error: null, data: null };
-        }
-      };
-
-      // Alle Abfragen parallel ausführen für bessere Performance
-      const [ordersResult, customersResult, revenueResult, pendingResult] = await Promise.all([
-        supabase.from('orders').select('*', { count: 'exact', head: true }),
-        getCustomersCount(),
-        supabase.from('orders').select('total_amount').eq('status', 'delivered'),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending')
-      ]);
-
+      // Verwende produktionsreife adminQueries
+      const statsData = await adminQueries.getAdminStats();
+      
+      // Zusätzliche Revenue-Berechnung
+      const revenueResult = await supabase
+        .from('orders')
+        .select('total_amount')
+        .eq('status', 'delivered');
+      
       const totalRevenue = revenueResult.data?.reduce((sum: number, order: any) => {
-         const amount = typeof order.total_amount === 'string' ? parseFloat(order.total_amount) : Number(order.total_amount) || 0;
-         return sum + amount;
-       }, 0) || 0;
-
+        const amount = typeof order.total_amount === 'string' ? parseFloat(order.total_amount) : Number(order.total_amount) || 0;
+        return sum + amount;
+      }, 0) || 0;
+      
+      // Pending Orders zählen
+      const pendingResult = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+      
       const newStats = {
-        totalOrders: ordersResult.count || 0,
-        totalCustomers: customersResult.count || 0,
+        totalOrders: statsData.orders,
+        totalCustomers: 0, // Customers werden später implementiert
         totalRevenue: totalRevenue,
         pendingOrders: pendingResult.count || 0
       };
       
-      // Nur aktualisieren wenn sich die Daten unterscheiden
-      if (newStats.totalOrders > 0 || newStats.totalCustomers > 0 || newStats.totalRevenue > 0) {
-        setStats(newStats);
-        console.log('Admin stats loaded:', newStats);
-      }
+      setStats(newStats);
+      console.log('✅ Production stats loaded:', newStats);
     } catch (error) {
-      console.error('Error loading stats:', error);
-    }
-  };
+      console.error('❌ Error loading production stats:', error);
+       // Keine Fallback-Daten mehr - zeige Fehler an
+     }
+   };
 
   if (!hasAccess) {
     return (
@@ -140,6 +159,7 @@ export default function AdminDashboard({ adminUser, onLogout }: AdminDashboardPr
       items: [
         { id: 'stats', label: 'Übersicht', icon: 'ri-dashboard-line' },
         { id: 'orders', label: 'Bestellungen', icon: 'ri-shopping-bag-line' },
+        { id: 'invoices', label: 'Rechnungen', icon: 'ri-file-text-line' },
         { id: 'customers', label: 'Kunden', icon: 'ri-user-line' }
       ]
     },
@@ -165,6 +185,8 @@ export default function AdminDashboard({ adminUser, onLogout }: AdminDashboardPr
       title: 'Analytics & Berichte',
       items: [
         { id: 'analytics', label: 'Analytics', icon: 'ri-bar-chart-line' },
+        { id: 'google-analytics', label: 'Google Analytics', icon: 'ri-google-line' },
+        { id: 'google-ads-tracking', label: 'Google Ads Tracking', icon: 'ri-advertisement-line' },
         { id: 'reports', label: 'Berichte', icon: 'ri-file-chart-line' }
       ]
     },
@@ -190,6 +212,7 @@ export default function AdminDashboard({ adminUser, onLogout }: AdminDashboardPr
       title: 'Support & System',
       items: [
         { id: 'support', label: 'Support', icon: 'ri-customer-service-2-line' },
+        { id: 'invoice-settings', label: 'Rechnungseinstellungen', icon: 'ri-settings-4-line' },
         { id: 'backup', label: 'Backup', icon: 'ri-archive-drawer-line' },
         { id: 'settings', label: 'Einstellungen', icon: 'ri-settings-line' }
       ]
@@ -205,37 +228,116 @@ export default function AdminDashboard({ adminUser, onLogout }: AdminDashboardPr
   ];
 
   const renderTabContent = () => {
-    if (!hasAccess || !adminUser) {
-      return (
-        <div className="bg-white rounded-xl shadow-sm border p-8 text-center">
-          <div className="w-16 h-16 flex items-center justify-center bg-red-100 rounded-full mx-auto mb-4">
-            <i className="ri-lock-line text-2xl text-red-600"></i>
-          </div>
-          <h3 className="text-lg font-bold text-gray-800 mb-2">Berechtigung erforderlich</h3>
-          <p className="text-gray-600">Für dieses Modul benötigen Sie entsprechende Berechtigungen.</p>
-        </div>
-      );
-    }
-
+    console.log('AdminDashboard: renderTabContent called with activeTab =', activeTab);
+    console.log('AdminDashboard: hasAccess =', hasAccess, 'adminUser =', !!adminUser);
+    
+    // Debug-Ausgabe für Tab-Switching
+    console.log('AdminDashboard: Rendering Tab:', activeTab);
+    
     switch (activeTab) {
-      case 'stats': return <StatsTab stats={stats} onRefresh={loadStats} />;
-      case 'orders': return <OrdersTab onStatsUpdate={loadStats} />;
-      case 'customers': return <CustomersTab />;
-      case 'products': return <ProductsTab />;
-      case 'categories': return <CategoriesTab />;
-      case 'shop-settings': return <ShopSettingsTab />;
-      case 'inventory': return <InventoryTab />;
-      case 'suppliers': return <SuppliersTab />;
-      case 'support': return <SupportTab />;
-      case 'faq': return <FAQManagementTab />;
-      case 'analytics': return <AnalyticsTab />;
-      case 'marketing': return <MarketingTab />;
-      case 'content': return <ContentManagementTab />;
-      case 'media': return <MediaTab />;
-      case 'seo': return <SEOTab />;
-      case 'email': return <EmailSystemTab />;
-      case 'settings': return <DashboardSettingsTab />;
-      default: return <StatsTab stats={stats} onRefresh={loadStats} />;
+      case 'stats': 
+        console.log('AdminDashboard: Rendering StatsTab');
+        return <StatsTab stats={stats} onRefresh={loadStats} onTabChange={setActiveTab} />;
+      case 'orders': 
+        console.log('AdminDashboard: Rendering OrdersTab');
+        return <OrdersTab onStatsUpdate={loadStats} />;
+      case 'customers': 
+        console.log('AdminDashboard: Rendering CustomersTab');
+        return <CustomersTab />;
+      case 'invoices': 
+        console.log('AdminDashboard: Rendering InvoiceTab');
+        return <InvoiceTab onStatsUpdate={loadStats} />;
+      case 'products': 
+        console.log('AdminDashboard: Rendering ProductsTab');
+        return <ProductsTab />;
+      case 'categories': 
+        console.log('AdminDashboard: Rendering CategoriesTab');
+        return <CategoriesTab />;
+      case 'shop-settings': 
+        console.log('AdminDashboard: Rendering ShopSettingsTab');
+        return <ShopSettingsTab />;
+      case 'inventory': 
+        console.log('AdminDashboard: Rendering InventoryTab');
+        return <InventoryTab />;
+      case 'suppliers': 
+        console.log('AdminDashboard: Rendering SuppliersTab');
+        return <SuppliersTab />;
+      case 'support': 
+        console.log('AdminDashboard: Rendering SupportTab');
+        return <SupportTab />;
+      case 'faq': 
+        console.log('AdminDashboard: Rendering FAQManagementTab');
+        return <FAQManagementTab />;
+      case 'analytics': 
+        console.log('AdminDashboard: Rendering AnalyticsTab');
+        return <AnalyticsTab />;
+      case 'google-analytics': 
+        console.log('AdminDashboard: Rendering GoogleAnalyticsTab');
+        return <GoogleAnalyticsTab />;
+      case 'google-ads-tracking': 
+        console.log('AdminDashboard: Rendering GoogleAdsTrackingTab');
+        return <GoogleAdsTrackingTab />;
+      case 'marketing': 
+        console.log('AdminDashboard: Rendering MarketingTab');
+        return <MarketingTab />;
+      case 'content': 
+        console.log('AdminDashboard: Rendering ContentManagementTab');
+        return <ContentManagementTab />;
+      case 'media': 
+        console.log('AdminDashboard: Rendering MediaTab');
+        return <MediaTab />;
+      case 'seo': 
+        console.log('AdminDashboard: Rendering SEOTab');
+        return <SEOTab />;
+      case 'invoice-settings': 
+        console.log('AdminDashboard: Rendering InvoiceSettingsTab');
+        return <InvoiceSettingsTab onStatsUpdate={loadStats} />;
+      case 'pricing': 
+        console.log('AdminDashboard: Rendering PricingTab');
+        return <PricingTab />;
+      case 'discount-codes': 
+        console.log('AdminDashboard: Rendering DiscountCodesTab');
+        return <DiscountCodesTab />;
+      case 'loyalty-program': 
+        console.log('AdminDashboard: Rendering LoyaltyProgramTab');
+        return <LoyaltyProgramTab />;
+      case 'reports': 
+        console.log('AdminDashboard: Rendering ReportsTab');
+        return <ReportsTab />;
+      case 'automation': 
+        console.log('AdminDashboard: Rendering AutomationTab');
+        return <AutomationTab />;
+      case 'blog-management': 
+        console.log('AdminDashboard: Rendering BlogManagementTab');
+        return <BlogManagementTab />;
+      case 'seo-management': 
+        console.log('AdminDashboard: Rendering SEOManagementTab');
+        return <SEOManagementTab />;
+      case 'email': 
+        console.log('AdminDashboard: Rendering EmailSystemTab');
+        return <EmailSystemTab />;
+      case 'email-automation': 
+        console.log('AdminDashboard: Rendering EmailAutomationTab');
+        return <EmailAutomationTab />;
+      case 'email-templates': 
+        console.log('AdminDashboard: Rendering EmailTemplatesTab');
+        return <EmailTemplatesTab />;
+      case 'smtp-settings': 
+        console.log('AdminDashboard: Rendering SMTPSettingsTab');
+        return <SMTPSettingsTab />;
+      case 'sms-system': 
+        console.log('AdminDashboard: Rendering SMSSystemTab');
+        return <SMSSystemTab />;
+      case 'push-notifications': 
+        console.log('AdminDashboard: Rendering PushNotificationTab');
+        return <PushNotificationTab />;
+      case 'backup': 
+        console.log('AdminDashboard: Rendering BackupTab');
+        return <BackupTab />;
+      case 'settings': 
+         console.log('AdminDashboard: Rendering DashboardSettingsTab');
+         return <DashboardSettingsTab />;
+       default: return <StatsTab stats={stats} onRefresh={loadStats} onTabChange={setActiveTab} />;
     }
   };
 
@@ -304,16 +406,26 @@ export default function AdminDashboard({ adminUser, onLogout }: AdminDashboardPr
 
               <div className="hidden sm:flex items-center space-x-3">
                 <div className="w-8 h-8 bg-[#C04020] rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  {adminUser.name?.charAt(0) || 'A'}
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-[#1A1A1A]">{adminUser.name}</p>
-                  <p className="text-xs text-gray-500">{adminUser.role}</p>
+                  {adminUser?.name?.charAt(0) || 'A'}
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium text-[#1A1A1A]">{adminUser?.name || 'Admin'}</p>
+                  <p className="text-xs text-gray-500">{adminUser?.role || 'Administrator'}</p>
                 </div>
               </div>
 
               <button
-                onClick={onLogout}
+                onClick={async () => {
+                  try {
+                    await supabase.auth.signOut();
+                    // Redirect to login page
+                    window.location.href = '/admin/login';
+                  } catch (error) {
+                    console.error('Logout error:', error);
+                    // Fallback redirect on error
+                    window.location.href = '/admin/login';
+                  }
+                }}
                 className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
               >
                 <div className="w-5 h-5 flex items-center justify-center sm:mr-2">
@@ -460,36 +572,7 @@ export default function AdminDashboard({ adminUser, onLogout }: AdminDashboardPr
           </div>
 
           <div className="flex-1 admin-content">
-            {activeTab === 'stats' && <StatsTab stats={stats} onRefresh={loadStats} />}
-            {activeTab === 'orders' && <OrdersTab onStatsUpdate={loadStats} />}
-            {activeTab === 'customers' && <CustomersTab />}
-            {activeTab === 'products' && <ProductsTab />}
-            {activeTab === 'product-management' && <ProductManagementTab />}
-            {activeTab === 'inventory' && <InventoryTab />}
-            {activeTab === 'suppliers' && <SuppliersTab />}
-            {activeTab === 'discount-codes' && <DiscountCodesTab />}
-            {activeTab === 'loyalty-program' && <LoyaltyProgramTab />}
-            {activeTab === 'pricing' && <PricingTab />}
-            {activeTab === 'support' && <SupportTab />}
-            {activeTab === 'faq' && <FAQManagementTab />}
-            {activeTab === 'analytics' && <AnalyticsTab />}
-            {activeTab === 'reports' && <ReportsTab />}
-            {activeTab === 'marketing' && <MarketingTab />}
-            {activeTab === 'automation' && <AutomationTab />}
-            {activeTab === 'content' && <ContentManagementTab />}
-            {activeTab === 'blog-management' && <BlogManagementTab />}
-            {activeTab === 'seo-management' && <SEOManagementTab />}
-            {activeTab === 'media' && <MediaTab />}
-            {activeTab === 'seo' && <SEOTab />}
-            {activeTab === 'email' && <EmailSystemTab />}
-            {activeTab === 'email-automation' && <EmailAutomationTab />}
-            {activeTab === 'email-templates' && <EmailTemplatesTab />}
-            {activeTab === 'smtp-settings' && <SMTPSettingsTab />}
-            {activeTab === 'sms-system' && <SMSSystemTab />}
-            {activeTab === 'push-notifications' && <PushNotificationTab />}
-            {/* PWA functionality removed */}
-            {activeTab === 'backup' && <BackupTab />}
-            {activeTab === 'settings' && <DashboardSettingsTab />}
+            {renderTabContent()}
           </div>
         </main>
       </div>

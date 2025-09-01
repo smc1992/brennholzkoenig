@@ -54,7 +54,7 @@ export default function ProductGrid() {
       name: 'Industrieholz Buche Klasse 1',
       description: 'Hochwertiges Industrieholz aus Buche, Klasse 1',
       price: 115.00,
-      image_url: '',
+      image_url: '/images/industrieholz-buche-klasse-1-1756333840437.png',
       category: 'Industrieholz',
       stock_quantity: 100,
       features: ['Kammergetrocknet', 'Sofort verfügbar', 'Premium Qualität'],
@@ -68,7 +68,7 @@ export default function ProductGrid() {
       name: 'Industrieholz Buche Klasse 2',
       description: 'Industrieholz aus Buche, Klasse 2',
       price: 90.00,
-      image_url: '',
+      image_url: '/images/industrieholz-buche-klasse-ii-1756679693263.webp',
       category: 'Industrieholz',
       stock_quantity: 150,
       features: ['Kammergetrocknet', 'Sofort verfügbar'],
@@ -76,18 +76,87 @@ export default function ProductGrid() {
       is_active: true,
       in_stock: true,
       created_at: new Date().toISOString()
+    },
+    {
+      id: 3,
+      name: 'Scheitholz Buche 33cm',
+      description: 'Klassisches Scheitholz aus Buche, 33cm Länge',
+      price: 99.99,
+      image_url: '/images/scheitholz-buche-33-cm-1756681329634.webp',
+      category: 'Scheitholz',
+      stock_quantity: 25,
+      unit: 'SRM',
+      is_active: true,
+      in_stock: true,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 4,
+      name: 'Scheitholz Buche 25 cm',
+      description: 'Premium Buchenscheitholz in kompakter 25 cm Länge',
+      price: 90.00,
+      image_url: '/images/scheitholz-buche-25-cm-1756684793745.webp',
+      category: 'Scheitholz',
+      stock_quantity: 22,
+      unit: 'SRM',
+      is_active: true,
+      in_stock: true,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 5,
+      name: 'Scheitholz - Industrieholz Mix 33 cm',
+      description: 'Optimale Mischung aus 70% Industrieholz und 30% Fichte',
+      price: 90.00,
+      image_url: '/images/scheitholz-industrieholz-mix-33-cm-1756683834112.jpg',
+      category: 'Mix-Sortiment',
+      stock_quantity: 38,
+      unit: 'SRM',
+      is_active: true,
+      in_stock: true,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 6,
+      name: 'Scheitholz Fichte 33 cm',
+      description: 'Hochwertiges Fichtenscheitholz, 33cm Länge',
+      price: 75.00,
+      image_url: '/images/scheitholz-fichte-33-cm-1756684168933.webp',
+      category: 'Scheitholz',
+      stock_quantity: 30,
+      unit: 'SRM',
+      is_active: true,
+      in_stock: true,
+      created_at: new Date().toISOString()
     }
-  ];
+   ];
 
   const { products: realtimeProducts, isLoading: realtimeLoading, error: realtimeError } = useRealtimeSync();
+  
+  // Debug: Prüfe useRealtimeSync Rückgabe
+  console.log('🔍 ProductGrid: useRealtimeSync result:', {
+    realtimeProducts,
+    realtimeLoading,
+    realtimeError,
+    productsLength: realtimeProducts?.length || 0
+  });
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('Alle');
   const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([]);
   const [minOrderQuantity, setMinOrderQuantity] = useState<number>(3);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // Debug: Prüfe Real-time-Produkte
+  console.log('🔍 ProductGrid: realtimeProducts:', realtimeProducts);
+  console.log('🔍 ProductGrid: realtimeProducts.length:', realtimeProducts.length);
+  console.log('🔍 ProductGrid: fallbackProducts:', fallbackProducts);
+  
   // Verwende Real-time-Produkte oder Fallback
   const products = realtimeProducts.length > 0 ? realtimeProducts : fallbackProducts;
+  
+  console.log('🔍 ProductGrid: Final products used:', products);
+  console.log('🔍 ProductGrid: Product 4 details:', products.find(p => p.id === 4));
+
 
   useEffect(() => {
     setLoading(realtimeLoading);
@@ -172,6 +241,17 @@ export default function ProductGrid() {
           {filteredProducts.map((product) => {
             const productUrl = getProductUrl(product.id);
             const imageUrl = getCDNUrl(product.image_url);
+            
+            // Debug-Logging für Bildladung
+            console.log(`🖼️ ProductGrid: Product ${product.id} (${product.name}):`, {
+              original_image_url: product.image_url,
+              processed_imageUrl: imageUrl,
+              productUrl
+            });
+            
+            if (product.id === 4) {
+              console.log('🔍 ProductGrid: Scheitholz Buche 25 cm details:', product);
+            }
 
             return (
               <div key={product.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">

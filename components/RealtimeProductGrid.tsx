@@ -4,7 +4,26 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRealtimeSync } from '../hooks/useRealtimeSync';
 import WishlistButton from './WishlistButton';
+import CategoryFilter from './CategoryFilter';
 import { getCDNUrl } from '../utils/cdn';
+
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  image_url: string;
+  category: string;
+  stock_quantity: number;
+  features?: string[];
+  specifications?: { [key: string]: string };
+  unit: string;
+  original_price?: number;
+  is_active: boolean;
+  in_stock?: boolean;
+  created_at: string;
+  updated_at?: string;
+}
 
 // SEO-freundliche URL-Zuordnung
 const productUrlMapping: { [key: number]: string } = {
@@ -16,13 +35,28 @@ const productUrlMapping: { [key: number]: string } = {
   6: 'scheitholz-fichte-33cm'
 };
 
-export default function RealtimeProductGrid() {
-  const { products, isLoading, error, refreshProducts } = useRealtimeSync();
+interface RealtimeProductGridProps {
+  initialProducts?: Product[];
+  loadTime?: number;
+  error?: string | null;
+}
+
+export default function RealtimeProductGrid({ 
+  initialProducts = [], 
+  loadTime = 0, 
+  error: serverError = null 
+}: RealtimeProductGridProps = {}) {
+  const { products: realtimeProducts, isLoading, error: realtimeError, refreshProducts } = useRealtimeSync();
+  
+  // Verwende Server-Side Daten wenn verfügbar, sonst Real-time Daten
+  const products = initialProducts.length > 0 ? initialProducts : realtimeProducts;
+  const combinedError = serverError || realtimeError;
+  
   const [filteredProducts, setFilteredProducts] = useState(products);
   const [selectedCategory, setSelectedCategory] = useState<string>('Alle');
   
   // Debug-Logs
-  console.log('RealtimeProductGrid - isLoading:', isLoading, 'products:', products.length, 'error:', error);
+  console.log('RealtimeProductGrid - isLoading:', isLoading, 'products:', products.length, 'error:', combinedError);
 
   // Update filtered products when products change
   useEffect(() => {
@@ -60,12 +94,12 @@ export default function RealtimeProductGrid() {
   //   );
   // }
 
-  if (error) {
+  if (combinedError) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <p>Fehler beim Laden der Produkte: {error}</p>
+            <p>Fehler beim Laden der Produkte: {combinedError}</p>
             <button 
               onClick={refreshProducts}
               className="mt-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
@@ -84,10 +118,7 @@ export default function RealtimeProductGrid() {
       <div className="mb-6 flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Unsere Produkte</h2>
         <div className="flex items-center space-x-4">
-          <div className="flex items-center text-sm text-gray-600">
-            <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-            Live-Synchronisation aktiv
-          </div>
+
           <button 
             onClick={refreshProducts}
             className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded transition-colors"
@@ -100,23 +131,11 @@ export default function RealtimeProductGrid() {
       </div>
 
       {/* Category Filter */}
-      <div className="mb-8">
-        <div className="flex flex-wrap gap-2">
-          {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                selectedCategory === category
-                  ? 'bg-[#C04020] text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-      </div>
+      <CategoryFilter 
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        showAllOption={true}
+      />
 
       {/* Products Grid */}
       {filteredProducts.length === 0 ? (
@@ -163,7 +182,11 @@ export default function RealtimeProductGrid() {
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
+                        console.log('Image load error for product:', product.name, 'URL:', imageUrl);
                         target.src = '/api/placeholder?width=400&height=400&text=Bild+nicht+verfügbar';
+                      }}
+                      onLoad={() => {
+                        console.log('Image loaded successfully for product:', product.name, 'URL:', imageUrl);
                       }}
                     />
                   </Link>
@@ -207,7 +230,7 @@ export default function RealtimeProductGrid() {
                   {product.features && product.features.length > 0 && (
                     <div className="mb-4">
                       <div className="flex flex-wrap gap-1">
-                        {product.features.slice(0, 3).map((feature, index) => (
+                        {product.features.slice(0, 3).map((feature: string, index: number) => (
                           <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
                             {feature}
                           </span>

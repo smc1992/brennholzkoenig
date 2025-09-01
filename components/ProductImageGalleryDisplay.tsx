@@ -34,13 +34,35 @@ export default function ProductImageGalleryDisplay({
     try {
       setIsLoading(true);
       
+      // Validiere productName
+      if (!productName || productName === 'undefined' || productName.trim() === '') {
+        console.error('Error loading product images: Invalid productName provided:', productName);
+        setImages([]);
+        setSelectedImage('');
+        return;
+      }
+      
       // Bei forceRefresh Cache invalidieren
       if (forceRefresh) {
         invalidateCache(productName);
       }
       
+      // Debug-Logging
+      console.log('🖼️ ProductImageGalleryDisplay: Loading images for:', {
+        productName,
+        productId,
+        forceRefresh
+      });
+      
       // Lade Bilder über Cache
       const imageUrls = await getProductImages(productName, productId);
+      
+      console.log('🖼️ ProductImageGalleryDisplay: Received images:', {
+        imageCount: imageUrls.length,
+        imageUrls,
+        productName,
+        productId
+      });
       
       if (imageUrls.length > 0) {
         setImages(imageUrls);
@@ -48,10 +70,12 @@ export default function ProductImageGalleryDisplay({
         // Setze das erste Bild als ausgewählt, falls noch keins ausgewählt ist
         if (!selectedImage || !imageUrls.includes(selectedImage)) {
           setSelectedImage(imageUrls[0]);
+          console.log('🖼️ ProductImageGalleryDisplay: Selected first image:', imageUrls[0]);
         }
         
         setLastSync(Date.now());
       } else {
+        console.warn('🖼️ ProductImageGalleryDisplay: No images found for product:', productName);
         setImages([]);
         setSelectedImage('');
       }
@@ -134,31 +158,58 @@ export default function ProductImageGalleryDisplay({
   };
 
   const setAsMainImage = useCallback(async (imageUrl: string) => {
-    if (!productId) return;
-    
     try {
-      // Aktualisiere das Hauptbild in der Datenbank
-      const { error } = await supabase
-        .from('products')
-        .update({ image_url: imageUrl })
-        .eq('id', productId);
-
-      if (error) {
-        console.error('Error updating main image:', error);
+      if (!productId) {
+        console.error('No product ID available for setting main image');
         return;
       }
-
-      // Aktualisiere lokalen State
+      
+      // Extrahiere die Image-ID aus der URL (SEO-Slug)
+      const seoSlug = imageUrl.replace('/images/', '');
+      
+      // Finde die Image-ID basierend auf dem SEO-Slug
+      const { data: imageMapping, error: findError } = await supabase
+        .from('image_mappings')
+        .select('id')
+        .eq('seo_slug', seoSlug)
+        .eq('product_id', productId)
+        .single();
+      
+      if (findError || !imageMapping) {
+        console.error('Error finding image mapping:', findError);
+        return;
+      }
+      
+      // Verwende die neue Set-Main-Image API
+      const response = await fetch('/api/set-main-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId: productId,
+          imageId: imageMapping.id
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        console.error('Error setting main image:', result.error);
+        return;
+      }
+      
+      // Aktualisiere den lokalen State
       setSelectedImage(imageUrl);
       
-      // Cache invalidieren für sofortige Aktualisierung
-      invalidateCache(productName);
+      // Lade Bilder neu, um die aktualisierten is_main_image Flags zu erhalten
+      loadProductImages(true);
       
-      console.log('Main image updated successfully');
+      console.log('Main image updated successfully:', result.data.newMainImageUrl);
     } catch (error) {
       console.error('Error setting main image:', error);
     }
-  }, [productId, invalidateCache, productName]);
+  }, [productId, loadProductImages]);
 
   const refreshImages = useCallback(() => {
     loadProductImages(true);
