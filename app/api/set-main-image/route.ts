@@ -1,14 +1,36 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest } from 'next/server';
 
-// Supabase Client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Runtime-Konfiguration für Node.js Kompatibilität
+export const runtime = 'nodejs';
+
+// Verhindert Pre-rendering während des Builds
+export const dynamic = 'force-dynamic';
+export const revalidate = false;
+
+// Supabase Client wird zur Laufzeit erstellt
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    console.warn('Supabase environment variables not configured for app-api-set-main-image-route route');
+    return null;
+  }
+  
+  return createClient(supabaseUrl, supabaseKey);
+}
 
 export async function POST(request: NextRequest) {
   try {
+    // Supabase Client zur Laufzeit erstellen
+    const supabase = getSupabaseClient();
+    
+    // Prüfen ob Supabase konfiguriert ist
+    if (!supabase) {
+      return Response.json({ error: 'Database service not configured' }, { status: 503 });
+    }
+
     const { productId, imageId } = await request.json();
     
     if (!productId || !imageId) {

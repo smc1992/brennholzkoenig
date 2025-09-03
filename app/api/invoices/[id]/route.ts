@@ -14,12 +14,25 @@ try {
   console.warn('Puppeteer or Handlebars not installed. Install with: npm install puppeteer handlebars @types/handlebars');
 }
 
-// Supabase Client wird zur Laufzeit erstellt
-function getSupabaseClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+// Runtime-Konfiguration für Node.js Kompatibilität
+export const runtime = 'nodejs';
+
+// Verhindert Pre-rendering während des Builds
+export const dynamic = 'force-dynamic';
+export const revalidate = false;
+
+// Supabase Admin Client wird zur Laufzeit erstellt
+function getSupabaseAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.warn('Supabase environment variables not configured for app-api-invoices-[id]-route route');
+    return null;
+  }
+  
+  return createClient(supabaseUrl, serviceRoleKey);
+}
 }
 
 // Handlebars Helpers
@@ -369,6 +382,14 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Supabase Client zur Laufzeit erstellen
+    const supabaseAdmin = getSupabaseAdminClient();
+    
+    // Prüfen ob Supabase konfiguriert ist
+    if (!supabaseAdmin) {
+      return Response.json({ error: 'Database service not configured' }, { status: 503 });
+    }
+
     const { id } = params;
     const { searchParams } = new URL(request.url);
     const format = searchParams.get('format') || 'pdf';
@@ -428,6 +449,14 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Supabase Client zur Laufzeit erstellen
+    const supabaseAdmin = getSupabaseAdminClient();
+    
+    // Prüfen ob Supabase konfiguriert ist
+    if (!supabaseAdmin) {
+      return Response.json({ error: 'Database service not configured' }, { status: 503 });
+    }
+
     const { id } = params;
     const body = await request.json();
     
