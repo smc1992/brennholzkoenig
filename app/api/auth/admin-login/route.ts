@@ -88,7 +88,6 @@ export async function POST(request: NextRequest) {
     
     console.log('🔐 API Admin Login attempt for:', email)
     
-    const supabaseAdmin = getSupabaseAdmin()
     const supabaseSSR = getSupabaseSSR()
     
     // Erste Authentifizierung mit SSR-Client für Session-Management
