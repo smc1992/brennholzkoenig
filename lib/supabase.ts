@@ -6,28 +6,58 @@ function createSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
+  // Check if we're in build-time (no window object) vs runtime
+  const isBuildTime = typeof window === 'undefined' && process.env.NODE_ENV !== 'production';
+  
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Supabase environment variables not configured');
-    // Return a comprehensive mock client for production fallback
-    return {
-      from: (table: string) => ({
-        select: (columns?: string) => ({
-          eq: (column: string, value: any) => ({
-            single: () => Promise.resolve({ data: null, error: null }),
-            limit: (count: number) => Promise.resolve({ data: [], error: null }),
-            order: (column: string, options?: any) => Promise.resolve({ data: [], error: null })
-          }),
-          limit: (count: number) => Promise.resolve({ data: [], error: null }),
-          order: (column: string, options?: any) => Promise.resolve({ data: [], error: null })
-        }),
-        insert: (values: any) => Promise.resolve({ data: null, error: null }),
-        update: (values: any) => ({
-          eq: (column: string, value: any) => Promise.resolve({ data: null, error: null })
-        }),
-        delete: () => ({
-          eq: (column: string, value: any) => Promise.resolve({ data: null, error: null })
-        })
-      }),
+    if (isBuildTime) {
+      console.warn('Supabase environment variables not configured for build-time');
+      // Return a comprehensive mock client for build-time only
+    } else {
+      // In production runtime, log warning but provide fallback
+      console.warn('⚠️ Supabase environment variables not configured in production');
+      console.warn('APIs will not function properly without database connection');
+      console.warn('Please configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY');
+      // Return mock client that logs warnings for production debugging
+    }
+    // Mock client with production warnings
+     const logProductionWarning = (operation: string) => {
+       if (!isBuildTime) {
+         console.warn(`🚫 Mock Supabase: ${operation} operation blocked - configure environment variables`);
+       }
+     };
+     
+     return {
+       from: (table: string) => ({
+         select: (columns?: string) => {
+           logProductionWarning(`SELECT from ${table}`);
+           return {
+             eq: (column: string, value: any) => ({
+               single: () => Promise.resolve({ data: null, error: { message: 'Mock client - no database connection' } }),
+               limit: (count: number) => Promise.resolve({ data: [], error: { message: 'Mock client - no database connection' } }),
+               order: (column: string, options?: any) => Promise.resolve({ data: [], error: { message: 'Mock client - no database connection' } })
+             }),
+             limit: (count: number) => Promise.resolve({ data: [], error: { message: 'Mock client - no database connection' } }),
+             order: (column: string, options?: any) => Promise.resolve({ data: [], error: { message: 'Mock client - no database connection' } })
+           };
+         },
+         insert: (values: any) => {
+           logProductionWarning(`INSERT into ${table}`);
+           return Promise.resolve({ data: null, error: { message: 'Mock client - no database connection' } });
+         },
+         update: (values: any) => {
+           logProductionWarning(`UPDATE ${table}`);
+           return {
+             eq: (column: string, value: any) => Promise.resolve({ data: null, error: { message: 'Mock client - no database connection' } })
+           };
+         },
+         delete: () => {
+           logProductionWarning(`DELETE from ${table}`);
+           return {
+             eq: (column: string, value: any) => Promise.resolve({ data: null, error: { message: 'Mock client - no database connection' } })
+           };
+         }
+       }),
       auth: {
         getUser: () => Promise.resolve({ data: { user: null }, error: null }),
         getSession: () => Promise.resolve({ data: { session: null }, error: null }),
@@ -60,9 +90,19 @@ function createSupabaseLegacyClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
+  // Check if we're in build-time vs runtime
+  const isBuildTime = typeof window === 'undefined' && process.env.NODE_ENV !== 'production';
+  
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Supabase environment variables not configured');
-    // Return the same comprehensive mock client
+    if (isBuildTime) {
+      console.warn('Supabase environment variables not configured for build-time');
+      // Return mock client for build-time only
+    } else {
+       console.warn('⚠️ Supabase environment variables not configured in production');
+       console.warn('APIs will not function properly without database connection');
+       console.warn('Please configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY');
+     }
+    // Mock client for build-time only
     return {
       from: (table: string) => ({
         select: (columns?: string) => ({
