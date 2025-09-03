@@ -204,11 +204,11 @@ export default function ImpressumPage() {
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <a
-                      href="tel:+4917622572100"
+                      href="tel:+4917671085234"
                       className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-bold transition-colors cursor-pointer whitespace-nowrap"
                     >
                       <i className="ri-phone-line mr-2"></i>
-                      0176-22572100
+                      +49 176 71085234
                     </a>
                     <a
                       href="mailto:info@brennholz-koenig.de"

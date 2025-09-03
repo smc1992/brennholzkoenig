@@ -1,0 +1,25 @@
+<svg width="120" height="60" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="120" height="60" rx="8" fill="#C04020"/>
+  
+  <!-- Crown -->
+  <path d="M30 15 L35 10 L40 15 L45 10 L50 15 L45 20 L40 18 L35 20 L30 15Z" fill="#FFD700" stroke="#FFA500" stroke-width="1"/>
+  
+  <!-- Wood logs -->
+  <ellipse cx="25" cy="35" rx="8" ry="3" fill="#8B4513" transform="rotate(-10 25 35)"/>
+  <ellipse cx="35" cy="38" rx="8" ry="3" fill="#A0522D" transform="rotate(15 35 38)"/>
+  <ellipse cx="45" cy="35" rx="8" ry="3" fill="#8B4513" transform="rotate(-5 45 35)"/>
+  
+  <!-- Wood grain lines -->
+  <line x1="20" y1="35" x2="30" y2="35" stroke="#654321" stroke-width="1" opacity="0.7"/>
+  <line x1="30" y1="38" x2="40" y2="38" stroke="#654321" stroke-width="1" opacity="0.7"/>
+  <line x1="40" y1="35" x2="50" y2="35" stroke="#654321" stroke-width="1" opacity="0.7"/>
+  
+  <!-- Text -->
+  <text x="60" y="25" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">BRENNHOLZ</text>
+  <text x="75" y="40" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#FFD700">KÖNIG</text>
+  
+  <!-- Decorative elements -->
+  <circle cx="105" cy="15" r="3" fill="#FFD700" opacity="0.8"/>
+  <circle cx="110" cy="45" r="2" fill="#FFA500" opacity="0.6"/>
+</svg>

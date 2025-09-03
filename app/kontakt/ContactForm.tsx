@@ -40,8 +40,8 @@ export default function ContactForm() {
 
   // Robuste E-Mail-Validierung
   const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
-    const strictEmailRegex = /^[a-zA-Z0-9.!#$%&\\\'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const strictEmailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
     if (!email || email.trim() === '') return false;
     if (email.length < 5 || email.length > 254) return false;
@@ -82,7 +82,7 @@ export default function ContactForm() {
     }
   };
 
-  const handleEmailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const email = e.target.value;
     setFormData(prev => ({ ...prev, email }));
     setEmailError('');
@@ -91,11 +91,6 @@ export default function ContactForm() {
       if (!validateEmail(email)) {
         setEmailError('Bitte geben Sie eine gültige E-Mail-Adresse ein (z.B. name@domain.de)');
         return;
-      }
-
-      const accountExists = await checkExistingAccount(email);
-      if (accountExists) {
-        setEmailError('Diese E-Mail-Adresse ist bereits registriert. Falls Sie bereits ein Konto haben, melden Sie sich bitte an.');
       }
     }
   };

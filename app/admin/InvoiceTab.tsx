@@ -83,8 +83,13 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
 
   useEffect(() => {
     loadInvoices();
-    loadOrdersWithoutInvoice();
   }, []);
+
+  useEffect(() => {
+    if (invoices.length >= 0) { // Auch bei 0 Rechnungen laden
+      loadOrdersWithoutInvoice();
+    }
+  }, [invoices]);
 
   useEffect(() => {
     filterInvoices();
@@ -134,7 +139,13 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
 
   const loadOrdersWithoutInvoice = async () => {
     try {
-      const { data, error } = await supabase
+      console.log('🔄 Loading orders without invoice...', {
+        invoices_count: invoices.length,
+        existing_order_ids: invoices.map(inv => inv.order_id)
+      });
+      
+      // Erst alle Bestellungen laden
+      const { data: allOrders, error: allOrdersError } = await supabase
         .from('orders')
         .select(`
           *,
@@ -146,20 +157,65 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
             total_price
           )
         `)
-        .not('id', 'in', `(${invoices.map(inv => `'${inv.order_id}'`).join(',') || "''"})`)
-        .eq('status', 'delivered')
         .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Fehler beim Laden der Bestellungen:', error);
+        
+      if (allOrdersError) {
+        console.error('❌ Error loading all orders:', allOrdersError);
         return;
       }
-
-      setOrders(data || []);
+      
+      console.log('📦 All orders loaded:', allOrders?.length || 0);
+      
+      // Dann filtern: Bestellungen ohne Rechnung
+      const existingInvoiceOrderIds = invoices.map(inv => inv.order_id);
+      const ordersWithoutInvoice = (allOrders || []).filter(order => 
+        !existingInvoiceOrderIds.includes(order.id)
+      );
+      
+      console.log('✅ Orders without invoice:', {
+        total_orders: allOrders?.length || 0,
+        existing_invoices: existingInvoiceOrderIds.length,
+        orders_without_invoice: ordersWithoutInvoice.length,
+        filtered_orders: ordersWithoutInvoice.map(o => ({ id: o.id, order_number: o.order_number, status: o.status }))
+      });
+      
+      setOrders(ordersWithoutInvoice);
+      
+      // Fallback: Wenn keine Bestellungen gefunden werden, aber es sollte welche geben
+      if (ordersWithoutInvoice.length === 0 && allOrders && allOrders.length > 0) {
+        console.log('⚠️ No orders without invoice found, but orders exist. Using all orders as fallback.');
+        setOrders(allOrders);
+      }
+      
     } catch (error) {
-      console.error('Fehler beim Laden der Bestellungen:', error);
+      console.error('💥 Error loading orders without invoice:', error);
+      
+      // Fallback: Lade alle Bestellungen bei Fehler
+      try {
+        const { data: fallbackOrders, error: fallbackError } = await supabase
+          .from('orders')
+          .select(`
+            *,
+            order_items (
+              id,
+              product_name,
+              quantity,
+              unit_price,
+              total_price
+            )
+          `)
+          .order('created_at', { ascending: false });
+          
+        if (!fallbackError && fallbackOrders) {
+          console.log('🔄 Using fallback: loaded all orders:', fallbackOrders.length);
+          setOrders(fallbackOrders);
+        }
+      } catch (fallbackError) {
+        console.error('💥 Fallback also failed:', fallbackError);
+      }
     }
   };
+
 
   const filterInvoices = () => {
     let filtered = invoices;
@@ -272,19 +328,100 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
     }
   };
 
+  const testPDFGeneration = async () => {
+    try {
+      console.log('🧪 Testing PDF generation with minimal data');
+      
+      const testInvoiceData = {
+        invoice_number: 'TEST-001',
+        invoice_date: new Date().toISOString().split('T')[0],
+        due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        customer: {
+          name: 'Test Kunde',
+          email: 'test@example.com',
+          address: {
+            street: 'Teststraße',
+            house_number: '1',
+            postal_code: '12345',
+            city: 'Teststadt'
+          }
+        },
+        items: [{
+          description: 'Test Produkt',
+          quantity: 1,
+          unit_price: 100,
+          total_price: 100
+        }],
+        subtotal_amount: 100,
+        tax_amount: 19,
+        total_amount: 119,
+        tax_rate: 19
+      };
+      
+      const testCompanySettings = {
+        company_name: 'Test Firma',
+        company_address_line1: 'Teststraße 1',
+        company_postal_code: '12345',
+        company_city: 'Teststadt',
+        company_phone: '0123456789',
+        company_email: 'test@firma.de',
+        tax_id: 'DE123456789'
+      };
+      
+      const { InvoicePDFGenerator } = await import('@/lib/pdfGenerator');
+      await InvoicePDFGenerator.downloadInvoicePDF(
+        testInvoiceData,
+        testCompanySettings,
+        'Test-Rechnung.pdf'
+      );
+      
+      console.log('✅ Test PDF generation successful');
+      alert('Test PDF wurde erfolgreich generiert!');
+    } catch (error) {
+      console.error('❌ Test PDF generation failed:', error);
+      alert(`Test PDF Fehler: ${error}`);
+    }
+  };
+
   const generatePDF = async (invoice: Invoice) => {
     try {
-      // Rechnungseinstellungen laden
-      const { data: settings, error: settingsError } = await supabase
+      console.log('🔄 Starting PDF generation for invoice:', invoice.invoice_number);
+      console.log('📋 Invoice data:', invoice);
+      
+      // Rechnungseinstellungen laden mit Fallback
+      let settings;
+      const { data: settingsData, error: settingsError } = await supabase
         .from('invoice_settings')
         .select('*')
         .single();
 
-      if (settingsError) {
-        console.error('Fehler beim Laden der Einstellungen:', settingsError);
-        alert('Fehler beim Laden der Rechnungseinstellungen');
-        return;
+      if (settingsError || !settingsData) {
+        console.warn('⚠️ No invoice settings found, using default settings:', settingsError);
+        // Fallback-Einstellungen verwenden
+        settings = {
+          company_name: 'Brennholzkönig',
+          company_address_line1: 'Musterstraße 1',
+          company_address_line2: '',
+          company_postal_code: '36419',
+          company_city: 'Butlar',
+          company_phone: '+49 661 123-4567',
+          company_email: 'info@brennholz-koenig.de',
+          company_website: 'www.brennholz-koenig.de',
+          tax_id: 'DE123456789',
+          bank_name: 'Sparkasse Fulda',
+          bank_iban: 'DE89 5305 0180 0000 0000 00',
+          bank_bic: 'HELADEF1FDS',
+          invoice_footer_text: 'Vielen Dank für Ihr Vertrauen!',
+          logo_url: null
+        };
+      } else {
+        settings = settingsData;
       }
+      
+      console.log('✅ Company settings loaded:', {
+        company_name: settings.company_name,
+        has_logo: !!settings.logo_url
+      });
 
       // Rechnungspositionen laden
       const { data: items, error: itemsError } = await supabase
@@ -293,10 +430,15 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
         .eq('invoice_id', invoice.id);
 
       if (itemsError) {
-        console.error('Fehler beim Laden der Rechnungspositionen:', itemsError);
-        alert('Fehler beim Laden der Rechnungspositionen');
-        return;
+        console.error('❌ Error loading invoice items:', itemsError);
+        console.log('🔄 Trying to generate PDF without invoice items (using order items as fallback)');
       }
+      
+      console.log('📦 Invoice items loaded:', {
+        items_count: items?.length || 0,
+        invoice_id: invoice.id,
+        has_order_items: !!invoice.orders
+      });
 
       // PDF-Daten vorbereiten
       const invoiceData = {
@@ -314,12 +456,20 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
             city: invoice.orders?.delivery_city || ''
           }
         },
-        items: items?.map(item => ({
+        items: items && items.length > 0 ? items.map(item => ({
           description: item.description,
           quantity: item.quantity,
           unit_price: parseFloat(item.unit_price),
           total_price: parseFloat(item.total_price)
-        })) || [],
+        })) : [
+          // Fallback: Erstelle einen Standard-Eintrag wenn keine Items vorhanden sind
+          {
+            description: `Bestellung ${invoice.orders?.order_number || invoice.invoice_number}`,
+            quantity: 1,
+            unit_price: parseFloat(invoice.subtotal_amount),
+            total_price: parseFloat(invoice.subtotal_amount)
+          }
+        ],
         subtotal_amount: parseFloat(invoice.subtotal_amount),
         tax_amount: parseFloat(invoice.tax_amount),
         total_amount: parseFloat(invoice.total_amount),
@@ -341,20 +491,98 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
         bank_name: settings.bank_name,
         bank_iban: settings.bank_iban,
         bank_bic: settings.bank_bic,
-        invoice_footer_text: settings.invoice_footer_text
+        invoice_footer_text: settings.invoice_footer_text,
+        logo_url: settings.logo_url
       };
 
       // PDF generieren und herunterladen
+      console.log('📄 Prepared invoice data:', invoiceData);
+      console.log('🏢 Prepared company settings:', companySettings);
+      
       const { InvoicePDFGenerator } = await import('@/lib/pdfGenerator');
+      console.log('📦 PDF Generator imported successfully');
+      
       await InvoicePDFGenerator.downloadInvoicePDF(
         invoiceData,
         companySettings,
         `Rechnung_${invoice.invoice_number}.pdf`
       );
+      
+      console.log('✅ PDF download completed successfully');
 
     } catch (error) {
-      console.error('Fehler bei der PDF-Generierung:', error);
-      alert('Fehler bei der PDF-Generierung');
+      console.error('💥 PDF generation failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
+      console.error('Error details:', {
+        message: errorMessage,
+        stack: errorStack,
+        invoice_id: invoice.id,
+        invoice_number: invoice.invoice_number,
+        invoice_data: invoice,
+        has_orders: !!invoice.orders,
+        has_customer_data: !!(invoice.orders?.delivery_first_name && invoice.orders?.delivery_last_name)
+      });
+      
+      // Zeige detaillierte Fehlermeldung
+      alert(`Fehler bei der PDF-Generierung für Rechnung ${invoice.invoice_number}:\n\n${errorMessage}\n\nPrüfen Sie die Browser-Konsole für weitere Details.`);
+    }
+  };
+
+  // Neue HTML→PDF Funktion mit Puppeteer
+  const generateHTMLPDF = async (invoice: Invoice) => {
+    console.log('🚀 Starting HTML→PDF generation for invoice:', invoice.invoice_number);
+    
+    try {
+      // API-Route für HTML→PDF aufrufen
+      const response = await fetch(`/api/invoices/${invoice.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(`API Error: ${response.status} - ${errorData.error || response.statusText}`);
+      }
+
+      // PDF als Blob herunterladen
+      const pdfBlob = await response.blob();
+      
+      // Download-Link erstellen
+      const url = window.URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Rechnung_${invoice.invoice_number}_HTML.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      console.log('✅ HTML→PDF download completed successfully');
+
+    } catch (error) {
+      console.error('💥 HTML→PDF generation failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
+      
+      // Zeige detaillierte Fehlermeldung
+      alert(`Fehler bei der HTML→PDF-Generierung für Rechnung ${invoice.invoice_number}:\n\n${errorMessage}\n\nStellen Sie sicher, dass die Dependencies installiert sind:\nnpm install puppeteer handlebars @types/handlebars`);
+    }
+  };
+
+  // HTML-Preview Funktion
+  const previewHTML = async (invoice: Invoice) => {
+    try {
+      // HTML-Preview in neuem Tab öffnen
+      const url = `/api/invoices/${invoice.id}?format=html`;
+      window.open(url, '_blank');
+      
+      console.log('✅ HTML preview opened successfully');
+    } catch (error) {
+      console.error('💥 HTML preview failed:', error);
+      alert('Fehler beim Öffnen der HTML-Vorschau');
     }
   };
 
@@ -396,13 +624,38 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
           <h2 className="text-2xl font-bold text-gray-900">Rechnungen</h2>
           <p className="text-gray-600">Verwalten Sie Rechnungen und erstellen Sie neue aus Bestellungen</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors"
-        >
-          <i className="ri-add-line mr-2"></i>
-          Rechnung erstellen
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={testPDFGeneration}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            title="Test PDF mit jsPDF"
+          >
+            <i className="ri-file-pdf-line mr-2"></i>
+            Test PDF (jsPDF)
+          </button>
+          <button
+            onClick={() => {
+              // Test HTML→PDF mit erster verfügbarer Rechnung
+              if (invoices.length > 0) {
+                generateHTMLPDF(invoices[0]);
+              } else {
+                alert('Keine Rechnungen zum Testen verfügbar');
+              }
+            }}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+            title="Test HTML→PDF mit Puppeteer"
+          >
+            <i className="ri-html5-line mr-2"></i>
+            Test HTML→PDF
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors"
+          >
+            <i className="ri-add-line mr-2"></i>
+            Rechnung erstellen
+          </button>
+        </div>
       </div>
 
       {/* Filter und Suche */}
@@ -509,10 +762,29 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
                       <i className="ri-eye-line"></i>
                     </button>
                     <button
-                      onClick={() => generatePDF(invoice)}
+                      onClick={() => {
+                        console.log('🖱️ PDF Download button clicked for invoice:', invoice.invoice_number);
+                        console.log('📋 Invoice object:', invoice);
+                        generatePDF(invoice);
+                      }}
                       className="text-blue-600 hover:text-blue-900"
+                      title="PDF herunterladen (jsPDF)"
                     >
                       <i className="ri-download-line"></i>
+                    </button>
+                    <button
+                      onClick={() => generateHTMLPDF(invoice)}
+                      className="text-purple-600 hover:text-purple-900"
+                      title="HTML→PDF herunterladen (Puppeteer)"
+                    >
+                      <i className="ri-file-pdf-line"></i>
+                    </button>
+                    <button
+                      onClick={() => previewHTML(invoice)}
+                      className="text-green-600 hover:text-green-900"
+                      title="HTML-Vorschau öffnen"
+                    >
+                      <i className="ri-external-link-line"></i>
                     </button>
                     {invoice.status === 'draft' && (
                       <button
@@ -683,7 +955,21 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <i className="ri-download-line mr-2"></i>
-                  PDF herunterladen
+                  PDF (jsPDF)
+                </button>
+                <button
+                  onClick={() => generateHTMLPDF(selectedInvoice)}
+                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  <i className="ri-file-pdf-line mr-2"></i>
+                  HTML→PDF
+                </button>
+                <button
+                  onClick={() => previewHTML(selectedInvoice)}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <i className="ri-external-link-line mr-2"></i>
+                  Vorschau
                 </button>
                 <button
                   onClick={() => setShowInvoiceModal(false)}

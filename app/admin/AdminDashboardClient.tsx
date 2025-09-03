@@ -70,18 +70,79 @@ export default function AdminDashboardClient({
   });
   // Using the centralized Supabase client from lib/supabase.ts
 
+  // Robuste Logout-Funktion
+  const handleLogout = async () => {
+    try {
+      console.log('🔐 Starting logout process...');
+      
+      // Vollständiger Logout mit Session-Bereinigung
+      await supabase.auth.signOut({ scope: 'global' });
+      
+      // Browser-Cache und Session-Storage leeren
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Cookies löschen
+        document.cookie.split(";").forEach(function(c) { 
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+      }
+      
+      console.log('✅ Logout successful, redirecting...');
+      
+      // Hard redirect um Cache zu umgehen
+      window.location.replace('/admin/login');
+      
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+      // Fallback: Force redirect auch bei Fehlern
+      window.location.replace('/admin/login');
+    }
+  };
+
   useEffect(() => {
-    // Session-Validierung und Admin-Zugriff prüfen
+    // Robuste Session-Validierung mit Refresh Token Behandlung
     const checkSessionAndLoadData = async () => {
       try {
-        // Prüfe aktuelle Session
+        console.log('🔄 Prüfe Admin-Session...');
+        
+        // Versuche Session zu erneuern falls abgelaufen
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (!session || error) {
-          console.warn('❌ Keine gültige Session im Admin Dashboard:', error);
-          setHasAccess(false);
-          // Redirect zur Login-Seite
-          window.location.href = '/admin/login';
+        if (error) {
+          console.warn('⚠️ Session-Fehler:', error.message);
+          
+          // Bei Refresh Token Fehlern, versuche Session zu erneuern
+          if (error.message.includes('refresh') || error.message.includes('token')) {
+            console.log('🔄 Versuche Session-Erneuerung...');
+            
+            try {
+              const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+              
+              if (refreshError || !refreshData.session) {
+                console.error('❌ Session-Erneuerung fehlgeschlagen:', refreshError);
+                throw new Error('Session abgelaufen');
+              }
+              
+              console.log('✅ Session erfolgreich erneuert');
+              setHasAccess(true);
+              if (adminUser) loadStats();
+              return;
+            } catch (refreshError) {
+              console.error('❌ Refresh fehlgeschlagen:', refreshError);
+              // Fallback: Logout und Redirect
+              await handleLogout();
+              return;
+            }
+          } else {
+            throw error;
+          }
+        }
+        
+        if (!session) {
+          console.warn('❌ Keine Session vorhanden');
+          await handleLogout();
           return;
         }
         
@@ -93,11 +154,31 @@ export default function AdminDashboardClient({
         }
       } catch (error) {
         console.error('❌ Session-Prüfung fehlgeschlagen:', error);
-        setHasAccess(false);
+        await handleLogout();
       }
     };
     
+    // Session-Listener für automatische Behandlung von Auth-Änderungen
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔄 Auth State Change:', event, session?.user?.email);
+      
+      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        if (event === 'SIGNED_OUT') {
+          setHasAccess(false);
+          window.location.href = '/admin/login';
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+          console.log('✅ Token automatisch erneuert');
+          setHasAccess(true);
+        }
+      }
+    });
+    
     checkSessionAndLoadData();
+    
+    // Cleanup
+    return () => {
+      subscription.unsubscribe();
+    };
    }, [adminUser]);
 
   // URL-Parameter für Tab-Switching verarbeiten
@@ -472,35 +553,7 @@ export default function AdminDashboardClient({
               </div>
 
               <button
-                onClick={async () => {
-                  try {
-                    console.log('🔐 Starting logout process...');
-                    
-                    // Vollständiger Logout mit Session-Bereinigung
-                    await supabase.auth.signOut({ scope: 'global' });
-                    
-                    // Browser-Cache und Session-Storage leeren
-                    if (typeof window !== 'undefined') {
-                      localStorage.clear();
-                      sessionStorage.clear();
-                      
-                      // Cookies löschen
-                      document.cookie.split(";").forEach(function(c) { 
-                        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-                      });
-                    }
-                    
-                    console.log('✅ Logout successful, redirecting...');
-                    
-                    // Hard redirect um Cache zu umgehen
-                    window.location.replace('/admin/login');
-                    
-                  } catch (error) {
-                    console.error('❌ Logout error:', error);
-                    // Fallback: Force redirect auch bei Fehlern
-                    window.location.replace('/admin/login');
-                  }
-                }}
+                onClick={handleLogout}
                 className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
               >
                 <div className="w-5 h-5 flex items-center justify-center sm:mr-2">

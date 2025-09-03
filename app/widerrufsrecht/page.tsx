@@ -14,18 +14,18 @@ export default function WiderrufsrechtPage() {
 
       <div className="min-h-screen bg-[#F5F0E0]">
         {/* Header */}
-        <section className="bg-gradient-to-r from-[#C04020] to-[#A03318] text-white py-16">
-          <div className="container mx-auto px-4">
+        <section className="bg-gradient-to-r from-[#C04020] to-[#A03318] text-white py-12 sm:py-16">
+          <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-4xl">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 flex items-center justify-center bg-white/20 rounded-full mr-4">
-                  <i className="ri-arrow-go-back-line text-2xl"></i>
+              <div className="flex items-start sm:items-center mb-4 min-w-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-white/20 rounded-full mr-3 sm:mr-4 flex-shrink-0 mt-1 sm:mt-0">
+                  <i className="ri-arrow-go-back-line text-lg sm:text-2xl"></i>
                 </div>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black" style={{ fontFamily: 'Inter, sans-serif' }}>
+                <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight min-w-0" style={{ fontFamily: 'Inter, sans-serif' }}>
                   WIDERRUFSRECHT
                 </h1>
               </div>
-              <p className="text-xl md:text-2xl text-white/90 font-light">
+              <p className="text-base sm:text-xl md:text-2xl text-white/90 font-light leading-relaxed">
                 Verbraucherschutz und Widerrufsbelehrung
               </p>
             </div>
@@ -86,12 +86,12 @@ export default function WiderrufsrechtPage() {
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
                       <p className="text-blue-800">
                         <strong>Brennholzkönig</strong><br />
-                        Thorsten Müller<br />
-                        Musterstraße 123<br />
-                        97616 Bad Neustadt a.d.Saale<br />
+                        Thorsten Vey<br />
+                        Frankfurter Straße 3<br />
+                        36419 Buttlar<br />
                         Deutschland<br /><br />
-                        <strong>Telefon:</strong> 0661 480 276 00<br />
-                        <strong>E-Mail:</strong> widerruf@brennholzkoenig.de
+                        <strong>Telefon:</strong> +49 176 71085234<br />
+                        <strong>E-Mail:</strong> info@brennholz-koenig.de
                       </p>
                     </div>
                     
@@ -230,7 +230,7 @@ export default function WiderrufsrechtPage() {
                         Brennholzhandel<br />
                         Frankfurter Straße 3<br />
                         36419 Buttlar<br />
-                        E-Mail: widerruf@brennholz-koenig.de
+                        E-Mail: info@brennholz-koenig.de
                       </p>
                       
                       <p className="mb-4">
@@ -284,18 +284,18 @@ export default function WiderrufsrechtPage() {
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <a
-                      href="mailto:widerruf@brennholz-koenig.de"
+                      href="mailto:info@brennholz-koenig.de"
                       className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-bold transition-colors cursor-pointer whitespace-nowrap"
                     >
                       <i className="ri-mail-line mr-2"></i>
-                      widerruf@brennholz-koenig.de
+                      info@brennholz-koenig.de
                     </a>
                     <a
-                      href="tel:+4917622572100"
+                      href="tel:+4917671085234"
                       className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg font-bold transition-colors cursor-pointer whitespace-nowrap"
                     >
                       <i className="ri-phone-line mr-2"></i>
-                      0176-22572100
+                      +49 176 71085234
                     </a>
                   </div>
                   

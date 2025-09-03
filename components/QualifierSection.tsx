@@ -117,36 +117,30 @@ export default function QualifierSection() {
               </div>
 
               <div className="space-y-3 sm:space-y-4 lg:space-y-6">
-                {[{
-                  icon: 'ri-eye-line',
-                  title: 'Optik-Perfektionisten',
-                  desc: 'Sie brauchen schön aussehende Scheite für repräsentative Kamine (→ nehmen Sie unser Scheitholz)',
-                  delay: 600
-                },
-                {
-                  icon: 'ri-store-3-line',
-                  title: 'Perfekte Lagerbedingungen',
-                  desc: 'Sie haben eine trockene, belüftete Lagerhalle und können problemlos große Mengen Scheitholz lagern',
-                  delay: 800
-                },
-                {
-                  icon: 'ri-fire-fill',
-                  title: 'Zentrale Holzvergaserheizungen',
-                    desc: 'Bei modernen Holzvergasern kann es durch das Industrieholz zu einer zu hohen Hitzeentwicklung kommen.',
-                  delay: 900
-                },
-                {
-                  icon: 'ri-ruler-line',
-                  title: 'Spezielle Größenanforderungen',
-                  desc: 'Ihr Ofen braucht sehr spezifische Holzmaße (→ unser Scheitholz in 25cm/33cm ist besser)',
-                  delay: 1000
-                },
-                {
-                  icon: 'ri-time-line',
-                  title: 'Traditionalisten',
-                  desc: 'Sie setzen auf Althergebrachtes und möchten nichts Neues wagen (→ bleiben Sie bei bewährtem Scheitholz)',
-                  delay: 1300
-                },
+                 {[{
+                   icon: 'ri-eye-line',
+                   title: 'Optik-Perfektionisten',
+                   desc: 'Sie brauchen schön aussehende Scheite für repräsentative Kamine (→ nehmen Sie unser Scheitholz)',
+                   delay: 600
+                 },
+                 {
+                   icon: 'ri-fire-fill',
+                   title: 'Zentrale Holzvergaserheizungen',
+                     desc: 'Bei modernen Holzvergasern kann es durch das Industrieholz zu einer zu hohen Hitzeentwicklung kommen.',
+                   delay: 800
+                 },
+                 {
+                   icon: 'ri-ruler-line',
+                   title: 'Spezielle Größenanforderungen',
+                   desc: 'Ihr Ofen braucht sehr spezifische Holzmaße (→ unser Scheitholz in 25cm/33cm ist besser)',
+                   delay: 900
+                 },
+                 {
+                   icon: 'ri-time-line',
+                   title: 'Traditionalisten',
+                   desc: 'Sie setzen auf Althergebrachtes und möchten nichts Neues wagen (→ bleiben Sie bei bewährtem Scheitholz)',
+                   delay: 1000
+                 },
                 {
                   icon: 'ri-seedling-line',
                   title: 'Anfänger ohne Erfahrung',

@@ -63,6 +63,8 @@ export async function POST(request: NextRequest) {
         setting_key: 'main',
         setting_value: JSON.stringify(validatedConfig),
         updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'setting_type,setting_key'
       });
 
     if (error) {

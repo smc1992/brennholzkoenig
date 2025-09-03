@@ -147,7 +147,7 @@ export default function USPSection() {
         </div>
 
         {/* Benefits Grid - Mobile responsive Layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8 max-w-6xl mx-auto px-2 sm:px-4">
           {[ 
             {
               icon: 'ri-truck-line',
@@ -200,7 +200,7 @@ export default function USPSection() {
         </div>
 
         {/* Trust indicators - Mobile responsive */}
-        <div className="mt-8 sm:mt-12 md:mt-16 text-center">
+        <div className="mt-8 sm:mt-12 md:mt-16 text-center px-2 sm:px-4">
           <div className={`flex flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-8 text-[#666] max-w-6xl mx-auto transition-all duration-1000 delay-1600 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
             <div className="flex items-center text-xs sm:text-sm bg-white px-2 sm:px-4 md:px-6 py-1 sm:py-2 md:py-3 rounded-full shadow-md hover:shadow-lg transition-all duration-300 mb-1 sm:mb-0" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
               <div className="w-3 h-3 sm:w-4 sm:h-4 flex items-center justify-center mr-1 sm:mr-2">

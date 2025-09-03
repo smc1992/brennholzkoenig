@@ -384,8 +384,8 @@ export default function OptimizedWarenkorbContent({
                       const priceInfo = getPriceInfoForQuantity(item.quantity, pricingTiers, minOrderQuantity);
                       
                       return (
-                        <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
-                          <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                        <div key={item.id} className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 p-3 sm:p-4 border border-gray-200 rounded-lg">
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 mx-auto sm:mx-0">
                             {item.image ? (
                               <img 
                                 src={item.image} 
@@ -398,49 +398,49 @@ export default function OptimizedWarenkorbContent({
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
-                                <i className="ri-image-line text-2xl text-gray-400"></i>
+                                <i className="ri-image-line text-xl sm:text-2xl text-gray-400"></i>
                               </div>
                             )}
                           </div>
                           
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-[#1A1A1A] mb-1">{item.name}</h3>
-                            <p className="text-sm text-gray-600 mb-2">{item.category}</p>
-                            <div className="flex items-center space-x-4">
+                          <div className="flex-1 text-center sm:text-left">
+                            <h3 className="font-semibold text-[#1A1A1A] mb-1 text-sm sm:text-base">{item.name}</h3>
+                            <p className="text-xs sm:text-sm text-gray-600 mb-2">{item.category}</p>
+                            <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start space-y-2 sm:space-y-0 sm:space-x-4">
                               <div className="flex items-center space-x-2">
                                 <button
                                   onClick={() => updateQuantity(item.id, item.quantity - 1)}
                                   className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded transition-colors"
                                 >
-                                  <i className="ri-subtract-line"></i>
+                                  <i className="ri-subtract-line text-sm"></i>
                                 </button>
-                                <span className="w-12 text-center font-medium">{item.quantity}</span>
+                                <span className="w-12 text-center font-medium text-sm sm:text-base">{item.quantity}</span>
                                 <button
                                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                   className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded transition-colors"
                                 >
-                                  <i className="ri-add-line"></i>
+                                  <i className="ri-add-line text-sm"></i>
                                 </button>
                               </div>
-                              <span className="text-sm text-gray-500">{item.unit}</span>
+                              <span className="text-xs sm:text-sm text-gray-500">{item.unit}</span>
                             </div>
                             {priceInfo.info && (
-                              <p className={`text-xs mt-1 ${priceInfo.color}`}>
+                              <p className={`text-xs mt-1 ${priceInfo.color} text-center sm:text-left`}>
                                 {priceInfo.info}
                               </p>
                             )}
                           </div>
                           
-                          <div className="text-right">
-                            <div className="font-bold text-[#C04020] text-lg">
+                          <div className="text-center sm:text-right">
+                            <div className="font-bold text-[#C04020] text-base sm:text-lg">
                               €{(parseFloat(item.price) * item.quantity).toFixed(2)}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-xs sm:text-sm text-gray-500">
                               €{parseFloat(item.price).toFixed(2)} / {item.unit}
                             </div>
                             <button
                               onClick={() => removeFromCart(item.id)}
-                              className="text-red-500 hover:text-red-700 text-sm mt-2 transition-colors"
+                              className="text-red-500 hover:text-red-700 text-xs sm:text-sm mt-2 transition-colors"
                             >
                               <i className="ri-delete-bin-line mr-1"></i>
                               Entfernen
@@ -497,19 +497,19 @@ export default function OptimizedWarenkorbContent({
                   <h3 className="font-semibold text-[#1A1A1A] mb-3">Rabattcode</h3>
                   {!appliedDiscount ? (
                     <div className="space-y-2">
-                      <div className="flex gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <input
                           type="text"
                           value={discountCode}
                           onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
                           placeholder="Rabattcode eingeben"
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent text-sm"
                           disabled={isApplyingDiscount}
                         />
                         <button
                           onClick={applyDiscountCode}
                           disabled={isApplyingDiscount || !discountCode.trim()}
-                          className="bg-[#C04020] text-white px-4 py-2 rounded-lg hover:bg-[#A03318] disabled:bg-gray-400 transition-colors"
+                          className="bg-[#C04020] text-white px-4 py-2 rounded-lg hover:bg-[#A03318] disabled:bg-gray-400 transition-colors text-sm font-medium whitespace-nowrap"
                         >
                           {isApplyingDiscount ? 'Prüfe...' : 'Anwenden'}
                         </button>

@@ -389,11 +389,15 @@ export default function CheckoutPage() {
 
     if (isValid) {
       setCurrentStep(currentStep + 1);
+      // Scroll to top when moving to next step
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handlePrevStep = () => {
     setCurrentStep(currentStep - 1);
+    // Scroll to top when moving to previous step
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const saveCustomerData = async (customerId?: string) => {
@@ -629,7 +633,7 @@ export default function CheckoutPage() {
         throw new Error(`Fehler beim Speichern der Bestellpositionen: ${itemsError.message}`);
       }
 
-      // Send order confirmation email
+      // Send order confirmation email with configurable template
       try {
         const emailData = {
           orderData: {
@@ -638,24 +642,34 @@ export default function CheckoutPage() {
               name: item.name,
               quantity: item.quantity,
               price: item.price,
-              unit: 'Stück',
+              unit: 'SRM',
             })),
             totalAmount: total,
             deliveryAddress: `${deliveryData.firstName} ${deliveryData.lastName}\n${deliveryData.street} ${deliveryData.houseNumber}\n${deliveryData.postalCode} ${deliveryData.city}`,
           },
           customerEmail: deliveryData.email,
           customerName: `${deliveryData.firstName} ${deliveryData.lastName}`,
+          templateType: 'order_confirmation'
         };
 
-        // Send confirmation email
-        await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-order-confirmation`, {
+        console.log('Sende Bestellbestätigung an:', deliveryData.email);
+        
+        // Send confirmation email using configurable templates
+        const emailResponse = await fetch('/api/send-order-email', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
           },
           body: JSON.stringify(emailData),
         });
+
+        const emailResult = await emailResponse.json();
+        
+        if (emailResult.success) {
+          console.log('✅ Bestellbestätigung erfolgreich gesendet:', emailResult.template_used);
+        } else {
+          console.error('❌ E-Mail-Versand fehlgeschlagen:', emailResult.error);
+        }
       } catch (emailError) {
         console.error('E-Mail Fehler (nicht kritisch):', emailError);
         // E-Mail Fehler ist nicht kritisch, Bestellung wird trotzdem fortgesetzt
@@ -703,9 +717,9 @@ export default function CheckoutPage() {
       <div className="min-h-screen bg-white py-12">
         <div className="max-w-4xl mx-auto px-4">
           <div className="text-center">
-            <div className="w-16 h-16 flex items-center justify-center bg-amber-100 rounded-full mx-auto mb-6">
-              <i className="ri-shopping-cart-line text-2xl text-amber-600"></i>
-            </div>
+            <div className="w-16 h-16 flex items-center justify-center bg-red-100 rounded-full mx-auto mb-6">
+          <i className="ri-shopping-cart-line text-2xl text-[#C04020]"></i>
+        </div>
             {isCartEmpty ? (
               <>
                 <h1 className="text-3xl font-bold text-gray-900 mb-4">Ihr Warenkorb ist leer</h1>
@@ -720,7 +734,7 @@ export default function CheckoutPage() {
                 </p>
               </>
             )}
-            <Link href="/shop" className="inline-block bg-amber-600 text-white px-8 py-3 rounded-lg hover:bg-amber-700 transition-colors whitespace-nowrap">
+            <Link href="/shop" className="inline-block bg-[#C04020] text-white px-8 py-3 rounded-lg hover:bg-[#A03318] transition-colors whitespace-nowrap">
               Zum Shop
             </Link>
           </div>
@@ -730,8 +744,8 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4">
+    <div className="min-h-screen bg-gray-50 py-8" style={{overflow: 'hidden'}}>
+      <div className="max-w-6xl mx-auto px-4" style={{overflow: 'hidden'}}>
         {/* Fortschrittsanzeige */}
         <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6 md:mb-8">
           {/* Mobile Progress Indicator */}
@@ -740,7 +754,7 @@ export default function CheckoutPage() {
               <div className="text-sm font-medium text-gray-600">
                 Schritt {currentStep} von 4
               </div>
-              <div className="text-sm font-medium text-amber-600">
+              <div className="text-sm font-medium text-[#C04020]">
                 {currentStep === 1 && 'Lieferadresse'}
                 {currentStep === 2 && 'Rechnungsadresse'}
                 {currentStep === 3 && 'Lieferart & Zahlungsart'}
@@ -749,7 +763,7 @@ export default function CheckoutPage() {
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
-                className="bg-amber-600 h-2 rounded-full transition-all duration-300"
+                className="bg-[#C04020] h-2 rounded-full transition-all duration-300"
                 style={{ width: `${(currentStep / 4) * 100}%` }}
               ></div>
             </div>
@@ -761,19 +775,19 @@ export default function CheckoutPage() {
               <div key={step} className="flex items-center">
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-                    currentStep >= step ? 'bg-amber-600 text-white' : 'bg-gray-200 text-gray-500'
+                    currentStep >= step ? 'bg-[#C04020] text-white' : 'bg-gray-200 text-gray-500'
                   }`}
                 >
                   {step}
                 </div>
-                <div className={`ml-3 text-sm font-medium ${currentStep >= step ? 'text-amber-600' : 'text-gray-500'}`}>
+                <div className={`ml-3 text-sm font-medium ${currentStep >= step ? 'text-[#C04020]' : 'text-gray-500'}`}>
                   {step === 1 && 'Lieferadresse'}
                   {step === 2 && 'Rechnungsadresse'}
                   {step === 3 && 'Lieferart & Zahlungsart'}
                   {step === 4 && 'Bestätigung'}
                 </div>
                 {index < 3 && (
-                  <div className={`mx-4 h-px flex-1 ${currentStep > step ? 'bg-amber-600' : 'bg-gray-200'}`}></div>
+                  <div className={`mx-4 h-px flex-1 ${currentStep > step ? 'bg-[#C04020]' : 'bg-gray-200'}`}></div>
                 )}
               </div>
             ))}
@@ -786,15 +800,15 @@ export default function CheckoutPage() {
             <div className="bg-white rounded-lg shadow-sm p-4 md:p-6">
               {/* Login-Option */}
               {!user && currentStep === 1 && (
-                <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center justify-between">
-                    <div>
+                <div className="mb-6 p-4 bg-red-50 rounded-lg border border-red-200">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex-1">
                       <h3 className="font-medium text-blue-900">Bereits Kunde?</h3>
                       <p className="text-sm text-blue-700">Melden Sie sich an, um Ihre Daten automatisch zu übernehmen.</p>
                     </div>
                     <button
                       onClick={() => setShowLogin(!showLogin)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+                      className="bg-[#C04020] text-white px-4 py-2 rounded-lg hover:bg-[#A03318] transition-colors whitespace-nowrap text-sm font-medium w-full sm:w-auto"
                     >
                       {showLogin ? 'Schließen' : 'Anmelden'}
                     </button>
@@ -808,7 +822,7 @@ export default function CheckoutPage() {
                           placeholder="E-Mail"
                           value={loginData.email}
                           onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
                         />
                       </div>
                       <div>
@@ -817,13 +831,13 @@ export default function CheckoutPage() {
                           placeholder="Passwort"
                           value={loginData.password}
                           onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
                         />
                       </div>
                       <div className="md:col-span-2">
                         <button
                           onClick={handleLogin}
-                          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+                          className="bg-[#C04020] text-white px-4 py-2 rounded-lg hover:bg-[#A03318] transition-colors whitespace-nowrap text-sm font-medium w-full sm:w-auto"
                         >
                           Anmelden
                         </button>
@@ -835,7 +849,7 @@ export default function CheckoutPage() {
               )}
 
               {user && (
-                <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="mb-6 p-4 bg-red-50 rounded-lg border border-red-200">
                   <div className="flex items-center">
                     <i className="ri-user-check-line text-green-600 text-xl mr-3"></i>
                     <div>
@@ -862,7 +876,7 @@ export default function CheckoutPage() {
                         onChange={(e) => setDeliveryData({ ...deliveryData, firstName: e.target.value })}
                         className={`w-full px-4 py-3 md:py-3 border rounded-lg text-base md:text-sm ${
                           errors.firstName ? 'border-red-500' : 'border-gray-300'
-                        } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
+                        } focus:ring-2 focus:ring-[#C04020] focus:border-transparent`}
                       />
                       {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
                     </div>
@@ -1028,7 +1042,7 @@ export default function CheckoutPage() {
                   <div className="flex justify-end mt-8">
                     <button
                       onClick={handleNextStep}
-                      className="bg-amber-600 text-white px-8 py-3 rounded-lg hover:bg-amber-700 transition-colors whitespace-nowrap"
+                      className="bg-[#C04020] text-white px-8 py-3 rounded-lg hover:bg-[#A03318] transition-colors whitespace-nowrap"
                     >
                       Weiter
                     </button>
@@ -1166,13 +1180,13 @@ export default function CheckoutPage() {
                   <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4 mt-6 md:mt-8">
                     <button
                       onClick={handlePrevStep}
-                      className="w-full sm:w-auto bg-gray-300 text-gray-700 px-6 md:px-8 py-3 md:py-3 rounded-lg hover:bg-gray-400 transition-colors font-medium text-center order-2 sm:order-1"
+                      className="w-full sm:w-auto bg-gray-200 text-gray-800 px-6 md:px-8 py-3 md:py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium text-center order-2 sm:order-1"
                     >
                       Zurück
                     </button>
                     <button
                       onClick={handleNextStep}
-                      className="w-full sm:w-auto bg-amber-600 text-white px-6 md:px-8 py-3 md:py-3 rounded-lg hover:bg-amber-700 transition-colors font-medium text-center order-1 sm:order-2"
+                      className="w-full sm:w-auto bg-[#C04020] text-white px-6 md:px-8 py-3 md:py-3 rounded-lg hover:bg-[#A03318] transition-colors font-medium text-center order-1 sm:order-2"
                     >
                       Weiter
                     </button>
@@ -1192,28 +1206,28 @@ export default function CheckoutPage() {
                       {getDeliveryOptions().map((option) => (
                         <label key={option.type} className="block cursor-pointer">
                           <div
-                            className={`border-2 rounded-lg p-4 transition-colors ${
+                            className={`border-2 rounded-lg p-3 sm:p-4 transition-colors ${
                               selectedDelivery === option.type ? 'border-amber-600 bg-amber-50' : 'border-gray-200 hover:border-gray-300'
                             }`}
                           >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                              <div className="flex items-start sm:items-center">
                                 <input
                                   type="radio"
                                   name="delivery"
                                   value={option.type}
                                   checked={selectedDelivery === option.type}
                                   onChange={(e) => setSelectedDelivery(e.target.value)}
-                                  className="mr-4 w-4 h-4 text-amber-600 border-gray-300 focus:ring-amber-500"
+                                  className="mr-3 sm:mr-4 w-4 h-4 text-amber-600 border-gray-300 focus:ring-amber-500 mt-0.5 sm:mt-0 flex-shrink-0"
                                 />
-                                <div>
-                                  <div className="font-medium text-gray-900">{option.name}</div>
-                                  <div className="text-sm text-gray-600">
+                                <div className="min-w-0 flex-1">
+                                  <div className="font-medium text-gray-900 text-sm sm:text-base">{option.name}</div>
+                                  <div className="text-xs sm:text-sm text-gray-600">
                                     {option.type === 'express' ? 'Schnellste Option' : 'Günstigste Option'}
                                   </div>
                                 </div>
                               </div>
-                              <div className="font-bold text-amber-600">€{option.price.toFixed(2)}</div>
+                              <div className="font-bold text-amber-600 text-base sm:text-lg text-center sm:text-right">€{option.price.toFixed(2)}</div>
                             </div>
                           </div>
                         </label>
@@ -1230,30 +1244,30 @@ export default function CheckoutPage() {
                           id: 'bar',
                           name: 'Barzahlung bei Lieferung',
                           icon: 'ri-money-euro-circle-line',
-                          desc: 'Zahlung in bar oder mit EC-Karte bei der Lieferung',
+                          desc: 'nur zahlen in bar',
                         },
                       ].map((method) => (
                         <label key={method.id} className="block cursor-pointer">
                           <div
-                            className={`border-2 rounded-lg p-4 transition-colors ${
+                            className={`border-2 rounded-lg p-3 sm:p-4 transition-colors ${
                               paymentMethod === method.id ? 'border-amber-600 bg-amber-50' : 'border-gray-200 hover:border-gray-300'
                             }`}
                           >
-                            <div className="flex items-center">
+                            <div className="flex items-start sm:items-center">
                               <input
                                 type="radio"
                                 name="payment"
                                 value={method.id}
                                 checked={paymentMethod === method.id}
                                 onChange={(e) => setPaymentMethod(e.target.value)}
-                                className="mr-4 w-4 h-4 text-amber-600 border-gray-300 focus:ring-amber-500"
+                                className="mr-3 sm:mr-4 w-4 h-4 text-amber-600 border-gray-300 focus:ring-amber-500 mt-0.5 sm:mt-0 flex-shrink-0"
                               />
-                              <div className="w-6 h-6 flex items-center justify-center mr-3">
-                                <i className={`${method.icon} text-xl text-gray-600`}></i>
+                              <div className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+                                <i className={`${method.icon} text-lg sm:text-xl text-gray-600`}></i>
                               </div>
-                              <div>
-                                <div className="font-medium text-gray-900">{method.name}</div>
-                                <div className="text-sm text-gray-600">{method.desc}</div>
+                              <div className="min-w-0 flex-1">
+                                <div className="font-medium text-gray-900 text-sm sm:text-base">{method.name}</div>
+                                <div className="text-xs sm:text-sm text-gray-600">{method.desc}</div>
                               </div>
                             </div>
                           </div>
@@ -1270,11 +1284,11 @@ export default function CheckoutPage() {
                           type="checkbox"
                           checked={agbAccepted}
                           onChange={(e) => setAgbAccepted(e.target.checked)}
-                          className={`mr-3 mt-1 w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500 ${
+                          className={`mr-3 mt-0.5 w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500 flex-shrink-0 ${
                             errors.agb ? 'border-red-500' : ''
                           }`}
                         />
-                        <span className="text-sm text-gray-700">
+                        <span className="text-xs sm:text-sm text-gray-700 leading-relaxed">
                           Ich akzeptiere die{' '}
                           <Link href="/agb" className="text-amber-600 hover:underline">
                             Allgemeinen Geschäftsbedingungen
@@ -1286,18 +1300,18 @@ export default function CheckoutPage() {
                           . *
                         </span>
                       </label>
-                      {errors.agb && <p className="text-red-500 text-sm ml-7">{errors.agb}</p>}
+                      {errors.agb && <p className="text-red-500 text-xs sm:text-sm ml-7">{errors.agb}</p>}
 
                       <label className="flex items-start cursor-pointer">
                         <input
                           type="checkbox"
                           checked={privacyAccepted}
                           onChange={(e) => setPrivacyAccepted(e.target.checked)}
-                          className={`mr-3 mt-1 w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500 ${
+                          className={`mr-3 mt-0.5 w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500 flex-shrink-0 ${
                             errors.privacy ? 'border-red-500' : ''
                           }`}
                         />
-                        <span className="text-sm text-gray-700">
+                        <span className="text-xs sm:text-sm text-gray-700 leading-relaxed">
                           Ich habe die{' '}
                           <Link href="/datenschutz" className="text-amber-600 hover:underline">
                             Datenschutzerklärung
@@ -1312,13 +1326,13 @@ export default function CheckoutPage() {
                   <div className="flex justify-between mt-8">
                     <button
                       onClick={handlePrevStep}
-                      className="bg-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-400 transition-colors whitespace-nowrap"
+                      className="bg-gray-200 text-gray-800 px-8 py-3 rounded-lg hover:bg-gray-300 transition-colors whitespace-nowrap"
                     >
                       Zurück
                     </button>
                     <button
                       onClick={handleNextStep}
-                      className="bg-amber-600 text-white px-8 py-3 rounded-lg hover:bg-amber-700 transition-colors whitespace-nowrap"
+                      className="bg-[#C04020] text-white px-8 py-3 rounded-lg hover:bg-[#A03318] transition-colors whitespace-nowrap"
                     >
                       Weiter
                     </button>
@@ -1381,14 +1395,14 @@ export default function CheckoutPage() {
                   <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4 mt-6 md:mt-8">
                     <button
                       onClick={handlePrevStep}
-                      className="w-full sm:w-auto bg-gray-300 text-gray-700 px-6 md:px-8 py-3 md:py-3 rounded-lg hover:bg-gray-400 transition-colors font-medium text-center order-2 sm:order-1"
-                    >
-                      Zurück
-                    </button>
-                    <button
-                      onClick={handleSubmitOrder}
-                      disabled={isProcessing}
-                      className="w-full sm:w-auto bg-green-600 text-white px-6 md:px-8 py-4 md:py-3 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 font-medium text-center order-1 sm:order-2 text-sm md:text-base"
+                      className="w-full sm:w-auto bg-gray-200 text-gray-800 px-6 md:px-8 py-3 md:py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium text-center order-2 sm:order-1"
+              >
+                Zurück
+              </button>
+              <button
+                 onClick={handleSubmitOrder}
+                 disabled={isProcessing}
+                 className="w-full sm:w-auto bg-[#C04020] text-white px-6 md:px-8 py-4 md:py-3 rounded-lg hover:bg-[#A03318] transition-colors disabled:opacity-50 font-medium text-center order-1 sm:order-2 text-sm md:text-base"
                     >
                       {isProcessing ? 'Verarbeitung...' : (
                         <>
@@ -1492,7 +1506,7 @@ export default function CheckoutPage() {
               </div>
 
               {subtotal < 100 && (
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <div className="mt-4 p-3 bg-red-50 rounded-lg">
                   <p className="text-sm text-blue-700">
                     <i className="ri-information-line mr-1"></i>
                     Noch {(100 - subtotal).toFixed(2)} € bis zum kostenlosen Versand!

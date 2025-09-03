@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rechnung {{invoice.number}}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    
+    @page {
+      size: A4;
+      margin: 20mm;
+    }
+    
+    @media print {
+      .no-print { display: none !important; }
+      
+      table {
+        page-break-inside: avoid;
+      }
+      
+      tr {
+        page-break-inside: avoid;
+      }
+      
+      .page-break {
+        page-break-before: always;
+      }
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 12pt;
+      line-height: 1.4;
+      color: #000;
+      margin: 0;
+      padding: 0;
+      background: white;
+    }
+    
+    .container {
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 0;
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 40pt;
+      min-height: 80pt;
+    }
+    
+    .logo-section {
+      flex: 0 0 auto;
+    }
+    
+    .logo {
+      max-width: 150pt;
+      max-height: 80pt;
+      object-fit: contain;
+    }
+    
+    .issuer-section {
+      flex: 0 0 auto;
+      text-align: right;
+      font-size: 10pt;
+      line-height: 1.3;
+    }
+    
+    .issuer-name {
+      font-size: 14pt;
+      font-weight: 600;
+      margin-bottom: 8pt;
+    }
+    
+    .issuer-address {
+      margin-bottom: 8pt;
+    }
+    
+    .issuer-contact {
+      font-size: 9pt;
+      color: #666;
+    }
+    
+    /* Recipient (DIN 5008 konform) */
+    .recipient-section {
+      margin-bottom: 30pt;
+      margin-top: 20pt;
+    }
+    
+    .recipient {
+      font-size: 11pt;
+      line-height: 1.3;
+      border-left: 3pt solid #e74c3c;
+      padding-left: 12pt;
+    }
+    
+    .recipient-name {
+      font-weight: 600;
+      margin-bottom: 4pt;
+    }
+    
+    /* Metadata */
+    .metadata {
+      margin-bottom: 30pt;
+    }
+    
+    .metadata-table {
+      width: 100%;
+      font-size: 10pt;
+      border-collapse: collapse;
+    }
+    
+    .metadata-table td {
+      padding: 4pt 8pt;
+      vertical-align: top;
+    }
+    
+    .metadata-table .label {
+      font-weight: 500;
+      color: #666;
+      width: 25%;
+    }
+    
+    .metadata-table .value {
+      width: 25%;
+    }
+    
+    /* Invoice Title */
+    .invoice-title {
+      font-size: 18pt;
+      font-weight: 600;
+      margin: 30pt 0 20pt 0;
+      color: #e74c3c;
+    }
+    
+    /* Items Table */
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20pt;
+      font-size: 11pt;
+    }
+    
+    .items-table th {
+      background-color: #f8f9fa;
+      padding: 12pt 8pt;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2pt solid #e74c3c;
+      font-size: 10pt;
+    }
+    
+    .items-table td {
+      padding: 10pt 8pt;
+      border-bottom: 1pt solid #eee;
+      vertical-align: top;
+    }
+    
+    .items-table .pos {
+      width: 8%;
+      text-align: center;
+    }
+    
+    .items-table .description {
+      width: 45%;
+    }
+    
+    .items-table .quantity {
+      width: 12%;
+      text-align: right;
+    }
+    
+    .items-table .unit-price {
+      width: 15%;
+      text-align: right;
+    }
+    
+    .items-table .tax-rate {
+      width: 10%;
+      text-align: right;
+    }
+    
+    .items-table .total {
+      width: 15%;
+      text-align: right;
+      font-weight: 500;
+    }
+    
+    .items-table .number {
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    }
+    
+    /* Totals */
+    .totals-section {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 30pt;
+      margin-bottom: 40pt;
+    }
+    
+    .totals {
+      width: 250pt;
+      border: 1pt solid #ddd;
+      border-radius: 4pt;
+    }
+    
+    .totals-header {
+      background-color: #e74c3c;
+      color: white;
+      padding: 8pt 12pt;
+      font-weight: 600;
+      font-size: 11pt;
+    }
+    
+    .totals-body {
+      padding: 12pt;
+    }
+    
+    .totals-table {
+      width: 100%;
+      font-size: 11pt;
+    }
+    
+    .totals-table td {
+      padding: 4pt 0;
+    }
+    
+    .totals-table .label {
+      text-align: left;
+    }
+    
+    .totals-table .amount {
+      text-align: right;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    }
+    
+    .totals-table .total-row {
+      border-top: 2pt solid #e74c3c;
+      padding-top: 8pt;
+      font-weight: 600;
+      font-size: 12pt;
+    }
+    
+    .totals-table .total-row td {
+      padding-top: 8pt;
+    }
+    
+    /* Payment Terms */
+    .payment-terms {
+      margin-bottom: 30pt;
+      padding: 15pt;
+      background-color: #f8f9fa;
+      border-left: 4pt solid #e74c3c;
+      font-size: 10pt;
+    }
+    
+    .payment-terms h3 {
+      margin: 0 0 8pt 0;
+      font-size: 11pt;
+      font-weight: 600;
+    }
+    
+    /* Notes */
+    .notes {
+      margin-bottom: 40pt;
+      font-size: 10pt;
+      line-height: 1.5;
+    }
+    
+    .notes h3 {
+      margin: 0 0 8pt 0;
+      font-size: 11pt;
+      font-weight: 600;
+    }
+    
+    /* Footer */
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 50pt;
+      font-size: 8pt;
+      color: #666;
+      border-top: 1pt solid #eee;
+      padding: 10pt 20mm;
+      background: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .footer-left {
+      flex: 1;
+    }
+    
+    .footer-center {
+      flex: 1;
+      text-align: center;
+    }
+    
+    .footer-right {
+      flex: 1;
+      text-align: right;
+    }
+    
+    .footer-section {
+      margin-bottom: 4pt;
+    }
+    
+    .footer-section strong {
+      font-weight: 500;
+    }
+    
+    /* Utilities */
+    .text-right {
+      text-align: right;
+    }
+    
+    .text-center {
+      text-align: center;
+    }
+    
+    .font-mono {
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    }
+    
+    .text-muted {
+      color: #666;
+    }
+    
+    .mb-0 {
+      margin-bottom: 0;
+    }
+    
+    .mt-0 {
+      margin-top: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-section">
+        {{#if logo.url}}
+          <img src="{{logo.url}}" alt="{{issuer.name}} Logo" class="logo">
+        {{else}}
+          <div class="logo-fallback" style="width: 150pt; height: 80pt; background: #e74c3c; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14pt;">
+            {{issuer.name}}
+          </div>
+        {{/if}}
+      </div>
+      
+      <div class="issuer-section">
+        <div class="issuer-name">{{issuer.name}}</div>
+        <div class="issuer-address">
+          {{issuer.address.street}} {{issuer.address.house_number}}<br>
+          {{#if issuer.address.line2}}{{issuer.address.line2}}<br>{{/if}}
+          {{issuer.address.postal_code}} {{issuer.address.city}}
+        </div>
+        <div class="issuer-contact">
+          {{#if issuer.phone}}Tel: {{issuer.phone}}<br>{{/if}}
+          {{#if issuer.email}}E-Mail: {{issuer.email}}<br>{{/if}}
+          {{#if issuer.website}}Web: {{issuer.website}}<br>{{/if}}
+          {{#if issuer.tax_id}}USt-IdNr.: {{issuer.tax_id}}{{/if}}
+        </div>
+      </div>
+    </header>
+    
+    <!-- Recipient (DIN 5008) -->
+    <section class="recipient-section">
+      <div class="recipient">
+        <div class="recipient-name">{{customer.name}}</div>
+        {{#if customer.company}}{{customer.company}}<br>{{/if}}
+        {{customer.address.street}} {{customer.address.house_number}}<br>
+        {{#if customer.address.line2}}{{customer.address.line2}}<br>{{/if}}
+        {{customer.address.postal_code}} {{customer.address.city}}
+      </div>
+    </section>
+    
+    <!-- Metadata -->
+    <section class="metadata">
+      <table class="metadata-table">
+        <tr>
+          <td class="label">Rechnungs-Nr.:</td>
+          <td class="value font-mono">{{invoice.number}}</td>
+          <td class="label">Kunden-Nr.:</td>
+          <td class="value font-mono">{{#if customer.number}}{{customer.number}}{{else}}-{{/if}}</td>
+        </tr>
+        <tr>
+          <td class="label">Rechnungsdatum:</td>
+          <td class="value">{{formatDate invoice.date}}</td>
+          <td class="label">Fällig bis:</td>
+          <td class="value">{{formatDate invoice.due_date}}</td>
+        </tr>
+        {{#if order.number}}
+        <tr>
+          <td class="label">Bestell-Nr.:</td>
+          <td class="value font-mono">{{order.number}}</td>
+          <td class="label">Bestell-Datum:</td>
+          <td class="value">{{formatDate order.date}}</td>
+        </tr>
+        {{/if}}
+      </table>
+    </section>
+    
+    <!-- Invoice Title -->
+    <h1 class="invoice-title">Rechnung</h1>
+    
+    <!-- Items Table -->
+    <section class="items-section">
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th class="pos">Pos.</th>
+            <th class="description">Artikel / Beschreibung</th>
+            <th class="quantity">Menge</th>
+            <th class="unit-price">Einzelpreis</th>
+            <th class="tax-rate">MwSt.</th>
+            <th class="total">Gesamt</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each items}}
+          <tr>
+            <td class="pos">{{add @index 1}}</td>
+            <td class="description">
+              <strong>{{this.name}}</strong>
+              {{#if this.description}}<br><span class="text-muted">{{this.description}}</span>{{/if}}
+            </td>
+            <td class="quantity number">{{formatNumber this.quantity}} {{#if this.unit}}{{this.unit}}{{/if}}</td>
+            <td class="unit-price number">{{formatCurrency this.unit_price}}</td>
+            <td class="tax-rate number">{{this.tax_rate}}%</td>
+            <td class="total number">{{formatCurrency this.total_price}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </section>
+    
+    <!-- Totals -->
+    <section class="totals-section">
+      <div class="totals">
+        <div class="totals-header">
+          Rechnungssumme
+        </div>
+        <div class="totals-body">
+          <table class="totals-table">
+            <tr>
+              <td class="label">Netto-Betrag:</td>
+              <td class="amount">{{formatCurrency subtotal}}</td>
+            </tr>
+            {{#each tax_breakdown}}
+            <tr>
+              <td class="label">MwSt. {{this.rate}}%:</td>
+              <td class="amount">{{formatCurrency this.amount}}</td>
+            </tr>
+            {{/each}}
+            <tr class="total-row">
+              <td class="label">Gesamt-Betrag:</td>
+              <td class="amount">{{formatCurrency total}}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Payment Terms -->
+    {{#if payment_terms}}
+    <section class="payment-terms">
+      <h3>Zahlungsbedingungen</h3>
+      <p>{{payment_terms}}</p>
+      {{#if issuer.bank.iban}}
+      <p><strong>Bankverbindung:</strong><br>
+      {{issuer.bank.name}}<br>
+      IBAN: {{issuer.bank.iban}}<br>
+      {{#if issuer.bank.bic}}BIC: {{issuer.bank.bic}}{{/if}}</p>
+      {{/if}}
+    </section>
+    {{/if}}
+    
+    <!-- Notes -->
+    {{#if notes}}
+    <section class="notes">
+      <h3>Hinweise</h3>
+      <p>{{notes}}</p>
+    </section>
+    {{/if}}
+    
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-left">
+        <div class="footer-section">
+          <strong>{{issuer.name}}</strong><br>
+          {{issuer.address.street}} {{issuer.address.house_number}}, {{issuer.address.postal_code}} {{issuer.address.city}}
+        </div>
+      </div>
+      <div class="footer-center">
+        {{#if issuer.bank.iban}}
+        <div class="footer-section">
+          <strong>Bankverbindung</strong><br>
+          {{issuer.bank.name}} • IBAN: {{issuer.bank.iban}}
+        </div>
+        {{/if}}
+      </div>
+      <div class="footer-right">
+        <div class="footer-section">
+          {{#if issuer.registration}}{{issuer.registration}}<br>{{/if}}
+          {{#if issuer.tax_id}}USt-IdNr.: {{issuer.tax_id}}<br>{{/if}}
+          Seite <span class="page-number"></span> von <span class="page-count"></span>
+        </div>
+      </div>
+    </footer>
+  </div>
+  
+  <script>
+    // Seitenzahlen für Print
+    if (window.location.search.includes('print=true')) {
+      window.addEventListener('beforeprint', function() {
+        const pageNumbers = document.querySelectorAll('.page-number');
+        const pageCounts = document.querySelectorAll('.page-count');
+        
+        pageNumbers.forEach(el => el.textContent = '1');
+        pageCounts.forEach(el => el.textContent = '1');
+      });
+    }
+  </script>
+</body>
+</html>

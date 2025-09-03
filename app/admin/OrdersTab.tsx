@@ -75,11 +75,17 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<Order | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [saving, setSaving] = useState(false);
 
   // Using the centralized Supabase client from lib/supabase.ts
 
   useEffect(() => {
     loadOrders();
+    loadProducts();
+    loadCustomers();
   }, []);
 
   useEffect(() => {
@@ -93,6 +99,7 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
         .select(`
           *,
           customers (
+            id,
             first_name,
             last_name,
             email,
@@ -103,6 +110,7 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
             city
           ),
           order_items (
+            id,
             product_name,
             product_category,
             quantity,
@@ -118,6 +126,199 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
       console.error('Error loading orders:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadProducts = async () => {
+    try {
+      console.log('🔄 Loading products from Supabase database...');
+      
+      // Direkte Abfrage ohne Session-Prüfung für bessere Kompatibilität
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, price, category, unit, is_active')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) {
+        console.error('❌ Error loading products:', error);
+        // Fallback: Verwende bekannte Produktdaten aus der Datenbank
+        console.log('🔄 Using fallback product data...');
+        const fallbackProducts = [
+           {
+             id: 1,
+             name: 'Industrieholz Buche Klasse 1',
+             price: '115',
+             category: 'Industrieholz',
+             unit: 'SRM',
+             is_active: true
+           },
+           {
+             id: 2,
+             name: 'Industrieholz Buche Klasse II',
+             price: '90',
+             category: 'Industrieholz',
+             unit: 'SRM',
+             is_active: true
+           },
+           {
+             id: 3,
+             name: 'Scheitholz Buche 33 cm',
+             price: '95',
+             category: 'Brennholz',
+             unit: 'SRM',
+             is_active: true
+           },
+           {
+             id: 4,
+             name: 'Scheitholz Buche 25 cm',
+             price: '100',
+             category: 'Brennholz',
+             unit: 'SRM',
+             is_active: true
+           },
+           {
+             id: 5,
+             name: 'Scheitholz - Industrieholz Mix 33 cm',
+             price: '90',
+             category: 'Brennholz',
+             unit: 'SRM',
+             is_active: true
+           },
+           {
+             id: 6,
+             name: 'Scheitholz Fichte 33 cm',
+             price: '55',
+             category: 'Brennholz',
+             unit: 'SRM',
+             is_active: true
+           }
+         ];
+        console.log('✅ Fallback products loaded:', fallbackProducts.length, 'products');
+        setProducts(fallbackProducts);
+        return;
+      }
+      
+      console.log('✅ Products loaded from database:', data?.length || 0, 'products');
+      console.log('📦 Sample product:', data?.[0]);
+      setProducts(data || []);
+      
+    } catch (error) {
+      console.error('💥 Failed to load products:', error);
+      // Verwende Fallback-Daten bei jedem Fehler
+      const fallbackProducts = [
+         {
+           id: 1,
+           name: 'Industrieholz Buche Klasse 1',
+           price: '115',
+           category: 'Industrieholz',
+           unit: 'SRM',
+           is_active: true
+         },
+         {
+           id: 2,
+           name: 'Industrieholz Buche Klasse II',
+           price: '90',
+           category: 'Industrieholz',
+           unit: 'SRM',
+           is_active: true
+         },
+         {
+           id: 3,
+           name: 'Scheitholz Buche 33 cm',
+           price: '95',
+           category: 'Brennholz',
+           unit: 'SRM',
+           is_active: true
+         },
+         {
+           id: 4,
+           name: 'Scheitholz Buche 25 cm',
+           price: '100',
+           category: 'Brennholz',
+           unit: 'SRM',
+           is_active: true
+         },
+         {
+           id: 5,
+           name: 'Scheitholz - Industrieholz Mix 33 cm',
+           price: '90',
+           category: 'Brennholz',
+           unit: 'SRM',
+           is_active: true
+         },
+         {
+           id: 6,
+           name: 'Scheitholz Fichte 33 cm',
+           price: '55',
+           category: 'Brennholz',
+           unit: 'SRM',
+           is_active: true
+         }
+       ];
+      console.log('🔄 Using fallback products due to error:', fallbackProducts.length);
+      setProducts(fallbackProducts);
+    }
+  };
+
+  const loadCustomers = async () => {
+    try {
+      console.log('🔄 Loading customers from Supabase database...');
+      
+      // Check if we have a valid session first
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error('❌ Session error:', sessionError);
+        throw sessionError;
+      }
+      
+      if (!session) {
+        console.warn('⚠️ No active session found for customers');
+        throw new Error('No active session');
+      }
+      
+      console.log('✅ Valid session found, fetching customers...');
+      
+      const { data, error } = await supabase
+        .from('customers')
+        .select('id, first_name, last_name, email, phone, street, house_number, postal_code, city')
+        .order('first_name');
+
+      if (error) {
+        console.error('❌ Error loading customers:', error);
+        throw error;
+      }
+      
+      console.log('✅ Customers loaded from database:', data?.length || 0, 'customers');
+      setCustomers(data || []);
+      
+    } catch (error) {
+      console.error('💥 Failed to load customers from database:', error);
+      console.log('🔄 Retrying customers with fresh session...');
+      
+      // Try to refresh the session and retry
+      try {
+        const { data: { session: newSession }, error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) throw refreshError;
+        
+        if (newSession) {
+          console.log('✅ Session refreshed, retrying customers fetch...');
+          const { data: retryData, error: retryError } = await supabase
+            .from('customers')
+            .select('id, first_name, last_name, email, phone, street, house_number, postal_code, city')
+            .order('first_name');
+            
+          if (retryError) throw retryError;
+          
+          console.log('✅ Customers loaded after session refresh:', retryData?.length || 0, 'customers');
+          setCustomers(retryData || []);
+        } else {
+          throw new Error('Failed to refresh session for customers');
+        }
+      } catch (retryError) {
+        console.error('💥 Failed to load customers even after session refresh:', retryError);
+        setCustomers([]);
+      }
     }
   };
 
@@ -137,6 +338,136 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
     }
 
     setFilteredOrders(filtered);
+  };
+
+  const createNewOrder = async (orderData: OrderFormData) => {
+    setSaving(true);
+    try {
+      // Generate order number
+      const orderNumber = `ORD-${Date.now()}`;
+      
+      // Create or get customer
+      let customerId = orderData.customer.id;
+      if (!customerId) {
+        const { data: newCustomer, error: customerError } = await supabase
+          .from('customers')
+          .insert({
+            first_name: orderData.customer.first_name,
+            last_name: orderData.customer.last_name,
+            email: orderData.customer.email,
+            phone: orderData.customer.phone,
+            street: orderData.customer.street,
+            house_number: orderData.customer.house_number,
+            postal_code: orderData.customer.postal_code,
+            city: orderData.customer.city
+          })
+          .select()
+          .single();
+        
+        if (customerError) throw customerError;
+        customerId = newCustomer.id;
+      }
+      
+      // Calculate totals
+      const subtotal = orderData.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+      const deliveryPrice = parseFloat(orderData.delivery_price);
+      const total = subtotal + deliveryPrice;
+      
+      // Create order
+      const { data: newOrder, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          order_number: orderNumber,
+          customer_id: customerId,
+          status: 'pending',
+          delivery_type: orderData.delivery_type,
+          delivery_price: deliveryPrice,
+          subtotal_amount: subtotal,
+          total_amount: total,
+          notes: orderData.notes,
+          delivery_first_name: orderData.customer.first_name,
+          delivery_last_name: orderData.customer.last_name,
+          delivery_email: orderData.customer.email,
+          delivery_phone: orderData.customer.phone,
+          delivery_street: orderData.customer.street,
+          delivery_house_number: orderData.customer.house_number,
+          delivery_postal_code: orderData.customer.postal_code,
+          delivery_city: orderData.customer.city
+        })
+        .select()
+        .single();
+      
+      if (orderError) throw orderError;
+      
+      // Create order items
+      const orderItems = orderData.items.map(item => ({
+        order_id: newOrder.id,
+        product_name: item.product_name,
+        product_category: item.product_category,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.quantity * item.unit_price
+      }));
+      
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+      
+      if (itemsError) throw itemsError;
+      
+      // Send order confirmation email
+      try {
+        const emailData = {
+          orderData: {
+            orderNumber: newOrder.order_number,
+            items: orderData.items.map((item) => ({
+              name: item.product_name,
+              quantity: item.quantity,
+              price: item.unit_price.toString(),
+              unit: 'SRM',
+            })),
+            totalAmount: total.toString(),
+            deliveryAddress: `${orderData.customer.first_name} ${orderData.customer.last_name}\n${orderData.customer.street} ${orderData.customer.house_number}\n${orderData.customer.postal_code} ${orderData.customer.city}`,
+          },
+          customerEmail: orderData.customer.email,
+          customerName: `${orderData.customer.first_name} ${orderData.customer.last_name}`,
+          templateType: 'order_confirmation'
+        };
+
+        console.log('Sende Admin-Bestellbestätigung an:', orderData.customer.email);
+        
+        const emailResponse = await fetch('/api/send-order-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(emailData),
+        });
+
+        const emailResult = await emailResponse.json();
+        
+        if (emailResult.success) {
+          console.log('✅ Admin-Bestellbestätigung erfolgreich gesendet:', emailResult.template_used);
+        } else {
+          console.error('❌ Admin E-Mail-Versand fehlgeschlagen:', emailResult.error);
+        }
+      } catch (emailError) {
+        console.error('Admin E-Mail Fehler (nicht kritisch):', emailError);
+      }
+      
+      await loadOrders();
+      setShowCreateModal(false);
+      
+      if (onStatsUpdate) {
+        await onStatsUpdate();
+      }
+      
+    } catch (error) {
+      console.error('Error creating order:', error);
+      alert('Fehler beim Erstellen der Bestellung');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
@@ -373,8 +704,17 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
             <h2 className="text-xl font-bold text-[#1A1A1A]">
               Bestellungen ({filteredOrders.length})
             </h2>
-            <div className="text-sm text-gray-500">
-              Gesamt: {orders.length} Bestellungen
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-gray-500">
+                Gesamt: {orders.length} Bestellungen
+              </div>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="bg-[#C04020] hover:bg-[#A03318] text-white px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer flex items-center gap-2"
+              >
+                <i className="ri-add-line"></i>
+                Neue Bestellung
+              </button>
             </div>
           </div>
         </div>
@@ -550,6 +890,17 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
         />
       )}
 
+      {/* Create Order Modal */}
+      {showCreateModal && (
+        <CreateOrderModal
+          products={products}
+          customers={customers}
+          onSave={createNewOrder}
+          onClose={() => setShowCreateModal(false)}
+          saving={saving}
+        />
+      )}
+
       {/* Order Detail Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -682,7 +1033,7 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
                       {parseFloat(selectedOrder.delivery_price).toFixed(2)}
                     </p>
                     <p>
-                      <span className="font-medium font-bold">Gesamtsumme:</span> €
+                      <span className="font-bold">Gesamtsumme:</span> €
                       {parseFloat(selectedOrder.total_amount).toFixed(2)}
                     </p>
                     {selectedOrder.notes && (
@@ -1089,6 +1440,550 @@ function EditOrderModal({ order, onSave, onClose }: EditOrderModalProps) {
             >
               <i className="ri-save-line mr-2"></i>
               Änderungen speichern
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// CreateOrderModal Interface
+interface CreateOrderModalProps {
+  products: any[];
+  customers: any[];
+  onSave: (orderData: OrderFormData) => void;
+  onClose: () => void;
+  saving: boolean;
+}
+
+// CreateOrderModal Component
+function CreateOrderModal({ products, customers, onSave, onClose, saving }: CreateOrderModalProps) {
+  const [formData, setFormData] = useState<OrderFormData>({
+    customer: {
+      first_name: '',
+      last_name: '',
+      email: '',
+      phone: '',
+      street: '',
+      house_number: '',
+      postal_code: '',
+      city: ''
+    },
+    delivery_type: 'standard',
+    delivery_price: '0',
+    notes: '',
+    items: []
+  });
+  
+  const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+  const [newItem, setNewItem] = useState({
+    product_id: '',
+    quantity: 1
+  });
+
+  const handleCustomerSelect = (customerId: string) => {
+    setSelectedCustomer(customerId);
+    if (customerId) {
+      const customer = customers.find(c => c.id === customerId);
+      if (customer) {
+        setFormData({
+          ...formData,
+          customer: {
+            id: customer.id,
+            first_name: customer.first_name,
+            last_name: customer.last_name,
+            email: customer.email,
+            phone: customer.phone || '',
+            street: customer.street,
+            house_number: customer.house_number,
+            postal_code: customer.postal_code,
+            city: customer.city
+          }
+        });
+      }
+    } else {
+      setFormData({
+        ...formData,
+        customer: {
+          first_name: '',
+          last_name: '',
+          email: '',
+          phone: '',
+          street: '',
+          house_number: '',
+          postal_code: '',
+          city: ''
+        }
+      });
+    }
+  };
+
+  const addItem = () => {
+    console.log('🔥 AddItem clicked:', {
+      newItem,
+      products_count: products.length,
+      products_sample: products[0],
+      selected_product_id: newItem.product_id,
+      product_id_type: typeof newItem.product_id
+    });
+    
+    if (!newItem.product_id) {
+      console.error('❌ No product selected');
+      alert('Bitte wählen Sie ein Produkt aus.');
+      return;
+    }
+    
+    if (newItem.quantity <= 0) {
+      console.error('❌ Invalid quantity:', newItem.quantity);
+      alert('Bitte geben Sie eine gültige Menge ein.');
+      return;
+    }
+    
+    // Konvertiere product_id zu Number für Vergleich, falls nötig
+    const productId = typeof newItem.product_id === 'string' ? parseInt(newItem.product_id) : newItem.product_id;
+    const product = products.find(p => p.id === productId || p.id.toString() === newItem.product_id.toString());
+    
+    console.log('🎯 Product search details:', {
+      searching_for: newItem.product_id,
+      converted_id: productId,
+      available_products: products.map(p => ({ id: p.id, name: p.name, id_type: typeof p.id })),
+      found_product: product
+    });
+    
+    if (!product) {
+      console.error('❌ Product not found in products array');
+      console.error('Available product IDs:', products.map(p => p.id));
+      console.error('Searching for ID:', newItem.product_id);
+      alert(`Produkt nicht gefunden. Verfügbare Produkte: ${products.map(p => p.name).join(', ')}`);
+      return;
+    }
+    
+    const item: OrderItem = {
+      id: `temp-${Date.now()}`,
+      product_name: product.name,
+      product_category: product.category || 'Brennholz',
+      quantity: newItem.quantity,
+      unit_price: parseFloat(product.price)
+    };
+    
+    console.log('✅ Adding item to order:', item);
+    
+    setFormData({
+      ...formData,
+      items: [...formData.items, item]
+    });
+    
+    console.log('📦 Updated formData.items:', [...formData.items, item]);
+    
+    setNewItem({ product_id: '', quantity: 1 });
+    console.log('🔄 Reset newItem');
+  };
+
+  const removeItem = (index: number) => {
+    const updatedItems = formData.items.filter((_, i) => i !== index);
+    setFormData({ ...formData, items: updatedItems });
+  };
+
+  const updateItemQuantity = (index: number, quantity: number) => {
+    const updatedItems = [...formData.items];
+    updatedItems[index].quantity = quantity;
+    setFormData({ ...formData, items: updatedItems });
+  };
+
+  const calculateTotal = () => {
+    console.log('💰 Calculating total:', {
+      items: formData.items,
+      itemsCount: formData.items.length,
+      delivery_price: formData.delivery_price
+    });
+    
+    const itemsTotal = formData.items.reduce((sum, item) => {
+      const itemTotal = item.quantity * item.unit_price;
+      console.log('📦 Item calculation:', {
+        name: item.product_name,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        itemTotal
+      });
+      return sum + itemTotal;
+    }, 0);
+    
+    const deliveryPrice = parseFloat(formData.delivery_price) || 0;
+    const total = itemsTotal + deliveryPrice;
+    
+    console.log('🧮 Total calculation result:', {
+      itemsTotal,
+      deliveryPrice,
+      total
+    });
+    
+    return total;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formData.items.length === 0) {
+      alert('Bitte fügen Sie mindestens ein Produkt hinzu.');
+      return;
+    }
+    if (!formData.customer.first_name || !formData.customer.last_name || !formData.customer.email) {
+      alert('Bitte füllen Sie alle Kundenfelder aus.');
+      return;
+    }
+    onSave(formData);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-[#1A1A1A]">
+              Neue Bestellung erstellen
+            </h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+              <i className="ri-close-line text-2xl"></i>
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Customer Selection */}
+          <div>
+            <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Kunde auswählen</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Bestehender Kunde</label>
+              <select
+                value={selectedCustomer}
+                onChange={(e) => handleCustomerSelect(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+              >
+                <option value="">Neuen Kunden erstellen</option>
+                {customers.map(customer => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.first_name} {customer.last_name} ({customer.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Customer Information */}
+          <div>
+            <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Kundeninformationen</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Vorname *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.customer.first_name}
+                  onChange={e => setFormData({
+                    ...formData,
+                    customer: { ...formData.customer, first_name: e.target.value }
+                  })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nachname *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.customer.last_name}
+                  onChange={e => setFormData({
+                    ...formData,
+                    customer: { ...formData.customer, last_name: e.target.value }
+                  })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail *</label>
+                <input
+                  type="email"
+                  required
+                  value={formData.customer.email}
+                  onChange={e => setFormData({
+                    ...formData,
+                    customer: { ...formData.customer, email: e.target.value }
+                  })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                <input
+                  type="tel"
+                  value={formData.customer.phone}
+                  onChange={e => setFormData({
+                    ...formData,
+                    customer: { ...formData.customer, phone: e.target.value }
+                  })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Straße</label>
+                <input
+                  type="text"
+                  value={formData.customer.street}
+                  onChange={e => setFormData({
+                    ...formData,
+                    customer: { ...formData.customer, street: e.target.value }
+                  })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Hausnummer</label>
+                <input
+                  type="text"
+                  value={formData.customer.house_number}
+                  onChange={e => setFormData({
+                    ...formData,
+                    customer: { ...formData.customer, house_number: e.target.value }
+                  })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">PLZ</label>
+                <input
+                  type="text"
+                  value={formData.customer.postal_code}
+                  onChange={e => setFormData({
+                    ...formData,
+                    customer: { ...formData.customer, postal_code: e.target.value }
+                  })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Stadt</label>
+                <input
+                  type="text"
+                  value={formData.customer.city}
+                  onChange={e => setFormData({
+                    ...formData,
+                    customer: { ...formData.customer, city: e.target.value }
+                  })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Products */}
+          <div>
+            <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Produkte hinzufügen</h3>
+            <div className="space-y-4 mb-4">
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Produkt auswählen</label>
+                  <select
+                    value={newItem.product_id}
+                    onChange={e => {
+                      console.log('🔄 Product selection changed:', {
+                        selected_value: e.target.value,
+                        available_products: products.map(p => ({ id: p.id, name: p.name })),
+                        products_count: products.length
+                      });
+                      setNewItem({ ...newItem, product_id: e.target.value });
+                    }}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                  >
+                    <option value="">Produkt auswählen</option>
+                    {products.map(product => {
+                      console.log('🏷️ Rendering product option:', { id: product.id, name: product.name, price: product.price });
+                      return (
+                        <option key={product.id} value={product.id}>
+                          {product.name} - €{product.price} / {product.unit}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+                <div className="w-24">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Menge</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={newItem.quantity}
+                    onChange={e => setNewItem({ ...newItem, quantity: parseInt(e.target.value) || 1 })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    placeholder="1"
+                  />
+                </div>
+                <div className="w-32 flex items-end">
+                  <button
+                    type="button"
+                    onClick={addItem}
+                    disabled={!newItem.product_id}
+                    className="w-full bg-[#C04020] hover:bg-[#A03318] disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer"
+                  >
+                    <i className="ri-add-line mr-1"></i>
+                    Hinzufügen
+                  </button>
+                </div>
+              </div>
+              
+              {/* Live Price Preview */}
+              {(() => {
+                console.log('🔍 Price Preview Debug:', {
+                  product_id: newItem.product_id,
+                  products_count: products.length,
+                  quantity: newItem.quantity
+                });
+                
+                if (newItem.product_id) {
+                  const selectedProduct = products.find(p => p.id === newItem.product_id);
+                  console.log('🎯 Selected product:', selectedProduct);
+                  
+                  if (selectedProduct) {
+                    const unitPrice = parseFloat(selectedProduct.price);
+                    const totalPrice = unitPrice * newItem.quantity;
+                    console.log('💰 Price calculation:', { unitPrice, quantity: newItem.quantity, totalPrice });
+                    
+                    return (
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium text-gray-900">{selectedProduct.name}</div>
+                            <div className="text-sm text-gray-500">{selectedProduct.category || 'Brennholz'}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm text-gray-600">€{unitPrice.toFixed(2)} / {selectedProduct.unit || 'Stück'}</div>
+                            <div className="text-lg font-bold text-[#C04020]">€{totalPrice.toFixed(2)}</div>
+                            <div className="text-xs text-gray-500">{newItem.quantity} × €{unitPrice.toFixed(2)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  } else {
+                    console.log('❌ Product not found in products array');
+                  }
+                }
+                return null;
+              })()}
+            </div>
+
+            {/* Items List */}
+            {formData.items.length > 0 && (
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="bg-gray-50 px-4 py-2 font-medium text-sm text-gray-700 grid grid-cols-12 gap-4">
+                  <div className="col-span-5">Produkt</div>
+                  <div className="col-span-2">Menge</div>
+                  <div className="col-span-2">Einzelpreis</div>
+                  <div className="col-span-2">Gesamt</div>
+                  <div className="col-span-1">Aktion</div>
+                </div>
+                {formData.items.map((item, index) => (
+                  <div key={index} className="px-4 py-3 border-t border-gray-200 grid grid-cols-12 gap-4 items-center">
+                    <div className="col-span-5">
+                      <div className="font-medium">{item.product_name}</div>
+                      <div className="text-sm text-gray-500">{item.product_category}</div>
+                    </div>
+                    <div className="col-span-2">
+                      <input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={e => updateItemQuantity(index, parseInt(e.target.value) || 1)}
+                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                      />
+                    </div>
+                    <div className="col-span-2">€{item.unit_price.toFixed(2)}</div>
+                    <div className="col-span-2 font-medium">€{(item.quantity * item.unit_price).toFixed(2)}</div>
+                    <div className="col-span-1">
+                      <button
+                        type="button"
+                        onClick={() => removeItem(index)}
+                        className="text-red-600 hover:text-red-800 cursor-pointer"
+                      >
+                        <i className="ri-delete-bin-line"></i>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Delivery */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Lieferart</label>
+              <select
+                value={formData.delivery_type}
+                onChange={e => setFormData({ ...formData, delivery_type: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+              >
+                <option value="standard">Standard Lieferung</option>
+                <option value="express">Express Lieferung</option>
+                <option value="pickup">Selbstabholung</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Lieferkosten (€)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.delivery_price}
+                onChange={e => setFormData({ ...formData, delivery_price: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
+            <textarea
+              value={formData.notes}
+              onChange={e => setFormData({ ...formData, notes: e.target.value })}
+              rows={3}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+              placeholder="Zusätzliche Hinweise zur Bestellung..."
+            />
+          </div>
+
+          {/* Total */}
+          <div className="border-t border-gray-200 pt-4">
+            <div className="flex justify-between items-center text-lg font-bold">
+              <span>Gesamtsumme:</span>
+              <span className="text-[#C04020]">€{calculateTotal().toFixed(2)}</span>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
+            >
+              Abbrechen
+            </button>
+            <button
+              type="submit"
+              disabled={saving || formData.items.length === 0}
+              className="flex-1 bg-[#C04020] hover:bg-[#A03318] text-white py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
+            >
+              {saving ? (
+                <>
+                  <i className="ri-loader-4-line mr-2 animate-spin"></i>
+                  Erstelle...
+                </>
+              ) : (
+                <>
+                  <i className="ri-add-line mr-2"></i>
+                  Bestellung erstellen
+                </>
+              )}
             </button>
           </div>
         </form>

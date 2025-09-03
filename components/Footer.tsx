@@ -33,7 +33,7 @@ export default function Footer() {
               <a href="tel:+4917671085234" className="w-10 h-10 flex items-center justify-center bg-[#C04020] rounded-full cursor-pointer hover:bg-[#A03318] transition-colors">
                 <i className="ri-phone-line text-white"></i>
               </a>
-              <a href="mailto:info@brennholzkoenig.de" className="w-10 h-10 flex items-center justify-center bg-[#C04020] rounded-full cursor-pointer hover:bg-[#A03318] transition-colors">
+              <a href="mailto:info@brennholz-koenig.de" className="w-10 h-10 flex items-center justify-center bg-[#C04020] rounded-full cursor-pointer hover:bg-[#A03318] transition-colors">
                 <i className="ri-mail-line text-white"></i>
               </a>
               <a href="https://wa.me/4917671085234" target="_blank" rel="noopener noreferrer" className="w-10 h-10 flex items-center justify-center bg-[#25D366] rounded-full cursor-pointer hover:bg-[#1DA851] transition-colors">

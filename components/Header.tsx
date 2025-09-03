@@ -152,7 +152,7 @@ export default function Header() {
                 className="h-12 md:h-20 w-auto object-contain"
               />
             </Link>
-            <nav className="hidden xl:flex items-center space-x-8">
+            <nav className="hidden lg:flex items-center space-x-8">
               <Link
                 href="/"
                 className="text-white hover:text-white/80 transition-colors cursor-pointer font-medium"
@@ -194,7 +194,7 @@ export default function Header() {
 
   return (
     <>
-      <header className={`sticky top-0 z-[9999] transition-all duration-300 w-full ${isScrolled ? 'bg-[#F5F0E0] shadow-lg' : 'bg-black/30 backdrop-blur-sm'}`} style={{overflow: 'visible'}}>
+      <header className={`sticky top-0 z-[9999] transition-all duration-300 w-full ${isScrolled ? 'bg-[#F5F0E0] shadow-lg' : 'bg-black/30 backdrop-blur-sm'}`}>
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16 md:h-20">
             <Link href="/" className="flex items-center flex-shrink-0">
@@ -204,7 +204,7 @@ export default function Header() {
                 className="h-12 md:h-20 w-auto object-contain"
               />
             </Link>
-            <nav className="hidden xl:flex items-center space-x-8">
+            <nav className="hidden lg:flex items-center space-x-8">
               {navigation.map((item) => (
                 <Link
                   key={item.href}
@@ -215,30 +215,30 @@ export default function Header() {
                 </Link>
               ))}
             </nav>
-            <div className="flex items-center space-x-4">
-              <Link href="/warenkorb" className={`flex items-center space-x-2 hover:text-orange-600 transition-colors cursor-pointer relative ${isScrolled ? 'text-gray-700' : 'text-white'}`}>
-                <div className="w-5 h-5 flex items-center justify-center">
-                  <i className="ri-shopping-cart-line text-xl"></i>
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <Link href="/warenkorb" className={`flex items-center space-x-2 sm:space-x-2 hover:text-orange-600 transition-colors cursor-pointer relative ${isScrolled ? 'text-gray-700' : 'text-white'}`}>
+                <div className="w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center flex-shrink-0 relative">
+                  <i className="ri-shopping-cart-line text-xl sm:text-xl"></i>
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs rounded-full min-w-5 h-5 px-1 flex items-center justify-center font-bold text-[10px] leading-none">
+                      {cartItemCount > 99 ? '99+' : cartItemCount}
+                    </span>
+                  )}
                 </div>
                 <span className="hidden sm:inline">Warenkorb</span>
-                {cartItemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                    {cartItemCount > 99 ? '99+' : cartItemCount}
-                  </span>
-                )}
               </Link>
 
               {/* Account Dropdown */}
               <div className="relative z-[9999]" ref={accountDropdownRef}>
                 <button
                   onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
-                  className={`flex items-center space-x-2 hover:text-orange-600 transition-colors cursor-pointer ${isScrolled ? 'text-gray-700' : 'text-white'}`}
+                  className={`flex items-center space-x-1 sm:space-x-2 hover:text-orange-600 transition-colors cursor-pointer ${isScrolled ? 'text-gray-700' : 'text-white'}`}
                 >
-                  <div className="w-5 h-5 flex items-center justify-center">
-                    <i className="ri-user-line text-xl"></i>
+                  <div className="w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center flex-shrink-0">
+                    <i className="ri-user-line text-lg sm:text-xl"></i>
                   </div>
                   <span className="hidden sm:inline">Mein Konto</span>
-                  <div className="w-4 h-4 flex items-center justify-center">
+                  <div className="w-5 h-5 sm:w-4 sm:h-4 flex items-center justify-center flex-shrink-0">
                     <i className={`ri-arrow-down-s-line text-sm transition-transform ${isAccountDropdownOpen ? 'rotate-180' : ''}`}></i>
                   </div>
                 </button>
@@ -247,7 +247,7 @@ export default function Header() {
               </div>
 
               <button
-                className="xl:hidden flex flex-col space-y-1 cursor-pointer p-2 z-50 relative flex-shrink-0"
+                className="lg:hidden flex flex-col space-y-1 cursor-pointer p-2 z-50 relative flex-shrink-0"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
               >
                 <span className={`block w-6 h-0.5 transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-1.5' : ''} ${isScrolled ? 'bg-[#C04020]' : 'bg-white drop-shadow-lg'}`}></span>
@@ -262,8 +262,8 @@ export default function Header() {
 
 
       {isMenuOpen && (
-        <div className="xl:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm">
-          <div className="bg-[#F5F0E0] h-full overflow-y-auto pt-20 max-w-full relative">
+        <div className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" style={{overflow: 'hidden'}}>
+          <div className="bg-[#F5F0E0] h-screen w-full pt-20 relative" style={{overflow: 'hidden', height: '100vh', maxHeight: '100vh'}}>
             {/* Schließen Button */}
             <button
               onClick={() => setIsMenuOpen(false)}
@@ -271,21 +271,21 @@ export default function Header() {
             >
               <i className="ri-close-line text-xl text-gray-600"></i>
             </button>
-            <div className="px-6 py-8 max-w-full overflow-x-hidden">
+            <div className="px-6 py-8 h-full" style={{overflow: 'hidden', height: 'calc(100vh - 5rem)', maxHeight: 'calc(100vh - 5rem)'}}>
               <div className="mb-8">
                 <h3 className="text-xs font-bold text-[#C04020] uppercase tracking-wider mb-4">Navigation</h3>
-                <div className="space-y-4">
+                <div className="space-y-4" style={{overflow: 'hidden'}}>
                   {navigation.map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="flex items-center text-lg font-medium text-[#1A1A1A] hover:text-[#C04020] transition-colors py-3 border-b border-gray-200"
+                      className="flex items-center text-lg font-medium text-[#1A1A1A] hover:text-[#C04020] transition-colors py-3 border-b border-gray-200 min-w-0"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <div className="w-6 h-6 flex items-center justify-center mr-4 flex-shrink-0">
+                      <div className="w-8 h-8 flex items-center justify-center mr-4 flex-shrink-0">
                         <i className={`ri-${item.href === '/' ? 'home-4-line' : item.href === '/shop' ? 'store-line' : item.href === '/blog' ? 'file-line' : item.href === '/ueber-uns' ? 'team-line' : 'mail-line'} text-xl text-[#C04020]`}></i>
                       </div>
-                      <span className="break-words">{item.name}</span>
+                      <span className="break-words min-w-0 flex-1">{item.name}</span>
                     </Link>
                   ))}
                 </div>
@@ -295,23 +295,23 @@ export default function Header() {
                 <div className="space-y-3">
                   <Link
                     href="/shop"
-                    className="w-full bg-[#C04020] text-white px-6 py-4 rounded-xl font-bold hover:bg-[#A03318] transition-colors flex items-center justify-center cursor-pointer"
+                    className="w-full bg-[#C04020] text-white px-4 py-4 rounded-xl font-bold hover:bg-[#A03318] transition-colors flex items-center justify-center cursor-pointer min-w-0"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <div className="w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0">
+                    <div className="w-7 h-7 flex items-center justify-center mr-3 flex-shrink-0">
                       <i className="ri-fire-line text-xl"></i>
                     </div>
-                    <span className="break-words">Brennholz kaufen</span>
+                    <span className="break-words min-w-0 flex-1 text-center">Brennholz kaufen</span>
                   </Link>
                   <Link
                     href="/kontakt"
-                    className="w-full bg-white text-[#C04020] border-2 border-[#C04020] px-6 py-4 rounded-xl font-bold hover:bg-gray-50 transition-colors flex items-center justify-center cursor-pointer"
+                    className="w-full bg-white text-[#C04020] border-2 border-[#C04020] px-4 py-4 rounded-xl font-bold hover:bg-gray-50 transition-colors flex items-center justify-center cursor-pointer min-w-0"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <div className="w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0">
+                    <div className="w-7 h-7 flex items-center justify-center mr-3 flex-shrink-0">
                       <i className="ri-phone-line text-xl"></i>
                     </div>
-                    <span className="break-words">Beratung anrufen</span>
+                    <span className="break-words min-w-0 flex-1 text-center">Beratung anrufen</span>
                   </Link>
                 </div>
               </div>
@@ -375,7 +375,7 @@ export default function Header() {
                     <div className="w-5 h-5 flex items-center justify-center mr-2 flex-shrink-0">
                       <i className="ri-phone-fill"></i>
                     </div>
-                    <span className="break-words">0661 / 123 456 78</span>
+                    <span className="break-words">+49 176 71085234</span>
                   </div>
                   <div className="flex items-center justify-center min-w-0">
                     <div className="w-5 h-5 flex items-center justify-center mr-2 flex-shrink-0">

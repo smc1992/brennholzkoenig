@@ -30,7 +30,7 @@ export default function ContactHero() {
 
           {/* Einfache Beschreibung */}
           <p className={`text-xl sm:text-2xl text-white/90 mb-12 transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`} style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-            Kostenlose Brennholz-Beratung von Brennholhandel Vey
+            Kostenlose Brennholz-Beratung von Brennholzhandel Vey
           </p>
 
           {/* Reduzierte Kontakt-Optionen */}
@@ -42,7 +42,7 @@ export default function ContactHero() {
               <h3 className="text-xl font-black mb-3 text-[#1A1A1A]" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
                 ANRUFEN
               </h3>
-              <p className="text-[#C04020] font-bold text-2xl mb-2">0561-43071895</p>
+              <p className="text-[#C04020] font-bold text-2xl mb-2">+49 176 71085234</p>
               <p className="text-sm text-gray-600">Mo-Fr 7-18 Uhr</p>
             </div>
 
@@ -60,7 +60,7 @@ export default function ContactHero() {
           {/* Einfache Call-to-Action */}
           <div className={`flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto px-12 sm:px-16 md:px-20 lg:px-24 transition-all duration-1000 delay-1200 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
             <a 
-              href="tel:+4917671085234"
+              href="tel:+4956143071895"
               className="bg-[#C04020] text-white px-10 py-5 text-xl font-bold rounded-xl hover:bg-[#A03318] transition-all duration-300 text-center whitespace-nowrap cursor-pointer shadow-lg transform hover:scale-105 flex items-center justify-center"
             >
               <div className="w-6 h-6 flex items-center justify-center mr-3">
@@ -69,7 +69,7 @@ export default function ContactHero() {
               JETZT ANRUFEN
             </a>
             <a 
-              href="https://wa.me/4917671085234"
+              href="https://wa.me/4956143071895"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-[#25D366] text-white px-10 py-5 text-xl font-bold rounded-xl hover:bg-[#1DA851] transition-all duration-300 text-center whitespace-nowrap cursor-pointer shadow-lg transform hover:scale-105 flex items-center justify-center"

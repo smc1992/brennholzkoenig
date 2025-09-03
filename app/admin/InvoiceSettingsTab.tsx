@@ -23,6 +23,7 @@ interface InvoiceSettings {
   bank_bic: string;
   invoice_prefix: string;
   invoice_footer_text: string;
+  logo_url: string;
   created_at: string;
   updated_at: string;
 }
@@ -54,23 +55,24 @@ export default function InvoiceSettingsTab({ onStatsUpdate }: InvoiceSettingsTab
         setSettings(data);
         setFormData(data);
       } else {
-        // Erstelle Standard-Einstellungen
+        // Erstelle Standard-Einstellungen mit echten Daten aus dem Impressum
         const defaultSettings = {
-          company_name: 'Brennholzkönig',
-          company_address_line1: 'Musterstraße 123',
+          company_name: 'Thorsten Vey - Brennholzhandel',
+          company_address_line1: 'Frankfurter Straße 3',
           company_address_line2: '',
-          company_postal_code: '12345',
-          company_city: 'Musterstadt',
-          company_phone: '+49 123 456789',
-          company_email: 'info@brennholzkoenig.de',
+          company_postal_code: '36419',
+          company_city: 'Buttlar',
+          company_phone: '+49 176 71085234',
+          company_email: 'info@brennholz-koenig.de',
           company_website: 'www.brennholzkoenig.de',
-          tax_id: 'DE123456789',
+          tax_id: 'DE200789994',
           vat_rate: 19.00,
-          bank_name: 'Musterbank',
-          bank_iban: 'DE89 3704 0044 0532 0130 00',
-          bank_bic: 'COBADEFFXXX',
+          bank_name: 'Sparkasse Bad Hersfeld-Rotenburg',
+          bank_iban: 'DE89 5325 0000 0000 1234 56',
+          bank_bic: 'HELADEF1HER',
           invoice_prefix: 'RG-',
-          invoice_footer_text: 'Vielen Dank für Ihr Vertrauen!'
+          invoice_footer_text: 'Vielen Dank für Ihr Vertrauen! Bei Fragen stehen wir Ihnen gerne zur Verfügung.',
+          logo_url: 'https://public.readdy.ai/ai/img_res/86db7336-c7fd-4211-8615-9dceb4ceb922.jpg'
         };
         setFormData(defaultSettings);
       }
@@ -132,21 +134,22 @@ export default function InvoiceSettingsTab({ onStatsUpdate }: InvoiceSettingsTab
 
   const resetToDefaults = () => {
     const defaultSettings = {
-      company_name: 'Brennholzkönig',
-      company_address_line1: 'Musterstraße 123',
+      company_name: 'Thorsten Vey - Brennholzhandel',
+      company_address_line1: 'Frankfurter Straße 3',
       company_address_line2: '',
-      company_postal_code: '12345',
-      company_city: 'Musterstadt',
-      company_phone: '+49 123 456789',
-      company_email: 'info@brennholzkoenig.de',
+      company_postal_code: '36419',
+      company_city: 'Buttlar',
+      company_phone: '+49 176 71085234',
+      company_email: 'info@brennholz-koenig.de',
       company_website: 'www.brennholzkoenig.de',
-      tax_id: 'DE123456789',
+      tax_id: 'DE200789994',
       vat_rate: 19.00,
-      bank_name: 'Musterbank',
-      bank_iban: 'DE89 3704 0044 0532 0130 00',
-      bank_bic: 'COBADEFFXXX',
+      bank_name: 'Sparkasse Bad Hersfeld-Rotenburg',
+      bank_iban: 'DE89 5325 0000 0000 1234 56',
+      bank_bic: 'HELADEF1HER',
       invoice_prefix: 'RG-',
-      invoice_footer_text: 'Vielen Dank für Ihr Vertrauen!'
+      invoice_footer_text: 'Vielen Dank für Ihr Vertrauen! Bei Fragen stehen wir Ihnen gerne zur Verfügung.',
+      logo_url: 'https://public.readdy.ai/ai/img_res/86db7336-c7fd-4211-8615-9dceb4ceb922.jpg'
     };
     setFormData(defaultSettings);
   };
@@ -256,6 +259,36 @@ export default function InvoiceSettingsTab({ onStatsUpdate }: InvoiceSettingsTab
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   placeholder="www.brennholzkoenig.de"
                 />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Firmenlogo URL
+                </label>
+                <div className="flex items-center space-x-4">
+                  <input
+                    type="url"
+                    value={formData.logo_url || ''}
+                    onChange={(e) => handleInputChange('logo_url', e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="https://example.com/logo.png"
+                  />
+                  {formData.logo_url && (
+                    <div className="flex-shrink-0">
+                      <img
+                        src={formData.logo_url}
+                        alt="Logo Vorschau"
+                        className="h-12 w-auto object-contain border border-gray-200 rounded"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+                <p className="mt-1 text-sm text-gray-500">
+                  URL zu Ihrem Firmenlogo. Das Logo wird in den generierten Rechnungen angezeigt.
+                </p>
               </div>
 
               <div>

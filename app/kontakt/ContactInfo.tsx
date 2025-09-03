@@ -40,7 +40,7 @@ export default function ContactInfo() {
             </h2>
 
             <p className="text-lg text-gray-700 mb-8" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-              Erreichen Sie unsere Brennholz-Experten von Brennholhandel Vey auf verschiedenen Wegen
+              Erreichen Sie unsere Brennholz-Experten von Brennholzhandel Vey auf verschiedenen Wegen
             </p>
           </div>
 

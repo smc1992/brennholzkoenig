@@ -81,11 +81,11 @@ export default function HeroSection() {
       <div className="container mx-auto px-6 sm:px-8 lg:px-12 w-full relative z-10 max-w-7xl" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: '2rem', paddingBottom: '4rem' }}>
         <div className="max-w-6xl mx-auto w-full">
           {/* Trust Badge */}
-          <div className="inline-flex items-center bg-[#C04020] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-sm sm:text-base mb-6 sm:mb-8 shadow-2xl mx-auto sm:mx-0">
-            <div className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center mr-2 sm:mr-3">
-              <i className="ri-award-fill text-lg"></i>
+          <div className="inline-flex items-center bg-[#C04020] text-white px-3 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-xs sm:text-base mb-6 sm:mb-8 shadow-2xl mx-auto sm:mx-0 max-w-fit">
+            <div className="w-4 h-4 sm:w-6 sm:h-6 flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+              <i className="ri-award-fill text-sm sm:text-lg"></i>
             </div>
-            <span className="whitespace-nowrap font-black">6.847 ZUFRIEDENE KUNDEN</span>
+            <span className="font-black text-xs sm:text-base leading-none">6.847 ZUFRIEDENE KUNDEN</span>
           </div>
 
           {/* Main Headline - Jetzt mit DynamicContent */}
@@ -157,10 +157,10 @@ export default function HeroSection() {
           <div className={`flex flex-col sm:flex-row gap-4 sm:gap-6 mb-12 sm:mb-16 max-w-full sm:max-w-none mx-auto sm:mx-0 transition-all duration-1000 delay-1200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
             <button 
               onClick={() => setShowWhatsAppModal(true)}
-              className="bg-[#25D366] text-white px-8 sm:px-10 py-5 sm:py-6 text-lg sm:text-xl font-black rounded-2xl hover:bg-[#128C7E] transition-all duration-300 whitespace-nowrap cursor-pointer shadow-2xl transform hover:scale-105 w-full sm:w-auto"
+              className="bg-[#25D366] text-white px-6 sm:px-10 py-5 sm:py-6 text-base sm:text-xl font-black rounded-2xl hover:bg-[#128C7E] transition-all duration-300 cursor-pointer shadow-2xl transform hover:scale-105 w-full sm:w-auto flex items-center justify-center min-w-0"
             >
-              <div className="w-6 h-6 inline-flex items-center justify-center mr-3">
-                <i className="ri-whatsapp-fill text-xl"></i>
+              <div className="w-7 h-7 sm:w-6 sm:h-6 inline-flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+                <i className="ri-whatsapp-fill text-lg sm:text-xl"></i>
               </div>
               <DynamicContent 
                 page="home" 
@@ -168,11 +168,12 @@ export default function HeroSection() {
                 contentType="button_primary"
                 fallback="WHATSAPP BERATUNG"
                 tag="span"
+                className="min-w-0 truncate"
               />
             </button>
-            <Link href="/kontakt" className="bg-white text-[#C04020] px-8 sm:px-10 py-5 sm:py-6 text-lg sm:text-xl font-black rounded-2xl hover:bg-gray-50 transition-all duration-300 whitespace-nowrap cursor-pointer shadow-2xl border-2 border-[#C04020] transform hover:scale-105 w-full sm:w-auto inline-flex items-center justify-center">
-              <div className="w-6 h-6 inline-flex items-center justify-center mr-3">
-                <i className="ri-phone-fill text-xl"></i>
+            <Link href="/kontakt" className="bg-white text-[#C04020] px-6 sm:px-10 py-5 sm:py-6 text-base sm:text-xl font-black rounded-2xl hover:bg-gray-50 transition-all duration-300 cursor-pointer shadow-2xl border-2 border-[#C04020] transform hover:scale-105 w-full sm:w-auto inline-flex items-center justify-center min-w-0">
+              <div className="w-7 h-7 sm:w-6 sm:h-6 inline-flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+                <i className="ri-phone-fill text-lg sm:text-xl"></i>
               </div>
               <DynamicContent 
                 page="home" 
@@ -180,6 +181,7 @@ export default function HeroSection() {
                 contentType="button_secondary"
                 fallback="KOSTENLOSE BERATUNG"
                 tag="span"
+                className="min-w-0 truncate"
               />
             </Link>
           </div>

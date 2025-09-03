@@ -110,15 +110,7 @@ export default function AGBPage() {
                         Mehrwertsteuer. Zusätzlich fallen Lieferkosten an, die vor Vertragsabschluss ausgewiesen werden.
                       </p>
                       
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <h4 className="font-bold text-green-900 mb-2">Mengenrabatte</h4>
-                        <ul className="text-green-800 text-sm space-y-1">
-                          <li>• 3-9 SRM: Standardpreis</li>
-                          <li>• 10-19 SRM: 5% Mengenrabatt</li>
-                          <li>• 20-49 SRM: 8% Mengenrabatt</li>
-                          <li>• ab 50 SRM: 12% Mengenrabatt</li>
-                        </ul>
-                      </div>
+
                     </div>
                     
                     <div>
@@ -164,7 +156,7 @@ export default function AGBPage() {
                     <div>
                       <h3 className="text-lg font-bold text-[#1A1A1A] mb-3">3.2 Liefergebiet</h3>
                       <p className="text-gray-700 leading-relaxed">
-                        Wir liefern im Umkreis von 50 km um Bad Neustadt a.d.Saale. Für größere Entfernungen 
+                        Wir liefern im Umkreis von 150 km von 36419 Butlar. Für größere Entfernungen 
                         können zusätzliche Transportkosten anfallen.
                       </p>
                     </div>
