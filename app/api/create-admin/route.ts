@@ -52,8 +52,6 @@ export async function POST(request: NextRequest) {
     
     console.log('🔧 Creating admin user:', { email, name, role })
     
-    const supabaseAdmin = getSupabaseAdmin()
-    
     // Prüfe ob Admin bereits existiert
     const { data: existingAdmin, error: checkError } = await supabaseAdmin
       .from('admin_users')
@@ -130,8 +128,6 @@ export async function GET(request: NextRequest) {
     }
     
     console.log('🔍 Checking admin user:', email)
-    
-    const supabaseAdmin = getSupabaseAdmin()
     
     // Prüfe Admin-Benutzer
     const { data: admin, error } = await supabaseAdmin
