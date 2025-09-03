@@ -60,8 +60,6 @@ export async function GET(request: NextRequest) {
     
     console.log('🔍 API Admin check for:', email)
     
-    const supabaseAdmin = getSupabaseAdmin()
-    
     // Admin-Berechtigung prüfen
     const { data: adminData, error: adminError } = await supabaseAdmin
       .from('admin_users')
