@@ -75,9 +75,11 @@ export default function ProcessSection() {
               {/* Step 1 */}
               <div className="text-center">
                 <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-gray-100 overflow-visible">
-                  <div className="w-20 h-20 flex items-center justify-center bg-gradient-to-br from-[#C04020] to-[#A03318] rounded-2xl mx-auto mb-6 shadow-lg relative mt-3 mr-3">
-                    <i className="ri-shopping-cart-line text-white text-3xl"></i>
-                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-[#D4A520] rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg">
+                  <div className="relative mx-auto mb-6">
+                    <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-gradient-to-br from-[#C04020] to-[#A03318] rounded-2xl shadow-lg">
+                      <i className="ri-shopping-cart-line text-white text-2xl md:text-3xl"></i>
+                    </div>
+                    <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-6 h-6 md:w-8 md:h-8 bg-[#D4A520] rounded-full flex items-center justify-center text-white font-black text-xs md:text-sm shadow-lg">
                       1
                     </div>
                   </div>
@@ -117,9 +119,11 @@ export default function ProcessSection() {
               {/* Step 2 */}
               <div className="text-center">
                 <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-gray-100 overflow-visible">
-                  <div className="w-20 h-20 flex items-center justify-center bg-gradient-to-br from-[#D4A520] to-[#B8941A] rounded-2xl mx-auto mb-6 shadow-lg relative mt-3 mr-3">
-                    <i className="ri-calendar-check-line text-white text-3xl"></i>
-                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-[#C04020] rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg">
+                  <div className="relative mx-auto mb-6">
+                    <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-gradient-to-br from-[#D4A520] to-[#B8941A] rounded-2xl shadow-lg">
+                      <i className="ri-calendar-check-line text-white text-2xl md:text-3xl"></i>
+                    </div>
+                    <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-6 h-6 md:w-8 md:h-8 bg-[#C04020] rounded-full flex items-center justify-center text-white font-black text-xs md:text-sm shadow-lg">
                       2
                     </div>
                   </div>
@@ -159,9 +163,11 @@ export default function ProcessSection() {
               {/* Step 3 */}
               <div className="text-center">
                 <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-gray-100 overflow-visible">
-                  <div className="w-20 h-20 flex items-center justify-center bg-gradient-to-br from-[#C04020] to-[#A03318] rounded-2xl mx-auto mb-6 shadow-lg relative mt-3 mr-3">
-                    <i className="ri-truck-line text-white text-3xl"></i>
-                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-[#D4A520] rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg">
+                  <div className="relative mx-auto mb-6">
+                    <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-gradient-to-br from-[#C04020] to-[#A03318] rounded-2xl shadow-lg">
+                      <i className="ri-truck-line text-white text-2xl md:text-3xl"></i>
+                    </div>
+                    <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-6 h-6 md:w-8 md:h-8 bg-[#D4A520] rounded-full flex items-center justify-center text-white font-black text-xs md:text-sm shadow-lg">
                       3
                     </div>
                   </div>
@@ -201,9 +207,11 @@ export default function ProcessSection() {
               {/* Step 4 */}
               <div className="text-center">
                 <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-gray-100 overflow-visible">
-                  <div className="w-20 h-20 flex items-center justify-center bg-gradient-to-br from-[#C04020] to-[#A03318] rounded-2xl mx-auto mb-6 shadow-lg relative mt-3 mr-3">
-                    <i className="ri-fire-line text-white text-3xl"></i>
-                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-[#C04020] rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg">
+                  <div className="relative mx-auto mb-6">
+                    <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-gradient-to-br from-[#C04020] to-[#A03318] rounded-2xl shadow-lg">
+                      <i className="ri-fire-line text-white text-2xl md:text-3xl"></i>
+                    </div>
+                    <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-6 h-6 md:w-8 md:h-8 bg-[#C04020] rounded-full flex items-center justify-center text-white font-black text-xs md:text-sm shadow-lg">
                       4
                     </div>
                   </div>

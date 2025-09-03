@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["nodejs", "curl"]
+nixPkgs = ["nodejs_18", "curl", "wget"]
 
 [phases.install]
 cmds = ["npm ci"]
@@ -14,3 +14,4 @@ cmd = "npm run start"
 NODE_ENV = "production"
 PORT = "3000"
 NEXT_TELEMETRY_DISABLED = "1"
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
