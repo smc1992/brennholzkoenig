@@ -1,0 +1,32 @@
+# Minimal Nixpacks Configuration - Stack Smashing Fix
+# Use this configuration if the standard nixpacks.toml still fails
+
+[phases.setup]
+nixPkgs = ["nodejs_18"]
+
+[phases.install]
+cmds = [
+  "npm config set fund false",
+  "npm config set audit false",
+  "npm ci --only=production --no-optional"
+]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm run start"
+
+[variables]
+NODE_ENV = "production"
+PORT = "3000"
+NEXT_TELEMETRY_DISABLED = "1"
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
+NPM_CONFIG_PRODUCTION = "true"
+NPM_CONFIG_FUND = "false"
+NPM_CONFIG_AUDIT = "false"
+NPM_CONFIG_UPDATE_NOTIFIER = "false"
+
+# Disable apt-get usage
+[providers]
+apt = false

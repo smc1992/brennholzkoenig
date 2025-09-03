@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
 import { safeJsonParse } from '@/lib/jsonHelper';
 
 export default function Header() {
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -436,20 +438,23 @@ export default function Header() {
           >
             {!isLoggedIn ? (
               <div style={{padding: '12px 16px'}}>
-                <a
-                  href="/konto"
+                <button
                   style={{
                     display: 'block',
                     fontSize: '14px',
                     fontWeight: '600',
                     color: '#111827',
                     textDecoration: 'none',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    width: '100%',
+                    textAlign: 'left'
                   }}
-                  onClick={(e) => {
-                    e.preventDefault();
+                  onClick={() => {
                     setIsAccountDropdownOpen(false);
-                    window.location.href = '/konto';
+                    router.push('/konto');
                   }}
                   onMouseEnter={(e) => {
                     const target = e.target as HTMLElement;
@@ -461,7 +466,7 @@ export default function Header() {
                   }}
                 >
                   Anmelden / Registrieren
-                </a>
+                </button>
                 <p style={{fontSize: '12px', color: '#6b7280', marginTop: '4px'}}>Zugang zu Ihrem Konto</p>
               </div>
             ) : (

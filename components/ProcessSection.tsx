@@ -75,15 +75,11 @@ export default function ProcessSection() {
               {/* Step 1 */}
               <div className="text-center">
                 <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-gray-100 overflow-visible">
-                  <div className="relative mx-auto mb-6">
-                    <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-gradient-to-br from-[#C04020] to-[#A03318] rounded-2xl shadow-lg">
-                      <i className="ri-shopping-cart-line text-white text-2xl md:text-3xl"></i>
-                    </div>
-                    <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-6 h-6 md:w-8 md:h-8 bg-[#D4A520] rounded-full flex items-center justify-center text-white font-black text-xs md:text-sm shadow-lg">
-                      1
-                    </div>
+                  <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-gradient-to-br from-[#C04020] to-[#A03318] rounded-2xl shadow-lg mx-auto mb-6">
+                    <i className="ri-shopping-cart-line text-white text-2xl md:text-3xl"></i>
                   </div>
-                  <h3 className="text-xl md:text-2xl font-black text-[#1A1A1A] mb-4" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+                  <h3 className="text-xl md:text-2xl font-black text-[#1A1A1A] mb-4 flex items-center justify-center gap-2" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+                    <span className="w-6 h-6 md:w-7 md:h-7 bg-[#D4A520] rounded-full flex items-center justify-center text-white font-black text-xs md:text-sm aspect-square">1</span>
                     <DynamicContent
                       page="home"
                       section="process"
@@ -119,15 +115,11 @@ export default function ProcessSection() {
               {/* Step 2 */}
               <div className="text-center">
                 <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-gray-100 overflow-visible">
-                  <div className="relative mx-auto mb-6">
-                    <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-gradient-to-br from-[#D4A520] to-[#B8941A] rounded-2xl shadow-lg">
-                      <i className="ri-calendar-check-line text-white text-2xl md:text-3xl"></i>
-                    </div>
-                    <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-6 h-6 md:w-8 md:h-8 bg-[#C04020] rounded-full flex items-center justify-center text-white font-black text-xs md:text-sm shadow-lg">
-                      2
-                    </div>
+                  <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-gradient-to-br from-[#D4A520] to-[#B8941A] rounded-2xl shadow-lg mx-auto mb-6">
+                    <i className="ri-calendar-check-line text-white text-2xl md:text-3xl"></i>
                   </div>
-                  <h3 className="text-xl md:text-2xl font-black text-[#1A1A1A] mb-4" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+                  <h3 className="text-xl md:text-2xl font-black text-[#1A1A1A] mb-4 flex items-center justify-center gap-2" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+                    <span className="w-6 h-6 md:w-7 md:h-7 bg-[#C04020] rounded-full flex items-center justify-center text-white font-black text-xs md:text-sm aspect-square">2</span>
                     <DynamicContent
                       page="home"
                       section="process"
@@ -163,15 +155,11 @@ export default function ProcessSection() {
               {/* Step 3 */}
               <div className="text-center">
                 <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-gray-100 overflow-visible">
-                  <div className="relative mx-auto mb-6">
-                    <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-gradient-to-br from-[#C04020] to-[#A03318] rounded-2xl shadow-lg">
-                      <i className="ri-truck-line text-white text-2xl md:text-3xl"></i>
-                    </div>
-                    <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-6 h-6 md:w-8 md:h-8 bg-[#D4A520] rounded-full flex items-center justify-center text-white font-black text-xs md:text-sm shadow-lg">
-                      3
-                    </div>
+                  <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-gradient-to-br from-[#C04020] to-[#A03318] rounded-2xl shadow-lg mx-auto mb-6">
+                    <i className="ri-truck-line text-white text-2xl md:text-3xl"></i>
                   </div>
-                  <h3 className="text-xl md:text-2xl font-black text-[#1A1A1A] mb-4" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+                  <h3 className="text-xl md:text-2xl font-black text-[#1A1A1A] mb-4 flex items-center justify-center gap-2" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+                    <span className="w-6 h-6 md:w-7 md:h-7 bg-[#D4A520] rounded-full flex items-center justify-center text-white font-black text-xs md:text-sm aspect-square">3</span>
                     <DynamicContent
                       page="home"
                       section="process"
@@ -207,20 +195,16 @@ export default function ProcessSection() {
               {/* Step 4 */}
               <div className="text-center">
                 <div className="bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-gray-100 overflow-visible">
-                  <div className="relative mx-auto mb-6">
-                    <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-gradient-to-br from-[#C04020] to-[#A03318] rounded-2xl shadow-lg">
-                      <i className="ri-fire-line text-white text-2xl md:text-3xl"></i>
-                    </div>
-                    <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-6 h-6 md:w-8 md:h-8 bg-[#C04020] rounded-full flex items-center justify-center text-white font-black text-xs md:text-sm shadow-lg">
-                      4
-                    </div>
+                  <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-gradient-to-br from-[#C04020] to-[#A03318] rounded-2xl shadow-lg mx-auto mb-6">
+                    <i className="ri-fire-line text-white text-2xl md:text-3xl"></i>
                   </div>
-                  <h3 className="text-xl md:text-2xl font-black text-[#1A1A1A] mb-4" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+                  <h3 className="text-xl md:text-2xl font-black text-[#1A1A1A] mb-4 flex items-center justify-center gap-2" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+                    <span className="w-6 h-6 md:w-7 md:h-7 bg-[#C04020] rounded-full flex items-center justify-center text-white font-black text-xs md:text-sm aspect-square">4</span>
                     <DynamicContent
                       page="home"
                       section="process"
                       contentType="step4_title"
-                      fallback="GENIESSEN"
+                      fallback="GENIEßEN"
                     />
                   </h3>
                   <p className="text-sm md:text-base text-gray-700 mb-4">
