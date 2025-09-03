@@ -36,32 +36,34 @@ function getSupabaseAdminClient() {
   return createClient(supabaseUrl, serviceRoleKey);
 }
 
-// Handlebars Helpers
-Handlebars.registerHelper('formatDate', function(date: string) {
-  if (!date) return '-';
-  return new Date(date).toLocaleDateString('de-DE', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
+// Handlebars Helpers - nur registrieren wenn Handlebars verfügbar ist
+if (Handlebars) {
+  Handlebars.registerHelper('formatDate', function(date: string) {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('de-DE', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
   });
-});
 
-Handlebars.registerHelper('formatCurrency', function(amount: number) {
-  if (typeof amount !== 'number') return '0,00 €';
-  return new Intl.NumberFormat('de-DE', {
-    style: 'currency',
-    currency: 'EUR'
-  }).format(amount);
-});
+  Handlebars.registerHelper('formatCurrency', function(amount: number) {
+    if (typeof amount !== 'number') return '0,00 €';
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: 'EUR'
+    }).format(amount);
+  });
 
-Handlebars.registerHelper('formatNumber', function(number: number) {
-  if (typeof number !== 'number') return '0';
-  return new Intl.NumberFormat('de-DE').format(number);
-});
+  Handlebars.registerHelper('formatNumber', function(number: number) {
+    if (typeof number !== 'number') return '0';
+    return new Intl.NumberFormat('de-DE').format(number);
+  });
 
-Handlebars.registerHelper('add', function(a: number, b: number) {
-  return a + b;
-});
+  Handlebars.registerHelper('add', function(a: number, b: number) {
+    return (a || 0) + (b || 0);
+  });
+}
 
 // Interface Definitionen
 interface InvoiceData {

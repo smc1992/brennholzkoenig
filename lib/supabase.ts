@@ -55,10 +55,32 @@ function createSupabaseClient() {
           }
        }),
       auth: {
-        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
-        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-        signInWithPassword: (credentials: any) => Promise.resolve({ data: { user: null, session: null }, error: null }),
-        signOut: () => Promise.resolve({ error: null }),
+        getUser: () => {
+          logMockWarning('AUTH getUser');
+          return Promise.resolve({ data: { user: null }, error: { message: 'Mock client - no database connection. Configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY' } });
+        },
+        getSession: () => {
+          logMockWarning('AUTH getSession');
+          return Promise.resolve({ data: { session: null }, error: { message: 'Mock client - no database connection' } });
+        },
+        signInWithPassword: (credentials: any) => {
+          logMockWarning('AUTH signInWithPassword');
+          return Promise.resolve({ 
+            data: { user: null, session: null }, 
+            error: { message: 'Anmeldung nicht möglich - Datenbankverbindung fehlt. Bitte konfigurieren Sie die Supabase-Umgebungsvariablen.' } 
+          });
+        },
+        signUp: (credentials: any) => {
+          logMockWarning('AUTH signUp');
+          return Promise.resolve({ 
+            data: { user: null, session: null }, 
+            error: { message: 'Registrierung nicht möglich - Datenbankverbindung fehlt. Bitte konfigurieren Sie die Supabase-Umgebungsvariablen.' } 
+          });
+        },
+        signOut: () => {
+          logMockWarning('AUTH signOut');
+          return Promise.resolve({ error: null });
+        },
         onAuthStateChange: (callback: any) => ({ data: { subscription: { unsubscribe: () => {} } } })
       },
       storage: {
@@ -119,9 +141,16 @@ function createSupabaseLegacyClient() {
         })
       }),
       auth: {
-        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
-        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-        signInWithPassword: (credentials: any) => Promise.resolve({ data: { user: null, session: null }, error: null }),
+        getUser: () => Promise.resolve({ data: { user: null }, error: { message: 'Mock client - no database connection. Configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY' } }),
+        getSession: () => Promise.resolve({ data: { session: null }, error: { message: 'Mock client - no database connection' } }),
+        signInWithPassword: (credentials: any) => Promise.resolve({ 
+          data: { user: null, session: null }, 
+          error: { message: 'Anmeldung nicht möglich - Datenbankverbindung fehlt. Bitte konfigurieren Sie die Supabase-Umgebungsvariablen.' } 
+        }),
+        signUp: (credentials: any) => Promise.resolve({ 
+          data: { user: null, session: null }, 
+          error: { message: 'Registrierung nicht möglich - Datenbankverbindung fehlt. Bitte konfigurieren Sie die Supabase-Umgebungsvariablen.' } 
+        }),
         signOut: () => Promise.resolve({ error: null }),
         onAuthStateChange: (callback: any) => ({ data: { subscription: { unsubscribe: () => {} } } })
       },
