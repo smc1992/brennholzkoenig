@@ -24,10 +24,12 @@ export const revalidate = false;
 // Supabase Admin Client wird zur Laufzeit erstellt
 function getSupabaseAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const serviceRoleKey = process.env.NEXT_PUBLIC_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   
   if (!supabaseUrl || !serviceRoleKey) {
     console.warn('Supabase environment variables not configured for app-api-invoices-[id]-route route');
+    console.warn('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? 'SET' : 'MISSING');
+    console.warn('NEXT_PUBLIC_SERVICE_ROLE_KEY:', serviceRoleKey ? 'SET' : 'MISSING');
     return null;
   }
   
