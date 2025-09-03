@@ -33,7 +33,6 @@ function getSupabaseAdminClient() {
   
   return createClient(supabaseUrl, serviceRoleKey);
 }
-}
 
 // Handlebars Helpers
 Handlebars.registerHelper('formatDate', function(date: string) {
