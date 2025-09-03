@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { safeJsonParse } from '@/lib/jsonHelper';
+import { supabase } from '@/lib/supabase';
 
 export default function Header() {
   const router = useRouter();
@@ -21,12 +22,17 @@ export default function Header() {
     isMountedRef.current = true;
     setIsMounted(true);
 
-    // Check login status
-    const checkLoginStatus = () => {
+    // Check login status with Supabase Auth
+    const checkLoginStatus = async () => {
       try {
-        const userToken = localStorage.getItem('userToken');
-        const userData = localStorage.getItem('userData');
-        setIsLoggedIn(!!(userToken && userData));
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error) {
+          console.warn('Fehler beim Überprüfen des Login-Status:', error);
+          setIsLoggedIn(false);
+          return;
+        }
+        setIsLoggedIn(!!user);
+        console.log('🔍 Login Status Check:', user ? 'Eingeloggt' : 'Nicht eingeloggt', user?.email);
       } catch (error) {
         console.warn('Fehler beim Überprüfen des Login-Status:', error);
         setIsLoggedIn(false);
@@ -35,17 +41,16 @@ export default function Header() {
 
     checkLoginStatus();
 
-    // Listen for login/logout events
-    const handleAuthChange = () => {
-      checkLoginStatus();
-    };
-
-    window.addEventListener('authChanged', handleAuthChange);
-
-    return () => {
-      isMountedRef.current = false;
-      window.removeEventListener('authChanged', handleAuthChange);
-    };
+    // Listen for Supabase auth state changes
+     const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, session: any) => {
+       console.log('🔍 Auth State Change:', event, session?.user?.email);
+       setIsLoggedIn(!!session?.user);
+     });
+ 
+     return () => {
+       isMountedRef.current = false;
+       subscription.unsubscribe();
+     };
   }, []);
 
   useEffect(() => {
@@ -527,6 +532,53 @@ export default function Header() {
                       {item.name}
                     </a>
                   ))}
+                  
+                  {/* Logout Button */}
+                  <button
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '8px 16px',
+                      fontSize: '14px',
+                      color: '#dc2626',
+                      textDecoration: 'none',
+                      cursor: 'pointer',
+                      background: 'none',
+                      border: 'none',
+                      width: '100%',
+                      textAlign: 'left',
+                      borderTop: '1px solid #f3f4f6',
+                      marginTop: '8px',
+                      paddingTop: '12px'
+                    }}
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      setIsAccountDropdownOpen(false);
+                      console.log('🔍 Logout button clicked');
+                      try {
+                        await supabase.auth.signOut();
+                        console.log('✅ Logout successful');
+                        window.location.href = '/';
+                      } catch (error) {
+                        console.error('❌ Logout error:', error);
+                      }
+                    }}
+                    onMouseEnter={(e) => {
+                       const target = e.target as HTMLElement;
+                       target.style.backgroundColor = '#fef2f2';
+                       target.style.color = '#b91c1c';
+                     }}
+                     onMouseLeave={(e) => {
+                       const target = e.target as HTMLElement;
+                       target.style.backgroundColor = 'transparent';
+                       target.style.color = '#dc2626';
+                     }}
+                  >
+                    <div style={{width: '20px', height: '20px', marginRight: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                      <i className="ri-logout-box-line" style={{color: '#dc2626'}}></i>
+                    </div>
+                    Abmelden
+                  </button>
                 </div>
               </>
             )}
