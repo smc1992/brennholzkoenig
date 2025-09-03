@@ -156,7 +156,12 @@ interface TemplateData {
 // Daten aus Datenbank laden
 async function loadInvoiceData(invoiceId: string): Promise<TemplateData | null> {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = getSupabaseAdminClient();
+    
+    if (!supabase) {
+      console.error('❌ Supabase client not configured');
+      return null;
+    }
     
     // Debug: Alle verfügbaren Rechnungen anzeigen
     const { data: allInvoices, error: allError } = await supabase
@@ -192,7 +197,7 @@ async function loadInvoiceData(invoiceId: string): Promise<TemplateData | null> 
           invoiceId, 
           invoiceError: invoiceError?.message, 
           numberError: numberError?.message,
-          availableInvoices: allInvoices?.map(i => ({ id: i.id, number: i.invoice_number }))
+          availableInvoices: allInvoices?.map((i: any) => ({ id: i.id, number: i.invoice_number }))
         });
         return null;
       }
