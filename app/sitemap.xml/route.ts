@@ -1,7 +1,25 @@
 
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
+// Runtime-Konfiguration für Node.js Kompatibilität
+export const runtime = 'nodejs';
+
+// Verhindert Pre-rendering während des Builds
 export const dynamic = 'force-dynamic';
+export const revalidate = false;
+
+// Supabase Client wird zur Laufzeit erstellt
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    console.warn('Supabase environment variables not configured for sitemap route');
+    return null;
+  }
+  
+  return createClient(supabaseUrl, supabaseKey);
+}
 
 export async function GET() {
   const baseUrl = 'https://brennholz-koenig.de';
@@ -19,48 +37,55 @@ export async function GET() {
     { url: '/widerrufsrecht', priority: '0.3', changefreq: 'yearly' }
   ];
 
+  // Supabase Client zur Laufzeit erstellen
+  const supabase = getSupabaseClient();
+  
   // Blog-Artikel laden
   let blogUrls: any[] = [];
-  try {
-    const { data: blogPosts } = await supabase
-      .from('page_contents')
-      .select('slug, updated_at')
-      .eq('content_type', 'blog_post')
-      .eq('status', 'published')
-      .eq('is_active', true);
+  if (supabase) {
+    try {
+      const { data: blogPosts } = await supabase
+        .from('page_contents')
+        .select('slug, updated_at')
+        .eq('content_type', 'blog_post')
+        .eq('status', 'published')
+        .eq('is_active', true);
 
-    if (blogPosts) {
-      blogUrls = blogPosts.map(post => ({
-        url: `/blog/${String(post.slug || '')}`,
-        priority: '0.7',
-        changefreq: 'weekly',
-        lastmod: new Date(String(post.updated_at || new Date())).toISOString().split('T')[0]
-      }));
+      if (blogPosts) {
+        blogUrls = blogPosts.map(post => ({
+          url: `/blog/${String(post.slug || '')}`,
+          priority: '0.7',
+          changefreq: 'weekly',
+          lastmod: new Date(String(post.updated_at || new Date())).toISOString().split('T')[0]
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading blog posts for sitemap:', error);
     }
-  } catch (error) {
-    console.error('Error loading blog posts for sitemap:', error);
   }
 
   // Produkte laden
   let productUrls: any[] = [];
-  try {
-    const { data: products } = await supabase
-      .from('page_contents')
-      .select('slug, updated_at')
-      .eq('content_type', 'product')
-      .eq('status', 'published')
-      .eq('is_active', true);
+  if (supabase) {
+    try {
+      const { data: products } = await supabase
+        .from('page_contents')
+        .select('slug, updated_at')
+        .eq('content_type', 'product')
+        .eq('status', 'published')
+        .eq('is_active', true);
 
-    if (products) {
-      productUrls = products.map(product => ({
-        url: `/shop/${String(product.slug || '')}`,
-        priority: '0.8',
-        changefreq: 'weekly',
-        lastmod: new Date(String(product.updated_at || new Date())).toISOString().split('T')[0]
-      }));
+      if (products) {
+        productUrls = products.map(product => ({
+          url: `/shop/${String(product.slug || '')}`,
+          priority: '0.8',
+          changefreq: 'weekly',
+          lastmod: new Date(String(product.updated_at || new Date())).toISOString().split('T')[0]
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading products for sitemap:', error);
     }
-  } catch (error) {
-    console.error('Error loading products for sitemap:', error);
   }
 
   // Alle URLs kombinieren
