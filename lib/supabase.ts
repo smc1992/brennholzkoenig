@@ -8,11 +8,48 @@ function createSupabaseClient() {
   
   if (!supabaseUrl || !supabaseAnonKey) {
     console.warn('Supabase environment variables not configured');
-    // Return a mock client for build-time
+    // Return a comprehensive mock client for production fallback
     return {
-      from: () => ({ select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: null, error: null }) }) }) }),
-      auth: { getUser: () => Promise.resolve({ data: { user: null }, error: null }) },
-      storage: { from: () => ({ upload: () => Promise.resolve({ data: null, error: null }) }) }
+      from: (table: string) => ({
+        select: (columns?: string) => ({
+          eq: (column: string, value: any) => ({
+            single: () => Promise.resolve({ data: null, error: null }),
+            limit: (count: number) => Promise.resolve({ data: [], error: null }),
+            order: (column: string, options?: any) => Promise.resolve({ data: [], error: null })
+          }),
+          limit: (count: number) => Promise.resolve({ data: [], error: null }),
+          order: (column: string, options?: any) => Promise.resolve({ data: [], error: null })
+        }),
+        insert: (values: any) => Promise.resolve({ data: null, error: null }),
+        update: (values: any) => ({
+          eq: (column: string, value: any) => Promise.resolve({ data: null, error: null })
+        }),
+        delete: () => ({
+          eq: (column: string, value: any) => Promise.resolve({ data: null, error: null })
+        })
+      }),
+      auth: {
+        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+        signInWithPassword: (credentials: any) => Promise.resolve({ data: { user: null, session: null }, error: null }),
+        signOut: () => Promise.resolve({ error: null }),
+        onAuthStateChange: (callback: any) => ({ data: { subscription: { unsubscribe: () => {} } } })
+      },
+      storage: {
+        from: (bucket: string) => ({
+          upload: (path: string, file: any, options?: any) => Promise.resolve({ data: null, error: null }),
+          download: (path: string) => Promise.resolve({ data: null, error: null }),
+          remove: (paths: string[]) => Promise.resolve({ data: null, error: null }),
+          list: (path?: string, options?: any) => Promise.resolve({ data: [], error: null })
+        })
+      },
+      channel: (name: string, options?: any) => ({
+        on: (event: string, filter: any, callback: any) => ({ subscribe: () => Promise.resolve('SUBSCRIBED') }),
+        subscribe: () => Promise.resolve('SUBSCRIBED'),
+        unsubscribe: () => Promise.resolve('CLOSED')
+      }),
+      removeChannel: (channel: any) => Promise.resolve('OK'),
+      removeAllChannels: () => Promise.resolve('OK')
     } as any;
   }
   
@@ -25,10 +62,48 @@ function createSupabaseLegacyClient() {
   
   if (!supabaseUrl || !supabaseAnonKey) {
     console.warn('Supabase environment variables not configured');
+    // Return the same comprehensive mock client
     return {
-      from: () => ({ select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: null, error: null }) }) }) }),
-      auth: { getUser: () => Promise.resolve({ data: { user: null }, error: null }) },
-      storage: { from: () => ({ upload: () => Promise.resolve({ data: null, error: null }) }) }
+      from: (table: string) => ({
+        select: (columns?: string) => ({
+          eq: (column: string, value: any) => ({
+            single: () => Promise.resolve({ data: null, error: null }),
+            limit: (count: number) => Promise.resolve({ data: [], error: null }),
+            order: (column: string, options?: any) => Promise.resolve({ data: [], error: null })
+          }),
+          limit: (count: number) => Promise.resolve({ data: [], error: null }),
+          order: (column: string, options?: any) => Promise.resolve({ data: [], error: null })
+        }),
+        insert: (values: any) => Promise.resolve({ data: null, error: null }),
+        update: (values: any) => ({
+          eq: (column: string, value: any) => Promise.resolve({ data: null, error: null })
+        }),
+        delete: () => ({
+          eq: (column: string, value: any) => Promise.resolve({ data: null, error: null })
+        })
+      }),
+      auth: {
+        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+        signInWithPassword: (credentials: any) => Promise.resolve({ data: { user: null, session: null }, error: null }),
+        signOut: () => Promise.resolve({ error: null }),
+        onAuthStateChange: (callback: any) => ({ data: { subscription: { unsubscribe: () => {} } } })
+      },
+      storage: {
+        from: (bucket: string) => ({
+          upload: (path: string, file: any, options?: any) => Promise.resolve({ data: null, error: null }),
+          download: (path: string) => Promise.resolve({ data: null, error: null }),
+          remove: (paths: string[]) => Promise.resolve({ data: null, error: null }),
+          list: (path?: string, options?: any) => Promise.resolve({ data: [], error: null })
+        })
+      },
+      channel: (name: string, options?: any) => ({
+        on: (event: string, filter: any, callback: any) => ({ subscribe: () => Promise.resolve('SUBSCRIBED') }),
+        subscribe: () => Promise.resolve('SUBSCRIBED'),
+        unsubscribe: () => Promise.resolve('CLOSED')
+      }),
+      removeChannel: (channel: any) => Promise.resolve('OK'),
+      removeAllChannels: () => Promise.resolve('OK')
     } as any;
   }
   
