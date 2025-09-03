@@ -233,7 +233,13 @@ export default function Header() {
               {/* Account Dropdown */}
               <div className="relative z-[9999]" ref={accountDropdownRef}>
                 <button
-                  onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🔍 Account dropdown button clicked, current state:', isAccountDropdownOpen);
+                    setIsAccountDropdownOpen(!isAccountDropdownOpen);
+                    console.log('🔍 Account dropdown new state:', !isAccountDropdownOpen);
+                  }}
                   className={`flex items-center space-x-1 sm:space-x-2 hover:text-orange-600 transition-colors cursor-pointer ${isScrolled ? 'text-gray-700' : 'text-white'}`}
                 >
                   <div className="w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center flex-shrink-0">
@@ -452,9 +458,19 @@ export default function Header() {
                     width: '100%',
                     textAlign: 'left'
                   }}
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🔍 Anmelden/Registrieren Button clicked');
                     setIsAccountDropdownOpen(false);
-                    router.push('/konto');
+                    try {
+                      router.push('/konto');
+                      console.log('✅ Navigation to /konto initiated');
+                    } catch (error) {
+                      console.error('❌ Navigation error:', error);
+                      // Fallback navigation
+                      window.location.href = '/konto';
+                    }
                   }}
                   onMouseEnter={(e) => {
                     const target = e.target as HTMLElement;
