@@ -1,12 +1,30 @@
 
 import { Suspense } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import BlogContent from './BlogContent';
 
-export async function generateStaticParams() {
-  // Using the centralized Supabase client from lib/supabase.ts
+// Sichere Supabase Client-Erstellung für Build-Zeit
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    console.warn('Supabase environment variables not configured for blog page');
+    return null;
+  }
+  
+  return createClient(supabaseUrl, supabaseKey);
+}
 
+export async function generateStaticParams() {
   try {
+    const supabase = getSupabaseClient();
+    
+    if (!supabase) {
+      console.warn('Supabase not configured, returning empty static params');
+      return [];
+    }
+
     const { data } = await supabase
       .from('page_contents')
       .select('slug')
@@ -22,9 +40,16 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
-  // Using the centralized Supabase client from lib/supabase.ts
-
   try {
+    const supabase = getSupabaseClient();
+    
+    if (!supabase) {
+      return {
+        title: 'Blog Post',
+        description: 'Blog post content'
+      };
+    }
+
     const { data } = await supabase
       .from('page_contents')
       .select('title, excerpt, meta_title, meta_description, focus_keywords')
