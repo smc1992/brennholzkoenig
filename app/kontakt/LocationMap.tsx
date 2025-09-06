@@ -42,7 +42,7 @@ export default function LocationMap() {
                     MOBIL
                   </h3>
                   <div className="space-y-1">
-                    <p className="font-bold text-base sm:text-lg text-[#C04020]">0176-22572100</p>
+                    <a href="tel:+4917671085234" className="font-bold text-base sm:text-lg text-[#C04020] hover:text-[#A03318] transition-colors duration-300 cursor-pointer">+49 176 71085234</a>
                     <p className="text-xs sm:text-sm text-gray-600">Für Express-Lieferungen</p>
                   </div>
                 </div>

@@ -169,7 +169,7 @@ export default function ContactForm() {
 
             <div class="footer">
                 <p><strong>Brennholzkönig - Premium Brennholz</strong></p>
-                <p> Für Rückfragen: <a href="tel:${data.phone || '+49 661 123-4567'}">${data.phone || '+49 661 123-4567'}</a></p>
+                <p> Für Rückfragen: <a href="tel:${data.phone || '+49 176 71085234'}">${data.phone || '+49 176 71085234'}</a></p>
                 <p> Antworten Sie direkt auf diese E-Mail: <a href="mailto:${data.email}">${data.email}</a></p>
                 <p class="timestamp">Automatisch generiert am ${currentDate}</p>
             </div>
@@ -374,7 +374,7 @@ Eingegangen am: ${new Date().toLocaleString('de-DE')}
                     value={formData.phone}
                     onChange={handleChange}
                     className="w-full px-3 sm:px-4 py-3 sm:py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C04020] focus:border-[#C04020] transition-all duration-300 text-sm font-medium hover:border-[#D4A520]"
-                    placeholder="+49 661 123-4567"
+                    placeholder="+49 176 71085234"
                   />
                 </div>
                 <div className="transition-all duration-300">

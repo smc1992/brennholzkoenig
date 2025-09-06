@@ -1,7 +1,10 @@
+'use client';
+
 import HeroSection from '@/components/HeroSection';
 import USPSection from '@/components/USPSection';
 import QualifierSection from '@/components/QualifierSection';
 import TrustSection from '../components/TrustSection';
+import Link from 'next/link';
 import TestimonialSection from '@/components/TestimonialSection';
 import CostCalculatorSection from '@/components/CostCalculatorSection';
 import ComparisonSection from '@/components/ComparisonSection';
@@ -10,31 +13,12 @@ import SafetySection from '@/components/SafetySection';
 import OptimizedProductSection from '../components/OptimizedProductSection';
 import RegionSection from '@/components/RegionSection';
 import SEOMetadata from '../components/SEOMetadata';
-import { createServerSupabase } from '@/lib/supabase-server';
-
-export default async function Home() {
+export default function Home() {
   const startTime = Date.now();
   
-  // Server-Side Product Preloading für Homepage
-  const supabase = createServerSupabase();
-  let products = [];
-  let error = null;
-  
-  try {
-    const { data, error: fetchError } = await supabase
-      .from('products')
-      .select('*')
-      .eq('is_active', true)
-      .eq('in_stock', true)
-      .limit(3)
-      .order('id');
-    
-    if (fetchError) throw fetchError;
-    products = data || [];
-  } catch (err: any) {
-    error = err.message;
-    console.error('Homepage: Fehler beim Laden der Produkte:', err);
-  }
+  // Client-Side - Products werden von den Komponenten selbst geladen
+  const products: any[] = [];
+  const error = null;
   
   const loadTime = Date.now() - startTime;
   console.log(`🏠 Homepage products preloaded in ${loadTime}ms: { productCount: ${products.length}, loadTime: ${loadTime}, hasError: ${!!error} }`);
@@ -45,6 +29,8 @@ export default async function Home() {
         defaultTitle="Brennholz König - Premium Brennholz & Kaminholz online kaufen"
         defaultDescription="Bestellen Sie hochwertiges Brennholz und Kaminholz beim Brennholz König. Schnelle Lieferung, faire Preise und erstklassige Qualität für Ihren Kamin und Ofen."
       />
+
+      
       <div className="min-h-dvh bg-pergament w-full">
         <HeroSection />
         <USPSection />

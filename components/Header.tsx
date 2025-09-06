@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { safeJsonParse } from '@/lib/jsonHelper';
 import { supabase } from '@/lib/supabase';
 
@@ -11,7 +12,9 @@ export default function Header() {
   const [isMounted, setIsMounted] = useState(false);
   const [cartItemCount, setCartItemCount] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
   const isMountedRef = useRef(false);
+  const accountDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -21,13 +24,23 @@ export default function Header() {
     const checkLoginStatus = async () => {
       try {
         const { data: { user }, error } = await supabase.auth.getUser();
+        
+        // Explicitly handle mock client or missing configuration
+        if (error && error.message?.includes('Mock client')) {
+          console.log('🔍 Mock Client detected - Setting logged out state');
+          setIsLoggedIn(false);
+          return;
+        }
+        
         if (error) {
           console.warn('Fehler beim Überprüfen des Login-Status:', error);
           setIsLoggedIn(false);
           return;
         }
-        setIsLoggedIn(!!user);
-        console.log('🔍 Login Status Check:', user ? 'Eingeloggt' : 'Nicht eingeloggt', user?.email);
+        
+        const isUserLoggedIn = !!user;
+        setIsLoggedIn(isUserLoggedIn);
+        console.log('🔍 Login Status Check:', isUserLoggedIn ? 'Eingeloggt' : 'Nicht eingeloggt', user?.email || 'No user');
       } catch (error) {
         console.warn('Fehler beim Überprüfen des Login-Status:', error);
         setIsLoggedIn(false);
@@ -38,8 +51,15 @@ export default function Header() {
 
     // Listen for Supabase auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, session: any) => {
-      console.log('🔍 Auth State Change:', event, session?.user?.email);
-      setIsLoggedIn(!!session?.user);
+      console.log('🔍 Auth State Change:', event, session?.user?.email || 'No user');
+      const isUserLoggedIn = !!session?.user;
+      setIsLoggedIn(isUserLoggedIn);
+      
+      // Additional logging for debugging
+      if (event === 'SIGNED_OUT') {
+        console.log('✅ User signed out - Setting logged out state');
+        setIsLoggedIn(false);
+      }
     });
 
     return () => {
@@ -87,15 +107,23 @@ export default function Header() {
       updateCartCount();
     };
 
+    const handleClickOutside = (event: MouseEvent) => {
+      if (accountDropdownRef.current && !accountDropdownRef.current.contains(event.target as Node)) {
+        setIsAccountDropdownOpen(false);
+      }
+    };
+
     updateCartCount();
     handleScroll();
 
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('cartUpdated', handleCartUpdate);
+    document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('cartUpdated', handleCartUpdate);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -209,16 +237,23 @@ export default function Header() {
                 <span className="hidden sm:inline">Warenkorb</span>
               </Link>
 
-              {/* Direct Account Link - Simple Solution */}
-              <Link 
-                href="/konto"
-                className={`flex items-center space-x-1 sm:space-x-2 hover:text-orange-600 transition-colors cursor-pointer ${isScrolled ? 'text-gray-700' : 'text-white'}`}
-              >
-                <div className="w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center flex-shrink-0">
-                  <i className="ri-user-line text-lg sm:text-xl"></i>
-                </div>
-                <span className="hidden sm:inline">Mein Konto</span>
-              </Link>
+              {/* Account Dropdown with Session Detection */}
+              <div className="relative" ref={accountDropdownRef}>
+                <button
+                  onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
+                  className={`flex items-center space-x-1 sm:space-x-2 hover:text-orange-600 transition-colors cursor-pointer ${isScrolled ? 'text-gray-700' : 'text-white'}`}
+                >
+                  <div className="w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center flex-shrink-0">
+                    <i className="ri-user-line text-lg sm:text-xl"></i>
+                  </div>
+                  <span className="hidden sm:inline">{isLoggedIn ? 'Mein Konto' : 'Anmelden'}</span>
+                  <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+                    <i className={`ri-arrow-down-s-line text-sm transition-transform ${isAccountDropdownOpen ? 'rotate-180' : ''}`}></i>
+                  </div>
+                </button>
+
+
+              </div>
 
               <button
                 className="lg:hidden flex flex-col space-y-1 cursor-pointer p-2 z-50 relative flex-shrink-0"
@@ -286,6 +321,102 @@ export default function Header() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Portal Dropdown - Always visible */}
+      {isAccountDropdownOpen && typeof window !== 'undefined' && createPortal(
+        <div 
+          className="fixed inset-0 z-[99999]"
+          onClick={() => setIsAccountDropdownOpen(false)}
+        >
+          <div 
+            className="absolute top-20 right-4 w-64 bg-white rounded-lg shadow-2xl border border-gray-200 py-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {!isLoggedIn ? (
+              // Not logged in - Show login option
+              <div className="px-4 py-3">
+                <Link
+                  href="/konto"
+                  className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-50 rounded-md transition-colors"
+                  onClick={() => setIsAccountDropdownOpen(false)}
+                >
+                  <div className="flex items-center">
+                    <i className="ri-login-box-line text-lg mr-3 text-orange-600"></i>
+                    <div>
+                      <div className="font-semibold">Anmelden / Registrieren</div>
+                      <div className="text-sm text-gray-500">Zugang zu Ihrem Konto</div>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            ) : (
+              // Logged in - Show account menu
+              <>
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <div className="font-semibold text-gray-800">Willkommen zurück!</div>
+                  <div className="text-sm text-gray-500">Verwalten Sie Ihr Konto</div>
+                </div>
+                <div className="py-1">
+                  <Link href="/konto/dashboard" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                    <i className="ri-dashboard-line text-lg mr-3 text-gray-400"></i>
+                    Dashboard
+                  </Link>
+                  <Link href="/konto/profil" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                    <i className="ri-user-line text-lg mr-3 text-gray-400"></i>
+                    Profil verwalten
+                  </Link>
+                  <Link href="/konto/bestellverlauf" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                    <i className="ri-shopping-bag-line text-lg mr-3 text-gray-400"></i>
+                    Bestellungen
+                  </Link>
+                  <Link href="/konto/adressen" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                    <i className="ri-map-pin-line text-lg mr-3 text-gray-400"></i>
+                    Adressbuch
+                  </Link>
+                  <Link href="/konto/wunschliste" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                    <i className="ri-heart-line text-lg mr-3 text-gray-400"></i>
+                    Wunschliste
+                  </Link>
+                  <div className="border-t border-gray-100 mt-1 pt-1">
+                    <button
+                      onClick={async () => {
+                        console.log('🚪 Logout button clicked');
+                        setIsAccountDropdownOpen(false);
+                        
+                        try {
+                          console.log('🔄 Attempting logout...');
+                          const { error } = await supabase.auth.signOut();
+                          
+                          if (error) {
+                            console.error('❌ Logout error:', error);
+                          } else {
+                            console.log('✅ Logout successful');
+                          }
+                          
+                          // Force state update and redirect
+                          setIsLoggedIn(false);
+                          console.log('🏠 Redirecting to home...');
+                          window.location.href = '/';
+                        } catch (error) {
+                          console.error('❌ Logout exception:', error);
+                          // Force logout even if there's an error
+                          setIsLoggedIn(false);
+                          window.location.href = '/';
+                        }
+                      }}
+                      className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <i className="ri-logout-box-line text-lg mr-3"></i>
+                      Abmelden
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>,
+        document.body
       )}
     </>
   );

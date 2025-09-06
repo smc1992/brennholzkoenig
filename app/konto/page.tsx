@@ -29,6 +29,13 @@ export default function AccountPage() {
           password,
         });
 
+        // Handle mock client or missing configuration
+        if (error && error.message?.includes('Mock client')) {
+          setMessage('⚠️ Demo-Modus: Supabase-Datenbank ist nicht konfiguriert.\n\n📋 Zur Aktivierung der Authentifizierung:\n1. Erstellen Sie ein Supabase-Projekt\n2. Konfigurieren Sie NEXT_PUBLIC_SUPABASE_URL\n3. Konfigurieren Sie NEXT_PUBLIC_SUPABASE_ANON_KEY\n4. Starten Sie den Server neu');
+          setLoading(false);
+          return;
+        }
+
         if (error) throw error;
         setMessage('Erfolgreich angemeldet!');
         window.location.href = '/konto/dashboard';
@@ -52,6 +59,13 @@ export default function AccountPage() {
             },
           },
         });
+
+        // Handle mock client or missing configuration
+        if (authError && authError.message?.includes('Mock client')) {
+          setMessage('⚠️ Demo-Modus: Supabase-Datenbank ist nicht konfiguriert.\n\n📋 Zur Aktivierung der Registrierung:\n1. Erstellen Sie ein Supabase-Projekt\n2. Konfigurieren Sie NEXT_PUBLIC_SUPABASE_URL\n3. Konfigurieren Sie NEXT_PUBLIC_SUPABASE_ANON_KEY\n4. Starten Sie den Server neu');
+          setLoading(false);
+          return;
+        }
 
         if (authError) throw authError;
 
@@ -174,9 +188,11 @@ export default function AccountPage() {
 
             {message && (
               <div
-                className={`p-4 rounded-lg text-sm ${
+                className={`p-4 rounded-lg text-sm whitespace-pre-line ${
                   message.includes('Erfolg') || message.includes('erfolgreich')
                     ? 'bg-green-50 text-green-700 border border-green-200'
+                    : message.includes('Demo-Modus') || message.includes('⚠️')
+                    ? 'bg-yellow-50 text-yellow-800 border border-yellow-200'
                     : 'bg-red-50 text-red-700 border border-red-200'
                 }`}
               >
