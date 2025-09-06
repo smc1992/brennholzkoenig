@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import { safeJsonParse } from '@/lib/jsonHelper';
 import { supabase } from '@/lib/supabase';
 
@@ -252,7 +251,92 @@ export default function Header() {
                   </div>
                 </button>
 
-
+                {/* Dropdown Menu */}
+                {isAccountDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                    {!isLoggedIn ? (
+                      // Not logged in - Show login option
+                      <div className="px-4 py-3">
+                        <Link
+                          href="/konto"
+                          className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-50 rounded-md transition-colors"
+                          onClick={() => setIsAccountDropdownOpen(false)}
+                        >
+                          <div className="flex items-center">
+                            <i className="ri-login-box-line text-lg mr-3 text-orange-600"></i>
+                            <div>
+                              <div className="font-semibold">Anmelden / Registrieren</div>
+                              <div className="text-sm text-gray-500">Zugang zu Ihrem Konto</div>
+                            </div>
+                          </div>
+                        </Link>
+                      </div>
+                    ) : (
+                      // Logged in - Show account menu
+                      <>
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <div className="font-semibold text-gray-800">Willkommen zurück!</div>
+                          <div className="text-sm text-gray-500">Verwalten Sie Ihr Konto</div>
+                        </div>
+                        <div className="py-1">
+                          <Link href="/konto/dashboard" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                            <i className="ri-dashboard-line text-lg mr-3 text-gray-400"></i>
+                            Dashboard
+                          </Link>
+                          <Link href="/konto/profil" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                            <i className="ri-user-line text-lg mr-3 text-gray-400"></i>
+                            Profil verwalten
+                          </Link>
+                          <Link href="/konto/bestellverlauf" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                            <i className="ri-shopping-bag-line text-lg mr-3 text-gray-400"></i>
+                            Bestellungen
+                          </Link>
+                          <Link href="/konto/adressen" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                            <i className="ri-map-pin-line text-lg mr-3 text-gray-400"></i>
+                            Adressbuch
+                          </Link>
+                          <Link href="/konto/wunschliste" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                            <i className="ri-heart-line text-lg mr-3 text-gray-400"></i>
+                            Wunschliste
+                          </Link>
+                          <div className="border-t border-gray-100 mt-1 pt-1">
+                            <button
+                              onClick={async () => {
+                                console.log('🚪 Logout button clicked');
+                                setIsAccountDropdownOpen(false);
+                                
+                                try {
+                                  console.log('🔄 Attempting logout...');
+                                  const { error } = await supabase.auth.signOut();
+                                  
+                                  if (error) {
+                                    console.error('❌ Logout error:', error);
+                                  } else {
+                                    console.log('✅ Logout successful');
+                                  }
+                                  
+                                  // Force state update and redirect
+                                  setIsLoggedIn(false);
+                                  console.log('🏠 Redirecting to home...');
+                                  window.location.href = '/';
+                                } catch (error) {
+                                  console.error('❌ Logout exception:', error);
+                                  // Force logout even if there's an error
+                                  setIsLoggedIn(false);
+                                  window.location.href = '/';
+                                }
+                              }}
+                              className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                              <i className="ri-logout-box-line text-lg mr-3"></i>
+                              Abmelden
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
 
               <button
@@ -323,101 +407,7 @@ export default function Header() {
         </div>
       )}
 
-      {/* Portal Dropdown - Always visible */}
-      {isAccountDropdownOpen && typeof window !== 'undefined' && createPortal(
-        <div 
-          className="fixed inset-0 z-[99999]"
-          onClick={() => setIsAccountDropdownOpen(false)}
-        >
-          <div 
-            className="absolute top-20 right-4 w-64 bg-white rounded-lg shadow-2xl border border-gray-200 py-2"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {!isLoggedIn ? (
-              // Not logged in - Show login option
-              <div className="px-4 py-3">
-                <Link
-                  href="/konto"
-                  className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-50 rounded-md transition-colors"
-                  onClick={() => setIsAccountDropdownOpen(false)}
-                >
-                  <div className="flex items-center">
-                    <i className="ri-login-box-line text-lg mr-3 text-orange-600"></i>
-                    <div>
-                      <div className="font-semibold">Anmelden / Registrieren</div>
-                      <div className="text-sm text-gray-500">Zugang zu Ihrem Konto</div>
-                    </div>
-                  </div>
-                </Link>
-              </div>
-            ) : (
-              // Logged in - Show account menu
-              <>
-                <div className="px-4 py-3 border-b border-gray-100">
-                  <div className="font-semibold text-gray-800">Willkommen zurück!</div>
-                  <div className="text-sm text-gray-500">Verwalten Sie Ihr Konto</div>
-                </div>
-                <div className="py-1">
-                  <Link href="/konto/dashboard" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
-                    <i className="ri-dashboard-line text-lg mr-3 text-gray-400"></i>
-                    Dashboard
-                  </Link>
-                  <Link href="/konto/profil" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
-                    <i className="ri-user-line text-lg mr-3 text-gray-400"></i>
-                    Profil verwalten
-                  </Link>
-                  <Link href="/konto/bestellverlauf" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
-                    <i className="ri-shopping-bag-line text-lg mr-3 text-gray-400"></i>
-                    Bestellungen
-                  </Link>
-                  <Link href="/konto/adressen" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
-                    <i className="ri-map-pin-line text-lg mr-3 text-gray-400"></i>
-                    Adressbuch
-                  </Link>
-                  <Link href="/konto/wunschliste" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
-                    <i className="ri-heart-line text-lg mr-3 text-gray-400"></i>
-                    Wunschliste
-                  </Link>
-                  <div className="border-t border-gray-100 mt-1 pt-1">
-                    <button
-                      onClick={async () => {
-                        console.log('🚪 Logout button clicked');
-                        setIsAccountDropdownOpen(false);
-                        
-                        try {
-                          console.log('🔄 Attempting logout...');
-                          const { error } = await supabase.auth.signOut();
-                          
-                          if (error) {
-                            console.error('❌ Logout error:', error);
-                          } else {
-                            console.log('✅ Logout successful');
-                          }
-                          
-                          // Force state update and redirect
-                          setIsLoggedIn(false);
-                          console.log('🏠 Redirecting to home...');
-                          window.location.href = '/';
-                        } catch (error) {
-                          console.error('❌ Logout exception:', error);
-                          // Force logout even if there's an error
-                          setIsLoggedIn(false);
-                          window.location.href = '/';
-                        }
-                      }}
-                      className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      <i className="ri-logout-box-line text-lg mr-3"></i>
-                      Abmelden
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>,
-        document.body
-      )}
+
     </>
   );
 }
