@@ -23,9 +23,14 @@ interface User {
 
 interface LoyaltyMember {
   id: string;
+  customer_id: string;
   tier: string;
-  points: number;
-  tier_benefits: any;
+  points_balance: number;
+  total_earned: number;
+  total_redeemed: number;
+  last_activity: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export default function CustomerDashboard() {
@@ -54,22 +59,33 @@ export default function CustomerDashboard() {
 
   const fetchOrders = async (user: any) => {
     try {
+      // Erst customer_id über customers Tabelle finden
+      const { data: customer } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('email', user.email)
+        .single();
+
+      if (!customer) {
+        console.log('Kunde nicht gefunden');
+        setOrders([]);
+        return;
+      }
+
       const { data: orders, error } = await supabase
         .from('orders')
         .select(`
           *,
           order_items (
             id,
-            product_id,
+            product_name,
+            product_category,
             quantity,
-            price_per_unit,
-            products (
-              name,
-              image_url
-            )
+            unit_price,
+            total_price
           )
         `)
-        .eq('customer_email', user.email)
+        .eq('customer_id', customer.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -81,26 +97,34 @@ export default function CustomerDashboard() {
 
   const fetchLoyaltyData = async (user: any) => {
     try {
+      // Erst customer_id über customers Tabelle finden
+      const { data: customer } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('email', user.email)
+        .single();
+
+      if (!customer) {
+        console.log('Kunde nicht gefunden für Treuepunkte');
+        setLoyaltyData(null);
+        return;
+      }
+
       let { data: loyalty, error } = await supabase
         .from('loyalty_members')
         .select('*')
-        .eq('customer_email', user.email)
+        .eq('customer_id', customer.id)
         .single();
 
       if (error && error.code === 'PGRST116') {
         const { data: newLoyalty, error: createError } = await supabase
           .from('loyalty_members')
           .insert({
-            customer_email: user.email,
-            tier: 'bronze',
-            points: 0,
-            tier_benefits: {
-              points_per_euro: 1,
-              birthday_bonus: 50,
-              discount_percentage: 0,
-              free_shipping: false,
-              priority_support: false
-            }
+            customer_id: customer.id,
+            tier: 'Bronze',
+            points_balance: 0,
+            total_earned: 0,
+            total_redeemed: 0
           })
           .select()
           .single();
@@ -254,7 +278,7 @@ export default function CustomerDashboard() {
                   </div>
                   <div>
                     <p className="text-sm font-medium opacity-90">{loyaltyData.tier.toUpperCase()} MITGLIED</p>
-                    <p className="text-lg font-bold">{loyaltyData.points} Punkte</p>
+                    <p className="text-lg font-bold">{loyaltyData.points_balance} Punkte</p>
                   </div>
                 </div>
               </div>
@@ -308,7 +332,7 @@ export default function CustomerDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Treuepunkte</p>
-                  <p className="text-2xl font-bold text-gray-900">{loyaltyData.points}</p>
+                  <p className="text-2xl font-bold text-gray-900">{loyaltyData.points_balance}</p>
                 </div>
                 <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
                   <i className={`${getTierIcon(loyaltyData.tier)} text-xl text-amber-600`}></i>
