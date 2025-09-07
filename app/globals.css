@@ -135,8 +135,8 @@
       overflow: hidden !important;
     }
     
-    /* Prevent any scrolling in mobile menu */
-    .xl\:hidden * {
+    /* Prevent any scrolling in mobile menu - exclude header dropdown */
+    .xl\:hidden *:not(.header-dropdown):not([class*="z-[9999]"]) {
       overflow: hidden !important;
       -webkit-overflow-scrolling: touch;
     }
@@ -160,12 +160,25 @@
        height: 0 !important;
      }
      
-     /* Override all overflow properties on mobile */
+     /* Override all overflow properties on mobile except header dropdown */
      .overflow-auto,
      .overflow-x-auto,
      .overflow-y-auto,
-     [class*="overflow-"] {
+     [class*="overflow-"]:not(.header-dropdown):not([class*="z-[9999]"]) {
        overflow: hidden !important;
+     }
+     
+     /* Ensure header dropdown is always visible */
+     .header-dropdown {
+       overflow: visible !important;
+       z-index: 9999 !important;
+       position: absolute !important;
+     }
+     
+     /* Override any parent overflow rules for header dropdown */
+     .header-dropdown,
+     .header-dropdown * {
+       overflow: visible !important;
      }
      
      /* Specific fixes for common scrollbar containers */

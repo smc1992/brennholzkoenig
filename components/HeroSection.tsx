@@ -69,16 +69,18 @@ export default function HeroSection() {
 
   return (
     <section 
-      className="relative overflow-hidden"
+      className="overflow-visible"
       style={{
         minHeight: '100vh',
+        paddingTop: '80px',
+        pointerEvents: 'none',
         backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3)), url('${heroImageUrl}')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
       }}
     >
-      <div className="container mx-auto px-6 sm:px-8 lg:px-12 w-full relative z-10 max-w-7xl" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: '2rem', paddingBottom: '4rem' }}>
+      <div className="container mx-auto px-6 sm:px-8 lg:px-12 w-full relative max-w-7xl" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: '8rem', paddingBottom: '4rem', pointerEvents: 'auto' }}>
         <div className="max-w-6xl mx-auto w-full">
           {/* Trust Badge */}
           <div className="inline-flex items-center bg-[#C04020] text-white px-3 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-xs sm:text-base mb-6 sm:mb-8 shadow-2xl mx-auto sm:mx-0 max-w-fit">

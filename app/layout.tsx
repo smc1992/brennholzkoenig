@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
-import './globals.css';
-import './tailwind-safelist.css';
 // Importiere die kompilierte Tailwind CSS Datei
 import './output.css';
+import './tailwind-safelist.css';
+import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import CookieBanner from '@/components/CookieBanner';

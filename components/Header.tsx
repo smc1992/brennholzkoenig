@@ -160,7 +160,7 @@ export default function Header() {
                 className="h-12 md:h-20 w-auto object-contain"
               />
             </Link>
-            <nav className="hidden lg:flex items-center space-x-8">
+            <nav className="hidden lg:flex items-center space-x-8" style={{pointerEvents: 'auto'}}>
               <Link
                 href="/"
                 className="text-white hover:text-white/80 transition-colors cursor-pointer font-medium"
@@ -202,9 +202,9 @@ export default function Header() {
 
   return (
     <>
-      <header className={`sticky top-0 z-[9999] transition-all duration-300 w-full ${isScrolled ? 'bg-[#F5F0E0] shadow-lg' : 'bg-black/30 backdrop-blur-sm'}`}>
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center h-16 md:h-20">
+      <header className={`fixed top-0 left-0 right-0 transition-all duration-300 w-full ${isScrolled ? 'bg-[#F5F0E0] shadow-lg' : 'bg-black/30 backdrop-blur-sm'}`} style={{pointerEvents: 'auto', zIndex: 999999, position: 'fixed'}}>
+        <div className="container mx-auto px-4" style={{pointerEvents: 'auto'}}>
+          <div className="flex justify-between items-center h-16 md:h-20" style={{pointerEvents: 'auto'}}>
             <Link href="/" className="flex items-center flex-shrink-0">
               <img
                 src="https://public.readdy.ai/ai/img_res/86db7336-c7fd-4211-8615-9dceb4ceb922.jpg"
@@ -237,10 +237,11 @@ export default function Header() {
               </Link>
 
               {/* Account Dropdown with Session Detection */}
-              <div className="relative" ref={accountDropdownRef}>
+              <div className="relative" ref={accountDropdownRef} style={{pointerEvents: 'auto'}}>
                 <button
                   onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
                   className={`flex items-center space-x-1 sm:space-x-2 hover:text-orange-600 transition-colors cursor-pointer ${isScrolled ? 'text-gray-700' : 'text-white'}`}
+                  style={{pointerEvents: 'auto'}}
                 >
                   <div className="w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center flex-shrink-0">
                     <i className="ri-user-line text-lg sm:text-xl"></i>
@@ -253,14 +254,25 @@ export default function Header() {
 
                 {/* Dropdown Menu */}
                 {isAccountDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                  <div 
+                    className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 header-dropdown"
+                    style={{
+                      position: 'fixed',
+                      zIndex: 99999,
+                      right: '20px',
+                      top: isScrolled ? '70px' : '80px',
+                      overflow: 'visible',
+                      pointerEvents: 'auto'
+                    }}
+                  >
                     {!isLoggedIn ? (
                       // Not logged in - Show login option
-                      <div className="px-4 py-3">
+                      <div className="px-4 py-3" style={{pointerEvents: 'auto'}}>
                         <Link
                           href="/konto"
                           className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-50 rounded-md transition-colors"
                           onClick={() => setIsAccountDropdownOpen(false)}
+                          style={{pointerEvents: 'auto', cursor: 'pointer'}}
                         >
                           <div className="flex items-center">
                             <i className="ri-login-box-line text-lg mr-3 text-orange-600"></i>
@@ -354,11 +366,11 @@ export default function Header() {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[9998] lg:hidden">
+        <div className="fixed inset-0 z-[9000] lg:hidden" style={{overflow: 'visible'}}>
           <div className="fixed inset-0 bg-black/50" onClick={() => setIsMenuOpen(false)}></div>
-          <div className="fixed top-0 right-0 h-full w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
-            <div className="flex flex-col h-full">
-              <div className="flex items-center justify-between p-6 border-b">
+          <div className="fixed top-0 right-0 h-full w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out" style={{overflow: 'visible'}}>
+            <div className="flex flex-col h-full" style={{overflow: 'visible'}}>
+              <div className="flex items-center justify-between p-6 border-b" style={{overflow: 'visible'}}>
                 <h2 className="text-xl font-bold text-gray-900">Menü</h2>
                 <button
                   onClick={() => setIsMenuOpen(false)}
@@ -367,7 +379,7 @@ export default function Header() {
                   <i className="ri-close-line text-2xl"></i>
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto py-6">
+              <div className="flex-1 py-6" style={{overflow: 'visible'}}>
                 {navigation.map((item) => (
                   <Link
                     key={item.href}
