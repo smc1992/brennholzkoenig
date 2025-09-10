@@ -147,7 +147,7 @@ export default function USPSection() {
         </div>
 
         {/* Benefits Grid - Mobile responsive Layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8 max-w-6xl mx-auto px-2 sm:px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto px-2 sm:px-4">
           {[ 
             {
               icon: 'ri-truck-line',
@@ -169,7 +169,7 @@ export default function USPSection() {
               icon: 'ri-award-line',
               bg: 'from-[#D4A520] to-[#B8941A]',
               title: '27 JAHRE ERFAHRUNG',
-              desc: 'Familientradition in zweiter Generation',
+              desc: 'Persönlich, leidenschaftlich & zuverlässig',
               detail: '✓ Seit 1997',
               delay: 1200
             },

@@ -4,9 +4,9 @@ export default function ThorstensStory() {
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
-            <div>
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-start">
+            <div className="md:pr-8">
               <h2 className="text-4xl md:text-5xl font-black text-[#1A1A1A] mb-6" style={{ fontFamily: 'Inter, sans-serif' }}>
                 THORSTEN VEY – <span className="text-[#C04020]">DER MANN HINTER DEM HOLZ</span>
               </h2>
@@ -19,14 +19,18 @@ export default function ThorstensStory() {
                 Mechaniker und Kundenberater in einer Person.
               </p>
             </div>
-            <img 
-              src="https://static.readdy.ai/image/5cb98375ce345c7331a1619afba21cba/2e2387727d4e5ec0540b56b3ddfd823f.webp"
-              alt="Thorsten Vey - Der Brennholzkönig"
-              className="rounded-lg shadow-lg object-cover object-top h-80"
-            />
+            <div className="flex justify-center md:justify-start md:pl-8">
+              <img 
+                src="https://static.readdy.ai/image/5cb98375ce345c7331a1619afba21cba/2e2387727d4e5ec0540b56b3ddfd823f.webp"
+                alt="Thorsten Vey - Der Brennholzkönig"
+                className="rounded-lg shadow-lg object-cover object-top h-80 w-80 flex-shrink-0"
+              />
+            </div>
           </div>
+          
+          <div className="h-24"></div>
 
-          <div className="bg-[#F5F0E0] rounded-xl p-8 mb-16">
+          <div className="bg-[#F5F0E0] rounded-xl p-8 mb-16 mt-8 md:mt-48">
             <h3 className="text-2xl font-bold text-[#C04020] mb-6 text-center">Was Thorsten besonders macht</h3>
             <div className="grid md:grid-cols-2 gap-8">
               <div>

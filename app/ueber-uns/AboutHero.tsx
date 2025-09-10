@@ -6,13 +6,13 @@ export default function AboutHero() {
     <section 
       className="py-16 sm:py-20 md:py-24 relative"
       style={{
-        backgroundImage: `linear-gradient(rgba(26, 26, 26, 0.7), rgba(26, 26, 26, 0.7)), url('https://readdy.ai/api/search-image?query=Professional%20German%20man%20in%20workwear%20standing%20proudly%20next%20to%20stacked%20firewood%2C%20authentic%20timber%20yard%20background%2C%20warm%20lighting%2C%20mature%20confident%20appearance%2C%20hands-on%20businessman%20portrait%20style&width=1920&height=800&seq=thorsten-hero&orientation=landscape')`,
+        backgroundImage: `linear-gradient(rgba(26, 26, 26, 0.7), rgba(26, 26, 26, 0.7)), url('/images/about-hero-fireplace.webp')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         paddingTop: '105px'
       }}
     >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 text-center">
         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white mb-4 sm:mb-6" style={{ fontFamily: 'Inter, sans-serif' }}>
           ÜBER <span className="text-[#C04020]">UNS</span>
         </h1>
