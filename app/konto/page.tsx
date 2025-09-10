@@ -1,11 +1,14 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function AccountPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,8 +17,70 @@ export default function AccountPage() {
   const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Using the centralized Supabase client from lib/supabase.ts
+
+  // Handle email verification redirect
+  useEffect(() => {
+    const handleEmailVerification = async () => {
+      const verified = searchParams.get('verified');
+      const token = searchParams.get('token');
+      const type = searchParams.get('type');
+      
+      // Check if user is already authenticated after email verification
+      if (verified === 'true') {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            setMessage('E-Mail erfolgreich verifiziert! Sie werden zum Dashboard weitergeleitet...');
+            setTimeout(() => {
+              router.push('/konto/dashboard');
+            }, 2000);
+            return;
+          }
+        } catch (error) {
+          console.error('Error checking user:', error);
+        }
+      }
+      
+      // Handle direct token verification (fallback)
+      if (token && type === 'signup') {
+        try {
+          setLoading(true);
+          setMessage('E-Mail wird verifiziert...');
+          
+          // Verify the email token
+          const { data, error } = await supabase.auth.verifyOtp({
+            token_hash: token,
+            type: 'signup'
+          });
+          
+          if (error) {
+            console.error('Verification error:', error);
+            setMessage('E-Mail-Verifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.');
+            setLoading(false);
+            return;
+          }
+          
+          if (data.user) {
+            setMessage('E-Mail erfolgreich verifiziert! Sie werden weitergeleitet...');
+            // Redirect to dashboard after successful verification
+            setTimeout(() => {
+              router.push('/konto/dashboard');
+            }, 2000);
+          }
+        } catch (error) {
+          console.error('Verification error:', error);
+          setMessage('E-Mail-Verifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.');
+          setLoading(false);
+        }
+      }
+    };
+    
+    handleEmailVerification();
+  }, [searchParams, router]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +122,7 @@ export default function AccountPage() {
               first_name: firstName,
               last_name: lastName,
             },
+            emailRedirectTo: `${window.location.origin}/konto?verified=true`,
           },
         });
 
@@ -160,14 +226,23 @@ export default function AccountPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Passwort * {!isLogin && <span className="text-xs text-gray-500">(mindestens 6 Zeichen)</span>}
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-                required
-                minLength={6}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  <i className={`ri-${showPassword ? 'eye-off' : 'eye'}-line text-lg`}></i>
+                </button>
+              </div>
             </div>
 
             {!isLogin && (
@@ -175,14 +250,23 @@ export default function AccountPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Passwort bestätigen *
                 </label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-                  required
-                  minLength={6}
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  >
+                    <i className={`ri-${showConfirmPassword ? 'eye-off' : 'eye'}-line text-lg`}></i>
+                  </button>
+                </div>
               </div>
             )}
 
