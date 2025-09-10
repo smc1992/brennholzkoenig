@@ -157,7 +157,8 @@ export default function FAQPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="min-h-screen bg-gray-50 pt-20 md:pt-24">
+      <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">Häufig gestellte Fragen</h1>
         <p className="text-gray-600">
@@ -311,6 +312,7 @@ export default function FAQPage() {
           <i className="ri-customer-service-line mr-2"></i>
           Support kontaktieren
         </a>
+      </div>
       </div>
     </div>
   );

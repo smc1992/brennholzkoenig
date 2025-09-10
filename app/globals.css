@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Dashboard pages header spacing fix */
+.dashboard-page {
+  padding-top: 6rem; /* 96px to account for fixed header */
+}
+
+@media (min-width: 768px) {
+  .dashboard-page {
+    padding-top: 7rem; /* 112px for larger header on desktop */
+  }
+}
+
 /* Mobile-optimized form inputs */
 @layer components {
   .checkout-input {

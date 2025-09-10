@@ -28,6 +28,7 @@ interface Product {
   technical_specs?: { [key: string]: string };
   additional_images?: string[];
   original_price?: number;
+  has_quantity_discount?: boolean;
 }
 
 interface PricingTier {
@@ -71,7 +72,7 @@ const urlToProductId: { [key: string]: string } = {
   'scheitholz-fichte-33cm': '6'
 };
 
-function calculatePriceWithTiers(basePrice: number, quantity: number, tiers: PricingTier[], minOrderQuantity: number = 3) {
+function calculatePriceWithTiers(basePrice: number, quantity: number, tiers: PricingTier[], minOrderQuantity: number = 3, hasQuantityDiscount: boolean = false) {
   if (quantity < minOrderQuantity) {
     return {
       price: basePrice,
@@ -92,10 +93,13 @@ function calculatePriceWithTiers(basePrice: number, quantity: number, tiers: Pri
   } else if (quantity >= 6 && quantity < 25) {
     // Normalpreis für 6-24 SRM
     adjustmentText = 'Normalpreis';
-  } else if (quantity >= 25) {
-    // 2,50€ Rabatt für 25+ SRM
+  } else if (quantity >= 25 && hasQuantityDiscount) {
+    // 2,50€ Rabatt für 25+ SRM (nur wenn Produkt Mengenrabatt aktiviert hat)
     finalPrice = basePrice - 2.5;
     adjustmentText = '€2,50 Rabatt je SRM';
+  } else if (quantity >= 25 && !hasQuantityDiscount) {
+    // Normalpreis für 25+ SRM (wenn kein Mengenrabatt aktiviert)
+    adjustmentText = 'Normalpreis';
   }
 
   return {
@@ -105,7 +109,7 @@ function calculatePriceWithTiers(basePrice: number, quantity: number, tiers: Pri
   };
 }
 
-function getPriceInfoForQuantity(quantity: number, tiers: PricingTier[], minOrderQuantity: number) {
+function getPriceInfoForQuantity(quantity: number, tiers: PricingTier[], minOrderQuantity: number, hasQuantityDiscount: boolean = false) {
   if (quantity < minOrderQuantity) {
     return {
       info: `Mindestbestellung ${minOrderQuantity} SRM`,
@@ -125,10 +129,14 @@ function getPriceInfoForQuantity(quantity: number, tiers: PricingTier[], minOrde
     // Normalpreis für 6-24 SRM
     info = 'Normalpreis';
     color = 'text-gray-600';
-  } else if (quantity >= 25) {
-    // 2,50€ Rabatt für 25+ SRM
+  } else if (quantity >= 25 && hasQuantityDiscount) {
+    // 2,50€ Rabatt für 25+ SRM (nur wenn Produkt Mengenrabatt aktiviert hat)
     info = '€2,50 Rabatt je SRM';
     color = 'text-green-600';
+  } else if (quantity >= 25 && !hasQuantityDiscount) {
+    // Normalpreis für 25+ SRM (wenn kein Mengenrabatt aktiviert)
+    info = 'Normalpreis';
+    color = 'text-gray-600';
   }
 
   return {
@@ -393,7 +401,8 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
             detailed_description: (realtimeProduct as any).detailed_description || realtimeProduct.description || 'Hochwertiges Brennholz für optimale Wärmeausbeute.',
             technical_specs: { 'Holzart': 'Buche', 'Länge': '33cm', 'Feuchtigkeitsgehalt': '<20%' },
             additional_images: [],
-            original_price: realtimeProduct.original_price
+            original_price: realtimeProduct.original_price,
+            has_quantity_discount: (realtimeProduct as any).has_quantity_discount || false
           };
           
           console.log(`Real-time Initial Load für Produkt ${actualProductId}:`, newProduct.name);
@@ -422,6 +431,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
               stock_quantity: realtimeProduct.stock_quantity,
               description: realtimeProduct.description || prevData.description,
               detailed_description: (realtimeProduct as any).detailed_description || prevData.detailed_description,
+              has_quantity_discount: (realtimeProduct as any).has_quantity_discount !== undefined ? (realtimeProduct as any).has_quantity_discount : prevData.has_quantity_discount,
               // Behalte andere Felder bei
             };
           }
@@ -478,11 +488,11 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
     if (!productData || !productData.price) return { price: 0, adjustmentText: '', canOrder: false };
     const basePrice = typeof productData.price === 'string' ? parseFloat(productData.price) : productData.price;
     if (isNaN(basePrice)) return { price: 0, adjustmentText: '', canOrder: false };
-    return calculatePriceWithTiers(basePrice, quantity, pricingTiers, minOrderQuantity);
+    return calculatePriceWithTiers(basePrice, quantity, pricingTiers, minOrderQuantity, productData.has_quantity_discount || false);
   };
 
   const getPriceInfo = () => {
-    return getPriceInfoForQuantity(quantity, pricingTiers, minOrderQuantity);
+    return getPriceInfoForQuantity(quantity, pricingTiers, minOrderQuantity, productData?.has_quantity_discount || false);
   };
 
   const addToCart = async () => {
@@ -504,7 +514,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
       if (existingItemIndex >= 0) {
         const newQuantity = currentCart[existingItemIndex].quantity + quantity;
         const basePrice = typeof productData.price === 'string' ? parseFloat(productData.price) : productData.price;
-        const newPricing = calculatePriceWithTiers(basePrice, newQuantity, pricingTiers, minOrderQuantity);
+        const newPricing = calculatePriceWithTiers(basePrice, newQuantity, pricingTiers, minOrderQuantity, productData?.has_quantity_discount || false);
 
         currentCart[existingItemIndex].quantity = newQuantity;
         currentCart[existingItemIndex].price = newPricing.price.toString();
@@ -519,7 +529,8 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
           image_url: productData.image_url,
           unit: productData.unit,
           quantity: quantity,
-          stock_quantity: productData.stock_quantity
+          stock_quantity: productData.stock_quantity,
+          has_quantity_discount: productData.has_quantity_discount
         });
       }
 
@@ -708,10 +719,12 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
                   <span>6-24 {productData.unit}</span>
                   <span className="font-medium">Normalpreis</span>
                 </div>
-                <div className="text-sm text-green-600 flex justify-between">
-                  <span>ab 25 {productData.unit}</span>
-                  <span className="font-medium">€2,50 Rabatt je {productData.unit}</span>
-                </div>
+                {productData.has_quantity_discount && (
+                  <div className="text-sm text-green-600 flex justify-between">
+                    <span>ab 25 {productData.unit}</span>
+                    <span className="font-medium">€2,50 Rabatt je {productData.unit}</span>
+                  </div>
+                )}
               </div>
             </div>
 

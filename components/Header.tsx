@@ -277,6 +277,18 @@ export default function Header() {
                           <i className="ri-heart-line text-lg mr-3 text-orange-600"></i>
                           Wunschliste
                         </Link>
+                        <Link href="/konto/benachrichtigungen" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                          <i className="ri-notification-line text-lg mr-3 text-orange-600"></i>
+                          Benachrichtigungen
+                        </Link>
+                        <Link href="/konto/support" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                          <i className="ri-customer-service-line text-lg mr-3 text-orange-600"></i>
+                          Support
+                        </Link>
+                        <Link href="/konto/faq" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                          <i className="ri-question-line text-lg mr-3 text-orange-600"></i>
+                          FAQ
+                        </Link>
                         <div className="border-t mt-2 pt-2">
                           <button
                             onClick={async () => {
@@ -412,7 +424,102 @@ export default function Header() {
                Bestellverlauf
              </div>
              
-             <div className="border-t mt-2 pt-2">
+             <div 
+               className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+               onMouseDown={(e) => {
+                 e.preventDefault();
+                 console.log('Adressen Navigation');
+                 setIsAccountDropdownOpen(false);
+                 window.location.href = '/konto/adressen';
+               }}
+               onTouchStart={(e) => {
+                 e.preventDefault();
+                 console.log('Adressen Touch');
+                 setIsAccountDropdownOpen(false);
+                 window.location.href = '/konto/adressen';
+               }}
+             >
+               <i className="ri-map-pin-line text-lg mr-3 text-orange-600"></i>
+               Adressen
+             </div>
+             
+             <div 
+                className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  console.log('Wunschliste Navigation');
+                  setIsAccountDropdownOpen(false);
+                  window.location.href = '/konto/wunschliste';
+                }}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  console.log('Wunschliste Touch');
+                  setIsAccountDropdownOpen(false);
+                  window.location.href = '/konto/wunschliste';
+                }}
+              >
+                <i className="ri-heart-line text-lg mr-3 text-orange-600"></i>
+                Wunschliste
+              </div>
+              
+              <div 
+                className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  console.log('Benachrichtigungen Navigation');
+                  setIsAccountDropdownOpen(false);
+                  window.location.href = '/konto/benachrichtigungen';
+                }}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  console.log('Benachrichtigungen Touch');
+                  setIsAccountDropdownOpen(false);
+                  window.location.href = '/konto/benachrichtigungen';
+                }}
+              >
+                <i className="ri-notification-line text-lg mr-3 text-orange-600"></i>
+                Benachrichtigungen
+              </div>
+              
+              <div 
+                className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  console.log('Support Navigation');
+                  setIsAccountDropdownOpen(false);
+                  window.location.href = '/konto/support';
+                }}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  console.log('Support Touch');
+                  setIsAccountDropdownOpen(false);
+                  window.location.href = '/konto/support';
+                }}
+              >
+                <i className="ri-customer-service-line text-lg mr-3 text-orange-600"></i>
+                Support
+              </div>
+              
+              <div 
+                className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  console.log('FAQ Navigation');
+                  setIsAccountDropdownOpen(false);
+                  window.location.href = '/konto/faq';
+                }}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  console.log('FAQ Touch');
+                  setIsAccountDropdownOpen(false);
+                  window.location.href = '/konto/faq';
+                }}
+              >
+                <i className="ri-question-line text-lg mr-3 text-orange-600"></i>
+                FAQ
+              </div>
+              
+              <div className="border-t mt-2 pt-2">
                <div
                  className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
                  onMouseDown={(e) => {

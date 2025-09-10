@@ -15,7 +15,7 @@ export default function AGBPage() {
 
       <div className="min-h-screen bg-[#F5F0E0]">
         {/* Header */}
-        <section className="bg-gradient-to-r from-[#C04020] to-[#A03318] text-white py-16">
+        <section className="bg-gradient-to-r from-[#C04020] to-[#A03318] text-white py-16 mt-16 md:mt-20">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl">
               <div className="flex items-center mb-4">

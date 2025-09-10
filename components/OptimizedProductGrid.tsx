@@ -14,7 +14,13 @@ interface Product {
   category: string;
   stock_quantity: number;
   unit: string;
+  features?: string[];
+  specifications?: { [key: string]: string };
+  original_price?: number;
   is_active: boolean;
+  in_stock?: boolean;
+  created_at: string;
+  has_quantity_discount?: boolean;
 }
 
 interface OptimizedProductGridProps {
@@ -161,7 +167,8 @@ export default function OptimizedProductGrid({
       product.price,
       quantity,
       [], // Preisstaffeln werden separat geladen
-      shopSettings.minOrderQuantity
+      shopSettings.minOrderQuantity,
+      product.has_quantity_discount || false
     );
   };
   

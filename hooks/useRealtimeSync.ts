@@ -18,6 +18,7 @@ interface Product {
   in_stock?: boolean;
   created_at: string;
   updated_at?: string;
+  has_quantity_discount?: boolean;
 }
 
 interface RealtimeSyncHook {
@@ -112,7 +113,8 @@ export function useRealtimeSync(): RealtimeSyncHook {
         is_active: item.is_active || false,
         in_stock: item.in_stock || false,
         created_at: item.created_at || new Date().toISOString(),
-        updated_at: item.updated_at
+        updated_at: item.updated_at,
+        has_quantity_discount: item.has_quantity_discount || false
       }));
       
       console.log('🔍 useRealtimeSync: Converted products:', fetchedProducts);

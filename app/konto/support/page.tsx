@@ -122,7 +122,7 @@ export default function SupportPage() {
       .channel('customer-messages')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'ticket_messages' }, 
-        (payload) => {
+        (payload: any) => {
           if (payload.eventType === 'INSERT' && selectedTicket) {
             loadMessages(selectedTicket);
           }
@@ -425,7 +425,8 @@ export default function SupportPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="min-h-screen bg-gray-50 pt-20 md:pt-24">
+      <div className="max-w-6xl mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Support & Anfragen</h1>
         <button
@@ -703,6 +704,7 @@ export default function SupportPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

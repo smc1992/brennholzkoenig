@@ -16,6 +16,7 @@ interface CartItem {
   quantity: number;
   image: string;
   unit: string;
+  has_quantity_discount?: boolean;
 }
 
 interface DeliveryData {
@@ -135,7 +136,8 @@ export default function CheckoutPage() {
         const normalizedCart = parsedCart.map((item: any) => ({
           ...item,
           price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
-          quantity: typeof item.quantity === 'string' ? parseInt(item.quantity) : item.quantity
+          quantity: typeof item.quantity === 'string' ? parseInt(item.quantity) : item.quantity,
+          has_quantity_discount: item.has_quantity_discount || false
         }));
         setCartItems(normalizedCart);
       }
@@ -199,11 +201,17 @@ export default function CheckoutPage() {
         const realtimeProduct = products.find(p => p.id && cartItem.id && p.id.toString() === cartItem.id.toString());
         if (realtimeProduct) {
           console.log(`Aktualisiere Checkout-Artikel: ${cartItem.name} -> ${realtimeProduct.name}, Preis: ${cartItem.price} -> ${realtimeProduct.price}`);
+          // Neuberechnung des Preises mit aktuellen Produktdaten
+          const basePrice = typeof realtimeProduct.price === 'string' ? parseFloat(realtimeProduct.price) : realtimeProduct.price;
+          const hasQuantityDiscount = (realtimeProduct as any).has_quantity_discount || false;
+          const pricing = calculatePriceWithTiers(basePrice, cartItem.quantity, pricingTiers, minOrderQuantity, hasQuantityDiscount);
+          
           return {
             ...cartItem,
             name: realtimeProduct.name,
-            price: typeof realtimeProduct.price === 'string' ? parseFloat(realtimeProduct.price) : realtimeProduct.price,
-            image: realtimeProduct.image_url
+            price: pricing.price,
+            image: realtimeProduct.image_url,
+            has_quantity_discount: hasQuantityDiscount
           };
         }
         return cartItem;

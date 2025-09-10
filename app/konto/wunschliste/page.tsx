@@ -51,7 +51,7 @@ export default function WishlistPage() {
       if (error) throw error;
       
       // Transformiere die Daten in das erwartete Format
-      const formattedData: WishlistItem[] = (data || []).map(item => ({
+      const formattedData: WishlistItem[] = (data || []).map((item: any) => ({
         id: item.id,
         created_at: item.created_at,
         product: Array.isArray(item.product) && item.product.length > 0 ? {
@@ -110,7 +110,7 @@ export default function WishlistPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-20 md:pt-24">
       <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="mb-8">
           <Link href="/konto/dashboard" className="inline-flex items-center text-orange-600 hover:text-orange-700 mb-4">

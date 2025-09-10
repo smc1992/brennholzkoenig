@@ -205,7 +205,7 @@ export default function OrderHistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-20 md:pt-24">
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4">
           <div className="flex items-center py-4 space-x-4">

@@ -23,6 +23,7 @@ interface Product {
   created_at?: string;
   updated_at?: string;
   slug?: string;
+  has_quantity_discount?: boolean;
 }
 
 interface InventoryMovement {
@@ -777,6 +778,7 @@ export default function ProductsTab() {
                 features,
                 specifications,
                 in_stock: parseInt(stockQuantityValue, 10) > 0,
+                has_quantity_discount: data.has_quantity_discount === 'on',
               });
             }}
             className="p-6 space-y-6"
@@ -895,6 +897,24 @@ export default function ProductsTab() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
                   required
                 />
+              </div>
+
+              <div className="md:col-span-2">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    name="has_quantity_discount"
+                    id="has_quantity_discount"
+                    defaultChecked={editingProduct.has_quantity_discount || false}
+                    className="w-4 h-4 text-[#C04020] bg-gray-100 border-gray-300 rounded focus:ring-[#C04020] focus:ring-2"
+                  />
+                  <label htmlFor="has_quantity_discount" className="text-sm font-medium text-gray-700">
+                    Mengenrabatt ab 25 SRM aktivieren
+                  </label>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Wenn aktiviert, erhalten Kunden €2,50 Rabatt pro SRM bei Bestellungen ab 25 SRM für dieses Produkt.
+                </p>
               </div>
             </div>
 
@@ -1254,6 +1274,7 @@ export default function ProductsTab() {
                    size: formData.get('size') as string,
                    in_stock: true,
                    is_active: true,
+                   has_quantity_discount: formData.get('has_quantity_discount') === 'on',
                   slug: (formData.get('name') as string).toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
                 };
 
@@ -1429,6 +1450,23 @@ export default function ProductsTab() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] font-mono text-sm"
                 placeholder='{"Holzart": "Buche", "Restfeuchte": "< 20%", "Scheitlänge": "25-33 cm"}'
               />
+            </div>
+
+            <div className="md:col-span-2">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  name="has_quantity_discount"
+                  id="new_has_quantity_discount"
+                  className="w-4 h-4 text-[#C04020] bg-gray-100 border-gray-300 rounded focus:ring-[#C04020] focus:ring-2"
+                />
+                <label htmlFor="new_has_quantity_discount" className="text-sm font-medium text-gray-700">
+                  Mengenrabatt ab 25 SRM aktivieren
+                </label>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Wenn aktiviert, erhalten Kunden €2,50 Rabatt pro SRM bei Bestellungen ab 25 SRM für dieses Produkt.
+              </p>
             </div>
 
             {/* Hidden fields */}

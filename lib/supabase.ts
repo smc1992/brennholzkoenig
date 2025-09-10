@@ -235,6 +235,7 @@ export type Database = {
           image_url: string
           category: string
           stock_quantity: number
+          has_quantity_discount: boolean
           created_at: string
           updated_at: string
         }
@@ -245,6 +246,7 @@ export type Database = {
           image_url: string
           category: string
           stock_quantity: number
+          has_quantity_discount?: boolean
         }
         Update: {
           name?: string
@@ -253,6 +255,7 @@ export type Database = {
           image_url?: string
           category?: string
           stock_quantity?: number
+          has_quantity_discount?: boolean
         }
       }
       orders: {

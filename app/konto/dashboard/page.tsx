@@ -214,8 +214,8 @@ export default function CustomerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b sticky top-0 z-30">
+    <div className="min-h-screen bg-gray-50 pt-20 md:pt-24">
+      <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
@@ -251,9 +251,9 @@ export default function CustomerDashboard() {
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8 dashboard-page">
         <div className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
           <Link href="/" className="hover:text-orange-600">Startseite</Link>
           <div className="w-4 h-4 flex items-center justify-center">

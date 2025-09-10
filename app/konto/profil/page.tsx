@@ -238,7 +238,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-4xl mx-auto px-6 py-8 dashboard-page">
         <div className="mb-8">
           <Link href="/konto/dashboard" className="inline-flex items-center text-orange-600 hover:text-orange-700 mb-4">
             <i className="ri-arrow-left-line mr-2"></i>

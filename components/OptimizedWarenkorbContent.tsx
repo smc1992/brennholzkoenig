@@ -15,6 +15,7 @@ interface CartItem {
   quantity: number;
   image: string;
   category: string;
+  has_quantity_discount?: boolean;
 }
 
 interface Tier {
@@ -89,22 +90,39 @@ export default function OptimizedWarenkorbContent({
     loadShippingCosts();
   }, []);
 
-  const loadCartFromStorage = () => {
+  const loadCartFromStorage = async () => {
     if (typeof window !== 'undefined') {
       const savedCart = localStorage.getItem('cart');
       if (savedCart) {
         try {
           const parsedCart = JSON.parse(savedCart);
-          const formattedCart = parsedCart.map((item: any) => ({
-            id: parseInt(item.id),
-            name: item.name,
-            price: item.price,
-            basePrice: item.basePrice,
-            unit: item.unit,
-            quantity: item.quantity,
-            image: item.image_url || '',
-            category: item.category
-          }));
+          
+          // Lade Produktdaten aus der Datenbank um has_quantity_discount zu erhalten
+          const productIds = parsedCart.map((item: any) => parseInt(item.id)).filter((id: number) => !isNaN(id));
+          
+          let productData: any[] = [];
+          if (productIds.length > 0) {
+            const { data } = await supabase
+              .from('products')
+              .select('id, has_quantity_discount')
+              .in('id', productIds);
+            productData = data || [];
+          }
+          
+          const formattedCart = parsedCart.map((item: any) => {
+            const product = productData.find(p => p.id === parseInt(item.id));
+            return {
+              id: parseInt(item.id),
+              name: item.name,
+              price: item.price,
+              basePrice: item.basePrice,
+              unit: item.unit,
+              quantity: item.quantity,
+              image: item.image_url || '',
+              category: item.category,
+              has_quantity_discount: product?.has_quantity_discount || false
+            };
+          });
           setCartItems(formattedCart);
         } catch (error) {
           console.error('Fehler beim Laden des Warenkorbs:', error);
@@ -174,7 +192,7 @@ export default function OptimizedWarenkorbContent({
     const updatedItems = cartItems.map(item => {
       if (item.id === id) {
         const basePrice = parseFloat(item.basePrice || item.price);
-        const pricing = calculatePriceWithTiers(basePrice, newQuantity, pricingTiers, minOrderQuantity);
+        const pricing = calculatePriceWithTiers(basePrice, newQuantity, pricingTiers, minOrderQuantity, item.has_quantity_discount || false);
         return {
           ...item,
           quantity: newQuantity,
@@ -204,7 +222,8 @@ export default function OptimizedWarenkorbContent({
         unit: item.unit,
         quantity: item.quantity,
         image_url: item.image,
-        category: item.category
+        category: item.category,
+        has_quantity_discount: item.has_quantity_discount
       }));
       localStorage.setItem('cart', JSON.stringify(cartData));
     }
