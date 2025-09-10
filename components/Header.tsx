@@ -48,105 +48,69 @@ export default function Header() {
 
     checkLoginStatus();
 
-    // Listen for Supabase auth state changes
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, session: any) => {
-      console.log('🔍 Auth State Change:', event, session?.user?.email || 'No user');
-      const isUserLoggedIn = !!session?.user;
-      setIsLoggedIn(isUserLoggedIn);
-      
-      // Additional logging for debugging
-      if (event === 'SIGNED_OUT') {
-        console.log('✅ User signed out - Setting logged out state');
-        setIsLoggedIn(false);
-      }
+      console.log('🔄 Auth state changed:', event, session?.user?.email || 'No user');
+      setIsLoggedIn(!!session?.user);
     });
 
     return () => {
-      isMountedRef.current = false;
       subscription.unsubscribe();
     };
   }, []);
 
   useEffect(() => {
-    if (!isMountedRef.current || typeof window === 'undefined') return;
-
     const updateCartCount = () => {
-      if (!isMountedRef.current) return;
-
-      try {
+      if (typeof window !== 'undefined') {
         const cartData = localStorage.getItem('cart');
-        if (!cartData || cartData === 'null' || cartData === 'undefined') {
-          setCartItemCount(0);
-          return;
-        }
-
         const cart = safeJsonParse(cartData, []);
-        
-        if (Array.isArray(cart)) {
-          const totalItems = cart.reduce((sum: number, item: any) => {
-            const quantity = typeof item?.quantity === 'number' && !isNaN(item.quantity) ? item.quantity : 0;
-            return sum + quantity;
-          }, 0);
-          setCartItemCount(Math.max(0, totalItems));
-        } else {
-          setCartItemCount(0);
-        }
-      } catch (error) {
-        console.warn('Fehler beim Laden des Warenkorbs:', error);
-        setCartItemCount(0);
+        const totalItems = cart.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0);
+        setCartItemCount(totalItems);
       }
     };
 
+    updateCartCount();
+    window.addEventListener('storage', updateCartCount);
+    window.addEventListener('cartUpdated', updateCartCount);
+
+    return () => {
+      window.removeEventListener('storage', updateCartCount);
+      window.removeEventListener('cartUpdated', updateCartCount);
+    };
+  }, []);
+
+  useEffect(() => {
     const handleScroll = () => {
-      if (!isMountedRef.current) return;
       setIsScrolled(window.scrollY > 50);
     };
 
-    const handleCartUpdate = () => {
-      updateCartCount();
-    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (accountDropdownRef.current && !accountDropdownRef.current.contains(event.target as Node)) {
         setIsAccountDropdownOpen(false);
       }
     };
 
-    updateCartCount();
-    handleScroll();
-
-    window.addEventListener('scroll', handleScroll);
-    window.addEventListener('cartUpdated', handleCartUpdate);
-    document.addEventListener('mousedown', handleClickOutside);
+    if (isAccountDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('cartUpdated', handleCartUpdate);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [isAccountDropdownOpen]);
 
   const navigation = [
     { name: 'Startseite', href: '/' },
     { name: 'Shop', href: '/shop' },
     { name: 'Blog', href: '/blog' },
     { name: 'Über uns', href: '/ueber-uns' },
-    { name: 'Kontakt', href: '/kontakt' }
+    { name: 'Kontakt', href: '/kontakt' },
   ];
-
-  useEffect(() => {
-    if (!isMountedRef.current || typeof document === 'undefined') return;
-
-    if (isMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isMenuOpen]);
 
   if (!isMounted) {
     return (
@@ -236,12 +200,15 @@ export default function Header() {
                 <span className="hidden sm:inline">Warenkorb</span>
               </Link>
 
-              {/* Account Dropdown with Session Detection */}
-              <div className="relative" ref={accountDropdownRef} style={{pointerEvents: 'auto'}}>
+              {/* Account Dropdown for Desktop */}
+              <div className="relative hidden sm:block" ref={accountDropdownRef} style={{pointerEvents: 'auto', zIndex: 10000}}>
                 <button
-                  onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
+                  onClick={() => {
+                    console.log('Desktop account dropdown clicked:', !isAccountDropdownOpen);
+                    setIsAccountDropdownOpen(!isAccountDropdownOpen);
+                  }}
                   className={`flex items-center space-x-1 sm:space-x-2 hover:text-orange-600 transition-colors cursor-pointer ${isScrolled ? 'text-gray-700' : 'text-white'}`}
-                  style={{pointerEvents: 'auto'}}
+                  style={{pointerEvents: 'auto', zIndex: 10001, position: 'relative'}}
                 >
                   <div className="w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center flex-shrink-0">
                     <i className="ri-user-line text-lg sm:text-xl"></i>
@@ -252,21 +219,26 @@ export default function Header() {
                   </div>
                 </button>
 
-                {/* Dropdown Menu */}
+                {/* Desktop Dropdown Menu */}
                 {isAccountDropdownOpen && (
                   <div 
-                    className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 header-dropdown"
+                    className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 header-dropdown block"
                     style={{
-                      position: 'fixed',
-                      zIndex: 99999,
-                      right: '20px',
-                      top: isScrolled ? '70px' : '80px',
-                      overflow: 'visible',
-                      pointerEvents: 'auto'
-                    }}
+                        position: 'fixed',
+                        zIndex: 9999999,
+                        right: '10px',
+                        top: '70px',
+                        overflow: 'visible',
+                        pointerEvents: 'auto',
+                        backgroundColor: '#ffffff',
+                        maxWidth: 'calc(100vw - 20px)',
+                        width: '280px',
+                        display: 'block',
+                        visibility: 'visible',
+                        opacity: 1
+                      }}
                   >
                     {!isLoggedIn ? (
-                      // Not logged in - Show login option
                       <div className="px-4 py-3" style={{pointerEvents: 'auto'}}>
                         <Link
                           href="/konto"
@@ -284,75 +256,80 @@ export default function Header() {
                         </Link>
                       </div>
                     ) : (
-                      // Logged in - Show account menu
-                      <>
-                        <div className="px-4 py-3 border-b border-gray-100">
-                          <div className="font-semibold text-gray-800">Willkommen zurück!</div>
-                          <div className="text-sm text-gray-500">Verwalten Sie Ihr Konto</div>
-                        </div>
-                        <div className="py-1">
-                          <Link href="/konto/dashboard" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
-                            <i className="ri-dashboard-line text-lg mr-3 text-gray-400"></i>
-                            Dashboard
-                          </Link>
-                          <Link href="/konto/profil" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
-                            <i className="ri-user-line text-lg mr-3 text-gray-400"></i>
-                            Profil verwalten
-                          </Link>
-                          <Link href="/konto/bestellverlauf" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
-                            <i className="ri-shopping-bag-line text-lg mr-3 text-gray-400"></i>
-                            Bestellungen
-                          </Link>
-                          <Link href="/konto/adressen" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
-                            <i className="ri-map-pin-line text-lg mr-3 text-gray-400"></i>
-                            Adressbuch
-                          </Link>
-                          <Link href="/konto/wunschliste" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
-                            <i className="ri-heart-line text-lg mr-3 text-gray-400"></i>
-                            Wunschliste
-                          </Link>
-                          <div className="border-t border-gray-100 mt-1 pt-1">
-                            <button
-                              onClick={async () => {
-                                console.log('🚪 Logout button clicked');
+                      <div className="py-2">
+                        <Link href="/konto/dashboard" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                          <i className="ri-dashboard-line text-lg mr-3 text-orange-600"></i>
+                          Dashboard
+                        </Link>
+                        <Link href="/konto/profil" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                          <i className="ri-user-line text-lg mr-3 text-orange-600"></i>
+                          Profil
+                        </Link>
+                        <Link href="/konto/bestellverlauf" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                          <i className="ri-file-list-line text-lg mr-3 text-orange-600"></i>
+                          Bestellverlauf
+                        </Link>
+                        <Link href="/konto/adressen" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                          <i className="ri-map-pin-line text-lg mr-3 text-orange-600"></i>
+                          Adressen
+                        </Link>
+                        <Link href="/konto/wunschliste" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                          <i className="ri-heart-line text-lg mr-3 text-orange-600"></i>
+                          Wunschliste
+                        </Link>
+                        <div className="border-t mt-2 pt-2">
+                          <button
+                            onClick={async () => {
+                              try {
+                                await supabase.auth.signOut();
                                 setIsAccountDropdownOpen(false);
-                                
-                                try {
-                                  console.log('🔄 Attempting logout...');
-                                  const { error } = await supabase.auth.signOut();
-                                  
-                                  if (error) {
-                                    console.error('❌ Logout error:', error);
-                                  } else {
-                                    console.log('✅ Logout successful');
-                                  }
-                                  
-                                  // Force state update and redirect
-                                  setIsLoggedIn(false);
-                                  console.log('🏠 Redirecting to home...');
-                                  window.location.href = '/';
-                                } catch (error) {
-                                  console.error('❌ Logout exception:', error);
-                                  // Force logout even if there's an error
-                                  setIsLoggedIn(false);
-                                  window.location.href = '/';
-                                }
-                              }}
-                              className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
-                            >
-                              <i className="ri-logout-box-line text-lg mr-3"></i>
-                              Abmelden
-                            </button>
-                          </div>
+                              } catch (error) {
+                                console.error('Logout error:', error);
+                              }
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                          >
+                            <i className="ri-logout-box-line text-lg mr-3 text-orange-600"></i>
+                            Abmelden
+                          </button>
                         </div>
-                      </>
+                      </div>
                     )}
                   </div>
                 )}
               </div>
 
+              {/* Konto für Mobile */}
+              {!isLoggedIn ? (
+                <Link 
+                  href="/konto" 
+                  className={`sm:hidden flex items-center space-x-1 hover:text-orange-600 transition-colors cursor-pointer ${isScrolled ? 'text-gray-700' : 'text-white'}`}
+                >
+                  <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                    <i className="ri-user-line text-lg"></i>
+                  </div>
+                </Link>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Mobile Dropdown geklickt:', !isAccountDropdownOpen);
+                    setIsAccountDropdownOpen(!isAccountDropdownOpen);
+                  }}
+                  className={`sm:hidden flex items-center space-x-1 hover:text-orange-600 transition-colors cursor-pointer ${isScrolled ? 'text-gray-700' : 'text-white'}`}
+                >
+                  <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                    <i className="ri-user-line text-lg"></i>
+                  </div>
+                  <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+                    <i className={`ri-arrow-down-s-line text-sm transition-transform ${isAccountDropdownOpen ? 'rotate-180' : ''}`}></i>
+                  </div>
+                </button>
+              )}
+
               <button
-                className="lg:hidden flex flex-col space-y-1 cursor-pointer p-2 z-50 relative flex-shrink-0"
+                className="lg:hidden flex flex-col space-y-1 cursor-pointer p-2 z-10 relative flex-shrink-0"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
               >
                 <span className={`block w-6 h-0.5 transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-2 bg-gray-800' : isScrolled ? 'bg-gray-800' : 'bg-white drop-shadow-lg'}`}></span>
@@ -364,11 +341,110 @@ export default function Header() {
         </div>
       </header>
 
+      {/* Mobile Dropdown Portal - Nur für eingeloggte Benutzer */}
+      {isLoggedIn && isAccountDropdownOpen && (
+        <div 
+          className="fixed inset-0 sm:hidden"
+          style={{zIndex: 999999999}}
+        >
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/20"
+            onClick={() => setIsAccountDropdownOpen(false)}
+          />
+          
+          {/* Dropdown */}
+           <div className="absolute right-2 top-16 bg-white rounded-lg shadow-xl border border-gray-200 py-2 min-w-[200px]">
+             <div 
+               className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+               onMouseDown={(e) => {
+                 e.preventDefault();
+                 console.log('Dashboard Navigation');
+                 setIsAccountDropdownOpen(false);
+                 window.location.href = '/konto/dashboard';
+               }}
+               onTouchStart={(e) => {
+                 e.preventDefault();
+                 console.log('Dashboard Touch');
+                 setIsAccountDropdownOpen(false);
+                 window.location.href = '/konto/dashboard';
+               }}
+             >
+               <i className="ri-dashboard-line text-lg mr-3 text-orange-600"></i>
+               Dashboard
+             </div>
+             
+             <div 
+               className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+               onMouseDown={(e) => {
+                 e.preventDefault();
+                 console.log('Profil Navigation');
+                 setIsAccountDropdownOpen(false);
+                 window.location.href = '/konto/profil';
+               }}
+               onTouchStart={(e) => {
+                 e.preventDefault();
+                 console.log('Profil Touch');
+                 setIsAccountDropdownOpen(false);
+                 window.location.href = '/konto/profil';
+               }}
+             >
+               <i className="ri-user-line text-lg mr-3 text-orange-600"></i>
+               Profil
+             </div>
+             
+             <div 
+               className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+               onMouseDown={(e) => {
+                 e.preventDefault();
+                 console.log('Bestellverlauf Navigation');
+                 setIsAccountDropdownOpen(false);
+                 window.location.href = '/konto/bestellverlauf';
+               }}
+               onTouchStart={(e) => {
+                 e.preventDefault();
+                 console.log('Bestellverlauf Touch');
+                 setIsAccountDropdownOpen(false);
+                 window.location.href = '/konto/bestellverlauf';
+               }}
+             >
+               <i className="ri-file-list-line text-lg mr-3 text-orange-600"></i>
+               Bestellverlauf
+             </div>
+             
+             <div className="border-t mt-2 pt-2">
+               <div
+                 className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                 onMouseDown={(e) => {
+                   e.preventDefault();
+                   console.log('Abmelden Navigation');
+                   setIsAccountDropdownOpen(false);
+                   supabase.auth.signOut().then(() => {
+                     window.location.href = '/';
+                   });
+                 }}
+                 onTouchStart={(e) => {
+                   e.preventDefault();
+                   console.log('Abmelden Touch');
+                   setIsAccountDropdownOpen(false);
+                   supabase.auth.signOut().then(() => {
+                     window.location.href = '/';
+                   });
+                 }}
+               >
+                 <i className="ri-logout-box-line text-lg mr-3 text-orange-600"></i>
+                 Abmelden
+               </div>
+             </div>
+           </div>
+        </div>
+      )}
+
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[9000] lg:hidden" style={{overflow: 'visible'}}>
-          <div className="fixed inset-0 bg-black/50" onClick={() => setIsMenuOpen(false)}></div>
-          <div className="fixed top-0 right-0 h-full w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out" style={{overflow: 'visible'}}>
+        <div className="fixed inset-0 lg:hidden" style={{zIndex: 9999999, overflow: 'visible'}}>
+          <div className="fixed inset-0 bg-black/80" style={{zIndex: 9999999}} onClick={() => setIsMenuOpen(false)}></div>
+          <div className="fixed top-0 right-0 h-full w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out" style={{zIndex: 9999999, overflow: 'visible', backgroundColor: '#ffffff', position: 'fixed'}}>
             <div className="flex flex-col h-full" style={{overflow: 'visible'}}>
               <div className="flex items-center justify-between p-6 border-b" style={{overflow: 'visible'}}>
                 <h2 className="text-xl font-bold text-gray-900">Menü</h2>
@@ -404,22 +480,80 @@ export default function Header() {
                       </span>
                     )}
                   </Link>
-                  <Link
-                    href="/konto"
-                    className="flex items-center px-6 py-3 text-gray-900 hover:bg-gray-50 transition-colors cursor-pointer"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <i className="ri-user-line text-xl mr-3"></i>
-                    Mein Konto
-                  </Link>
+                  <div className="px-6 py-3">
+                    <div className="text-gray-900 font-medium mb-2 flex items-center">
+                      <i className="ri-user-line text-xl mr-3"></i>
+                      Mein Konto
+                    </div>
+                    <div className="ml-8 space-y-1">
+                      {!isLoggedIn ? (
+                        <Link
+                          href="/konto"
+                          className="block py-2 text-gray-700 hover:text-orange-600 transition-colors"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          Anmelden / Registrieren
+                        </Link>
+                      ) : (
+                        <>
+                          <Link
+                            href="/konto/dashboard"
+                            className="block py-2 text-gray-700 hover:text-orange-600 transition-colors"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            Dashboard
+                          </Link>
+                          <Link
+                            href="/konto/profil"
+                            className="block py-2 text-gray-700 hover:text-orange-600 transition-colors"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            Profil
+                          </Link>
+                          <Link
+                            href="/konto/bestellverlauf"
+                            className="block py-2 text-gray-700 hover:text-orange-600 transition-colors"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            Bestellverlauf
+                          </Link>
+                          <Link
+                            href="/konto/adressen"
+                            className="block py-2 text-gray-700 hover:text-orange-600 transition-colors"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            Adressen
+                          </Link>
+                          <Link
+                            href="/konto/wunschliste"
+                            className="block py-2 text-gray-700 hover:text-orange-600 transition-colors"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            Wunschliste
+                          </Link>
+                          <button
+                            onClick={async () => {
+                              try {
+                                await supabase.auth.signOut();
+                                setIsMenuOpen(false);
+                              } catch (error) {
+                                console.error('Logout error:', error);
+                              }
+                            }}
+                            className="block w-full text-left py-2 text-gray-700 hover:text-orange-600 transition-colors"
+                          >
+                            Abmelden
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       )}
-
-
     </>
   );
 }

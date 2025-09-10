@@ -55,7 +55,7 @@ serve(async (req) => {
                 <div class="order-details">
                     <h3 style="margin-top: 0; color: #C04020;">📦 Ihre Bestelldetails</h3>
                     
-                    <p><strong>Bestellnummer:</strong> #${orderData.orderNumber || 'BK-' + Date.now()}</p>
+                    <p><strong>Bestellnummer:</strong> #${orderData.orderNumber}</p>
                     <p><strong>Bestelldatum:</strong> ${new Date().toLocaleDateString('de-DE')}</p>
                     <p><strong>Bestellzeit:</strong> ${new Date().toLocaleTimeString('de-DE')}</p>
                     
@@ -129,7 +129,7 @@ Lieber ${customerName},
 vielen Dank für Ihre Bestellung bei Brennholzkönig!
 
 BESTELLDETAILS:
-- Bestellnummer: #${orderData.orderNumber || 'BK-' + Date.now()}
+- Bestellnummer: #${orderData.orderNumber}
 - Bestelldatum: ${new Date().toLocaleDateString('de-DE')}
 - Gesamtbetrag: €${orderData.totalAmount?.toFixed(2) || '0.00'}
 
@@ -160,7 +160,7 @@ Brennholzhandel Vey
       },
       body: JSON.stringify({
         to: customerEmail,
-        subject: `🔥 Bestellbestätigung Brennholzkönig - Bestellung #${orderData.orderNumber || 'BK-' + Date.now()}`,
+        subject: `🔥 Bestellbestätigung Brennholzkönig - Bestellung #${orderData.orderNumber}`,
         html: orderConfirmationHTML,
         text: textVersion,
         type: 'order_confirmation'

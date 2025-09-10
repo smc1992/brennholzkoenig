@@ -153,8 +153,8 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 text-xs md:text-sm">
               <div>
                 <h4 className="font-medium text-[#1A1A1A] mb-2">📞 Kontakt</h4>
-                <p className="text-gray-600 mb-1">Telefon: 0661 480 276 00</p>
-                <p className="text-gray-600">E-Mail: info@brennholzkoenig.de</p>
+                <p className="text-gray-600 mb-1">Telefon: +49 176 71085234</p>
+                <p className="text-gray-600">E-Mail: info@brennholz-koenig.de</p>
               </div>
               
               <div>
@@ -196,7 +196,7 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
             </Link>
             
             <a
-              href="tel:0661480276000"
+              href="tel:+4917671085234"
               className="bg-green-500 hover:bg-green-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-lg md:rounded-xl font-bold text-center transition-all hover:shadow-lg transform hover:scale-[1.02] cursor-pointer text-sm md:text-base"
             >
               <i className="ri-phone-line mr-2 md:mr-3"></i>
@@ -208,7 +208,7 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
           <div className={`text-center mt-8 md:mt-12 px-4 transition-all duration-1000 delay-1100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <p className="text-gray-500 text-xs md:text-sm">
               Bei Fragen stehen wir Ihnen gerne telefonisch zur Verfügung: 
-              <strong className="text-[#C04020] ml-1">0661 480 276 00</strong>
+              <strong className="text-[#C04020] ml-1">+49 176 71085234</strong>
             </p>
           </div>
 

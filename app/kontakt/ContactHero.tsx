@@ -25,7 +25,7 @@ export default function ContactHero() {
           {/* Vereinfachte Hauptüberschrift */}
           <h1 className={`text-5xl sm:text-6xl md:text-7xl font-black text-white mb-6 leading-tight transition-all duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'}`} style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
             <span className="text-[#D4A520] block">KONTAKT</span>
-            <span className="text-white block text-3xl sm:text-4xl md:text-5xl font-normal">Sprechen Sie mit uns</span>
+            <span className="text-white block text-3xl sm:text-4xl md:text-5xl font-normal" style={{marginTop: '20px'}}>Sprechen Sie mit uns</span>
           </h1>
 
           {/* Einfache Beschreibung */}
@@ -35,7 +35,7 @@ export default function ContactHero() {
 
           {/* Reduzierte Kontakt-Optionen */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            <div className={`bg-white/95 backdrop-blur-sm rounded-2xl p-8 text-center shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer ${isVisible ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: '600ms' }}>
+            <a href="tel:+4917671085234" className={`bg-white/95 backdrop-blur-sm rounded-2xl p-8 text-center shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer ${isVisible ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: '600ms' }}>
               <div className="w-16 h-16 flex items-center justify-center bg-[#C04020] rounded-full mx-auto mb-4 shadow-lg">
                 <i className="ri-phone-fill text-white text-2xl"></i>
               </div>
@@ -44,9 +44,9 @@ export default function ContactHero() {
               </h3>
               <p className="text-[#C04020] font-bold text-2xl mb-2">+49 176 71085234</p>
               <p className="text-sm text-gray-600">Mo-Fr 7-18 Uhr</p>
-            </div>
+            </a>
 
-            <div className={`bg-white/95 backdrop-blur-sm rounded-2xl p-8 text-center shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer ${isVisible ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: '900ms' }}>
+            <a href="mailto:info@brennholz-koenig.de" className={`bg-white/95 backdrop-blur-sm rounded-2xl p-8 text-center shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer ${isVisible ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: '900ms' }}>
               <div className="w-16 h-16 flex items-center justify-center bg-[#D4A520] rounded-full mx-auto mb-4 shadow-lg">
                 <i className="ri-mail-fill text-white text-2xl"></i>
               </div>
@@ -54,11 +54,11 @@ export default function ContactHero() {
                 E-MAIL SENDEN
               </h3>
               <p className="text-[#C04020] font-bold text-xl mb-2 break-words">info@brennholz-koenig.de</p>
-            </div>
+            </a>
           </div>
 
           {/* Einfache Call-to-Action */}
-          <div className={`flex flex-col sm:flex-row gap-4 max-w-2xl transition-all duration-1000 delay-1200 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+          <div className={`flex flex-col sm:flex-row gap-4 max-w-2xl mb-16 transition-all duration-1000 delay-1200 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
             <a 
               href="tel:+4917671085234"
               className="bg-[#C04020] text-white px-10 py-5 text-xl font-bold rounded-xl hover:bg-[#A03318] transition-all duration-300 text-center whitespace-nowrap cursor-pointer shadow-lg transform hover:scale-105 flex items-center justify-center"

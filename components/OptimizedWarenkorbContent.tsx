@@ -150,8 +150,8 @@ export default function OptimizedWarenkorbContent({
 
       if (error) throw error;
 
-      const standardPrice = data?.find(s => s.setting_key === 'standard_delivery_price')?.setting_value;
-      const expressPrice = data?.find(s => s.setting_key === 'express_delivery_price')?.setting_value;
+      const standardPrice = data?.find((s: any) => s.setting_key === 'standard_delivery_price')?.setting_value;
+      const expressPrice = data?.find((s: any) => s.setting_key === 'express_delivery_price')?.setting_value;
 
       if (standardPrice || expressPrice) {
         setShippingCosts({
@@ -312,8 +312,8 @@ export default function OptimizedWarenkorbContent({
 
   if (isLoading && initialProducts.length === 0) {
     return (
-      <div className="min-h-screen bg-pergament py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-pergament py-16" style={{paddingTop: '120px'}}>
+        <div className="container mx-auto px-6 sm:px-8 lg:px-12 max-w-7xl">
           <div className="text-center">
             <div className="w-16 h-16 flex items-center justify-center bg-[#C04020] rounded-full mx-auto mb-4 animate-pulse">
               <i className="ri-shopping-cart-line text-2xl text-white"></i>
@@ -328,8 +328,8 @@ export default function OptimizedWarenkorbContent({
 
   if (combinedError) {
     return (
-      <div className="min-h-screen bg-pergament py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-pergament py-16" style={{paddingTop: '120px'}}>
+        <div className="container mx-auto px-6 sm:px-8 lg:px-12 max-w-7xl">
           <div className="text-center">
             <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
               <h1 className="text-2xl font-bold text-red-800 mb-4">Fehler beim Laden</h1>
@@ -348,8 +348,8 @@ export default function OptimizedWarenkorbContent({
   }
 
   return (
-    <div className="min-h-screen bg-pergament py-16">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-pergament py-16" style={{paddingTop: '120px'}}>
+      <div className="container mx-auto px-6 sm:px-8 lg:px-12 max-w-7xl">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-4">Ihr Warenkorb</h1>
           

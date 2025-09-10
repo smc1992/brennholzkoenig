@@ -72,7 +72,7 @@ export default function EmailAutomationTab() {
         console.error('Templates error:', templatesError);
       }
 
-      const parsedTemplates = templatesData?.map(item => ({
+      const parsedTemplates = templatesData?.map((item: any) => ({
         id: item.setting_key,
         ...JSON.parse(item.setting_value),
         created_at: item.created_at,
@@ -91,7 +91,7 @@ export default function EmailAutomationTab() {
         console.error('Campaigns error:', campaignError);
       }
 
-      const parsedCampaigns = campaignData?.map(item => ({
+      const parsedCampaigns = campaignData?.map((item: any) => ({
         id: item.setting_key,
         ...JSON.parse(item.setting_value),
         created_at: item.created_at
@@ -233,7 +233,7 @@ export default function EmailAutomationTab() {
             .replace(/{{customer_name}}/g, 'Max Mustermann')
             .replace(/{{cart_items}}/g, '3x Premium Brennholz Buche (25cm)')
             .replace(/{{cart_total}}/g, '€299,50')
-            .replace(/{{order_number}}/g, 'BHK-12345678'),
+            .replace(/{{order_number}}/g, 'BK-202412-1234'),
           template_type: 'test_automation'
         })
       });
@@ -283,7 +283,7 @@ export default function EmailAutomationTab() {
             .replace(/{{customer_name}}/g, 'Test Kunde')
             .replace(/{{cart_items}}/g, 'Demo Produkte')
             .replace(/{{cart_total}}/g, '€199,99')
-            .replace(/{{order_number}}/g, 'DEMO-12345'),
+            .replace(/{{order_number}}/g, 'BK-202412-5678'),
           template_type: 'campaign_test'
         })
       });

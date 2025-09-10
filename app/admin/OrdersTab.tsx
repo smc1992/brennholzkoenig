@@ -343,8 +343,16 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
   const createNewOrder = async (orderData: OrderFormData) => {
     setSaving(true);
     try {
-      // Generate order number
-      const orderNumber = `ORD-${Date.now()}`;
+      // Generate order number with improved format
+      const generateOrderNumber = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const randomNum = Math.floor(Math.random() * 9000) + 1000; // 4-digit random number
+        return `BK-${year}${month}-${randomNum}`;
+      };
+      
+      const orderNumber = generateOrderNumber();
       
       // Create or get customer
       let customerId = orderData.customer.id;

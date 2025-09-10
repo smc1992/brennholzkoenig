@@ -85,7 +85,7 @@ export default function RealtimeProductGrid({
   // Loading-Check deaktiviert - zeige immer Fallback-Produkte
   // if (isLoading) {
   //   return (
-  //     <div className="container mx-auto px-4 py-8">
+  //     <div className="container mx-auto px-6 sm:px-8 lg:px-12 py-8 max-w-7xl">
   //       <div className="text-center">
   //         <div className="animate-spin w-12 h-12 border-4 border-[#C04020] border-t-transparent rounded-full mx-auto mb-4"></div>
   //         <p className="text-gray-600">Produkte werden geladen...</p>
@@ -113,7 +113,7 @@ export default function RealtimeProductGrid({
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-6 sm:px-8 lg:px-12 py-8 max-w-7xl">
       {/* Real-time Status Indicator */}
       <div className="mb-6 flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Unsere Produkte</h2>

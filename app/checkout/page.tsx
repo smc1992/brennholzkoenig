@@ -543,8 +543,16 @@ export default function CheckoutPage() {
       
       console.log('Final Customer ID:', finalCustomerId, 'Type:', typeof finalCustomerId);
 
-      // Create order
-      const orderNumber = 'BK-' + Date.now();
+      // Create order with improved order number format
+      const generateOrderNumber = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const randomNum = Math.floor(Math.random() * 9000) + 1000; // 4-digit random number
+        return `BK-${year}${month}-${randomNum}`;
+      };
+      
+      const orderNumber = generateOrderNumber();
       const { subtotal, discountAmount, shipping, total } = calculateTotal();
 
       // Validiere und bereinige alle Datenfelder für UUID-Kompatibilität
@@ -744,8 +752,8 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8" style={{overflow: 'hidden'}}>
-      <div className="max-w-6xl mx-auto px-4" style={{overflow: 'hidden'}}>
+    <div className="min-h-screen bg-gray-50 py-8" style={{overflow: 'hidden', paddingTop: '120px'}}>
+      <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12" style={{overflow: 'hidden'}}>
         {/* Fortschrittsanzeige */}
         <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6 md:mb-8">
           {/* Mobile Progress Indicator */}
@@ -1447,9 +1455,13 @@ export default function CheckoutPage() {
                     {cartItems.map((item) => (
                       <div key={`mobile-${item.id}`} className="flex items-center space-x-3 text-sm">
                         <img
-                          src={item.image}
+                          src={item.image || '/api/placeholder?width=40&height=40'}
                           alt={item.name}
                           className="w-10 h-10 object-cover rounded"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/api/placeholder?width=40&height=40';
+                          }}
                         />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-gray-900 truncate">{item.name}</p>
@@ -1471,9 +1483,13 @@ export default function CheckoutPage() {
                 {cartItems.map((item) => (
                   <div key={`desktop-${item.id}`} className="flex items-center space-x-4">
                     <img
-                      src={item.image}
+                      src={item.image || '/api/placeholder?width=64&height=64'}
                       alt={item.name}
                       className="w-16 h-16 object-cover rounded-lg"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/api/placeholder?width=64&height=64';
+                      }}
                     />
                     <div className="flex-1">
                       <h4 className="font-medium text-gray-900 text-sm">{item.name}</h4>

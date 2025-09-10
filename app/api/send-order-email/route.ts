@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     // Ersetze Platzhalter im Template
     let emailSubject = emailTemplate.subject
       .replace(/{customerName}/g, customerName)
-      .replace(/{orderId}/g, orderData.orderNumber || 'BK-' + Date.now())
+      .replace(/{orderId}/g, orderData.orderNumber)
       .replace(/{orderDate}/g, new Date().toLocaleDateString('de-DE'))
       .replace(/{totalAmount}/g, orderData.totalAmount?.toFixed(2) || '0.00');
 
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
 
     let emailContent = emailTemplate.content
       .replace(/{customerName}/g, customerName)
-      .replace(/{orderId}/g, orderData.orderNumber || 'BK-' + Date.now())
+      .replace(/{orderId}/g, orderData.orderNumber)
       .replace(/{orderDate}/g, new Date().toLocaleDateString('de-DE'))
       .replace(/{totalAmount}/g, orderData.totalAmount?.toFixed(2) || '0.00')
       .replace(/{orderItems}/g, orderItemsHtml)

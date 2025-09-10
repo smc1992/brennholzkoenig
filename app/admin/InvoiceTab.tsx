@@ -168,7 +168,7 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
       
       // Dann filtern: Bestellungen ohne Rechnung
       const existingInvoiceOrderIds = invoices.map(inv => inv.order_id);
-      const ordersWithoutInvoice = (allOrders || []).filter(order => 
+      const ordersWithoutInvoice = (allOrders || []).filter((order: any) => 
         !existingInvoiceOrderIds.includes(order.id)
       );
       
@@ -176,7 +176,7 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
         total_orders: allOrders?.length || 0,
         existing_invoices: existingInvoiceOrderIds.length,
         orders_without_invoice: ordersWithoutInvoice.length,
-        filtered_orders: ordersWithoutInvoice.map(o => ({ id: o.id, order_number: o.order_number, status: o.status }))
+        filtered_orders: ordersWithoutInvoice.map((o: any) => ({ id: o.id, order_number: o.order_number, status: o.status }))
       });
       
       setOrders(ordersWithoutInvoice);
@@ -456,7 +456,7 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
             city: invoice.orders?.delivery_city || ''
           }
         },
-        items: items && items.length > 0 ? items.map(item => ({
+        items: items && items.length > 0 ? items.map((item: any) => ({
           description: item.description,
           quantity: item.quantity,
           unit_price: parseFloat(item.unit_price),
@@ -535,8 +535,8 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
     console.log('🚀 Starting HTML→PDF generation for invoice:', invoice.invoice_number);
     
     try {
-      // API-Route für HTML→PDF aufrufen
-      const response = await fetch(`/api/invoices/${invoice.id}`, {
+      // API-Route für HTML→PDF aufrufen (verwende invoice_number statt id)
+      const response = await fetch(`/api/invoices/${invoice.invoice_number}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -575,8 +575,8 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
   // HTML-Preview Funktion
   const previewHTML = async (invoice: Invoice) => {
     try {
-      // HTML-Preview in neuem Tab öffnen
-      const url = `/api/invoices/${invoice.id}?format=html`;
+      // HTML-Preview in neuem Tab öffnen (verwende invoice_number statt id)
+      const url = `/api/invoices/${invoice.invoice_number}?format=html`;
       window.open(url, '_blank');
       
       console.log('✅ HTML preview opened successfully');

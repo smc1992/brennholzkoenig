@@ -616,7 +616,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
         onClose={() => setShowNotification(false)}
       />
 
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-6 sm:px-8 lg:px-12 py-16 max-w-7xl" style={{paddingTop: '120px'}}>
         <nav className="mb-8">
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <button

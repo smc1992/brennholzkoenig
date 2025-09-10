@@ -4,7 +4,7 @@
 export default function ShopInfo() {
   return (
     <section className="py-16 bg-[#F5F0E0]">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-6 sm:px-8 lg:px-12 max-w-7xl">
         
         {/* Service Information */}
         <div className="grid md:grid-cols-3 gap-8 mb-16">

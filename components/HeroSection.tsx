@@ -72,7 +72,7 @@ export default function HeroSection() {
       className="overflow-visible"
       style={{
         minHeight: '100vh',
-        paddingTop: '80px',
+        paddingTop: '60px',
         pointerEvents: 'none',
         backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3)), url('${heroImageUrl}')`,
         backgroundSize: 'cover',
@@ -80,14 +80,16 @@ export default function HeroSection() {
         backgroundRepeat: 'no-repeat'
       }}
     >
-      <div className="container mx-auto px-6 sm:px-8 lg:px-12 w-full relative max-w-7xl" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: '8rem', paddingBottom: '4rem', pointerEvents: 'auto' }}>
+      <div className="container mx-auto px-6 sm:px-8 lg:px-12 w-full relative max-w-7xl" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: '2rem', paddingBottom: '4rem', pointerEvents: 'auto' }}>
         <div className="max-w-6xl mx-auto w-full">
           {/* Trust Badge */}
-          <div className="inline-flex items-center bg-[#C04020] text-white px-3 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-xs sm:text-base mb-6 sm:mb-8 shadow-2xl mx-auto sm:mx-0 max-w-fit">
-            <div className="w-4 h-4 sm:w-6 sm:h-6 flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
-              <i className="ri-award-fill text-sm sm:text-lg"></i>
+          <div className="flex justify-center sm:justify-start mb-6 sm:mb-8">
+            <div className="inline-flex items-center bg-[#C04020] text-white px-3 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-xs sm:text-base shadow-2xl max-w-fit">
+              <div className="w-4 h-4 sm:w-6 sm:h-6 flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+                <i className="ri-award-fill text-sm sm:text-lg"></i>
+              </div>
+              <span className="font-black text-xs sm:text-base leading-none">6.847 ZUFRIEDENE KUNDEN</span>
             </div>
-            <span className="font-black text-xs sm:text-base leading-none">6.847 ZUFRIEDENE KUNDEN</span>
           </div>
 
           {/* Main Headline - Jetzt mit DynamicContent */}
@@ -213,7 +215,7 @@ export default function HeroSection() {
           {/* WhatsApp Modal */}
           {showWhatsAppModal && (
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full mx-4 shadow-2xl transform animate-in slide-in-from-bottom-4 duration-300">
+              <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full mx-auto shadow-2xl transform animate-in slide-in-from-bottom-4 duration-300">
                 <div className="text-center mb-6">
                   <div className="w-16 h-16 bg-[#25D366] rounded-full flex items-center justify-center mx-auto mb-4">
                     <i className="ri-whatsapp-fill text-white text-3xl"></i>
