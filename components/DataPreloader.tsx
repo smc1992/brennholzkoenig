@@ -23,7 +23,8 @@ export default function DataPreloader() {
     const prefetchResources = () => {
       // Prefetch wichtige Bilder
       const criticalImages = [
-        'https://public.readdy.ai/ai/img_res/86db7336-c7fd-4211-8615-9dceb4ceb922.jpg', // Logo
+        '/images/brennholzkoenig-logo.webp?v=1', // Logo
+        '/images/brennholzkoenig-logo-white.webp?v=1', // Footer Logo
       ];
 
       criticalImages.forEach(src => {
