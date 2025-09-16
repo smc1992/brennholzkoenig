@@ -30,7 +30,11 @@ export async function loadSMTPSettings(): Promise<SMTPSettings | null> {
     
     // 1) Primär: Umgebungsvariablen (für Coolify/Hetzner)
     if (process.env.EMAIL_SERVER_HOST && process.env.EMAIL_SERVER_USER && process.env.EMAIL_SERVER_PASSWORD) {
-      console.log('[SMTP] Umgebungsvariablen-Konfiguration gefunden');
+      console.log('[SMTP] Umgebungsvariablen-Konfiguration gefunden:', {
+        host: process.env.EMAIL_SERVER_HOST,
+        port: process.env.EMAIL_SERVER_PORT || '587',
+        user: process.env.EMAIL_SERVER_USER.substring(0, 3) + '***'
+      });
       return {
         smtp_host: process.env.EMAIL_SERVER_HOST,
         smtp_port: process.env.EMAIL_SERVER_PORT || '587',
@@ -41,6 +45,8 @@ export async function loadSMTPSettings(): Promise<SMTPSettings | null> {
         smtp_from_name: 'Brennholzkönig'
       };
     }
+    
+    console.log('[SMTP] Keine vollständigen Umgebungsvariablen gefunden, verwende Supabase-Fallback');
     
     // 2) Fallback: JSON-Konfiguration unter setting_type = 'smtp_config'
     const { data: jsonRows, error: jsonError } = await supabase
@@ -144,14 +150,53 @@ export async function loadSMTPSettings(): Promise<SMTPSettings | null> {
     console.error('[SMTP] Fehlende Felder:', Object.keys(kv).filter(key => !kv[key]));
     return null;
   } catch (error) {
-    console.error('Fehler beim Laden der SMTP-Einstellungen:', error);
+    console.error('[SMTP] Fehler beim Laden der SMTP-Einstellungen:', error);
+    
+    // Letzter Fallback: Hardcoded Werte für Notfall
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('[SMTP] Verwende Notfall-Konfiguration für Produktion');
+      return {
+        smtp_host: 'w0208da5.kasserver.com',
+        smtp_port: '587',
+        smtp_secure: 'false',
+        smtp_username: 'info@brennholz-koenig.de',
+        smtp_password: 'infokoenig',
+        smtp_from_email: 'info@brennholz-koenig.de',
+        smtp_from_name: 'Brennholzkönig'
+      };
+    }
+    
     return null;
   }
 }
 
+// Neue Funktion: Garantierte SMTP-Einstellungen
+export async function getGuaranteedSMTPSettings(): Promise<SMTPSettings> {
+  try {
+    const settings = await loadSMTPSettings();
+    if (settings) {
+      return settings;
+    }
+  } catch (error) {
+    console.error('[SMTP] Fehler beim Laden der SMTP-Einstellungen:', error);
+  }
+  
+  // Garantierter Fallback
+  console.warn('[SMTP] Verwende garantierte Fallback-Konfiguration');
+  return {
+    smtp_host: 'w0208da5.kasserver.com',
+    smtp_port: '587',
+    smtp_secure: 'false',
+    smtp_username: 'info@brennholz-koenig.de',
+    smtp_password: 'infokoenig',
+    smtp_from_email: 'info@brennholz-koenig.de',
+    smtp_from_name: 'Brennholzkönig'
+  };
+}
+
 // Erstelle Nodemailer-Transporter basierend auf Datenbankeinstellungen
 export async function createEmailTransporter() {
-  const settings = await loadSMTPSettings();
+  const settings = await getGuaranteedSMTPSettings();
 
   if (!settings) {
     throw new Error('SMTP-Einstellungen konnten nicht geladen werden');
