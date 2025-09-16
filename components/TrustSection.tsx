@@ -163,7 +163,7 @@ export default function TrustSection() {
           <div className={`bg-white rounded-2xl p-6 sm:p-8 shadow-xl transition-all duration-700 transform delay-300 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}`}>
             <div className="aspect-video rounded-xl overflow-hidden mb-6 shadow-lg">
               <img 
-                src="https://static.readdy.ai/image/5cb98375ce345c7331a1619afba21cba/fc6bd73633df28293b3a47852f59e15a.webp"
+                src="/uploads/quality/industrieholz-brennt.webp"
                 alt="Professionelle Qualitätskontrolle"
                 className="w-full h-full object-cover object-center"
               />
@@ -173,7 +173,7 @@ export default function TrustSection() {
             </h3>
             <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
               Jedes Holzstück wird vor der Auslieferung geprüft. 
-              <strong className="text-[#C04020]">6-8 % Restfeuchte garantiert</strong> - 
+              <strong className="text-[#C04020]"> 6-8 % Restfeuchte garantiert</strong> - 
               gemessen mit professionellen Geräten. So brennt Ihr Holz perfekt ab dem ersten Tag.
             </p>
           </div>
