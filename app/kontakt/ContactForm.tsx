@@ -246,7 +246,7 @@ Eingegangen am: ${new Date().toLocaleString('de-DE')}
 
       // E-Mail-Versand im Hintergrund versuchen (ohne Fehler bei Problemen)
       try {
-        await fetch('/api/send-email', {
+        const emailResponse = await fetch('/api/send-email', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -259,6 +259,14 @@ Eingegangen am: ${new Date().toLocaleString('de-DE')}
             type: 'contact_form'
           })
         });
+
+        if (!emailResponse.ok) {
+          const errorData = await emailResponse.json().catch(() => ({ error: 'Unbekannter Fehler' }));
+          console.warn(`E-Mail-Versand fehlgeschlagen (${emailResponse.status}):`, errorData);
+        } else {
+          const emailResult = await emailResponse.json();
+          console.log('E-Mail erfolgreich versendet:', emailResult);
+        }
       } catch (emailError) {
         console.warn('E-Mail-Versand fehlgeschlagen, aber Anfrage wurde gespeichert:', emailError);
       }
