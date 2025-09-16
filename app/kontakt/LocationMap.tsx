@@ -10,7 +10,7 @@ export default function LocationMap() {
             UNSER <span className="text-[#C04020]">STANDORT</span>
           </h2>
           <p className="text-base sm:text-lg text-gray-700" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-            Besuchen Sie <strong>Brennholhandel Vey</strong> in Buttlar - Ihr Partner für Premium-Brennholz
+            Besuchen Sie <strong>Brennholzkönig</strong> in Eiterfeld-Großentaft - Ihr Partner für Premium-Brennholz
           </p>
         </div>
 
@@ -26,9 +26,9 @@ export default function LocationMap() {
                     ADRESSE
                   </h3>
                   <div className="space-y-1">
-                    <p className="font-bold text-base sm:text-lg">Brennholhandel Vey</p>
-                    <p className="text-sm sm:text-base">Frankfurter Straße 3</p>
-                    <p className="text-sm sm:text-base">36419 Buttlar</p>
+                    <p className="font-bold text-base sm:text-lg">Brennholzkönig</p>
+                <p className="text-sm sm:text-base">Am Rainbaum 19a</p>
+                <p className="text-sm sm:text-base">36132 Eiterfeld-Großentaft</p>
                   </div>
                 </div>
               </div>
@@ -43,7 +43,7 @@ export default function LocationMap() {
                   </h3>
                   <div className="space-y-1">
                     <a href="tel:+4917671085234" className="font-bold text-base sm:text-lg text-[#C04020] hover:text-[#A03318] transition-colors duration-300 cursor-pointer">+49 176 71085234</a>
-                    <p className="text-xs sm:text-sm text-gray-600">Für Express-Lieferungen</p>
+                    <p className="text-xs sm:text-sm text-gray-600">Besuche des Lagers / Selbstabholmarkt nur mit persönlichem Termin möglich</p>
                   </div>
                 </div>
               </div>

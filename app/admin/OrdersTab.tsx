@@ -407,6 +407,14 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
       
       if (orderError) throw orderError;
       
+      // Lade Steuereinstellungen für tax_included
+      const { data: taxSettings } = await supabase
+        .from('invoice_settings')
+        .select('default_tax_included')
+        .single();
+      
+      const defaultTaxIncluded = taxSettings?.default_tax_included || false;
+      
       // Create order items
       const orderItems = orderData.items.map(item => ({
         order_id: newOrder.id,
@@ -414,7 +422,8 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
         product_category: item.product_category,
         quantity: item.quantity,
         unit_price: item.unit_price,
-        total_price: item.quantity * item.unit_price
+        total_price: item.quantity * item.unit_price,
+        tax_included: defaultTaxIncluded
       }));
       
       const { error: itemsError } = await supabase
@@ -750,6 +759,9 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
                     Bestellung
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Kundennummer
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Kunde
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
@@ -775,6 +787,11 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-bold text-[#1A1A1A]">#{order.order_number}</div>
                       <div className="text-xs text-gray-500">{order.order_items?.length || 0} Artikel</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-mono text-gray-900">
+                        {order.customers?.id ? `KD-${String(parseInt(order.customers.id.replace(/-/g, '').slice(-5), 16) % 99999 + 10000).padStart(5, '0')}` : (order.delivery_email ? `KD-${String(Math.abs(order.delivery_email.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0)) % 89999 + 10000).padStart(5, '0')}` : '-')}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
@@ -1203,24 +1220,36 @@ function EditOrderModal({ order, onSave, onClose }: EditOrderModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-[#1A1A1A]">
-              Bestellung #{order.order_number} bearbeiten
-            </h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 cursor-pointer">
-              <i className="ri-close-line text-2xl"></i>
-            </button>
+    <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+          <div className="p-6 border-b border-gray-200 flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-[#1A1A1A]">
+                Bestellung #{order.order_number} bearbeiten
+              </h2>
+              <button onClick={onClose} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                <i className="ri-close-line text-2xl"></i>
+              </button>
+            </div>
           </div>
-        </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto p-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
           {/* Customer Information */}
           <div>
             <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Kundeninformationen</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Kundennummer</label>
+                <input
+                  type="text"
+                  value={order.customers?.id ? `KD-${String(parseInt(order.customers.id.replace(/-/g, '').slice(-5), 16) % 99999 + 10000).padStart(5, '0')}` : (order.delivery_email ? `KD-${String(Math.abs(order.delivery_email.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0)) % 89999 + 10000).padStart(5, '0')}` : '-')}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600 font-mono text-sm"
+                  readOnly
+                />
+              </div>
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Vorname</label>
                 <input
@@ -1450,7 +1479,9 @@ function EditOrderModal({ order, onSave, onClose }: EditOrderModalProps) {
               Änderungen speichern
             </button>
           </div>
-        </form>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1643,20 +1674,22 @@ function CreateOrderModal({ products, customers, onSave, onClose, saving }: Crea
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-[#1A1A1A]">
-              Neue Bestellung erstellen
-            </h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 cursor-pointer">
-              <i className="ri-close-line text-2xl"></i>
-            </button>
+    <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+          <div className="p-6 border-b border-gray-200 flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-[#1A1A1A]">
+                Neue Bestellung erstellen
+              </h2>
+              <button onClick={onClose} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                <i className="ri-close-line text-2xl"></i>
+              </button>
+            </div>
           </div>
-        </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto p-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
           {/* Customer Selection */}
           <div>
             <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Kunde auswählen</h3>
@@ -1681,6 +1714,16 @@ function CreateOrderModal({ products, customers, onSave, onClose, saving }: Crea
           <div>
             <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Kundeninformationen</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Kundennummer</label>
+                <input
+                  type="text"
+                  value={formData.customer.id ? `KD-${String(parseInt(formData.customer.id.replace(/-/g, '').slice(-5), 16) % 99999 + 10000).padStart(5, '0')}` : (formData.customer.email ? `KD-${String(Math.abs(formData.customer.email.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0)) % 89999 + 10000).padStart(5, '0')}` : 'Wird automatisch generiert')}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600 font-mono text-sm"
+                  readOnly
+                />
+              </div>
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Vorname *</label>
                 <input
@@ -1995,6 +2038,8 @@ function CreateOrderModal({ products, customers, onSave, onClose, saving }: Crea
             </button>
           </div>
         </form>
+          </div>
+        </div>
       </div>
     </div>
   );

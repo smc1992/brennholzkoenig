@@ -107,12 +107,12 @@ serve(async (req) => {
                 
                 <p style="margin-top: 30px;">Freundliche Grüße aus der schönen Rhön,<br>
                 <strong>Ihr Brennholzkönig-Team</strong><br>
-                <em>Brennholzhandel Vey</em></p>
+                <em>Brennholzkönig</em></p>
             </div>
             
             <div class="footer">
                 <p><strong>🔥 Brennholzkönig - Premium Brennholz seit 1997</strong></p>
-                <p>Brennholzhandel Vey | Frankfurter Straße 3, 36419 Buttlar</p>
+                <p>Brennholzkönig | Frankfurter Straße 3, 36419 Buttlar</p>
                 <p>Tel: 0561-43071895 | Mobil: 0176-22572100</p>
                 <p style="margin-top: 15px; font-style: italic; color: #C04020;">
                     "Wärme, die von Herzen kommt - Brennholz, das begeistert!"
@@ -148,7 +148,7 @@ E-Mail: info@brennholzkoenig.de
 
 Freundliche Grüße,
 Ihr Brennholzkönig-Team
-Brennholzhandel Vey
+Brennholzkönig
     `
 
     // E-Mail über Edge Function senden

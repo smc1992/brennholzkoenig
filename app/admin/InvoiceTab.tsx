@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import InvoicePreview from './InvoicePreview';
+import TaxSettingsModal from './TaxSettingsModal';
 
 interface InvoiceTabProps {
   onStatsUpdate?: () => Promise<void>;
@@ -80,6 +82,14 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
+  const [showInvoicePreview, setShowInvoicePreview] = useState(false);
+  const [previewOrderId, setPreviewOrderId] = useState<string | null>(null);
+  const [previewInvoiceId, setPreviewInvoiceId] = useState<string | null>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
+  const [previewHtml, setPreviewHtml] = useState<string>('');
+  const [showTaxSettings, setShowTaxSettings] = useState(false);
 
   useEffect(() => {
     loadInvoices();
@@ -239,14 +249,34 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
   const createInvoiceFromOrder = async (order: Order) => {
     setIsCreating(true);
     try {
+      // Verwende die invoice-builder API um korrekte Steuerberechnung zu erhalten
+      const response = await fetch('/api/invoice-builder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          templateId: 'invoice',
+          saveToFile: false
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Fehler bei der Steuerberechnung');
+      }
+
       // Rechnungsnummer generieren
       const invoiceNumber = `RG-${Date.now()}`;
       
-      // Steuerberechnung
-      const subtotal = parseFloat(order.subtotal_amount || '0');
-      const taxRate = 19; // 19% MwSt
-      const taxAmount = (subtotal * taxRate) / 100;
-      const totalAmount = subtotal + taxAmount;
+      // Lade die korrekt berechneten Summen aus der invoice-builder Route
+      // Dazu müssen wir die loadInvoiceData Funktion direkt aufrufen
+      const invoiceResponse = await fetch(`/api/invoice-builder?orderId=${order.id}`);
+      const invoiceData = await invoiceResponse.json();
+      
+      const subtotal = invoiceData.subtotal_amount || 0;
+      const taxAmount = invoiceData.tax_amount || 0;
+      const totalAmount = invoiceData.total_amount || 0;
 
       // Rechnung erstellen
       const { data: invoice, error: invoiceError } = await supabase
@@ -277,7 +307,7 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
           quantity: item.quantity,
           unit_price: parseFloat(item.unit_price),
           total_price: parseFloat(item.total_price),
-          tax_rate: taxRate
+          tax_rate: 19 // 19% MwSt
         }));
 
         const { error: itemsError } = await supabase
@@ -330,50 +360,44 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
 
   const testPDFGeneration = async () => {
     try {
-      console.log('🧪 Testing PDF generation with minimal data');
+      console.log('🧪 Testing modern PDF generation with Puppeteer');
       
-      const testInvoiceData = {
-        invoice_number: 'TEST-001',
-        invoice_date: new Date().toISOString().split('T')[0],
-        due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        customer: {
-          name: 'Test Kunde',
-          email: 'test@example.com',
-          address: {
-            street: 'Teststraße',
-            house_number: '1',
-            postal_code: '12345',
-            city: 'Teststadt'
-          }
+      // Verwende echte Bestellungen für Tests
+      if (orders.length === 0) {
+        alert('Keine Bestellungen zum Testen verfügbar. Erstellen Sie zuerst eine Bestellung.');
+        return;
+      }
+      
+      const testOrder = orders[0];
+      console.log('Using order for test:', testOrder.order_number);
+      
+      const response = await fetch('/api/invoice-builder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        items: [{
-          description: 'Test Produkt',
-          quantity: 1,
-          unit_price: 100,
-          total_price: 100
-        }],
-        subtotal_amount: 100,
-        tax_amount: 19,
-        total_amount: 119,
-        tax_rate: 19
-      };
-      
-      const testCompanySettings = {
-        company_name: 'Test Firma',
-        company_address_line1: 'Teststraße 1',
-        company_postal_code: '12345',
-        company_city: 'Teststadt',
-        company_phone: '0123456789',
-        company_email: 'test@firma.de',
-        tax_id: 'DE123456789'
-      };
-      
-      const { InvoicePDFGenerator } = await import('@/lib/pdfGenerator');
-      await InvoicePDFGenerator.downloadInvoicePDF(
-        testInvoiceData,
-        testCompanySettings,
-        'Test-Rechnung.pdf'
-      );
+        body: JSON.stringify({ 
+          orderId: testOrder.id,
+          templateId: 'invoice',
+          saveToFile: false
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `test-rechnung-${testOrder.order_number}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
       
       console.log('✅ Test PDF generation successful');
       alert('Test PDF wurde erfolgreich generiert!');
@@ -384,193 +408,198 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
   };
 
   const generatePDF = async (invoice: Invoice) => {
+    setIsGeneratingPDF(true);
     try {
-      console.log('🔄 Starting PDF generation for invoice:', invoice.invoice_number);
-      console.log('📋 Invoice data:', invoice);
+      console.log('Generating PDF for invoice:', invoice.invoice_number, 'ID:', invoice.id);
       
-      // Rechnungseinstellungen laden mit Fallback
-      let settings;
-      const { data: settingsData, error: settingsError } = await supabase
-        .from('invoice_settings')
-        .select('*')
-        .single();
-
-      if (settingsError || !settingsData) {
-        console.warn('⚠️ No invoice settings found, using default settings:', settingsError);
-        // Fallback-Einstellungen verwenden
-        settings = {
-          company_name: 'Brennholzkönig',
-          company_address_line1: 'Musterstraße 1',
-          company_address_line2: '',
-          company_postal_code: '36419',
-          company_city: 'Butlar',
-          company_phone: '+49 661 123-4567',
-          company_email: 'info@brennholz-koenig.de',
-          company_website: 'www.brennholz-koenig.de',
-          tax_id: 'DE123456789',
-          bank_name: 'Sparkasse Fulda',
-          bank_iban: 'DE89 5305 0180 0000 0000 00',
-          bank_bic: 'HELADEF1FDS',
-          invoice_footer_text: 'Vielen Dank für Ihr Vertrauen!',
-          logo_url: null
-        };
-      } else {
-        settings = settingsData;
-      }
-      
-      console.log('✅ Company settings loaded:', {
-        company_name: settings.company_name,
-        has_logo: !!settings.logo_url
-      });
-
-      // Rechnungspositionen laden
-      const { data: items, error: itemsError } = await supabase
-        .from('invoice_items')
-        .select('*')
-        .eq('invoice_id', invoice.id);
-
-      if (itemsError) {
-        console.error('❌ Error loading invoice items:', itemsError);
-        console.log('🔄 Trying to generate PDF without invoice items (using order items as fallback)');
-      }
-      
-      console.log('📦 Invoice items loaded:', {
-        items_count: items?.length || 0,
-        invoice_id: invoice.id,
-        has_order_items: !!invoice.orders
-      });
-
-      // PDF-Daten vorbereiten
-      const invoiceData = {
-        invoice_number: invoice.invoice_number,
-        invoice_date: invoice.invoice_date,
-        due_date: invoice.due_date,
-        customer: {
-          name: `${invoice.orders?.delivery_first_name || ''} ${invoice.orders?.delivery_last_name || ''}`.trim(),
-          email: invoice.orders?.delivery_email || '',
-          phone: invoice.orders?.delivery_phone,
-          address: {
-            street: invoice.orders?.delivery_street || '',
-            house_number: invoice.orders?.delivery_house_number || '',
-            postal_code: invoice.orders?.delivery_postal_code || '',
-            city: invoice.orders?.delivery_city || ''
-          }
-        },
-        items: items && items.length > 0 ? items.map((item: any) => ({
-          description: item.description,
-          quantity: item.quantity,
-          unit_price: parseFloat(item.unit_price),
-          total_price: parseFloat(item.total_price)
-        })) : [
-          // Fallback: Erstelle einen Standard-Eintrag wenn keine Items vorhanden sind
-          {
-            description: `Bestellung ${invoice.orders?.order_number || invoice.invoice_number}`,
-            quantity: 1,
-            unit_price: parseFloat(invoice.subtotal_amount),
-            total_price: parseFloat(invoice.subtotal_amount)
-          }
-        ],
-        subtotal_amount: parseFloat(invoice.subtotal_amount),
-        tax_amount: parseFloat(invoice.tax_amount),
-        total_amount: parseFloat(invoice.total_amount),
-        tax_rate: 19, // Standard MwSt-Satz
-        payment_terms: invoice.payment_terms,
-        notes: invoice.notes
-      };
-
-      const companySettings = {
-        company_name: settings.company_name,
-        company_address_line1: settings.company_address_line1,
-        company_address_line2: settings.company_address_line2,
-        company_postal_code: settings.company_postal_code,
-        company_city: settings.company_city,
-        company_phone: settings.company_phone,
-        company_email: settings.company_email,
-        company_website: settings.company_website,
-        tax_id: settings.tax_id,
-        bank_name: settings.bank_name,
-        bank_iban: settings.bank_iban,
-        bank_bic: settings.bank_bic,
-        invoice_footer_text: settings.invoice_footer_text,
-        logo_url: settings.logo_url
-      };
-
-      // PDF generieren und herunterladen
-      console.log('📄 Prepared invoice data:', invoiceData);
-      console.log('🏢 Prepared company settings:', companySettings);
-      
-      const { InvoicePDFGenerator } = await import('@/lib/pdfGenerator');
-      console.log('📦 PDF Generator imported successfully');
-      
-      await InvoicePDFGenerator.downloadInvoicePDF(
-        invoiceData,
-        companySettings,
-        `Rechnung_${invoice.invoice_number}.pdf`
-      );
-      
-      console.log('✅ PDF download completed successfully');
-
-    } catch (error) {
-      console.error('💥 PDF generation failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      
-      console.error('Error details:', {
-        message: errorMessage,
-        stack: errorStack,
-        invoice_id: invoice.id,
-        invoice_number: invoice.invoice_number,
-        invoice_data: invoice,
-        has_orders: !!invoice.orders,
-        has_customer_data: !!(invoice.orders?.delivery_first_name && invoice.orders?.delivery_last_name)
-      });
-      
-      // Zeige detaillierte Fehlermeldung
-      alert(`Fehler bei der PDF-Generierung für Rechnung ${invoice.invoice_number}:\n\n${errorMessage}\n\nPrüfen Sie die Browser-Konsole für weitere Details.`);
-    }
-  };
-
-  // Neue HTML→PDF Funktion mit Puppeteer
-  const generateHTMLPDF = async (invoice: Invoice) => {
-    console.log('🚀 Starting HTML→PDF generation for invoice:', invoice.invoice_number);
-    
-    try {
-      // API-Route für HTML→PDF aufrufen (verwende invoice_number statt id)
-      const response = await fetch(`/api/invoices/${invoice.invoice_number}`, {
-        method: 'GET',
+      const response = await fetch('/api/invoice-builder', {
+        method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          orderId: invoice.order_id, // Verwende order_id um die Bestellung zu laden
+          templateId: 'invoice',
+          saveToFile: false
+        }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(`API Error: ${response.status} - ${errorData.error || response.statusText}`);
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText };
+        }
+        throw new Error(`PDF generation failed: ${errorData.details || errorData.error || response.statusText}`);
       }
 
-      // PDF als Blob herunterladen
-      const pdfBlob = await response.blob();
-      
-      // Download-Link erstellen
-      const url = window.URL.createObjectURL(pdfBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Rechnung_${invoice.invoice_number}_HTML.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `rechnung-${invoice.invoice_number}.pdf`;
+      document.body.appendChild(a);
+      a.click();
       window.URL.revokeObjectURL(url);
-      
-      console.log('✅ HTML→PDF download completed successfully');
+      document.body.removeChild(a);
 
+      alert('PDF erfolgreich generiert!');
     } catch (error) {
-      console.error('💥 HTML→PDF generation failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
-      
-      // Zeige detaillierte Fehlermeldung
-      alert(`Fehler bei der HTML→PDF-Generierung für Rechnung ${invoice.invoice_number}:\n\n${errorMessage}\n\nStellen Sie sicher, dass die Dependencies installiert sind:\nnpm install puppeteer handlebars @types/handlebars`);
+      console.error('PDF generation error:', error);
+      alert(`Fehler beim Generieren der PDF: ${error instanceof Error ? error.message : error}`);
+    } finally {
+      setIsGeneratingPDF(false);
     }
   };
+
+  const showPreview = async (invoice: Invoice) => {
+    try {
+      const response = await fetch(`/api/invoice-builder?action=preview&invoiceId=${invoice.id}&templateId=default`);
+      
+      if (!response.ok) {
+        throw new Error('Preview generation failed');
+      }
+      
+      const html = await response.text();
+      setPreviewHtml(html);
+      setPreviewInvoice(invoice);
+      setShowPreviewModal(true);
+    } catch (error) {
+      console.error('Preview error:', error);
+      alert('Fehler beim Laden der Vorschau');
+    }
+  };
+
+  const generateFromOrder = async (order: Order) => {
+    setIsCreating(true);
+    try {
+      // Generiere Rechnungsnummer
+      const invoiceNumber = `RG-${Date.now()}`;
+      
+      console.log('🔄 Creating invoice for order:', order.order_number);
+      
+      // Erstelle Rechnung direkt (umgeht RLS-Probleme)
+      const directResponse = await fetch('/api/create-invoice-direct', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          orderData: order,
+          invoiceNumber: invoiceNumber
+        }),
+      });
+
+      if (!directResponse.ok) {
+        const errorText = await directResponse.text();
+        console.error('Direct API Error Response:', errorText);
+        throw new Error('Direct invoice creation failed');
+      }
+
+      const directResult = await directResponse.json();
+      
+      if (directResult.success) {
+        console.log('✅ Invoice created:', directResult.invoice);
+        
+        // Versuche auch PDF zu generieren (optional)
+        try {
+          const pdfResponse = await fetch('/api/invoice-builder', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              invoiceId: directResult.invoice.id,
+              templateId: 'invoice',
+              saveToFile: true
+            }),
+          });
+          
+          if (pdfResponse.ok) {
+            console.log('✅ PDF also generated successfully');
+          } else {
+            console.log('⚠️ PDF generation failed, but invoice created');
+          }
+        } catch (pdfError) {
+          console.log('⚠️ PDF generation error:', pdfError);
+        }
+        
+        alert(`Rechnung erfolgreich erstellt! Rechnungsnummer: ${directResult.invoice.invoice_number}`);
+        
+        // Schließe das Modal
+        setShowCreateModal(false);
+        
+        // Aktualisiere die Rechnungsliste
+        await loadInvoices();
+        
+        // Aktualisiere auch die Bestellungsliste
+        await loadOrdersWithoutInvoice();
+        
+        // Aktualisiere Statistiken falls verfügbar
+        if (onStatsUpdate) {
+          await onStatsUpdate();
+        }
+      } else {
+        throw new Error('Direct invoice creation failed');
+      }
+    } catch (error) {
+      console.error('Invoice generation error:', error);
+      alert(`Fehler beim Erstellen der Rechnung: ${error instanceof Error ? error.message : error}`);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const deleteInvoice = async (invoice: Invoice) => {
+    const confirmDelete = confirm(
+      `Sind Sie sicher, dass Sie die Rechnung ${invoice.invoice_number} löschen möchten?\n\nDiese Aktion kann nicht rückgängig gemacht werden.`
+    );
+    
+    if (!confirmDelete) {
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .delete()
+        .eq('id', invoice.id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Lösche auch die PDF-Datei falls vorhanden
+      if (invoice.pdf_path) {
+        try {
+          await supabase.storage
+            .from('documents')
+            .remove([invoice.pdf_path]);
+        } catch (storageError) {
+          console.warn('PDF file could not be deleted:', storageError);
+        }
+      }
+      
+      alert('Rechnung erfolgreich gelöscht!');
+      
+      // Aktualisiere die Rechnungsliste
+      await loadInvoices();
+      
+      // Aktualisiere Statistiken falls verfügbar
+      if (onStatsUpdate) {
+        await onStatsUpdate();
+      }
+    } catch (error) {
+      console.error('Delete invoice error:', error);
+      alert(`Fehler beim Löschen der Rechnung: ${error instanceof Error ? error.message : error}`);
+    }
+  };
+
+
 
   // HTML-Preview Funktion
   const previewHTML = async (invoice: Invoice) => {
@@ -626,27 +655,20 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={testPDFGeneration}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            title="Test PDF mit jsPDF"
+            onClick={() => setShowTaxSettings(true)}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+            title="Steuereinstellungen verwalten"
           >
-            <i className="ri-file-pdf-line mr-2"></i>
-            Test PDF (jsPDF)
+            <i className="ri-settings-3-line mr-2"></i>
+            Steuereinstellungen
           </button>
           <button
-            onClick={() => {
-              // Test HTML→PDF mit erster verfügbarer Rechnung
-              if (invoices.length > 0) {
-                generateHTMLPDF(invoices[0]);
-              } else {
-                alert('Keine Rechnungen zum Testen verfügbar');
-              }
-            }}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-            title="Test HTML→PDF mit Puppeteer"
+            onClick={testPDFGeneration}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            title="Test PDF-Generierung mit Puppeteer"
           >
-            <i className="ri-html5-line mr-2"></i>
-            Test HTML→PDF
+            <i className="ri-file-pdf-line mr-2"></i>
+            Test PDF
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
@@ -754,30 +776,22 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                     <button
                       onClick={() => {
-                        setSelectedInvoice(invoice);
-                        setShowInvoiceModal(true);
+                        setPreviewInvoiceId(invoice.id);
+                        setPreviewOrderId(null);
+                        setShowInvoicePreview(true);
                       }}
-                      className="text-amber-600 hover:text-amber-900"
+                      className="text-green-600 hover:text-green-900"
+                      title="Vorschau anzeigen"
                     >
                       <i className="ri-eye-line"></i>
                     </button>
                     <button
-                      onClick={() => {
-                        console.log('🖱️ PDF Download button clicked for invoice:', invoice.invoice_number);
-                        console.log('📋 Invoice object:', invoice);
-                        generatePDF(invoice);
-                      }}
-                      className="text-blue-600 hover:text-blue-900"
-                      title="PDF herunterladen (jsPDF)"
+                      onClick={() => generatePDF(invoice)}
+                      disabled={isGeneratingPDF}
+                      className="text-blue-600 hover:text-blue-900 disabled:opacity-50"
+                      title="PDF herunterladen"
                     >
                       <i className="ri-download-line"></i>
-                    </button>
-                    <button
-                      onClick={() => generateHTMLPDF(invoice)}
-                      className="text-purple-600 hover:text-purple-900"
-                      title="HTML→PDF herunterladen (Puppeteer)"
-                    >
-                      <i className="ri-file-pdf-line"></i>
                     </button>
                     <button
                       onClick={() => previewHTML(invoice)}
@@ -798,10 +812,18 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
                       <button
                         onClick={() => updateInvoiceStatus(invoice.id, 'paid')}
                         className="text-green-600 hover:text-green-900"
+                        title="Als bezahlt markieren"
                       >
                         <i className="ri-check-line"></i>
                       </button>
                     )}
+                    <button
+                      onClick={() => deleteInvoice(invoice)}
+                      className="text-red-600 hover:text-red-900"
+                      title="Rechnung löschen"
+                    >
+                      <i className="ri-delete-bin-line"></i>
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -855,7 +877,17 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
                           <div className="text-right">
                             <p className="font-medium text-gray-900">€{parseFloat(order.total_amount).toFixed(2)}</p>
                             <button
-                              onClick={() => createInvoiceFromOrder(order)}
+                              onClick={() => {
+                                setPreviewOrderId(order.order_number || order.id);
+                                setPreviewInvoiceId(null);
+                                setShowInvoicePreview(true);
+                              }}
+                              className="mt-2 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors mr-2"
+                            >
+                              Vorschau
+                            </button>
+                            <button
+                              onClick={() => generateFromOrder(order)}
                               disabled={isCreating}
                               className="mt-2 bg-amber-600 text-white px-3 py-1 rounded text-sm hover:bg-amber-700 transition-colors disabled:opacity-50"
                             >
@@ -872,6 +904,8 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
           </div>
         </div>
       )}
+
+
 
       {/* Modal für Rechnungsdetails */}
       {showInvoiceModal && selectedInvoice && (
@@ -951,25 +985,24 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
 
               <div className="flex justify-end space-x-3 mt-6">
                 <button
-                  onClick={() => generatePDF(selectedInvoice)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <i className="ri-download-line mr-2"></i>
-                  PDF (jsPDF)
-                </button>
-                <button
-                  onClick={() => generateHTMLPDF(selectedInvoice)}
-                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  <i className="ri-file-pdf-line mr-2"></i>
-                  HTML→PDF
-                </button>
-                <button
-                  onClick={() => previewHTML(selectedInvoice)}
+                  onClick={() => {
+                    setPreviewInvoiceId(selectedInvoice.id);
+                    setPreviewOrderId(null);
+                    setShowInvoicePreview(true);
+                    setShowInvoiceModal(false);
+                  }}
                   className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
                 >
-                  <i className="ri-external-link-line mr-2"></i>
+                  <i className="ri-eye-line mr-2"></i>
                   Vorschau
+                </button>
+                <button
+                  onClick={() => generatePDF(selectedInvoice)}
+                  disabled={isGeneratingPDF}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  <i className="ri-download-line mr-2"></i>
+                  PDF herunterladen
                 </button>
                 <button
                   onClick={() => setShowInvoiceModal(false)}
@@ -982,6 +1015,68 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
           </div>
         </div>
       )}
-    </div>
-  );
+
+      {/* Modal für Rechnungsvorschau */}
+      {showPreviewModal && previewInvoice && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Vorschau: {previewInvoice.invoice_number}
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => generatePDF(previewInvoice)}
+                    disabled={isGeneratingPDF}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    <i className="ri-download-line mr-2"></i>
+                    PDF herunterladen
+                  </button>
+                  <button
+                    onClick={() => setShowPreviewModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <i className="ri-close-line text-xl"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <iframe
+                  srcDoc={previewHtml}
+                  className="w-full h-[600px]"
+                  title="Rechnungsvorschau"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* InvoicePreview Komponente */}
+       {showInvoicePreview && (
+         <InvoicePreview
+           orderId={previewOrderId || undefined}
+           invoiceId={previewInvoiceId || undefined}
+           onClose={() => {
+             setShowInvoicePreview(false);
+             setPreviewOrderId(null);
+           setPreviewInvoiceId(null);
+         }}
+       />
+     )}
+
+     {/* Steuereinstellungen Modal */}
+     <TaxSettingsModal
+       isOpen={showTaxSettings}
+       onClose={() => setShowTaxSettings(false)}
+       onSave={() => {
+         // Reload data if needed
+         loadInvoices();
+       }}
+     />
+   </div>
+ );
 }

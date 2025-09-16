@@ -87,7 +87,7 @@ export default function SMSSystemTab() {
         .select('*')
         .eq('setting_type', 'sms_templates');
 
-      const templates = data?.map(item => JSON.parse(item.setting_value)) || [];
+      const templates = data?.map((item: any) => JSON.parse(item.setting_value)) || [];
 
       // Standard-Templates falls keine vorhanden
       if (templates.length === 0) {
@@ -128,11 +128,13 @@ export default function SMSSystemTab() {
         for (const template of defaultTemplates) {
           await supabase
             .from('app_settings')
-            .insert({
+            .upsert({
               setting_type: 'sms_templates',
               setting_key: template.id,
               setting_value: JSON.stringify(template),
               updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'setting_key'
             });
         }
       } else {
@@ -152,7 +154,7 @@ export default function SMSSystemTab() {
         .order('updated_at', { ascending: false })
         .limit(50);
 
-      const logs = data?.map(item => JSON.parse(item.setting_value)) || [];
+      const logs = data?.map((item: any) => JSON.parse(item.setting_value)) || [];
       setSmsLogs(logs);
     } catch (error) {
       console.error('Error loading SMS logs:', error);
@@ -169,6 +171,8 @@ export default function SMSSystemTab() {
           setting_key: 'config',
           setting_value: JSON.stringify(smsSettings),
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'setting_key'
         });
 
       if (error) throw error;
@@ -218,11 +222,13 @@ export default function SMSSystemTab() {
 
         await supabase
           .from('app_settings')
-          .insert({
+          .upsert({
             setting_type: 'sms_logs',
             setting_key: logEntry.id,
             setting_value: JSON.stringify(logEntry),
             updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'setting_key'
           });
 
         setMessage('Test-SMS erfolgreich gesendet!');
@@ -243,11 +249,14 @@ export default function SMSSystemTab() {
     try {
       const { error } = await supabase
         .from('app_settings')
-        .update({
+        .upsert({
+          setting_type: 'sms_templates',
+          setting_key: templateId,
           setting_value: JSON.stringify(updatedTemplate),
           updated_at: new Date().toISOString()
-        })
-        .eq('setting_key', templateId);
+        }, {
+          onConflict: 'setting_key'
+        });
 
       if (error) throw error;
 

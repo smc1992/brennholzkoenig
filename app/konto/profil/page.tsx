@@ -15,6 +15,7 @@ export default function ProfilePage() {
     first_name: '',
     last_name: '',
     phone: '',
+    company: '',
     street: '',
     house_number: '',
     city: '',
@@ -58,6 +59,7 @@ export default function ProfilePage() {
         first_name: data?.first_name || '',
         last_name: data?.last_name || '',
         phone: data?.phone || '',
+        company: data?.company || '',
         street: data?.street || '',
         house_number: data?.house_number || '',
         city: data?.city || '',
@@ -89,6 +91,7 @@ export default function ProfilePage() {
         first_name: profile.first_name,
         last_name: profile.last_name,
         phone: profile.phone || null,
+        company: profile.company || null,
         street: profile.street || null,
         house_number: profile.house_number || null,
         city: profile.city || null,
@@ -237,23 +240,23 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-6 py-8 dashboard-page">
-        <div className="mb-8">
-          <Link href="/konto/dashboard" className="inline-flex items-center text-orange-600 hover:text-orange-700 mb-4">
+    <div className="min-h-screen bg-gray-50 pt-20 sm:pt-24 md:pt-28">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8 dashboard-page">
+        <div className="mb-6 sm:mb-8">
+          <Link href="/konto/dashboard" className="inline-flex items-center text-orange-600 hover:text-orange-700 mb-3 sm:mb-4 text-sm sm:text-base">
             <i className="ri-arrow-left-line mr-2"></i>
-            Zurück zum Dashboard
+            <span className="truncate">Zurück zum Dashboard</span>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Mein Profil</h1>
-          <p className="text-gray-600 mt-2">Verwalten Sie Ihre persönlichen Daten</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mein Profil</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-2">Verwalten Sie Ihre persönlichen Daten</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Persönliche Informationen</h2>
+          <div className="p-4 sm:p-6 border-b border-gray-200">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Persönliche Informationen</h2>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6">
             {message && (
               <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center">
@@ -332,6 +335,20 @@ export default function ProfilePage() {
                   name="phone"
                   value={profile.phone}
                   onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Firmenname (optional)
+                </label>
+                <input
+                  type="text"
+                  name="company"
+                  value={profile.company}
+                  onChange={handleInputChange}
+                  placeholder="Firmenname eingeben..."
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 />
               </div>

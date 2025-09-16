@@ -63,7 +63,7 @@ const fallbackProducts: Product[] = [
     name: "Scheitholz Buche 33cm",
     description: "Klassisches Scheitholz aus Buche - 33cm Länge",
     price: 99.99,
-    image_url: "/images/scheitholz-buche-33.jpg",
+    image_url: "/images/scheitholz-buche-33-cm-1756681329634.webp",
     category: "Scheitholz",
     stock_quantity: 25,
     unit: "SRM",

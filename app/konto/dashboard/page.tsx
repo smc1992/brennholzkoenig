@@ -21,6 +21,16 @@ interface User {
   };
 }
 
+interface Customer {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  customer_number: string;
+  phone?: string;
+  company?: string;
+}
+
 interface LoyaltyMember {
   id: string;
   customer_id: string;
@@ -35,6 +45,7 @@ interface LoyaltyMember {
 
 export default function CustomerDashboard() {
   const [user, setUser] = useState<User | null>(null);
+  const [customer, setCustomer] = useState<Customer | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loyaltyData, setLoyaltyData] = useState<LoyaltyMember | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,18 +70,21 @@ export default function CustomerDashboard() {
 
   const fetchOrders = async (user: any) => {
     try {
-      // Erst customer_id über customers Tabelle finden
-      const { data: customer } = await supabase
+      // Erst customer_id über customers Tabelle finden und Kundendaten laden
+      const { data: customerData } = await supabase
         .from('customers')
-        .select('id')
+        .select('id, first_name, last_name, email, customer_number, phone, company')
         .eq('email', user.email)
         .single();
 
-      if (!customer) {
+      if (!customerData) {
         console.log('Kunde nicht gefunden');
         setOrders([]);
         return;
       }
+      
+      // Kundendaten setzen
+      setCustomer(customerData as Customer);
 
       const { data: orders, error } = await supabase
         .from('orders')
@@ -85,7 +99,7 @@ export default function CustomerDashboard() {
             total_price
           )
         `)
-        .eq('customer_id', customer.id)
+        .eq('customer_id', customerData.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -214,38 +228,45 @@ export default function CustomerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 md:pt-24">
+    <div className="min-h-screen bg-gray-50 pt-20 sm:pt-24 md:pt-28">
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="text-orange-600 hover:text-orange-700 transition-colors">
-                <div className="w-6 h-6 flex items-center justify-center">
-                  <i className="ri-arrow-left-line text-xl"></i>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <Link href="/" className="text-orange-600 hover:text-orange-700 transition-colors p-1">
+                <div className="w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center">
+                  <i className="ri-arrow-left-line text-xl sm:text-lg"></i>
                 </div>
               </Link>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
-                <p className="text-sm text-gray-500">Willkommen zurück, {user?.user_metadata?.first_name || 'Kunde'}</p>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">Dashboard</h1>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
+                  <p className="text-xs sm:text-sm text-gray-500 truncate">Willkommen zurück, {user?.user_metadata?.first_name || 'Kunde'}</p>
+                  {customer?.customer_number && (
+                    <span className="text-xs font-mono bg-orange-100 text-orange-800 px-2 py-1 rounded mt-1 sm:mt-0 inline-block">
+                      {customer.customer_number}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/shop" className="text-gray-600 hover:text-orange-600 transition-colors">
-                <div className="w-6 h-6 flex items-center justify-center">
-                  <i className="ri-store-line text-xl"></i>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <Link href="/shop" className="text-gray-600 hover:text-orange-600 transition-colors p-1">
+                <div className="w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center">
+                  <i className="ri-store-line text-xl sm:text-lg"></i>
                 </div>
               </Link>
-              <Link href="/warenkorb" className="text-gray-600 hover:text-orange-600 transition-colors">
-                <div className="w-6 h-6 flex items-center justify-center">
-                  <i className="ri-shopping-cart-line text-xl"></i>
+              <Link href="/warenkorb" className="text-gray-600 hover:text-orange-600 transition-colors p-1">
+                <div className="w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center">
+                  <i className="ri-shopping-cart-line text-xl sm:text-lg"></i>
                 </div>
               </Link>
               <button
                 onClick={handleLogout}
-                className="text-gray-600 hover:text-red-600 transition-colors"
+                className="text-gray-600 hover:text-red-600 transition-colors p-1"
               >
-                <div className="w-6 h-6 flex items-center justify-center">
-                  <i className="ri-logout-box-line text-xl"></i>
+                <div className="w-8 h-8 sm:w-6 sm:h-6 flex items-center justify-center">
+                  <i className="ri-logout-box-line text-xl sm:text-lg"></i>
                 </div>
               </button>
             </div>
@@ -253,32 +274,32 @@ export default function CustomerDashboard() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 dashboard-page">
-        <div className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
-          <Link href="/" className="hover:text-orange-600">Startseite</Link>
-          <div className="w-4 h-4 flex items-center justify-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 dashboard-page">
+        <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6">
+          <Link href="/" className="hover:text-orange-600 truncate">Startseite</Link>
+          <div className="w-3 h-3 sm:w-4 sm:h-4 flex items-center justify-center flex-shrink-0">
             <i className="ri-arrow-right-s-line"></i>
           </div>
-          <span className="text-orange-600 font-medium">Dashboard</span>
+          <span className="text-orange-600 font-medium truncate">Dashboard</span>
         </div>
 
-        <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-6 mb-8 border">
-          <div className="flex flex-col md:flex-row md:items-center justify-between">
-            <div className="mb-4 md:mb-0">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 border">
+          <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
                 Willkommen zurück, {user?.user_metadata?.first_name || 'Kunde'}! 
               </h2>
-              <p className="text-gray-600">Hier ist Ihre aktuelle Kontoübersicht</p>
+              <p className="text-sm sm:text-base text-gray-600">Hier ist Ihre aktuelle Kontoübersicht</p>
             </div>
             {loyaltyData && (
-              <div className="bg-gradient-to-r from-amber-600 to-amber-800 p-4 rounded-lg text-white">
+              <div className="bg-gradient-to-r from-amber-600 to-amber-800 p-3 sm:p-4 rounded-lg text-white w-full md:w-auto">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                    <i className={`${getTierIcon(loyaltyData.tier)} text-xl`}></i>
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i className={`${getTierIcon(loyaltyData.tier)} text-lg sm:text-xl`}></i>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium opacity-90">{loyaltyData.tier.toUpperCase()} MITGLIED</p>
-                    <p className="text-lg font-bold">{loyaltyData.points_balance} Punkte</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium opacity-90">{loyaltyData.tier.toUpperCase()} MITGLIED</p>
+                    <p className="text-base sm:text-lg font-bold">{loyaltyData.points_balance} Punkte</p>
                   </div>
                 </div>
               </div>
@@ -286,15 +307,15 @@ export default function CustomerDashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Gesamtbestellungen</p>
-                <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-gray-600 truncate">Gesamtbestellungen</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">{orders.length}</p>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <i className="ri-shopping-bag-line text-xl text-blue-600"></i>
+              <div className="w-8 h-8 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <i className="ri-shopping-bag-line text-base sm:text-xl text-blue-600"></i>
               </div>
             </div>
           </div>
@@ -439,31 +460,31 @@ export default function CustomerDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Schnell-Aktionen</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Schnell-Aktionen</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <Link
               href="/shop"
-              className="flex items-center justify-center px-6 py-4 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+              className="flex items-center justify-center px-4 sm:px-6 py-3 sm:py-4 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm sm:text-base font-medium"
             >
-              <i className="ri-shopping-bag-line mr-2"></i>
-              Jetzt einkaufen
+              <i className="ri-shopping-bag-line mr-2 text-base sm:text-lg"></i>
+              <span className="truncate">Jetzt einkaufen</span>
             </Link>
 
             <Link
               href="/konto/bestellverlauf"
-              className="flex items-center justify-center px-6 py-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              className="flex items-center justify-center px-4 sm:px-6 py-3 sm:py-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm sm:text-base font-medium"
             >
-              <i className="ri-file-list-line mr-2"></i>
-              Bestellungen anzeigen
+              <i className="ri-file-list-line mr-2 text-base sm:text-lg"></i>
+              <span className="truncate">Bestellungen</span>
             </Link>
 
             <Link
               href="/kontakt"
-              className="flex items-center justify-center px-6 py-4 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+              className="flex items-center justify-center px-4 sm:px-6 py-3 sm:py-4 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm sm:text-base font-medium"
             >
-              <i className="ri-customer-service-line mr-2"></i>
-              Support kontaktieren  
+              <i className="ri-customer-service-line mr-2 text-base sm:text-lg"></i>
+              <span className="truncate">Support</span>
             </Link>
           </div>
         </div>

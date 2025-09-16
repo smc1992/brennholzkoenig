@@ -20,8 +20,58 @@ import Underline from '@tiptap/extension-underline';
 import Strike from '@tiptap/extension-strike';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
 import { useCallback } from 'react';
+import { Extension } from '@tiptap/core';
 
 const lowlight = createLowlight(common);
+
+// Custom FontSize Extension
+const FontSize = Extension.create({
+  name: 'fontSize',
+  
+  addOptions() {
+    return {
+      types: ['textStyle'],
+    }
+  },
+  
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: element => element.style.fontSize?.replace(/['\"]/, ''),
+            renderHTML: attributes => {
+              if (!attributes.fontSize) {
+                return {}
+              }
+              return {
+                style: `font-size: ${attributes.fontSize}`,
+              }
+            },
+          },
+        },
+      },
+    ]
+  },
+  
+  addCommands() {
+    return {
+      setFontSize: (fontSize: string) => ({ chain }: any) => {
+        return chain()
+          .setMark('textStyle', { fontSize })
+          .run()
+      },
+      unsetFontSize: () => ({ chain }: any) => {
+        return chain()
+          .setMark('textStyle', { fontSize: null })
+          .removeEmptyTextStyle()
+          .run()
+      },
+    } as any
+  },
+})
 
 interface RichTextEditorProps {
   content: string;
@@ -30,6 +80,10 @@ interface RichTextEditorProps {
 }
 
 export default function RichTextEditor({ content, onChange, placeholder }: RichTextEditorProps) {
+  const [showImageUpload, setShowImageUpload] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -51,6 +105,7 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
       }),
       Color,
       TextStyle,
+      FontSize,
       Highlight.configure({
         multicolor: true,
       }),
@@ -82,6 +137,53 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
   });
 
   const [showMediaManager, setShowMediaManager] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  
+  // Supabase Image Upload
+  const uploadImageToSupabase = async (file: File): Promise<string> => {
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `blog-${Date.now()}.${fileExt}`;
+      const filePath = `blog-images/${fileName}`;
+      
+      const { data, error } = await supabase.storage
+        .from('media')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      if (error) throw error;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('media')
+        .getPublicUrl(filePath);
+      
+      return publicUrl;
+    } catch (error) {
+      console.error('Image upload error:', error);
+      throw error;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+  
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      const imageUrl = await uploadImageToSupabase(file);
+      editor?.chain().focus().setImage({ src: imageUrl }).run();
+    } catch (error) {
+      alert('Fehler beim Hochladen des Bildes');
+    }
+  };
+  
+  const insertImage = () => {
+    fileInputRef.current?.click();
+  };
 
   const addImage = useCallback(() => {
     setShowMediaManager(true);
@@ -135,6 +237,52 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
       
       <div className="border border-gray-300 rounded-lg overflow-hidden">
         <div className="bg-gray-50 border-b border-gray-300 p-2 flex flex-wrap gap-1">
+        {/* Font Size */}
+        <div className="flex gap-1 border-r border-gray-300 pr-2 mr-2">
+          <select
+            onChange={(e) => {
+               const size = e.target.value;
+               if (size) {
+                 (editor as any)?.chain().focus().setFontSize(size).run();
+               } else {
+                 (editor as any)?.chain().focus().unsetFontSize().run();
+               }
+             }}
+            className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+            title="Schriftgröße"
+          >
+            <option value="">Standard</option>
+            <option value="10px">10px</option>
+            <option value="12px">12px</option>
+            <option value="14px">14px</option>
+            <option value="16px">16px</option>
+            <option value="18px">18px</option>
+            <option value="20px">20px</option>
+            <option value="24px">24px</option>
+            <option value="28px">28px</option>
+            <option value="32px">32px</option>
+            <option value="36px">36px</option>
+            <option value="48px">48px</option>
+          </select>
+        </div>
+        
+        {/* Text Color */}
+        <div className="flex gap-1 border-r border-gray-300 pr-2 mr-2">
+          <input
+            type="color"
+            onChange={(e) => editor?.chain().focus().setColor(e.target.value).run()}
+            className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+            title="Textfarbe"
+          />
+          <button
+            onClick={() => editor?.chain().focus().unsetColor().run()}
+            className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-700"
+            title="Textfarbe entfernen"
+          >
+            <i className="ri-format-clear"></i>
+          </button>
+        </div>
+        
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -291,8 +439,25 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
 
         <button
           type="button"
+          onClick={insertImage}
+          disabled={uploadingImage}
+          className={`px-3 py-1 rounded text-sm font-medium ${
+            uploadingImage ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'
+          }`}
+          title="Bild hochladen"
+        >
+          {uploadingImage ? (
+            <i className="ri-loader-4-line animate-spin w-4 h-4 flex items-center justify-center"></i>
+          ) : (
+            <i className="ri-upload-2-line w-4 h-4 flex items-center justify-center"></i>
+          )}
+        </button>
+
+        <button
+          type="button"
           onClick={addImage}
           className="px-3 py-1 rounded text-sm font-medium bg-white text-gray-700 hover:bg-gray-100"
+          title="Medien-Bibliothek"
         >
           <i className="ri-image-line w-4 h-4 flex items-center justify-center"></i>
         </button>
@@ -370,6 +535,14 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
           editor={editor}
           className="min-h-[200px] max-h-[400px] overflow-y-auto"
           placeholder={placeholder}
+        />
+        
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="hidden"
         />
       </div>
     </>

@@ -28,6 +28,7 @@ export default function SMTPSettingsTab() {
   const [testEmail, setTestEmail] = useState('');
   const [activeTab, setActiveTab] = useState('basic');
   const [validationResults, setValidationResults] = useState<any>({});
+  const [testLoading, setTestLoading] = useState(false);
   const [deliverabilityScore, setDeliverabilityScore] = useState<any>(null);
 
   useEffect(() => {
@@ -39,12 +40,13 @@ export default function SMTPSettingsTab() {
       const { data } = await supabase
         .from('app_settings')
         .select('*')
-        .eq('category', 'smtp');
+        .eq('setting_type', 'smtp');
 
       if (data) {
         const settingsObj: Record<string, any> = {};
-        data.forEach(setting => {
-          settingsObj[setting.key] = setting.value;
+        data.forEach((setting: any) => {
+          // Verwende setting_key direkt, da es bereits das korrekte Format hat
+          settingsObj[setting.setting_key] = setting.setting_value;
         });
         setSettings(prev => ({ ...prev, ...settingsObj }));
       }
@@ -56,22 +58,77 @@ export default function SMTPSettingsTab() {
   const saveSettings = async () => {
     setLoading(true);
     try {
-      for (const [key, value] of Object.entries(settings)) {
-        await supabase
-          .from('app_settings')
-          .upsert({
-            category: 'smtp',
-            key: key,
-            value: value,
-            updated_at: new Date().toISOString()
-          });
+      console.log('Speichere SMTP-Einstellungen mit gespeicherter Funktion...');
+      
+      // Filtere nur gültige Einstellungen
+      const validSettings: Record<string, string> = {};
+      Object.entries(settings).forEach(([key, value]) => {
+        if (value && value.toString().trim() !== '') {
+          validSettings[key] = value.toString().trim();
+        }
+      });
+
+      console.log('Gültige Einstellungen:', Object.keys(validSettings));
+
+      // Verwende die gespeicherte Funktion für robuste UPSERT-Operation
+      const { data, error } = await supabase
+        .rpc('upsert_smtp_settings', {
+          settings_json: validSettings
+        });
+
+      if (error) {
+        console.error('RPC-Fehler:', error);
+        throw error;
       }
-      alert('SMTP-Einstellungen erfolgreich gespeichert!');
+
+      if (data && data.length > 0) {
+        const result = data[0];
+        if (result.success) {
+          console.log('SMTP-Einstellungen erfolgreich gespeichert!');
+          alert('SMTP-Einstellungen erfolgreich gespeichert!');
+        } else {
+          console.error('Datenbankfehler:', result.message);
+          throw new Error(result.message);
+        }
+      } else {
+        console.log('Keine Antwort von der Datenbankfunktion.');
+        alert('SMTP-Einstellungen gespeichert (keine Bestätigung erhalten).');
+      }
     } catch (error) {
-      console.error('Fehler beim Speichern:', error);
-      alert('Fehler beim Speichern der Einstellungen');
+      console.error('Error saving SMTP settings:', error);
+      alert('Fehler beim Speichern der Einstellungen: ' + (error as any).message);
     }
     setLoading(false);
+  };
+
+  const testSMTPConnection = async () => {
+    if (!testEmail.trim()) {
+      alert('Bitte geben Sie eine Test-E-Mail-Adresse ein.');
+      return;
+    }
+
+    setTestLoading(true);
+    try {
+      const response = await fetch('/api/test-smtp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ testEmail }),
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('SMTP-Test erfolgreich! E-Mail wurde gesendet.');
+      } else {
+        alert('SMTP-Test fehlgeschlagen: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Fehler beim SMTP-Test:', error);
+      alert('Fehler beim SMTP-Test: ' + (error as any).message);
+    }
+    setTestLoading(false);
   };
 
   const sendTestEmail = async () => {
@@ -604,15 +661,22 @@ export default function SMTPSettingsTab() {
                   placeholder="test@beispiel.de"
                 />
                 <button
+                  onClick={testSMTPConnection}
+                  disabled={testLoading || !testEmail}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 cursor-pointer whitespace-nowrap"
+                >
+                  {testLoading ? 'Teste...' : 'SMTP Test'}
+                </button>
+                <button
                   onClick={sendTestEmail}
-                  disabled={loading}
+                  disabled={loading || !testEmail}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 cursor-pointer whitespace-nowrap"
                 >
-                  {loading ? 'Sende...' : 'Test senden'}
+                  {loading ? 'Sende...' : 'E-Mail Test'}
                 </button>
               </div>
               <p className="text-sm text-gray-500 mt-2">
-                Testet SMTP-Konfiguration mit DKIM/SPF-Authentifizierung
+                SMTP Test: Prüft nur die Verbindung | E-Mail Test: Sendet tatsächliche Test-E-Mail
               </p>
             </div>
 

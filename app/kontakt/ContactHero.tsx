@@ -30,7 +30,7 @@ export default function ContactHero() {
 
           {/* Einfache Beschreibung */}
           <p className={`text-xl sm:text-2xl text-white/90 mb-12 transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`} style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-            Kostenlose Brennholz-Beratung von Brennholzhandel Vey
+            Kostenlose Brennholz-Beratung vom Brennholzkönig
           </p>
 
           {/* Reduzierte Kontakt-Optionen */}

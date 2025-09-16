@@ -2,9 +2,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 
-// Using the centralized Supabase client from lib/supabase.ts
+// Using the new SSR-compatible Supabase client
 
 interface WishlistButtonProps {
   productId: string | number;
@@ -15,6 +15,7 @@ export default function WishlistButton({ productId, className = '' }: WishlistBu
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const supabase = createClient();
 
   useEffect(() => {
     checkAuthAndWishlist();

@@ -84,7 +84,6 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
                   <i className="ri-phone-line text-xl md:text-2xl text-green-600"></i>
                 </div>
                 <h3 className="font-bold text-[#1A1A1A] mb-2 text-sm md:text-base">Bestätigung</h3>
-                <p className="text-gray-600 text-xs md:text-sm">Innerhalb von 2 Stunden</p>
                 <div className="mt-2 text-xs text-gray-500">
                   Telefonische Koordination
                 </div>
@@ -122,7 +121,7 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
                 <div>
                   <h3 className="font-bold mb-2 text-sm md:text-base">Telefonische Bestätigung</h3>
                   <p className="text-white/90 text-xs md:text-sm">
-                    Wir rufen Sie innerhalb der nächsten 2 Stunden an, um die Bestellung zu bestätigen und den Liefertermin zu koordinieren.
+                    Wir rufen Sie an, um die Bestellung zu bestätigen und den Liefertermin zu koordinieren.
                   </p>
                 </div>
               </div>
@@ -160,13 +159,13 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
               <div>
                 <h4 className="font-medium text-[#1A1A1A] mb-2">💶 Bezahlung</h4>
                 <p className="text-gray-600 mb-1">Nur Barzahlung bei Lieferung</p>
-                <p className="text-gray-600">Quittung wird vor Ort ausgestellt</p>
+                <p className="text-gray-600">Bestellbestätigung/Rechnung wird vor Ort ausgestellt</p>
               </div>
               
               <div>
                 <h4 className="font-medium text-[#1A1A1A] mb-2">🚚 Lieferung</h4>
-                <p className="text-gray-600 mb-1">Anlieferung bis vor die Haustür</p>
-                <p className="text-gray-600">Zufahrt für LKW erforderlich</p>
+                <p className="text-gray-600 mb-1">Anlieferung frei Bordsteinkante</p>
+                <p className="text-gray-600">Bei LKW-Zufahrt: Lieferung bis vor Haustür/Garage/Scheune möglich</p>
               </div>
               
               <div>

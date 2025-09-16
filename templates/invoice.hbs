@@ -5,15 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Rechnung {{invoice.number}}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap');
     
     @page {
       size: A4;
-      margin: 20mm;
+      margin: 0;
     }
     
     @media print {
       .no-print { display: none !important; }
+      
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      
+      .container {
+        margin: 0;
+        padding: 20mm 15mm;
+        box-shadow: none;
+        width: 210mm;
+        min-height: 297mm;
+      }
       
       table {
         page-break-inside: avoid;
@@ -23,8 +36,40 @@
         page-break-inside: avoid;
       }
       
+      .items-table thead {
+        display: table-header-group;
+      }
+      
+      .items-table tbody tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+      }
+      
+      .totals-section {
+        page-break-inside: avoid;
+        page-break-before: auto;
+      }
+      
+      .payment-terms {
+        page-break-inside: avoid;
+        page-break-before: auto;
+      }
+      
+      .notes {
+        page-break-inside: avoid;
+        page-break-before: auto;
+      }
+      
+      .footer {
+        /* Footer-Styles werden von normalen CSS-Regeln übernommen */
+      }
+      
       .page-break {
         page-break-before: always;
+      }
+      
+      .page-break-avoid {
+        page-break-inside: avoid;
       }
     }
     
@@ -34,82 +79,131 @@
     
     body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      font-size: 12pt;
-      line-height: 1.4;
-      color: #000;
+      font-size: 11pt;
+      line-height: 1.5;
+      color: #1A1A1A;
       margin: 0;
       padding: 0;
       background: white;
     }
     
     .container {
-      max-width: 210mm;
-      margin: 0 auto;
-      padding: 0;
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0;
+      padding: 20mm 15mm;
+      background: white;
+      box-shadow: none;
     }
     
     /* Header */
     .header {
+      background: linear-gradient(135deg, #C04020 0%, #A03318 100%) !important;
+      color: white !important;
+      padding: 12pt 20pt;
+      margin: -20mm -15mm 15pt -15mm;
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 40pt;
-      min-height: 80pt;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      min-height: 40pt;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100pt;
+      height: 100%;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M20,20 Q50,5 80,20 Q50,35 20,20" fill="%23ffffff" opacity="0.1"/></svg>') no-repeat center;
+      background-size: contain;
     }
     
     .logo-section {
       flex: 0 0 auto;
+      z-index: 2;
     }
     
     .logo {
-      max-width: 150pt;
-      max-height: 80pt;
+      max-width: 120pt;
+      max-height: 60pt;
       object-fit: contain;
+    }
+    
+    .brand-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 24pt;
+      font-weight: 400;
+      letter-spacing: 1pt;
+      margin: 0;
+    }
+    
+    .brand-tagline {
+      font-size: 9pt;
+      opacity: 0.9;
+      margin: 2pt 0 0 0;
+      font-weight: 400;
     }
     
     .issuer-section {
       flex: 0 0 auto;
       text-align: right;
-      font-size: 10pt;
-      line-height: 1.3;
+      font-size: 9pt;
+      line-height: 1.4;
+      z-index: 2;
     }
     
     .issuer-name {
-      font-size: 14pt;
+      font-size: 13pt;
       font-weight: 600;
-      margin-bottom: 8pt;
+      margin-bottom: 6pt;
     }
     
     .issuer-address {
-      margin-bottom: 8pt;
+      margin-bottom: 6pt;
+      opacity: 0.95;
     }
     
     .issuer-contact {
-      font-size: 9pt;
-      color: #666;
+      font-size: 8pt;
+      opacity: 0.9;
     }
     
     /* Recipient (DIN 5008 konform) */
     .recipient-section {
-      margin-bottom: 30pt;
-      margin-top: 20pt;
+      margin-bottom: 25pt;
+      margin-top: 0;
     }
     
     .recipient {
+      background: white;
+      border: 1pt solid #ddd;
+      border-left: 4pt solid #C04020;
+      border-radius: 0 8pt 8pt 0;
+      padding: 15pt 20pt;
       font-size: 11pt;
-      line-height: 1.3;
-      border-left: 3pt solid #e74c3c;
-      padding-left: 12pt;
+      line-height: 1.4;
+      box-shadow: 0 2pt 8px rgba(192, 64, 32, 0.1);
     }
     
     .recipient-name {
-      font-weight: 600;
-      margin-bottom: 4pt;
+      font-weight: 700;
+      font-size: 12pt;
+      color: #C04020;
+      margin-bottom: 6pt;
     }
     
     /* Metadata */
     .metadata {
-      margin-bottom: 30pt;
+      margin-bottom: 25pt;
+      background: #f8f9fa;
+      border-radius: 12pt;
+      padding: 20pt;
+      border: 1pt solid #ddd;
     }
     
     .metadata-table {
@@ -119,49 +213,69 @@
     }
     
     .metadata-table td {
-      padding: 4pt 8pt;
+      padding: 6pt 12pt;
       vertical-align: top;
     }
     
     .metadata-table .label {
-      font-weight: 500;
+      font-weight: 600;
       color: #666;
       width: 25%;
     }
     
     .metadata-table .value {
       width: 25%;
+      font-weight: 500;
+      color: #1A1A1A;
     }
     
     /* Invoice Title */
     .invoice-title {
-      font-size: 18pt;
-      font-weight: 600;
-      margin: 30pt 0 20pt 0;
-      color: #e74c3c;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28pt;
+      font-weight: 400;
+      letter-spacing: 2pt;
+      margin: 25pt 0 20pt 0;
+      color: #C04020;
+      text-transform: uppercase;
+      position: relative;
+      padding-bottom: 8pt;
+    }
+    
+    .invoice-title::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 60pt;
+      height: 3pt;
+      background: #C04020;
+      border-radius: 2pt;
     }
     
     /* Items Table */
     .items-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 20pt;
-      font-size: 11pt;
+      margin: 20pt 0;
+      font-size: 9pt;
     }
     
     .items-table th {
-      background-color: #f8f9fa;
-      padding: 12pt 8pt;
-      text-align: left;
+      background: #f5f5f5;
+      color: #333;
       font-weight: 600;
-      border-bottom: 2pt solid #e74c3c;
-      font-size: 10pt;
+      padding: 8pt 6pt;
+      text-align: left;
+      border: 1pt solid #ccc;
+      font-size: 8pt;
     }
     
     .items-table td {
-      padding: 10pt 8pt;
-      border-bottom: 1pt solid #eee;
+      padding: 6pt;
+      border: 1pt solid #ccc;
       vertical-align: top;
+      font-size: 8pt;
     }
     
     .items-table .pos {
@@ -170,154 +284,225 @@
     }
     
     .items-table .description {
-      width: 45%;
+      width: 40%;
+    }
+    
+    .items-table .category {
+      width: 20%;
+      text-align: center;
     }
     
     .items-table .quantity {
-      width: 12%;
+      width: 15%;
       text-align: right;
     }
     
     .items-table .unit-price {
-      width: 15%;
-      text-align: right;
-    }
-    
-    .items-table .tax-rate {
-      width: 10%;
+      width: 12%;
       text-align: right;
     }
     
     .items-table .total {
-      width: 15%;
+      width: 13%;
       text-align: right;
-      font-weight: 500;
+      font-weight: 600;
     }
     
     .items-table .number {
-      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      font-family: 'Courier New', monospace;
     }
     
     /* Totals */
     .totals-section {
       display: flex;
       justify-content: flex-end;
-      margin-top: 30pt;
-      margin-bottom: 40pt;
+      margin-top: 25pt;
+      margin-bottom: 30pt;
     }
     
     .totals {
-      width: 250pt;
+      width: 280pt;
+      border-radius: 12pt;
+      overflow: hidden;
+      box-shadow: 0 6pt 20pt rgba(192, 64, 32, 0.15);
       border: 1pt solid #ddd;
-      border-radius: 4pt;
     }
     
     .totals-header {
-      background-color: #e74c3c;
+      background: linear-gradient(135deg, #C04020 0%, #A03318 100%);
       color: white;
-      padding: 8pt 12pt;
-      font-weight: 600;
-      font-size: 11pt;
+      padding: 15pt 20pt;
+      font-weight: 700;
+      font-size: 12pt;
+      text-transform: uppercase;
+      letter-spacing: 1pt;
+      position: relative;
+    }
+    
+    .totals-header::after {
+      content: '🔥';
+      position: absolute;
+      right: 20pt;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16pt;
     }
     
     .totals-body {
-      padding: 12pt;
+      padding: 20pt;
+      background: white;
     }
     
     .totals-table {
       width: 100%;
-      font-size: 11pt;
+      font-size: 10pt;
     }
     
     .totals-table td {
-      padding: 4pt 0;
+      padding: 6pt 0;
     }
     
     .totals-table .label {
       text-align: left;
+      font-weight: 500;
+      color: #666;
     }
     
     .totals-table .amount {
       text-align: right;
       font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      font-weight: 600;
+      color: #1A1A1A;
     }
     
     .totals-table .total-row {
-      border-top: 2pt solid #e74c3c;
-      padding-top: 8pt;
-      font-weight: 600;
-      font-size: 12pt;
+      border-top: 2pt solid #C04020;
+      padding-top: 10pt;
+      font-weight: 700;
+      font-size: 13pt;
     }
     
     .totals-table .total-row td {
-      padding-top: 8pt;
+      padding-top: 10pt;
+    }
+    
+    .totals-table .total-row .label {
+      color: #C04020;
+    }
+    
+    .totals-table .total-row .amount {
+      color: #C04020;
+      font-size: 14pt;
     }
     
     /* Payment Terms */
     .payment-terms {
-      margin-bottom: 30pt;
-      padding: 15pt;
-      background-color: #f8f9fa;
-      border-left: 4pt solid #e74c3c;
+      margin-bottom: 25pt;
+      padding: 20pt;
+      background: #f8f9fa;
+      border: 1pt solid #ddd;
+      border-left: 4pt solid #C04020;
+      border-radius: 8pt;
       font-size: 10pt;
+      box-shadow: 0 2pt 8pt rgba(192, 64, 32, 0.08);
     }
     
     .payment-terms h3 {
-      margin: 0 0 8pt 0;
-      font-size: 11pt;
-      font-weight: 600;
+      margin: 0 0 10pt 0;
+      font-size: 12pt;
+      font-weight: 700;
+      color: #C04020;
+      display: flex;
+      align-items: center;
+    }
+    
+    .payment-terms h3::before {
+      content: '💳';
+      margin-right: 8pt;
+      font-size: 14pt;
     }
     
     /* Notes */
     .notes {
-      margin-bottom: 40pt;
+      margin-bottom: 30pt;
+      padding: 20pt;
+      background: #f8f9fa;
+      border: 1pt solid #ddd;
+      border-left: 4pt solid #C04020;
+      border-radius: 8pt;
       font-size: 10pt;
-      line-height: 1.5;
+      line-height: 1.6;
+      box-shadow: 0 2pt 8pt rgba(192, 64, 32, 0.08);
     }
     
     .notes h3 {
-      margin: 0 0 8pt 0;
-      font-size: 11pt;
-      font-weight: 600;
+      margin: 0 0 10pt 0;
+      font-size: 12pt;
+      font-weight: 700;
+      color: #C04020;
+      display: flex;
+      align-items: center;
+    }
+    
+    .notes h3::before {
+      content: '📝';
+      margin-right: 8pt;
+      font-size: 14pt;
     }
     
     /* Footer */
     .footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 50pt;
+      margin-top: 30pt;
+      padding: 15pt 20pt;
+      border-top: 1pt solid #ddd;
       font-size: 8pt;
+      line-height: 1.3;
       color: #666;
-      border-top: 1pt solid #eee;
-      padding: 10pt 20mm;
-      background: white;
+      text-align: center;
+      max-width: 100%;
+      overflow: hidden;
+    }
+    
+    .footer-content {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-    }
-    
-    .footer-left {
-      flex: 1;
-    }
-    
-    .footer-center {
-      flex: 1;
-      text-align: center;
-    }
-    
-    .footer-right {
-      flex: 1;
-      text-align: right;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 15pt;
+      max-width: 100%;
     }
     
     .footer-section {
-      margin-bottom: 4pt;
+      flex: 1;
+      min-width: 120pt;
+      max-width: 33%;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    
+    .footer-section.left {
+      text-align: left;
+    }
+    
+    .footer-section.center {
+      text-align: center;
+    }
+    
+    .footer-section.right {
+      text-align: right;
     }
     
     .footer-section strong {
-      font-weight: 500;
+      font-weight: 600;
+      color: #333;
+      display: block;
+      margin-bottom: 2pt;
+    }
+    
+    .footer-section p {
+      margin: 0;
+      line-height: 1.2;
+      word-wrap: break-word;
     }
     
     /* Utilities */
@@ -351,27 +536,28 @@
     <!-- Header -->
     <header class="header">
       <div class="logo-section">
-        {{#if logo.url}}
-          <img src="{{logo.url}}" alt="{{issuer.name}} Logo" class="logo">
+        {{#if company.logo_url}}
+          <img src="{{company.logo_url}}" alt="{{company.name}} Logo" class="logo">
         {{else}}
-          <div class="logo-fallback" style="width: 150pt; height: 80pt; background: #e74c3c; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14pt;">
-            {{issuer.name}}
+          <div>
+            <h1 class="brand-name">🔥 BRENNHOLZKÖNIG</h1>
+            <p class="brand-tagline">Premium Brennholz direkt vom Produzenten</p>
           </div>
         {{/if}}
       </div>
       
       <div class="issuer-section">
-        <div class="issuer-name">{{issuer.name}}</div>
+        <div class="issuer-name">{{company.name}}</div>
         <div class="issuer-address">
-          {{issuer.address.street}} {{issuer.address.house_number}}<br>
-          {{#if issuer.address.line2}}{{issuer.address.line2}}<br>{{/if}}
-          {{issuer.address.postal_code}} {{issuer.address.city}}
+          {{company.address_line1}}<br>
+          {{#if company.address_line2}}{{company.address_line2}}<br>{{/if}}
+          {{company.postal_code}} {{company.city}}
         </div>
         <div class="issuer-contact">
-          {{#if issuer.phone}}Tel: {{issuer.phone}}<br>{{/if}}
-          {{#if issuer.email}}E-Mail: {{issuer.email}}<br>{{/if}}
-          {{#if issuer.website}}Web: {{issuer.website}}<br>{{/if}}
-          {{#if issuer.tax_id}}USt-IdNr.: {{issuer.tax_id}}{{/if}}
+          {{#if company.phone}}📞 {{company.phone}}<br>{{/if}}
+          {{#if company.email}}✉️ {{company.email}}<br>{{/if}}
+          {{#if company.website}}🌐 {{company.website}}<br>{{/if}}
+          {{#if company.tax_id}}🏢 USt-IdNr.: {{company.tax_id}}{{/if}}
         </div>
       </div>
     </header>
@@ -394,20 +580,20 @@
           <td class="label">Rechnungs-Nr.:</td>
           <td class="value font-mono">{{invoice.number}}</td>
           <td class="label">Kunden-Nr.:</td>
-          <td class="value font-mono">{{#if customer.number}}{{customer.number}}{{else}}-{{/if}}</td>
+          <td class="value font-mono">{{#if customer.customer_number}}{{customer.customer_number}}{{else}}-{{/if}}</td>
         </tr>
         <tr>
           <td class="label">Rechnungsdatum:</td>
-          <td class="value">{{formatDate invoice.date}}</td>
+          <td class="value">{{invoice.date}}</td>
           <td class="label">Fällig bis:</td>
-          <td class="value">{{formatDate invoice.due_date}}</td>
+          <td class="value">{{invoice.due_date}}</td>
         </tr>
         {{#if order.number}}
         <tr>
           <td class="label">Bestell-Nr.:</td>
           <td class="value font-mono">{{order.number}}</td>
           <td class="label">Bestell-Datum:</td>
-          <td class="value">{{formatDate order.date}}</td>
+          <td class="value">{{order.date}}</td>
         </tr>
         {{/if}}
       </table>
@@ -418,29 +604,25 @@
     
     <!-- Items Table -->
     <section class="items-section">
+      <h3 style="margin: 20pt 0 10pt 0; font-size: 12pt; color: #333;">Auftrag/Lieferschein/Rechnung Nr.:</h3>
       <table class="items-table">
         <thead>
           <tr>
-            <th class="pos">Pos.</th>
-            <th class="description">Artikel / Beschreibung</th>
+            <th class="description">Produkt</th>
+            <th class="category">Kategorie</th>
             <th class="quantity">Menge</th>
             <th class="unit-price">Einzelpreis</th>
-            <th class="tax-rate">MwSt.</th>
-            <th class="total">Gesamt</th>
+            <th class="total">Gesamtpreis</th>
           </tr>
         </thead>
         <tbody>
           {{#each items}}
           <tr>
-            <td class="pos">{{add @index 1}}</td>
-            <td class="description">
-              <strong>{{this.name}}</strong>
-              {{#if this.description}}<br><span class="text-muted">{{this.description}}</span>{{/if}}
-            </td>
-            <td class="quantity number">{{formatNumber this.quantity}} {{#if this.unit}}{{this.unit}}{{/if}}</td>
-            <td class="unit-price number">{{formatCurrency this.unit_price}}</td>
-            <td class="tax-rate number">{{this.tax_rate}}%</td>
-            <td class="total number">{{formatCurrency this.total_price}}</td>
+            <td class="description">{{this.name}}</td>
+            <td class="category">{{#if this.category}}{{this.category}}{{else}}Brennholz{{/if}}</td>
+            <td class="quantity number">{{formatNumber this.quantity}} SRM</td>
+            <td class="unit-price number">€{{formatCurrency this.unitPrice}}</td>
+            <td class="total number">€{{formatCurrency this.totalPrice}}</td>
           </tr>
           {{/each}}
         </tbody>
@@ -449,29 +631,23 @@
     
     <!-- Totals -->
     <section class="totals-section">
-      <div class="totals">
-        <div class="totals-header">
-          Rechnungssumme
-        </div>
-        <div class="totals-body">
-          <table class="totals-table">
-            <tr>
-              <td class="label">Netto-Betrag:</td>
-              <td class="amount">{{formatCurrency subtotal}}</td>
-            </tr>
-            {{#each tax_breakdown}}
-            <tr>
-              <td class="label">MwSt. {{this.rate}}%:</td>
-              <td class="amount">{{formatCurrency this.amount}}</td>
-            </tr>
-            {{/each}}
-            <tr class="total-row">
-              <td class="label">Gesamt-Betrag:</td>
-              <td class="amount">{{formatCurrency total}}</td>
-            </tr>
-          </table>
-        </div>
+      <div style="float: right; width: 200pt; margin-top: 20pt;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 9pt;">
+          <tr>
+            <td style="padding: 4pt; text-align: left;">Gesamt Netto:</td>
+            <td style="padding: 4pt; text-align: right; font-weight: 600;">{{formatCurrency totals.subtotal}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 4pt; text-align: left;">zzgl. {{totals.tax_rate}}% MwSt.:</td>
+            <td style="padding: 4pt; text-align: right;">{{formatCurrency totals.tax}}</td>
+          </tr>
+          <tr style="border-top: 2pt solid #333; font-weight: 600; font-size: 10pt;">
+            <td style="padding: 6pt 4pt; text-align: left;">Gesamt Brutto</td>
+            <td style="padding: 6pt 4pt; text-align: right;">{{formatCurrency totals.total}}</td>
+          </tr>
+        </table>
       </div>
+      <div style="clear: both;"></div>
     </section>
     
     <!-- Payment Terms -->
@@ -498,41 +674,142 @@
     
     <!-- Footer -->
     <footer class="footer">
-      <div class="footer-left">
-        <div class="footer-section">
-          <strong>{{issuer.name}}</strong><br>
-          {{issuer.address.street}} {{issuer.address.house_number}}, {{issuer.address.postal_code}} {{issuer.address.city}}
+      <div class="footer-content">
+        <div class="footer-section left">
+          <strong>{{company.name}}</strong>
+          <p>{{company.address_line1}}</p>
+          <p>{{company.postal_code}} {{company.city}}</p>
+          {{#if company.phone}}<p>Mobil: {{company.phone}}</p>{{/if}}
+          {{#if company.email}}<p>Email: {{company.email}}</p>{{/if}}
+          {{#if company.website}}<p>Internet: {{company.website}}</p>{{/if}}
         </div>
-      </div>
-      <div class="footer-center">
-        {{#if issuer.bank.iban}}
-        <div class="footer-section">
-          <strong>Bankverbindung</strong><br>
-          {{issuer.bank.name}} • IBAN: {{issuer.bank.iban}}
+        
+        {{#if payment.iban}}
+        <div class="footer-section center">
+          <strong>Bankverbindung</strong>
+          {{#if payment.bank_name}}<p>{{payment.bank_name}}</p>{{/if}}
+          <p>IBAN: {{payment.iban}}</p>
+          <p>BIC: {{payment.bic}}</p>
         </div>
         {{/if}}
-      </div>
-      <div class="footer-right">
-        <div class="footer-section">
-          {{#if issuer.registration}}{{issuer.registration}}<br>{{/if}}
-          {{#if issuer.tax_id}}USt-IdNr.: {{issuer.tax_id}}<br>{{/if}}
-          Seite <span class="page-number"></span> von <span class="page-count"></span>
+        
+        <div class="footer-section right">
+          {{#if company.registration}}<p>Steuer-Nr.: {{company.registration}}</p>{{/if}}
+          {{#if company.tax_id}}<p>USt-Ident-Nr.: {{company.tax_id}}</p>{{/if}}
         </div>
       </div>
     </footer>
   </div>
   
   <script>
-    // Seitenzahlen für Print
-    if (window.location.search.includes('print=true')) {
-      window.addEventListener('beforeprint', function() {
-        const pageNumbers = document.querySelectorAll('.page-number');
-        const pageCounts = document.querySelectorAll('.page-count');
+    // Automatische Seitennummerierung und Seitenumbrüche
+    function setupPagination() {
+      const container = document.querySelector('.container');
+      const footer = document.querySelector('.footer');
+      
+      // Berechne verfügbare Höhe (A4 minus Margins und Footer)
+      const pageHeight = 297; // A4 Höhe in mm
+      const topMargin = 15;
+      const bottomMargin = 15;
+      const footerHeight = 20; // Footer Höhe in mm
+      const availableHeight = pageHeight - topMargin - bottomMargin - footerHeight;
+      
+      // Konvertiere zu Pixeln (ungefähr 3.78 Pixel pro mm bei 96 DPI)
+      const availableHeightPx = availableHeight * 3.78;
+      
+      // Prüfe ob Inhalt zu lang ist
+      const contentHeight = container.scrollHeight;
+      
+      if (contentHeight > availableHeightPx) {
+        // Berechne Anzahl der benötigten Seiten
+        const pageCount = Math.ceil(contentHeight / availableHeightPx);
         
-        pageNumbers.forEach(el => el.textContent = '1');
-        pageCounts.forEach(el => el.textContent = '1');
-      });
+        // Aktualisiere Seitenzahl in Footer
+        const pageCountElements = document.querySelectorAll('.page-count');
+        pageCountElements.forEach(el => el.textContent = pageCount.toString());
+        
+        // Füge CSS für Seitenumbrüche hinzu
+        const style = document.createElement('style');
+        style.textContent = `
+          @media print {
+            .container {
+              page-break-inside: auto;
+            }
+            
+            .items-table tbody tr {
+              page-break-inside: avoid;
+              page-break-after: auto;
+            }
+            
+            .totals-section {
+              page-break-inside: avoid;
+            }
+            
+            .payment-terms {
+              page-break-inside: avoid;
+            }
+            
+            .notes {
+              page-break-inside: avoid;
+            }
+            
+            .footer {
+              position: fixed;
+              bottom: 0;
+              left: 0;
+              right: 0;
+            }
+            
+            @page {
+              margin: 0;
+              @bottom-right {
+                content: "Seite " counter(page) " von " counter(pages);
+                font-size: 8pt;
+                color: #666;
+              }
+            }
+          }
+        `;
+        document.head.appendChild(style);
+      }
     }
+    
+    // Seitennummerierung für Print und Preview
+     function updatePageNumbers() {
+       const pageNumbers = document.querySelectorAll('.page-number');
+       const pageCounts = document.querySelectorAll('.page-count');
+       
+       // Berechne aktuelle Seitenzahl basierend auf Content-Höhe
+       const container = document.querySelector('.container');
+       const pageHeight = 297; // A4 Höhe in mm
+       const topMargin = 15;
+       const bottomMargin = 15;
+       const footerHeight = 20;
+       const availableHeight = pageHeight - topMargin - bottomMargin - footerHeight;
+       const availableHeightPx = availableHeight * 3.78;
+       const contentHeight = container.scrollHeight;
+       
+       const totalPages = Math.max(1, Math.ceil(contentHeight / availableHeightPx));
+       
+       // Aktualisiere alle Seitenzahl-Elemente
+       pageNumbers.forEach(el => el.textContent = '1');
+       pageCounts.forEach(el => el.textContent = totalPages.toString());
+     }
+    
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      setupPagination();
+      updatePageNumbers();
+    });
+    
+    window.addEventListener('beforeprint', function() {
+      setupPagination();
+      updatePageNumbers();
+    });
+    
+    window.addEventListener('resize', function() {
+      setupPagination();
+    });
   </script>
 </body>
 </html>

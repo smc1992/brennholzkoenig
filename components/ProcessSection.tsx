@@ -96,11 +96,11 @@ export default function ProcessSection() {
                     />
                   </p>
                   <ul className="text-xs md:text-sm text-gray-600 space-y-1">
-                    <li className="flex items-center">
+                    <li className="flex items-center transform transition-all duration-300 hover:translate-x-2">
                       <i className="ri-check-line text-green-600 mr-2"></i>
                       Online oder per Telefon
                     </li>
-                    <li className="flex items-center">
+                    <li className="flex items-center transform transition-all duration-300 hover:translate-x-2">
                       <i className="ri-check-line text-green-600 mr-2"></i>
                       Kostenlose Beratung
                     </li>
@@ -357,7 +357,7 @@ export default function ProcessSection() {
                 </a>
               </div>
               <div className="flex flex-wrap justify-center gap-4 mt-4 text-xs md:text-sm opacity-80">
-                <span className="flex items-center">
+                <span className="flex items-center transform transition-all duration-300 hover:scale-110">
                   <i className="ri-phone-line mr-1"></i>
                   Kostenlose Beratung
                 </span>

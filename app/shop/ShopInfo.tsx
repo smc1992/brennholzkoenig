@@ -26,7 +26,7 @@ export default function ShopInfo() {
             <h3 className="text-xl font-bold text-[#1A1A1A] mb-4">Premium Qualität</h3>
             <p className="text-gray-700 leading-relaxed">
               27 Jahre Erfahrung in der Brennholzproduktion. Alle Hölzer werden sorgfältig getrocknet 
-              und kontrolliert. Restfeuchte unter 18% garantiert.
+              und kontrolliert. Industrieholz hat eine Restfeuchte von 6-8% und Scheitholz garantiert unter 20%.
             </p>
           </div>
           
@@ -135,7 +135,7 @@ export default function ShopInfo() {
                 </h4>
                 <p className="text-gray-700 text-sm leading-relaxed">
                   Jede Holzlieferung wird vor dem Versand kontrolliert. Wir messen die Restfeuchte 
-                  und prüfen die Qualität. Bei Problemen tauschen wir die Ware kostenlos aus.
+                  und prüfen die Qualität.
                 </p>
               </div>
             </div>
@@ -150,7 +150,6 @@ export default function ShopInfo() {
                 </h4>
                 <p className="text-gray-700 text-sm leading-relaxed">
                   Die Lieferung kostet 43,50€ ab einer Bestellung von 3 Schüttraummeter. 
-                  Bei kleineren Mengen können höhere Lieferkosten anfallen.
                 </p>
               </div>
               

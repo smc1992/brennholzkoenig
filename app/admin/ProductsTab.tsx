@@ -2,6 +2,7 @@
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { supabase } from '@/lib/supabase';
 import ProductImageManager from '@/components/ProductImageManager';
+import ProductImageGalleryWithCrop from '@/components/ProductImageGalleryWithCrop';
 
 interface Product {
   id: string;
@@ -715,10 +716,10 @@ export default function ProductsTab() {
     {/* Product Edit Modal */}
     {isEditModalOpen && editingProduct && (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="p-6 border-b border-gray-200">
+        <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+          <div className="p-6 border-b border-gray-200 flex-shrink-0">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-[#1A1A1A)">
+              <h2 className="text-2xl font-bold text-[#1A1A1A]">
                 Produkt bearbeiten: {editingProduct.name}
               </h2>
               <button
@@ -733,6 +734,7 @@ export default function ProductsTab() {
               </button>
             </div>
           </div>
+          <div className="flex-1 overflow-y-auto">
 
           <form
             onSubmit={(e: FormEvent<HTMLFormElement>) => {
@@ -920,7 +922,7 @@ export default function ProductsTab() {
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">Produktbilder</label>
-              <ProductImageManager
+              <ProductImageGalleryWithCrop
                 productData={editProductData}
                 onImagesChange={(images: any) => {
                   setEditProductImages(images);
@@ -931,7 +933,9 @@ export default function ProductsTab() {
                   }
                 }}
                 maxImages={6}
-                showMainImageSelector={true}
+                aspectRatio={1}
+                minWidth={400}
+                minHeight={400}
               />
             </div>
 
@@ -1010,6 +1014,7 @@ export default function ProductsTab() {
               </button>
             </div>
           </form>
+          </div>
         </div>
       </div>
     )}

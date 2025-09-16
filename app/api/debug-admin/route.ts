@@ -67,18 +67,32 @@ export async function GET(request: NextRequest) {
     // 3. Prüfe aktuelle Session
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
-    // 4. Zähle admin_users
+    // 4. Prüfe ob invoices Tabelle existiert
+    const { data: invoicesTest, error: invoicesError } = await supabase
+      .from('invoices')
+      .select('count')
+      .limit(1);
+    
+    // 5. Zähle admin_users
     const { data: adminCount, error: countError } = await supabase
       .from('admin_users')
       .select('*', { count: 'exact' });
+    
+    // 6. Lade invoices
+    const { data: invoices, error: invoicesLoadError } = await supabase
+      .from('invoices')
+      .select('*')
+      .limit(10);
     
     return Response.json({
       success: true,
       checks: {
         supabase_connection: connectionTest ? 'OK' : 'FAILED',
         admin_users_table: adminUsersTest !== null ? 'EXISTS' : 'NOT_FOUND',
+        invoices_table: invoicesTest !== null ? 'EXISTS' : 'NOT_FOUND',
         session_check: session ? 'ACTIVE_SESSION' : 'NO_SESSION',
-        admin_users_count: adminCount?.length || 0
+        admin_users_count: adminCount?.length || 0,
+        invoices_count: invoices?.length || 0
       },
       session_info: {
         user_id: session?.user?.id || null,
@@ -86,11 +100,14 @@ export async function GET(request: NextRequest) {
         expires_at: session?.expires_at || null
       },
       admin_users: adminCount || [],
+      invoices: invoices || [],
       errors: {
         connection: connectionError,
         admin_table: adminUsersError,
+        invoices_table: invoicesError,
         session: sessionError,
-        count: countError
+        count: countError,
+        invoices_load: invoicesLoadError
       }
     });
     

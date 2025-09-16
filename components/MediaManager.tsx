@@ -124,7 +124,7 @@ export default function MediaManager({
   };
 
   const filteredFiles = files.filter(file =>
-    file.name.toLowerCase().includes(searchTerm.toLowerCase())
+    file?.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) || false
   );
 
   const formatFileSize = (bytes: number) => {

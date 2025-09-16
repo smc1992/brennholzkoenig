@@ -51,6 +51,7 @@ interface Customer {
   created_at: string;
   updated_at: string;
   is_deleted?: boolean;
+  customer_number?: string;
   orders?: Order[];
   [key: string]: any; // For any additional properties
 }
@@ -77,6 +78,7 @@ export default function CustomersTab() {
     last_name: '',
     email: '',
     phone: '',
+    company: '',
     street: '',
     house_number: '',
     postal_code: '',
@@ -414,6 +416,7 @@ export default function CustomersTab() {
         last_name: '',
         email: '',
         phone: '',
+        company: '',
         street: '',
         house_number: '',
         postal_code: '',
@@ -517,7 +520,7 @@ export default function CustomersTab() {
           schema: 'public',
           table: 'customers',
         },
-        (payload) => {
+        (payload: any) => {
           console.log('Customer change detected:', payload);
           loadCustomers();
         }
@@ -725,6 +728,9 @@ export default function CustomersTab() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Kundennummer
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Kunde
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
@@ -756,6 +762,29 @@ export default function CustomersTab() {
                   const status = getCustomerStatus(customer);
                   return (
                     <tr key={customer.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-mono text-gray-900">
+                          {(() => {
+                            // Verwende echte customer_number falls verfügbar, sonst generiere aus ID
+                            if (customer.customer_number) {
+                              return customer.customer_number;
+                            } else if (customer.email) {
+                              // Generiere konsistente Kundennummer aus Email
+                              let hash = 0;
+                              for (let i = 0; i < customer.email.length; i++) {
+                                const char = customer.email.charCodeAt(i);
+                                hash = ((hash << 5) - hash) + char;
+                                hash = hash & hash;
+                              }
+                              const numericPart = Math.abs(hash) % 89999 + 10000;
+                              return `KD-${String(numericPart).padStart(5, '0')}`;
+                            } else if (customer.id) {
+                              return `KD-${String(parseInt(customer.id.replace(/-/g, '').slice(-5), 16) % 99999 + 10000).padStart(5, '0')}`;
+                            }
+                            return '-';
+                          })()} 
+                        </div>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div
@@ -906,8 +935,9 @@ export default function CustomersTab() {
       </div>
 
       {selectedCustomer && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] flex flex-col">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-[#1A1A1A)">
@@ -1163,24 +1193,27 @@ export default function CustomersTab() {
             </div>
           </div>
         </div>
+      </div>
       )}
 
       {editingCustomer && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-[#1A1A1A]">Kunde bearbeiten</h2>
-                <button
-                  onClick={() => setEditingCustomer(null)}
-                  className="text-gray-400 hover:text-gray-600 cursor-pointer"
-                >
-                  <i className="ri-close-line text-2xl"></i>
-                </button>
+        <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+              <div className="p-6 border-b border-gray-200 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-[#1A1A1A]">Kunde bearbeiten</h2>
+                  <button
+                    onClick={() => setEditingCustomer(null)}
+                    className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                  >
+                    <i className="ri-close-line text-2xl"></i>
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <form
+              <div className="flex-1 overflow-y-auto p-6">
+                <form
               onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
                 e.preventDefault();
                 const form = e.currentTarget;
@@ -1195,11 +1228,21 @@ export default function CustomersTab() {
                 data.billing_same_as_delivery = formData.get('billing_same_as_delivery') === 'on';
                 updateCustomer(editingCustomer.id, data);
               }}
-              className="p-6 space-y-6"
+              className="space-y-6"
             >
               <div>
                 <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Grundinformationen</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Kundennummer</label>
+                    <input
+                      type="text"
+                      value={editingCustomer.id ? `KD-${String(parseInt(editingCustomer.id.replace(/-/g, '').slice(-5), 16) % 99999 + 10000).padStart(5, '0')}` : '-'}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600 font-mono"
+                      readOnly
+                    />
+                  </div>
+                  
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Vorname</label>
                     <input
@@ -1240,6 +1283,17 @@ export default function CustomersTab() {
                       name="phone"
                       defaultValue={editingCustomer.phone}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Firmenname (optional)</label>
+                    <input
+                      type="text"
+                      name="company"
+                      defaultValue={editingCustomer.company}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                      placeholder="Firmenname eingeben..."
                     />
                   </div>
 
@@ -1459,18 +1513,44 @@ export default function CustomersTab() {
                 </button>
               </div>
             </form>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* Add Customer Modal */}
       {showAddCustomerModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">Neuen Kunden anlegen</h3>
-            
-            <form onSubmit={createCustomer} className="space-y-4">
+        <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+              <div className="p-6 border-b border-gray-200 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Neuen Kunden anlegen</h3>
+                  <button
+                    onClick={() => setShowAddCustomerModal(false)}
+                    className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                  >
+                    <i className="ri-close-line text-2xl"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-6">
+                <form onSubmit={createCustomer} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Kundennummer
+                  </label>
+                  <input
+                    type="text"
+                    value={newCustomerData.email ? `KD-${String(Math.abs(newCustomerData.email.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0)) % 89999 + 10000).padStart(5, '0')}` : 'Wird automatisch generiert'}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 font-mono focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    readOnly
+                  />
+                </div>
+                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Vorname *
@@ -1519,6 +1599,19 @@ export default function CustomersTab() {
                   value={newCustomerData.phone}
                   onChange={(e) => setNewCustomerData({...newCustomerData, phone: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Firmenname (optional)
+                </label>
+                <input
+                  type="text"
+                  value={newCustomerData.company || ''}
+                  onChange={(e) => setNewCustomerData({...newCustomerData, company: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Firmenname eingeben..."
                 />
               </div>
 
@@ -1766,6 +1859,8 @@ export default function CustomersTab() {
                 </button>
               </div>
             </form>
+              </div>
+            </div>
           </div>
         </div>
       )}

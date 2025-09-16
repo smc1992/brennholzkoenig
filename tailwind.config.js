@@ -160,15 +160,22 @@ const config = {
     'border',
     'border-gray-200',
     
-    // Interactive
+    // Hover states
     'hover:bg-primary-600',
     'hover:bg-primary-700',
     'hover:text-white',
+    'hover:translate-x-2',
+    'hover:-translate-y-2',
+    'hover:shadow-xl',
     'focus:outline-none',
     'focus:ring-2',
     'focus:ring-primary-500',
+    'transform',
     'transition',
-    'duration-200'
+    'transition-all',
+    'duration-200',
+    'duration-300',
+    'duration-800'
   ]
 };
 

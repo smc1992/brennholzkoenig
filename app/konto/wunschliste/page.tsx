@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import { getCDNUrl } from '@/utils/cdn';
 
 // Using the centralized Supabase client from lib/supabase.ts
 
@@ -15,6 +16,9 @@ interface WishlistItem {
     price: number;
     image_url: string;
     category: string;
+    unit?: string;
+    stock_quantity?: number;
+    description?: string;
   };
   created_at: string;
 }
@@ -42,7 +46,10 @@ export default function WishlistPage() {
             name,
             price,
             image_url,
-            category
+            category,
+            unit,
+            stock_quantity,
+            description
           )
         `)
         .eq('customer_id', user.id)
@@ -54,20 +61,28 @@ export default function WishlistPage() {
       const formattedData: WishlistItem[] = (data || []).map((item: any) => ({
         id: item.id,
         created_at: item.created_at,
-        product: Array.isArray(item.product) && item.product.length > 0 ? {
-          id: item.product[0].id,
-          name: item.product[0].name,
-          price: item.product[0].price,
-          image_url: item.product[0].image_url,
-          category: item.product[0].category
+        product: item.product ? {
+          id: item.product.id,
+          name: item.product.name,
+          price: item.product.price,
+          image_url: item.product.image_url,
+          category: item.product.category,
+          unit: item.product.unit || 'SRM',
+          stock_quantity: item.product.stock_quantity || 0,
+          description: item.product.description || ''
         } : {
           id: '',
           name: 'Produkt nicht verfügbar',
           price: 0,
           image_url: '',
-          category: ''
+          category: '',
+          unit: 'SRM',
+          stock_quantity: 0,
+          description: ''
         }
       }));
+      
+      console.log('Wunschliste geladen:', formattedData);
       
       setWishlistItems(formattedData);
     } catch (error) {
@@ -93,8 +108,60 @@ export default function WishlistPage() {
   };
 
   const addToCart = async (productId: string) => {
-    // Hier würde die Warenkorb-Logik implementiert werden
-    alert('Produkt wurde zum Warenkorb hinzugefügt!');
+    try {
+      // Finde das Produkt in der Wunschliste
+      const wishlistItem = wishlistItems.find(item => item.product.id === productId);
+      if (!wishlistItem) {
+        alert('Produkt nicht gefunden!');
+        return;
+      }
+
+      const product = wishlistItem.product;
+      const quantity = 1; // Standard-Menge
+
+      // Warenkorb aus localStorage laden
+      const existingCart = JSON.parse(localStorage.getItem('cart') || '[]');
+      
+      // Prüfen ob Produkt bereits im Warenkorb
+      const existingItemIndex = existingCart.findIndex((item: any) => item.id === productId);
+      
+      if (existingItemIndex > -1) {
+        // Menge erhöhen
+        existingCart[existingItemIndex].quantity += quantity;
+      } else {
+        // Neues Produkt hinzufügen
+        existingCart.push({
+          id: productId,
+          name: product.name,
+          category: product.category,
+          price: product.price.toString(),
+          basePrice: product.price,
+          image_url: product.image_url,
+           unit: product.unit || 'SRM',
+           quantity: quantity,
+           stock_quantity: product.stock_quantity || 999
+        });
+      }
+      
+      // Warenkorb speichern
+      localStorage.setItem('cart', JSON.stringify(existingCart));
+      
+      // Erfolgs-Benachrichtigung
+      alert(`${product.name} wurde zum Warenkorb hinzugefügt!`);
+      
+    } catch (error) {
+      console.error('Fehler beim Hinzufügen zum Warenkorb:', error);
+      alert('Fehler beim Hinzufügen zum Warenkorb');
+    }
+  };
+
+  // Hilfsfunktion für CDN-URLs
+  const getImageUrl = (url: string) => {
+    if (!url) return '/api/placeholder?width=400&height=400&text=Bild+nicht+verfügbar';
+    // Wenn es bereits eine vollständige URL ist, verwende sie direkt
+    if (url.startsWith('http')) return url;
+    // Wenn es ein Storage-Filename ist, konvertiere zu CDN-URL
+    return getCDNUrl(`products/${url}`);
   };
 
   if (loading) {
@@ -110,15 +177,15 @@ export default function WishlistPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 md:pt-24">
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="mb-8">
-          <Link href="/konto/dashboard" className="inline-flex items-center text-orange-600 hover:text-orange-700 mb-4">
+    <div className="min-h-screen bg-gray-50 pt-20 sm:pt-24 md:pt-28">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <Link href="/konto/dashboard" className="inline-flex items-center text-orange-600 hover:text-orange-700 mb-3 sm:mb-4 text-sm sm:text-base">
             <i className="ri-arrow-left-line mr-2"></i>
-            Zurück zum Dashboard
+            <span className="truncate">Zurück zum Dashboard</span>
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Meine Wunschliste</h1>
-          <p className="text-gray-600 mt-2">Ihre gespeicherten Lieblingsprodukte</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Meine Wunschliste</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-2">Ihre gespeicherten Lieblingsprodukte</p>
         </div>
 
         {wishlistItems.length === 0 ? (
@@ -142,9 +209,13 @@ export default function WishlistPage() {
               <div key={item.id} className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
                 <div className="relative">
                   <img 
-                    src={item.product.image_url} 
+                    src={getImageUrl(item.product.image_url)} 
                     alt={item.product.name}
                     className="w-full h-48 object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/api/placeholder?width=400&height=400&text=Bild+nicht+verfügbar';
+                    }}
                   />
                   <button
                     onClick={() => removeFromWishlist(item.id)}
@@ -161,12 +232,32 @@ export default function WishlistPage() {
                     </span>
                   </div>
                   
-                  <h3 className="font-semibold text-gray-900 mb-2">{item.product.name}</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{item.product.name}</h3>
+                  
+                  {item.product.description && (
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.product.description}</p>
+                  )}
                   
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-2xl font-bold text-orange-600">
-                      {item.product.price}€
-                    </span>
+                    <div>
+                      <span className="text-2xl font-bold text-orange-600">
+                        {item.product.price}€
+                      </span>
+                      <span className="text-sm text-gray-500 ml-1">/ {item.product.unit}</span>
+                    </div>
+                    
+                    {item.product.stock_quantity !== undefined && (
+                      <div className={`text-xs px-2 py-1 rounded-full ${
+                        item.product.stock_quantity > 0 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {item.product.stock_quantity > 0 
+                          ? `${item.product.stock_quantity} ${item.product.unit} verfügbar`
+                          : 'Ausverkauft'
+                        }
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex gap-2">
@@ -178,10 +269,15 @@ export default function WishlistPage() {
                     </Link>
                     <button
                       onClick={() => addToCart(item.product.id)}
-                      className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors whitespace-nowrap"
+                      disabled={item.product.stock_quantity === 0}
+                      className={`flex-1 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                        item.product.stock_quantity === 0
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-orange-600 text-white hover:bg-orange-700'
+                      }`}
                     >
                       <i className="ri-shopping-cart-line mr-1"></i>
-                      In den Warenkorb
+                      {item.product.stock_quantity === 0 ? 'Ausverkauft' : 'In den Warenkorb'}
                     </button>
                   </div>
                   

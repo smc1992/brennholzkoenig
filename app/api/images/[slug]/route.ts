@@ -84,12 +84,13 @@ export async function GET(
         break;
     }
     
-    // Response mit optimalen Cache-Headern
+    // Response ohne aggressive Caching für sofortige Updates
     return new Response(imageData, {
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=31536000, immutable',
-        'CDN-Cache-Control': 'max-age=31536000',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
         'Vary': 'Accept-Encoding',
         // SEO-optimierte Header
         'X-Content-Type-Options': 'nosniff',

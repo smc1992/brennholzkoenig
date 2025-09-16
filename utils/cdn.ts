@@ -40,13 +40,8 @@ export const getCDNUrl = (filename: string, seoSlug?: string): string => {
     return `/images/${seoSlug}`;
   }
   
-  // Wenn es ein SEO-Slug ist, verwende saubere /images/ Route
-  if (isSEOSlug) {
-    return `/images/${cleanFilename}`;
-  } else {
-    // Für technische Dateinamen verwende /api/cdn/products/
-    return `/api/cdn/products/${cleanFilename}`;
-  }
+  // Alle Produktbilder verwenden die /images/ Route
+  return `/images/${cleanFilename}`;
 };
 
 /**

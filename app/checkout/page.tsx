@@ -1,11 +1,104 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { calculatePriceWithTiers } from '../../lib/pricing';
+
+// Funktion zur Generierung einer Kundennummer basierend auf Email
+function generateCustomerNumber(email: string): string {
+  let hash = 0;
+  for (let i = 0; i < email.length; i++) {
+    const char = email.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  const numericPart = Math.abs(hash) % 89999 + 10000;
+  return `KD-${String(numericPart).padStart(5, '0')}`;
+}
+
+// Funktion zum Abrufen oder Erstellen einer Kundennummer
+async function getOrCreateCustomerNumber(email: string): Promise<string> {
+  if (!email) return 'KD-GAST';
+  
+  try {
+    console.log('🔍 Fetching customer for email:', email);
+    
+    // Prüfe ob Kunde bereits existiert und hole customer_number falls vorhanden
+    const { data: existingCustomer, error: fetchError } = await supabase
+      .from('customers')
+      .select('id, customer_number, email')
+      .eq('email', email)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      console.error('❌ Error fetching customer:', fetchError);
+    }
+
+    // Wenn Kunde existiert und bereits eine customer_number hat, verwende diese
+    if (existingCustomer && existingCustomer.customer_number) {
+      console.log('✅ Found existing customer with number:', existingCustomer.customer_number);
+      return existingCustomer.customer_number;
+    }
+
+    // Generiere neue Kundennummer
+    const newCustomerNumber = generateCustomerNumber(email);
+    console.log('🔢 Generated new customer number:', newCustomerNumber);
+    
+    if (existingCustomer) {
+      // Kunde existiert, aber hat keine customer_number - aktualisiere ihn
+      try {
+        const { error: updateError } = await supabase
+          .from('customers')
+          .update({ customer_number: newCustomerNumber })
+          .eq('id', existingCustomer.id);
+        
+        if (updateError) {
+          console.log('ℹ️ Could not update customer_number (column may not exist):', updateError.message);
+        } else {
+          console.log('✅ Updated existing customer with customer_number');
+        }
+      } catch (updateError) {
+        console.log('ℹ️ customer_number column not available for update');
+      }
+    } else {
+      // Kunde existiert nicht - erstelle neuen Kunden
+      try {
+        const { error: insertError } = await supabase
+          .from('customers')
+          .insert({
+            email: email,
+            customer_number: newCustomerNumber,
+            first_name: '',
+            last_name: ''
+          });
+        
+        if (insertError) {
+          console.log('ℹ️ Could not insert with customer_number (column may not exist):', insertError.message);
+          // Fallback: Erstelle Kunde ohne customer_number
+          await supabase
+            .from('customers')
+            .insert({
+              email: email,
+              first_name: '',
+              last_name: ''
+            });
+        } else {
+          console.log('✅ Created new customer with customer_number');
+        }
+      } catch (insertError) {
+        console.log('ℹ️ customer_number column not available for insert');
+      }
+    }
+    
+    return newCustomerNumber;
+  } catch (error) {
+    console.error('💥 Error in getOrCreateCustomerNumber:', error);
+    return generateCustomerNumber(email);
+  }
+}
 
 // Using the centralized Supabase client from lib/supabase.ts
 
@@ -24,6 +117,7 @@ interface DeliveryData {
   lastName: string;
   email: string;
   phone: string;
+  company: string;
   street: string;
   houseNumber: string;
   postalCode: string;
@@ -70,6 +164,7 @@ export default function CheckoutPage() {
     lastName: '',
     email: '',
     phone: '',
+    company: '',
     street: '',
     houseNumber: '',
     postalCode: '',
@@ -197,14 +292,17 @@ export default function CheckoutPage() {
   // Synchronisiere Checkout-Artikel mit Real-time Produktdaten
   useEffect(() => {
     if (products.length > 0 && cartItems.length > 0) {
+      // Berechne Gesamtmenge aller Artikel für korrekte Preisberechnung
+      const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0);
+      
       const updatedCartItems = cartItems.map(cartItem => {
         const realtimeProduct = products.find(p => p.id && cartItem.id && p.id.toString() === cartItem.id.toString());
         if (realtimeProduct) {
           console.log(`Aktualisiere Checkout-Artikel: ${cartItem.name} -> ${realtimeProduct.name}, Preis: ${cartItem.price} -> ${realtimeProduct.price}`);
-          // Neuberechnung des Preises mit aktuellen Produktdaten
+          // Neuberechnung des Preises mit Gesamtmenge aller Artikel
           const basePrice = typeof realtimeProduct.price === 'string' ? parseFloat(realtimeProduct.price) : realtimeProduct.price;
           const hasQuantityDiscount = (realtimeProduct as any).has_quantity_discount || false;
-          const pricing = calculatePriceWithTiers(basePrice, cartItem.quantity, pricingTiers, minOrderQuantity, hasQuantityDiscount);
+          const pricing = calculatePriceWithTiers(basePrice, totalQuantity, pricingTiers, minOrderQuantity, hasQuantityDiscount);
           
           return {
             ...cartItem,
@@ -573,6 +671,7 @@ export default function CheckoutPage() {
         delivery_last_name: deliveryData.lastName || '',
         delivery_email: deliveryData.email || '',
         delivery_phone: deliveryData.phone || '',
+        delivery_company: deliveryData.company || '',
         delivery_street: deliveryData.street || '',
         delivery_house_number: deliveryData.houseNumber || '',
         delivery_postal_code: deliveryData.postalCode || '',
@@ -627,6 +726,28 @@ export default function CheckoutPage() {
 
       console.log('Bestellung erstellt:', order);
 
+      // Lade Steuereinstellungen für tax_included
+      const { data: taxSettings } = await supabase
+        .from('invoice_settings')
+        .select('default_tax_included')
+        .single();
+      
+      const defaultTaxIncluded = taxSettings?.default_tax_included || false;
+      
+      // Erstelle oder hole Kundennummer für diese Email
+      const customerNumber = await getOrCreateCustomerNumber(deliveryData.email);
+      console.log('📋 Customer number for order:', customerNumber);
+      
+      // Aktualisiere Order mit Kundennummer (falls Spalte existiert)
+      try {
+        await supabase
+          .from('orders')
+          .update({ customer_number: customerNumber })
+          .eq('id', order.id);
+      } catch (error) {
+        console.log('ℹ️ customer_number column not available yet:', error);
+      }
+      
       // Add order items
       const orderItems = cartItems.map((item) => ({
         order_id: order.id,
@@ -635,6 +756,7 @@ export default function CheckoutPage() {
         quantity: item.quantity,
         unit_price: parseFloat(item.price.toFixed(2)),
         total_price: parseFloat((item.price * item.quantity).toFixed(2)),
+        tax_included: defaultTaxIncluded,
         created_at: new Date().toISOString(),
       }));
 
@@ -647,6 +769,62 @@ export default function CheckoutPage() {
       if (itemsError) {
         console.error('Fehler bei Bestellpositionen:', itemsError);
         throw new Error(`Fehler beim Speichern der Bestellpositionen: ${itemsError.message}`);
+      }
+
+      // Update inventory for each ordered item
+      for (const item of cartItems) {
+        try {
+          // Get current product data
+          const { data: productData, error: productError } = await supabase
+            .from('products')
+            .select('stock_quantity')
+            .eq('id', item.id)
+            .single();
+
+          if (productError) {
+            console.error('Fehler beim Laden der Produktdaten:', productError);
+            continue; // Continue with other items even if one fails
+          }
+
+          const currentStock = productData?.stock_quantity || 0;
+          const newStock = Math.max(0, currentStock - item.quantity);
+
+          // Update product stock
+          const { error: stockError } = await supabase
+            .from('products')
+            .update({ 
+              stock_quantity: newStock,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', item.id);
+
+          if (stockError) {
+            console.error('Fehler beim Aktualisieren des Lagerbestands:', stockError);
+            continue;
+          }
+
+          // Create inventory movement record
+          const { error: movementError } = await supabase
+            .from('inventory_movements')
+            .insert({
+              product_id: item.id,
+              movement_type: 'out',
+              quantity: item.quantity,
+              reference_id: order.id,
+              notes: `Verkauf - Bestellung ${orderNumber}`,
+              created_by: 'system',
+              created_at: new Date().toISOString()
+            });
+
+          if (movementError) {
+            console.error('Fehler beim Erstellen der Lagerbewegung:', movementError);
+          }
+
+          console.log(`Lagerbestand aktualisiert für ${item.name}: ${currentStock} → ${newStock}`);
+        } catch (error) {
+          console.error(`Fehler beim Aktualisieren des Lagers für ${item.name}:`, error);
+          // Continue with other items even if one fails
+        }
       }
 
       // Send order confirmation email with configurable template
@@ -721,10 +899,11 @@ export default function CheckoutPage() {
     }
   };
 
-  const { subtotal, shipping, total } = calculateTotal();
+  // Berechne Preise für die Anzeige mit useMemo für Performance
+  const { subtotal, discountAmount, shipping, total } = useMemo(() => calculateTotal(), [cartItems, appliedDiscount, selectedDelivery]);
 
   // Prüfe, ob der Warenkorb leer ist oder die Mindestbestellmenge nicht erreicht wird
-  const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const isCartEmpty = cartItems.length === 0;
   const isBelowMinimumQuantity = totalQuantity < minOrderQuantity;
   
@@ -940,6 +1119,19 @@ export default function CheckoutPage() {
                         } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
                       />
                       {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Firmenname (optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={deliveryData.company}
+                        onChange={(e) => setDeliveryData({ ...deliveryData, company: e.target.value })}
+                        placeholder="Firmenname eingeben..."
+                        className="w-full px-4 py-3 border rounded-lg text-sm border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      />
                     </div>
 
                     <div>
@@ -1452,6 +1644,11 @@ export default function CheckoutPage() {
                   <div className="text-lg font-bold text-amber-600">
                     {subtotal.toFixed(2)} €
                   </div>
+                  {appliedDiscount && (
+                    <div className="mt-2 text-sm text-green-600">
+                      Rabatt ({appliedDiscount.code}): -{discountAmount.toFixed(2)} €
+                    </div>
+                  )}
                 </div>
                 
                 {/* Expandable Items List */}
@@ -1517,6 +1714,12 @@ export default function CheckoutPage() {
                   <span className="text-gray-600">Zwischensumme</span>
                   <span className="text-gray-900">{subtotal.toFixed(2)} €</span>
                 </div>
+                {appliedDiscount && (
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-green-600">Rabatt ({appliedDiscount.code})</span>
+                    <span className="text-green-600">-{discountAmount.toFixed(2)} €</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm mb-4">
                   <span className="text-gray-600">Versandkosten</span>
                   <span className="text-gray-900">

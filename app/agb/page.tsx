@@ -194,13 +194,27 @@ export default function AGBPage() {
                     <div>
                       <h3 className="text-lg font-bold text-[#1A1A1A] mb-3">4.1 Qualitätsstandards</h3>
                       <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                        <h4 className="font-bold text-purple-900 mb-2">Unser Qualitätsversprechen</h4>
-                        <ul className="text-purple-800 text-sm space-y-1">
-                          <li>• Kammergetrocknet auf unter 20% Restfeuchte</li>
-                          <li>• Saubere Lagerung ohne Schimmel oder Fäulnis</li>
-                          <li>• Einheitliche Scheitlängen (25-33 cm)</li>
-                          <li>• Nachhaltiger Anbau aus regionalen Wäldern</li>
-                        </ul>
+                        <h4 className="font-bold text-purple-900 mb-4">Unser Qualitätsversprechen</h4>
+                        
+                        <div className="mb-4">
+                          <h5 className="font-bold text-purple-900 mb-2">Industrieholz</h5>
+                          <ul className="text-purple-800 text-sm space-y-1">
+                            <li>• Kammergetrocknet auf 6%-8% Restfeuchte</li>
+                            <li>• Saubere Lagerung ohne Schimmel oder Fäulnis</li>
+                            <li>• Maße: 18-33 cm Länge, 3,5-6,5 cm Dicke</li>
+                            <li>• Nachhaltiger Anbau aus regionalen Wäldern</li>
+                          </ul>
+                        </div>
+                        
+                        <div>
+                          <h5 className="font-bold text-purple-900 mb-2">Scheitholz</h5>
+                          <ul className="text-purple-800 text-sm space-y-1">
+                            <li>• Kammergetrocknet auf unter 20% Restfeuchte</li>
+                            <li>• Saubere Lagerung ohne Schimmel oder Fäulnis</li>
+                            <li>• Maße: 25 cm Scheitlänge oder 33 cm Scheitlänge</li>
+                            <li>• Nachhaltiger Anbau aus regionalen Wäldern</li>
+                          </ul>
+                        </div>
                       </div>
                     </div>
                     

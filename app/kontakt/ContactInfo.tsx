@@ -40,7 +40,7 @@ export default function ContactInfo() {
             </h2>
 
             <p className="text-lg text-gray-700 mb-8" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-              Erreichen Sie unsere Brennholz-Experten von Brennholzhandel Vey auf verschiedenen Wegen
+              Erreichen Sie unsere Brennholz-Experten vom Brennholzkönig auf verschiedenen Wegen
             </p>
           </div>
 
@@ -60,7 +60,7 @@ export default function ContactInfo() {
                     +49 176 71085234
                   </div>
                   <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                    Für Express-Lieferungen und dringende Anfragen
+                    Besuche des Lagers / Selbstabholmarkt nur mit persönlichem Termin möglich
                   </p>
                 </div>
               </div>

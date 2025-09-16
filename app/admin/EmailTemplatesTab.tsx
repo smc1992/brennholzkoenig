@@ -4,33 +4,261 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
 interface EmailTemplate {
-  id: number;
-  name: string;
+  id?: number;
+  template_key: string;
+  template_name: string;
   subject: string;
-  content: string;
-  type: 'order_confirmation' | 'shipping_notification' | 'welcome' | 'abandoned_cart' | 'promotion';
+  html_content: string;
+  text_content: string;
+  variables: string[];
   is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  template_type: 'order_confirmation' | 'shipping_notification' | 'admin_notification' | 'newsletter' | 'custom';
+  description?: string;
+  created_at?: string;
+  updated_at?: string;
 }
+
+const DEFAULT_TEMPLATES: Omit<EmailTemplate, 'id' | 'created_at' | 'updated_at'>[] = [
+  {
+    template_key: 'order_confirmation',
+    template_name: 'Bestellbestätigung',
+    template_type: 'order_confirmation',
+    subject: 'Ihre Bestellung bei Brennholzkönig - Bestätigung #{order_id}',
+    html_content: `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bestellbestätigung</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background-color: white; }
+        .header { background-color: #C04020; color: white; padding: 20px; text-align: center; }
+        .logo { font-size: 24px; font-weight: bold; }
+        .content { padding: 30px; }
+        .order-details { background-color: #f9f9f9; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .footer { background-color: #1A1A1A; color: white; padding: 20px; text-align: center; }
+        .button { background-color: #C04020; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🔥 Brennholzkönig</div>
+            <p>Premium Brennholz direkt vom Produzenten</p>
+        </div>
+        
+        <div class="content">
+            <h2>Vielen Dank für Ihre Bestellung!</h2>
+            <p>Hallo {customer_name},</p>
+            <p>wir haben Ihre Bestellung erfolgreich erhalten und bestätigen hiermit den Eingang.</p>
+            
+            <div class="order-details">
+                <h3>Bestelldetails</h3>
+                <p><strong>Bestellnummer:</strong> #{order_id}</p>
+                <p><strong>Bestelldatum:</strong> {order_date}</p>
+                <p><strong>Gesamtbetrag:</strong> {total_amount}€</p>
+                <p><strong>Lieferadresse:</strong><br>
+                {delivery_address}</p>
+            </div>
+            
+            <p>Ihre Bestellung wird schnellstmöglich bearbeitet. Sie erhalten eine weitere E-Mail, sobald Ihre Bestellung versendet wurde.</p>
+            
+            <a href="{order_tracking_url}" class="button">Bestellung verfolgen</a>
+        </div>
+        
+        <div class="footer">
+            <p>Brennholzkönig - Ihr Partner für Premium Brennholz</p>
+            <p>Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de</p>
+        </div>
+    </div>
+</body>
+</html>`,
+    text_content: `Vielen Dank für Ihre Bestellung!
+
+Hallo {customer_name},
+
+wir haben Ihre Bestellung erfolgreich erhalten und bestätigen hiermit den Eingang.
+
+Bestelldetails:
+- Bestellnummer: #{order_id}
+- Bestelldatum: {order_date}
+- Gesamtbetrag: {total_amount}€
+- Lieferadresse: {delivery_address}
+
+Ihre Bestellung wird schnellstmöglich bearbeitet. Sie erhalten eine weitere E-Mail, sobald Ihre Bestellung versendet wurde.
+
+Bestellung verfolgen: {order_tracking_url}
+
+Brennholzkönig - Ihr Partner für Premium Brennholz
+Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`,
+    variables: ['customer_name', 'order_id', 'order_date', 'total_amount', 'delivery_address', 'order_tracking_url'],
+    is_active: true,
+    description: 'Automatische Bestätigung nach Bestelleingang'
+  },
+  {
+    template_key: 'shipping_notification',
+    template_name: 'Versandbenachrichtigung',
+    template_type: 'shipping_notification',
+    subject: 'Ihre Bestellung #{order_id} ist unterwegs!',
+    html_content: `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Versandbenachrichtigung</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background-color: white; }
+        .header { background-color: #C04020; color: white; padding: 20px; text-align: center; }
+        .logo { font-size: 24px; font-weight: bold; }
+        .content { padding: 30px; }
+        .shipping-info { background-color: #e8f5e8; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #4CAF50; }
+        .footer { background-color: #1A1A1A; color: white; padding: 20px; text-align: center; }
+        .button { background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🔥 Brennholzkönig</div>
+            <p>Premium Brennholz direkt vom Produzenten</p>
+        </div>
+        
+        <div class="content">
+            <h2>🚚 Ihre Bestellung ist unterwegs!</h2>
+            <p>Hallo {customer_name},</p>
+            <p>gute Nachrichten! Ihre Bestellung #{order_id} wurde versendet und ist nun auf dem Weg zu Ihnen.</p>
+            
+            <div class="shipping-info">
+                <h3>Versandinformationen</h3>
+                <p><strong>Tracking-Nummer:</strong> {tracking_number}</p>
+                <p><strong>Versanddatum:</strong> {shipping_date}</p>
+                <p><strong>Voraussichtliche Lieferung:</strong> {estimated_delivery}</p>
+                <p><strong>Versandunternehmen:</strong> {shipping_company}</p>
+            </div>
+            
+            <p>Sie können den Status Ihrer Sendung jederzeit über die Tracking-Nummer verfolgen.</p>
+            
+            <a href="{tracking_url}" class="button">Sendung verfolgen</a>
+        </div>
+        
+        <div class="footer">
+            <p>Brennholzkönig - Ihr Partner für Premium Brennholz</p>
+            <p>Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de</p>
+        </div>
+    </div>
+</body>
+</html>`,
+    text_content: `Ihre Bestellung ist unterwegs!
+
+Hallo {customer_name},
+
+gute Nachrichten! Ihre Bestellung #{order_id} wurde versendet und ist nun auf dem Weg zu Ihnen.
+
+Versandinformationen:
+- Tracking-Nummer: {tracking_number}
+- Versanddatum: {shipping_date}
+- Voraussichtliche Lieferung: {estimated_delivery}
+- Versandunternehmen: {shipping_company}
+
+Sie können den Status Ihrer Sendung jederzeit über die Tracking-Nummer verfolgen.
+
+Sendung verfolgen: {tracking_url}
+
+Brennholzkönig - Ihr Partner für Premium Brennholz
+Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`,
+    variables: ['customer_name', 'order_id', 'tracking_number', 'shipping_date', 'estimated_delivery', 'shipping_company', 'tracking_url'],
+    is_active: true,
+    description: 'Benachrichtigung bei Versand der Bestellung'
+  },
+  {
+    template_key: 'admin_new_order',
+    template_name: 'Admin: Neue Bestellung',
+    template_type: 'admin_notification',
+    subject: 'Neue Bestellung #{order_id} eingegangen',
+    html_content: `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neue Bestellung</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background-color: white; }
+        .header { background-color: #1A1A1A; color: white; padding: 20px; text-align: center; }
+        .content { padding: 30px; }
+        .order-summary { background-color: #fff3cd; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #ffc107; }
+        .customer-info { background-color: #f8f9fa; padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .button { background-color: #C04020; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>🔔 Neue Bestellung eingegangen</h2>
+        </div>
+        
+        <div class="content">
+            <h3>Bestelldetails</h3>
+            
+            <div class="order-summary">
+                <p><strong>Bestellnummer:</strong> #{order_id}</p>
+                <p><strong>Bestelldatum:</strong> {order_date}</p>
+                <p><strong>Gesamtbetrag:</strong> {total_amount}€</p>
+                <p><strong>Zahlungsstatus:</strong> {payment_status}</p>
+            </div>
+            
+            <div class="customer-info">
+                <h4>Kundeninformationen</h4>
+                <p><strong>Name:</strong> {customer_name}</p>
+                <p><strong>E-Mail:</strong> {customer_email}</p>
+                <p><strong>Telefon:</strong> {customer_phone}</p>
+                <p><strong>Lieferadresse:</strong><br>{delivery_address}</p>
+            </div>
+            
+            <h4>Bestellte Artikel</h4>
+            <div>{order_items}</div>
+            
+            <a href="{admin_order_url}" class="button">Bestellung im Admin bearbeiten</a>
+        </div>
+    </div>
+</body>
+</html>`,
+    text_content: `Neue Bestellung eingegangen
+
+Bestelldetails:
+- Bestellnummer: #{order_id}
+- Bestelldatum: {order_date}
+- Gesamtbetrag: {total_amount}€
+- Zahlungsstatus: {payment_status}
+
+Kundeninformationen:
+- Name: {customer_name}
+- E-Mail: {customer_email}
+- Telefon: {customer_phone}
+- Lieferadresse: {delivery_address}
+
+Bestellte Artikel:
+{order_items}
+
+Bestellung im Admin bearbeiten: {admin_order_url}`,
+    variables: ['order_id', 'order_date', 'total_amount', 'payment_status', 'customer_name', 'customer_email', 'customer_phone', 'delivery_address', 'order_items', 'admin_order_url'],
+    is_active: true,
+    description: 'Admin-Benachrichtigung bei neuen Bestellungen'
+  }
+];
 
 export default function EmailTemplatesTab() {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [showNewTemplate, setShowNewTemplate] = useState(false);
-  const [newTemplate, setNewTemplate] = useState({
-    name: '',
-    type: 'order_confirmation',
-    subject: '',
-    content: '',
-    is_active: true,
-  });
-
-  // Using the centralized Supabase client from lib/supabase.ts
 
   useEffect(() => {
     loadTemplates();
@@ -39,383 +267,190 @@ export default function EmailTemplatesTab() {
   const loadTemplates = async () => {
     try {
       const { data, error } = await supabase
-        .from('email_templates')
+        .from('app_settings')
         .select('*')
+        .eq('setting_type', 'email_template')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setTemplates(data || []);
+
+      const parsedTemplates = data?.map((item: any) => ({
+        id: item.id,
+        ...JSON.parse(item.setting_value),
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      })) || [];
+
+      setTemplates(parsedTemplates);
     } catch (error) {
-      console.error('Fehler beim Laden der E-Mail-Vorlagen:', error);
-      setMessage('Fehler beim Laden der E-Mail-Vorlagen');
-    } finally {
-      setLoading(false);
+      console.error('Error loading templates:', error);
+      setMessage('Fehler beim Laden der Templates.');
     }
   };
 
-  const saveTemplate = async () => {
-    if (!selectedTemplate) return;
-
-    setSaving(true);
+  const saveTemplate = async (template: EmailTemplate) => {
+    setLoading(true);
     try {
+      const templateData = {
+        template_key: template.template_key,
+        template_name: template.template_name,
+        subject: template.subject,
+        html_content: template.html_content,
+        text_content: template.text_content,
+        variables: template.variables,
+        is_active: template.is_active,
+        template_type: template.template_type,
+        description: template.description
+      };
+
       const { error } = await supabase
-        .from('email_templates')
-        .upsert({
-          id: selectedTemplate.id,
-          name: selectedTemplate.name,
-          subject: selectedTemplate.subject,
-          content: selectedTemplate.content,
-          type: selectedTemplate.type,
-          is_active: selectedTemplate.is_active,
+        .rpc('universal_smtp_upsert', {
+          p_setting_type: 'email_template',
+          p_setting_key: template.template_key,
+          p_setting_value: JSON.stringify(templateData),
+          p_description: `Email template: ${template.template_name}`
         });
 
       if (error) throw error;
 
-      await loadTemplates();
+      setMessage('Template erfolgreich gespeichert!');
       setIsEditing(false);
-      setMessage('E-Mail-Vorlage erfolgreich gespeichert!');
-      setTimeout(() => setMessage(''), 3000);
+      setIsCreating(false);
+      setSelectedTemplate(null);
+      loadTemplates();
     } catch (error) {
-      console.error('Fehler beim Speichern:', error);
-      setMessage('Fehler beim Speichern der Vorlage.');
-    } finally {
-      setSaving(false);
+      console.error('Error saving template:', error);
+      setMessage('Fehler beim Speichern des Templates.');
     }
-  };
-
-  const createNewTemplate = async () => {
-    if (!newTemplate.name || !newTemplate.subject || !newTemplate.content) {
-      setMessage('Bitte alle Pflichtfelder ausfüllen');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const templateId = `template_email_${Date.now()}`;
-
-      const { error } = await supabase
-        .from('email_templates')
-        .insert({
-          id: templateId,
-          name: newTemplate.name,
-          subject: newTemplate.subject,
-          content: newTemplate.content,
-          type: newTemplate.type,
-          is_active: newTemplate.is_active,
-        });
-
-      if (error) throw error;
-
-      await loadTemplates();
-      setShowNewTemplate(false);
-      setNewTemplate({
-        name: '',
-        type: 'order_confirmation',
-        subject: '',
-        content: '',
-        is_active: true,
-      });
-      setMessage('Neue E-Mail-Vorlage erfolgreich erstellt!');
-      setTimeout(() => setMessage(''), 3000);
-    } catch (error: any) {
-      console.error('Fehler beim Erstellen:', error);
-      setMessage(`Fehler beim Erstellen der Vorlage: ${error.message}`);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const sendTestEmail = async (template: EmailTemplate) => {
-    setSaving(true);
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-email-auth`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          to: 'admin@brennholzkoenig.de',
-          subject: `[TEST] ${template.subject}`,
-          html: template.content
-            .replace(/{customerName}/g, 'Max Mustermann')
-            .replace(/{orderId}/g, 'BHK-12345678')
-            .replace(/{orderDate}/g, new Date().toLocaleDateString('de-DE'))
-            .replace(/{totalAmount}/g, '299,50')
-            .replace(/{trackingNumber}/g, 'DHL-123456789'),
-          type: 'template_test',
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const result = await response.json();
-      if (result.success) {
-        setMessage('Test-E-Mail erfolgreich gesendet! Prüfen Sie Ihr Postfach.');
-      } else {
-        throw new Error(result.error || 'Unbekannter Fehler');
-      }
-    } catch (error: any) {
-      console.error('Error sending test email:', error);
-      setMessage(`Fehler beim Senden der Test-E-Mail: ${error.message}`);
-    } finally {
-      setSaving(false);
-      setTimeout(() => setMessage(''), 5000);
-    }
+    setLoading(false);
   };
 
   const createDefaultTemplates = async () => {
-    setSaving(true);
+    setLoading(true);
     try {
-      const defaultTemplates = [
-        {
-          id: 'order_confirmation_default',
-          name: 'Bestellbestätigung',
-          type: 'order_confirmation',
-          subject: 'Ihre Bestellung #{orderId} wurde bestätigt - Brennholzkönig',
-          content: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
-              <div style="background-color: #C04020; padding: 30px 20px; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 28px;">🔥 Brennholzkönig</h1>
-                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0; font-size: 16px;">Premium Brennholz aus Fulda</p>
-              </div>
-              <div style="padding: 40px 30px; background-color: #ffffff;">
-                <h2 style="color: #1f2937; margin-bottom: 25px; font-size: 24px;">Hallo {customerName},</h2>
-                <p style="color: #4b5563; font-size: 16px; line-height: 1.7; margin-bottom: 25px;">
-                  vielen Dank für Ihre Bestellung! Wir haben Ihre Bestellung erhalten und bearbeiten sie umgehend.
-                </p>
-                <div style="background-color: #fef3c7; padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 4px solid #f59e0b;">
-                  <h3 style="color: #92400e; margin: 0 0 15px 0; font-size: 18px;">📋 Bestelldetails:</h3>
-                  <div style="color: #1f2937; line-height: 1.6;">
-                    <p style="margin: 8px 0;"><strong>Bestellnummer:</strong> {orderId}</p>
-                    <p style="margin: 8px 0;"><strong>Bestelldatum:</strong> {orderDate}</p>
-                    <p style="margin: 8px 0;"><strong>Gesamtbetrag:</strong> €{totalAmount}</p>
-                  </div>
-                </div>
-                <div style="background: #dcfce7; padding: 20px; border-radius: 8px; margin: 25px 0;">
-                  <h4 style="color: #15803d; margin-top: 0; margin-bottom: 15px;">✅ Nächste Schritte:</h4>
-                  <ul style="color: #15803d; margin: 0; padding-left: 20px; line-height: 1.6;">
-                    <li>Wir bereiten Ihre Bestellung vor</li>
-                    <li>Sie erhalten eine E-Mail zur Lieferung</li>
-                    <li>Lieferung erfolgt direkt zu Ihnen</li>
-                  </ul>
-                </div>
-                <div style="text-align: center; margin: 30px 0;">
-                  <a href="https://brennholzkoenig.de/konto/bestellungen" style="background: #C04020; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">📋 Bestellung verfolgen</a>
-                </div>
-              </div>
-              <div style="background: #f3f4f6; padding: 20px; text-align: center; color: #6b7280; font-size: 14px;">
-                <p style="margin: 0;">Bei Fragen stehen wir Ihnen gerne zur Verfügung.</p>
-                <p style="margin: 5px 0 0;">Ihr Team vom Brennholzkönig</p>
-              </div>
-            </div>
-          `,
-          is_active: true,
-        },
-        {
-          id: 'order_shipped_default',
-          name: 'Versandbenachrichtigung',
-          type: 'shipping_notification',
-          subject: '🚚 Ihre Bestellung #{orderId} wurde versandt - Brennholzkönig',
-          content: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
-              <div style="background-color: #C04020; padding: 30px 20px; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 28px;">🚚 Brennholzkönig</h1>
-                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0; font-size: 16px;">Ihr Brennholz ist unterwegs!</p>
-              </div>
-              <div style="padding: 40px 30px; background-color: #ffffff;">
-                <h2 style="color: #1f2937; margin-bottom: 25px; font-size: 24px;">Hallo {customerName},</h2>
-                <p style="color: #4b5563; font-size: 16px; line-height: 1.7; margin-bottom: 25px;">
-                  📦 Gute Nachrichten! Ihre Bestellung wurde versandt und ist unterwegs zu Ihnen.
-                </p>
-                <div style="background: #dcfce7; padding: 25px; border-radius: 12px; margin: 25px 0; text-align: center;">
-                  <h3 style="color: #15803d; margin-top: 0; margin-bottom: 15px; font-size: 18px;">📋 Versanddetails</h3>
-                  <div style="color: #15803d;">
-                    <p style="margin: 8px 0;"><strong>Bestellnummer:</strong> {orderId}</p>
-                    <p style="margin: 8px 0;"><strong>Sendungsverfolgung:</strong></p>
-                    <div style="background: #16a34a; color: white; padding: 10px; border-radius: 6px; font-weight: bold; margin: 10px 0;">
-                      {trackingNumber}
-                    </div>
-                  </div>
-                </div>
-                <div style="text-align: center; margin: 30px 0;">
-                  <a href="https://brennholzkoenig.de/konto/bestellungen/{orderId}" style="background: #C04020; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-right: 10px;">📦 Sendung verfolgen</a>
-                  <a href="https://brennholzkoenig.de/shop" style="background: #6b7280; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">🔥 Nachbestellen</a>
-                </div>
-              </div>
-              <div style="background: #f3f4f6; padding: 20px; text-align: center; color: #6b7280; font-size: 14px;">
-                <p style="margin: 0;">Vielen Dank für Ihr Vertrauen in Brennholzkönig!</p>
-                <p style="margin: 5px 0 0;">Ihr Team vom Brennholzkönig</p>
-              </div>
-            </div>
-          `,
-          is_active: true,
-        },
-        {
-          id: 'order_delivered_default',
-          name: 'Lieferbestätigung',
-          type: 'order_delivered',
-          subject: '✅ Ihre Bestellung #{orderId} wurde zugestellt - Brennholzkönig',
-          content: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
-              <div style="background-color: #16a34a; padding: 30px 20px; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 28px;">✅ Brennholzkönig</h1>
-                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0; font-size: 16px;">Lieferung erfolgreich abgeschlossen!</p>
-              </div>
-              <div style="padding: 40px 30px; background-color: #ffffff;">
-                <h2 style="color: #1f2937; margin-bottom: 25px; font-size: 24px;">Hallo {customerName},</h2>
-                <p style="color: #4b5563; font-size: 16px; line-height: 1.7; margin-bottom: 25px;">
-                  🎉 Ihr Premium Brennholz wurde erfolgreich zugestellt! Wir hoffen, Sie sind mit der Qualität zufrieden.
-                </p>
-                <div style="background: #dcfce7; padding: 25px; border-radius: 12px; margin: 25px 0; text-align: center;">
-                  <h3 style="color: #15803d; margin-top: 0; margin-bottom: 15px; font-size: 18px;">⭐ Bewerten Sie uns!</h3>
-                  <p style="color: #15803d; margin-bottom: 20px;">Ihre Meinung ist uns wichtig. Teilen Sie Ihre Erfahrung mit anderen Kunden.</p>
-                  <a href="https://brennholzkoenig.de/bewertung" style="background: #16a34a; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">⭐ Jetzt bewerten</a>
-                </div>
-                <div style="text-align: center; margin: 30px 0;">
-                  <a href="https://brennholzkoenig.de/shop" style="background: #C04020; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-right: 10px;">🔥 Nachbestellen</a>
-                  <a href="https://brennholzkoenig.de/kontakt" style="background: #6b7280; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">💬 Kontakt</a>
-                </div>
-              </div>
-              <div style="background: #f3f4f6; padding: 20px; text-align: center; color: #6b7280; font-size: 14px;">
-                <p style="margin: 0;">Vielen Dank für Ihr Vertrauen in Brennholzkönig!</p>
-                <p style="margin: 5px 0 0;">Ihr Team vom Brennholzkönig aus Fulda</p>
-              </div>
-            </div>
-          `,
-          is_active: true,
-        },
-      ];
-
       let successCount = 0;
-      for (const template of defaultTemplates) {
+      
+      for (const template of DEFAULT_TEMPLATES) {
         try {
           const { error } = await supabase
-            .from('email_templates')
-            .upsert(template);
+            .rpc('universal_smtp_upsert', {
+              p_setting_type: 'email_template',
+              p_setting_key: template.template_key,
+              p_setting_value: JSON.stringify(template),
+              p_description: `Email template: ${template.template_name}`
+            });
 
-          if (error) {
-            console.error('Template creation error:', error);
-            throw new Error(`Fehler beim Erstellen der Vorlage "${template.name}": ${error.message}`);
+          if (!error) {
+            successCount++;
           }
-
-          successCount++;
-          await new Promise(resolve => setTimeout(resolve, 100));
         } catch (err) {
-          console.error(`Error creating template ${template.name}:`, err);
-          throw err;
+          console.error(`Error creating template ${template.template_key}:`, err);
         }
       }
 
-      await loadTemplates();
-      setMessage(`✅ ${successCount} Standard-Vorlagen erfolgreich erstellt! Alle verwenden die globale SMTP-Konfiguration und sind sofort einsatzbereit.`);
-      setTimeout(() => setMessage(''), 5000);
-    } catch (error: any) {
-      console.error('Fehler beim Erstellen der Vorlagen:', error);
-      setMessage(`❌ Fehler beim Erstellen der Standard-Vorlagen: ${error.message}`);
-      setTimeout(() => setMessage(''), 8000);
-    } finally {
-      setSaving(false);
+      setMessage(`✅ ${successCount} Standard-Templates erfolgreich erstellt! Alle verwenden die globale SMTP-Konfiguration und sind sofort einsatzbereit.`);
+      loadTemplates();
+    } catch (error) {
+      console.error('Error creating default templates:', error);
+      setMessage('Fehler beim Erstellen der Standard-Templates.');
+    }
+    setLoading(false);
+  };
+
+  const deleteTemplate = async (templateKey: string) => {
+    if (!confirm('Möchten Sie dieses Template wirklich löschen?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('app_settings')
+        .delete()
+        .eq('setting_type', 'email_template')
+        .eq('setting_key', templateKey);
+
+      if (error) throw error;
+
+      setMessage('Template erfolgreich gelöscht!');
+      loadTemplates();
+    } catch (error) {
+      console.error('Error deleting template:', error);
+      setMessage('Fehler beim Löschen des Templates.');
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C04020]"></div>
-        <span className="ml-3 text-gray-600">Lade E-Mail-Vorlagen...</span>
-      </div>
-    );
-  }
+  const startEditing = (template: EmailTemplate) => {
+    setSelectedTemplate({ ...template });
+    setIsEditing(true);
+    setIsCreating(false);
+  };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">E-Mail-Vorlagen</h2>
-          <p className="text-gray-600 mt-1">Verwalten Sie die E-Mail-Vorlagen für automatische Benachrichtigungen</p>
-        </div>
-        <div className="flex space-x-3">
-          {templates.length === 0 && (
-            <button
-              onClick={createDefaultTemplates}
-              disabled={saving}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap cursor-pointer disabled:opacity-50"
-            >
-              {saving ? (
-                <>
-                  <i className="ri-loader-4-line animate-spin mr-2"></i>
-                  Erstelle...
-                </>
-              ) : (
-                <>
-                  <i className="ri-add-line mr-2"></i>
-                  Standard-Vorlagen erstellen
-                </>
-              )}
-            </button>
-          )}
+  const startCreating = () => {
+    setSelectedTemplate({
+      template_key: '',
+      template_name: '',
+      subject: '',
+      html_content: '',
+      text_content: '',
+      variables: [],
+      is_active: true,
+      template_type: 'custom',
+      description: ''
+    });
+    setIsCreating(true);
+    setIsEditing(false);
+  };
+
+  const cancelEditing = () => {
+    setSelectedTemplate(null);
+    setIsEditing(false);
+    setIsCreating(false);
+  };
+
+  if (isEditing || isCreating) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">
+              {isCreating ? 'Neues E-Mail-Template erstellen' : 'E-Mail-Template bearbeiten'}
+            </h2>
+            <p className="text-gray-600">Template für automatische E-Mails konfigurieren</p>
+          </div>
           <button
-            onClick={() => setShowNewTemplate(true)}
-            className="bg-[#C04020] text-white px-4 py-2 rounded-lg hover:bg-[#A0351A] transition-colors whitespace-nowrap cursor-pointer"
+            onClick={cancelEditing}
+            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
           >
-            <i className="ri-add-line mr-2"></i>
-            Neue Vorlage
+            <i className="ri-arrow-left-line mr-2"></i>
+            Zurück
           </button>
         </div>
-      </div>
 
-      {message && (
-        <div className={`px-4 py-3 rounded-lg text-sm font-medium border ${message.includes('erfolgreich') || message.includes('✅')
-          ? 'bg-green-50 text-green-800 border-green-200'
-          : 'bg-red-50 text-red-800 border-red-200'
-          }`}>
-          <div className="flex items-start">
-            <i className={`mr-2 mt-0.5 ${message.includes('erfolgreich') || message.includes('✅') ? 'ri-check-line' : 'ri-error-warning-line'}`}></i>
-            <span>{message}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Neue Vorlage erstellen Modal */}
-      {showNewTemplate && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Neue E-Mail-Vorlage erstellen</h3>
-
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {selectedTemplate && (
+          <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vorlagen-Name *
+                  Template-Name *
                 </label>
                 <input
                   type="text"
-                  value={newTemplate.name}
-                  onChange={(e) => setNewTemplate(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={selectedTemplate.template_name}
+                  onChange={(e) => setSelectedTemplate({ ...selectedTemplate, template_name: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   placeholder="z.B. Bestellbestätigung"
                 />
               </div>
-
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vorlagen-Typ
+                  Template-Key *
                 </label>
-                <select
-                  value={newTemplate.type}
-                  onChange={(e) => setNewTemplate(prev => ({ ...prev, type: e.target.value }))}
-                  className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="order_confirmation">Bestellbestätigung</option>
-                  <option value="shipping_notification">Versandbenachrichtigung</option>
-                  <option value="order_delivered">Lieferbestätigung</option>
-                  <option value="welcome">Willkommen</option>
-                  <option value="abandoned_cart">Abandoned Cart</option>
-                  <option value="promotion">Promotion</option>
-                  <option value="custom">Benutzerdefiniert</option>
-                </select>
+                <input
+                  type="text"
+                  value={selectedTemplate.template_key}
+                  onChange={(e) => setSelectedTemplate({ ...selectedTemplate, template_key: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  placeholder="z.B. order_confirmation"
+                />
               </div>
             </div>
 
@@ -425,10 +460,10 @@ export default function EmailTemplatesTab() {
               </label>
               <input
                 type="text"
-                value={newTemplate.subject}
-                onChange={(e) => setNewTemplate(prev => ({ ...prev, subject: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="z.B. Ihre Bestellung #{orderId} wurde bestätigt"
+                value={selectedTemplate.subject}
+                onChange={(e) => setSelectedTemplate({ ...selectedTemplate, subject: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                placeholder="z.B. Ihre Bestellung #{order_id} wurde bestätigt"
               />
             </div>
 
@@ -437,241 +472,187 @@ export default function EmailTemplatesTab() {
                 HTML-Inhalt *
               </label>
               <textarea
-                value={newTemplate.content}
-                onChange={(e) => setNewTemplate(prev => ({ ...prev, content: e.target.value }))}
-                rows={12}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                value={selectedTemplate.html_content}
+                onChange={(e) => setSelectedTemplate({ ...selectedTemplate, html_content: e.target.value })}
+                rows={15}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 font-mono text-sm"
                 placeholder="HTML-Inhalt der E-Mail..."
               />
-              <div className="text-xs text-gray-500 mt-1">
-                Verfügbare Platzhalter: {`{customerName}`}, {`{orderId}`}, {`{orderDate}`}, {`{totalAmount}`}, {`{trackingNumber}`}
-              </div>
             </div>
 
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="new_active"
-                checked={newTemplate.is_active}
-                onChange={(e) => setNewTemplate(prev => ({ ...prev, is_active: e.target.checked }))}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label htmlFor="new_active" className="ml-2 text-sm text-gray-700">
-                Vorlage aktiv
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Text-Inhalt (Fallback)
               </label>
-            </div>
-          </div>
-
-          <div className="flex justify-end space-x-3 mt-6">
-            <button
-              onClick={() => setShowNewTemplate(false)}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium cursor-pointer whitespace-nowrap"
-            >
-              Abbrechen
-            </button>
-            <button
-              onClick={createNewTemplate}
-              disabled={saving}
-              className="bg-[#C04020] text-white px-6 py-2 rounded-lg hover:bg-[#A0351A] transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
-            >
-              {saving ? 'Speichert...' : 'Vorlage erstellen'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Vorlagen-Liste */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-4 border-b border-gray-200">
-            <h3 className="font-semibold text-gray-900">E-Mail-Vorlagen ({templates.length})</h3>
-          </div>
-
-          <div className="divide-y divide-gray-200">
-            {templates.map((template) => (
-              <div
-                key={template.id}
-                className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${selectedTemplate?.id === template.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''}`}
-                onClick={() => {
-                  setSelectedTemplate(template);
-                  setIsEditing(false);
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{template.name}</h4>
-                    <p className="text-sm text-gray-500 mt-1">{template.subject}</p>
-                    <div className="flex items-center mt-2 space-x-2">
-                      <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
-                        {template.type}
-                      </span>
-                      {template.is_active && (
-                        <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">
-                          Aktiv
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        sendTestEmail(template);
-                      }}
-                      disabled={saving}
-                      className="text-blue-600 hover:text-blue-800 text-sm cursor-pointer disabled:opacity-50"
-                    >
-                      <i className="ri-send-plane-line mr-1"></i>
-                      Test
-                    </button>
-                    <i className="ri-arrow-right-s-line text-gray-400"></i>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {templates.length === 0 && (
-              <div className="p-8 text-center text-gray-500">
-                <i className="ri-mail-line text-4xl mb-4"></i>
-                <p>Noch keine E-Mail-Vorlagen vorhanden</p>
-                <p className="text-sm mt-1">Erstellen Sie Standard-Vorlagen zum Starten</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Vorlagen-Editor */}
-        {selectedTemplate && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900">Vorlage bearbeiten</h3>
-              <div className="flex items-center space-x-2">
-                {!isEditing ? (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors cursor-pointer whitespace-nowrap"
-                  >
-                    <i className="ri-edit-line mr-1"></i>
-                    Bearbeiten
-                  </button>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => setIsEditing(false)}
-                      className="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 transition-colors cursor-pointer whitespace-nowrap"
-                    >
-                      Abbrechen
-                    </button>
-                    <button
-                      onClick={saveTemplate}
-                      disabled={saving}
-                      className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
-                    >
-                      {saving ? (
-                        <>
-                          <i className="ri-loader-4-line animate-spin mr-1"></i>
-                          Speichern...
-                        </>
-                      ) : (
-                        <>
-                          <i className="ri-save-line mr-1"></i>
-                          Speichern
-                        </>
-                      )}
-                    </button>
-                  </>
-                )}
-              </div>
+              <textarea
+                value={selectedTemplate.text_content}
+                onChange={(e) => setSelectedTemplate({ ...selectedTemplate, text_content: e.target.value })}
+                rows={8}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                placeholder="Text-Version der E-Mail..."
+              />
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vorlagen-Name
+                  Template-Typ
                 </label>
-                <input
-                  type="text"
-                  value={selectedTemplate.name}
-                  onChange={(e) => setSelectedTemplate({ ...selectedTemplate, name: e.target.value })}
-                  disabled={!isEditing}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  E-Mail-Betreff
-                </label>
-                <input
-                  type="text"
-                  value={selectedTemplate.subject}
-                  onChange={(e) => setSelectedTemplate({ ...selectedTemplate, subject: e.target.value })}
-                  disabled={!isEditing}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  HTML-Inhalt
-                </label>
-                <textarea
-                  value={selectedTemplate.content}
-                  onChange={(e) => setSelectedTemplate({ ...selectedTemplate, content: e.target.value })}
-                  disabled={!isEditing}
-                  rows={12}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm disabled:bg-gray-50"
-                />
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="active"
-                  checked={selectedTemplate.is_active}
-                  onChange={(e) => setSelectedTemplate({ ...selectedTemplate, is_active: e.target.checked })}
-                  disabled={!isEditing}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
-                />
-                <label htmlFor="active" className="ml-2 text-sm text-gray-700">
-                  Vorlage aktiv
-                </label>
-              </div>
-
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Verfügbare Platzhalter:</h4>
-                <div className="text-xs text-gray-600 space-y-1">
-                  <p><code>{`{customerName}`}</code> - Name des Kunden</p>
-                  <p><code>{`{orderId}`}</code> - Bestellnummer</p>
-                  <p><code>{`{orderDate}`}</code> - Bestelldatum</p>
-                  <p><code>{`{totalAmount}`}</code> - Gesamtbetrag</p>
-                  <p><code>{`{trackingNumber}`}</code> - Sendungsverfolgungsnummer</p>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => sendTestEmail(selectedTemplate)}
-                  disabled={saving}
-                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer disabled:opacity-50"
+                <select
+                  value={selectedTemplate.template_type}
+                  onChange={(e) => setSelectedTemplate({ ...selectedTemplate, template_type: e.target.value as any })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 >
-                  {saving ? (
-                    <>
-                      <i className="ri-loader-4-line animate-spin mr-2"></i>
-                      Sende Test-E-Mail...
-                    </>
-                  ) : (
-                    <>
-                      <i className="ri-send-plane-line mr-2"></i>
-                      Test-E-Mail senden
-                    </>
-                  )}
-                </button>
+                  <option value="order_confirmation">Bestellbestätigung</option>
+                  <option value="shipping_notification">Versandbenachrichtigung</option>
+                  <option value="admin_notification">Admin-Benachrichtigung</option>
+                  <option value="newsletter">Newsletter</option>
+                  <option value="custom">Benutzerdefiniert</option>
+                </select>
               </div>
+              
+              <div className="flex items-center">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedTemplate.is_active}
+                    onChange={(e) => setSelectedTemplate({ ...selectedTemplate, is_active: e.target.checked })}
+                    className="mr-2"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Template aktiv</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Beschreibung
+              </label>
+              <input
+                type="text"
+                value={selectedTemplate.description || ''}
+                onChange={(e) => setSelectedTemplate({ ...selectedTemplate, description: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                placeholder="Kurze Beschreibung des Templates"
+              />
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={cancelEditing}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={() => saveTemplate(selectedTemplate)}
+                disabled={loading || !selectedTemplate.template_name || !selectedTemplate.template_key || !selectedTemplate.subject}
+                className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Speichere...' : 'Template speichern'}
+              </button>
             </div>
           </div>
         )}
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">E-Mail-Templates</h2>
+          <p className="text-gray-600">Verwalten Sie Templates für automatische E-Mails</p>
+        </div>
+        <div className="flex space-x-3">
+          {templates.length === 0 && (
+            <button
+              onClick={createDefaultTemplates}
+              disabled={loading}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Erstelle...' : 'Standard-Templates erstellen'}
+            </button>
+          )}
+          <button
+            onClick={startCreating}
+            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            <i className="ri-add-line mr-2"></i>
+            Neues Template
+          </button>
+        </div>
+      </div>
+
+      {message && (
+        <div className={`p-4 rounded-lg ${
+          message.includes('✅') || message.includes('erfolgreich') 
+            ? 'bg-green-50 text-green-800 border border-green-200' 
+            : 'bg-red-50 text-red-800 border border-red-200'
+        }`}>
+          {message}
+        </div>
+      )}
+
+      {templates.length === 0 ? (
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <div className="w-16 h-16 flex items-center justify-center bg-gray-200 rounded-full mx-auto mb-4">
+            <i className="ri-mail-line text-2xl text-gray-400"></i>
+          </div>
+          <h3 className="text-lg font-medium text-gray-600 mb-2">Keine E-Mail-Templates vorhanden</h3>
+          <p className="text-gray-500 mb-4">Erstellen Sie Templates für automatische E-Mails an Ihre Kunden.</p>
+          <button
+            onClick={createDefaultTemplates}
+            disabled={loading}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50"
+          >
+            {loading ? 'Erstelle...' : 'Standard-Templates erstellen'}
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {templates.map((template) => (
+            <div key={template.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900 mb-1">{template.template_name}</h3>
+                  <p className="text-sm text-gray-600 mb-2">{template.description}</p>
+                  <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                    template.is_active 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {template.is_active ? 'Aktiv' : 'Inaktiv'}
+                  </span>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => startEditing(template)}
+                    className="text-blue-600 hover:text-blue-800 p-1"
+                    title="Bearbeiten"
+                  >
+                    <i className="ri-edit-line"></i>
+                  </button>
+                  <button
+                    onClick={() => deleteTemplate(template.template_key)}
+                    className="text-red-600 hover:text-red-800 p-1"
+                    title="Löschen"
+                  >
+                    <i className="ri-delete-bin-line"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div className="text-sm text-gray-600">
+                <p><strong>Typ:</strong> {template.template_type}</p>
+                <p><strong>Betreff:</strong> {template.subject.substring(0, 50)}...</p>
+                <p><strong>Variablen:</strong> {template.variables.length}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

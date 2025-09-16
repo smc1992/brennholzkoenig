@@ -91,10 +91,12 @@ export async function GET(
         break;
     }
     
-    // Cache-Header setzen (1 Jahr)
+    // Cache-Header für sofortige Updates
     const headers = new Headers({
       'Content-Type': contentType,
-      'Cache-Control': 'public, max-age=31536000, immutable',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
       'ETag': `"${actualFilename}"`,
     });
     

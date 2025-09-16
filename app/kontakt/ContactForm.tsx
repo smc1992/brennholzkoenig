@@ -61,26 +61,7 @@ export default function ContactForm() {
     return emailRegex.test(email) && strictEmailRegex.test(email);
   };
 
-  // Überprüfung auf existierendes Konto
-  const checkExistingAccount = async (email: string): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase
-        .from('customers')
-        .select('id')
-        .eq('email', email.toLowerCase().trim())
-        .limit(1);
-
-      if (error) {
-        console.error('Fehler bei Kontoprüfung:', error);
-        return false;
-      }
-
-      return data && data.length > 0;
-    } catch (error) {
-      console.error('Fehler bei Kontoprüfung:', error);
-      return false;
-    }
-  };
+  // Entfernt: checkExistingAccount - Registrierte Kunden können Kontaktanfragen senden
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const email = e.target.value;
@@ -113,34 +94,45 @@ export default function ContactForm() {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Neue Kontaktanfrage - Brennholzkönig</title>
         <style>
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f5f5f5; margin: 0; padding: 20px; }
-            .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
-            .header { background: linear-gradient(135deg, #C04020, #A03318); color: white; padding: 30px; text-align: center; }
-            .header h1 { margin: 0; font-size: 28px; font-weight: bold; }
-            .header p { margin: 10px 0 0; opacity: 0.9; font-size: 16px; }
-            .content { padding: 30px; }
-            .field-group { margin-bottom: 25px; border-left: 4px solid #D4A520; padding-left: 15px; background: #fafafa; padding: 15px; border-radius: 8px; }
-            .field-label { font-weight: bold; color: #C04020; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
-            .field-value { font-size: 16px; color: #333; word-wrap: break-word; }
-            .message-field { background: #f0f8ff; border: 1px solid #e0e8f0; border-radius: 8px; padding: 20px; margin: 20px 0; }
-            .priority-high { border-left-color: #C04020; background: #fff5f5; }
-            .footer { background: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #eee; }
-            .footer p { margin: 5px 0; color: #666; font-size: 14px; }
-            .timestamp { color: #888; font-size: 12px; font-style: italic; }
-            .logo { font-family: "Pacifico", serif; font-size: 24px; color: #D4A520; margin-bottom: 10px; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: linear-gradient(135deg, #f5f5f5, #e8e8e8); margin: 0; padding: 20px; }
+            .container { max-width: 650px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.15); }
+            .header { background: linear-gradient(135deg, #C04020, #A03318); color: white; padding: 40px 30px; text-align: center; position: relative; }
+            .header::before { content: '🔥'; font-size: 48px; display: block; margin-bottom: 10px; }
+            .header h1 { margin: 0; font-size: 32px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+            .header p { margin: 15px 0 0; opacity: 0.95; font-size: 18px; font-weight: 300; }
+            .content { padding: 40px 30px; }
+            .field-group { margin-bottom: 30px; border-left: 5px solid #D4A520; background: linear-gradient(135deg, #fafafa, #f0f0f0); padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+            .field-label { font-weight: bold; color: #C04020; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: flex; align-items: center; }
+            .field-label::before { content: '▶'; margin-right: 8px; color: #D4A520; }
+            .field-value { font-size: 16px; color: #333; word-wrap: break-word; line-height: 1.7; }
+            .field-value a { color: #C04020; text-decoration: none; font-weight: 600; }
+            .field-value a:hover { text-decoration: underline; }
+            .message-field { background: linear-gradient(135deg, #f0f8ff, #e6f3ff); border: 2px solid #D4A520; border-radius: 12px; padding: 25px; margin: 25px 0; position: relative; }
+            .message-field::before { content: '💬'; position: absolute; top: -10px; left: 20px; background: white; padding: 0 10px; font-size: 20px; }
+            .priority-high { border-left-color: #C04020; background: linear-gradient(135deg, #fff5f5, #ffe6e6); }
+            .priority-high .field-label::before { content: '⭐'; }
+            .footer { background: linear-gradient(135deg, #f8f9fa, #e9ecef); padding: 30px; text-align: center; border-top: 3px solid #D4A520; }
+            .footer p { margin: 8px 0; color: #666; font-size: 14px; }
+            .footer .company-name { font-size: 18px; font-weight: bold; color: #C04020; margin-bottom: 15px; }
+            .footer .contact-info { background: white; padding: 15px; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+            .timestamp { color: #888; font-size: 12px; font-style: italic; background: #f0f0f0; padding: 8px 12px; border-radius: 20px; display: inline-block; }
+            .logo { font-family: 'Georgia', serif; font-size: 28px; color: #D4A520; margin-bottom: 15px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+            .action-buttons { margin: 25px 0; text-align: center; }
+            .action-button { display: inline-block; background: #C04020; color: white; padding: 12px 25px; text-decoration: none; border-radius: 25px; font-weight: bold; margin: 0 10px; box-shadow: 0 4px 12px rgba(192,64,32,0.3); transition: all 0.3s ease; }
+            .action-button:hover { background: #A03318; transform: translateY(-2px); }
         </style>
     </head>
     <body>
         <div class="container">
             <div class="header">
-                <div class="logo">Brennholzkönig</div>
-                <h1> Neue Kontaktanfrage</h1>
+                <div class="logo">🔥 Brennholzkönig</div>
+                <h1>Neue Kontaktanfrage</h1>
                 <p>Eine neue Kundenanfrage ist eingegangen</p>
             </div>
             
             <div class="content">
                 <div class="field-group priority-high">
-                    <div class="field-label"> Kontaktdaten</div>
+                    <div class="field-label">👤 Kontaktdaten</div>
                     <div class="field-value">
                         <strong>Name:</strong> ${data.name}<br>
                         <strong>E-Mail:</strong> <a href="mailto:${data.email}">${data.email}</a><br>
@@ -149,29 +141,45 @@ export default function ContactForm() {
                 </div>
 
                 <div class="field-group">
-                    <div class="field-label"> Betreff & Kategorie</div>
+                    <div class="field-label">📋 Betreff & Kategorie</div>
                     <div class="field-value">
-                        <strong>Produktkategorie:</strong> ${data.product}<br>
+                        <strong>Produktkategorie:</strong> <span style="background: #D4A520; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;">${data.product}</span><br><br>
                         ${data.subject ? `<strong>Betreff Details:</strong> ${data.subject}<br>` : ''}
                     </div>
                 </div>
 
                 <div class="field-group message-field">
-                    <div class="field-label"> Nachricht</div>
-                    <div class="field-value">${data.message.replace(/\\n/g, '<br>')}</div>
+                    <div class="field-label">💬 Nachricht</div>
+                    <div class="field-value" style="font-size: 16px; line-height: 1.8; background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #C04020;">
+                        ${data.message.replace(/\\n/g, '<br>')}
+                    </div>
                 </div>
 
                 <div class="field-group">
-                    <div class="field-label"> Eingangsdatum</div>
-                    <div class="field-value timestamp">${currentDate}</div>
+                    <div class="field-label">⏰ Eingangsdatum</div>
+                    <div class="field-value">
+                        <span class="timestamp">${currentDate}</span>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="mailto:${data.email}" class="action-button">📧 Antworten</a>
+                    ${data.phone ? `<a href="tel:${data.phone}" class="action-button">📞 Anrufen</a>` : ''}
                 </div>
             </div>
 
             <div class="footer">
-                <p><strong>Brennholzkönig - Premium Brennholz</strong></p>
-                <p> Für Rückfragen: <a href="tel:${data.phone || '+49 176 71085234'}">${data.phone || '+49 176 71085234'}</a></p>
-                <p> Antworten Sie direkt auf diese E-Mail: <a href="mailto:${data.email}">${data.email}</a></p>
-                <p class="timestamp">Automatisch generiert am ${currentDate}</p>
+                <div class="company-name">🔥 Brennholzkönig - Premium Brennholz</div>
+                
+                <div class="contact-info">
+                    <p><strong>📞 Für Rückfragen:</strong> <a href="tel:${data.phone || '+49 176 71085234'}">${data.phone || '+49 176 71085234'}</a></p>
+                    <p><strong>📧 Direkt antworten:</strong> <a href="mailto:${data.email}">${data.email}</a></p>
+                </div>
+                
+                <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                    🤖 Automatisch generiert am ${currentDate}<br>
+                    Diese E-Mail wurde über das Kontaktformular auf brennholz-koenig.de gesendet
+                </p>
             </div>
         </div>
     </body>
@@ -192,12 +200,8 @@ export default function ContactForm() {
       return;
     }
 
-    const accountExists = await checkExistingAccount(formData.email);
-    if (accountExists) {
-      setEmailError('Diese E-Mail-Adresse ist bereits registriert');
-      setIsSubmitting(false);
-      return;
-    }
+    // Registrierte Kunden können weiterhin Kontaktanfragen senden
+    // Die Überprüfung auf existierende Konten wurde entfernt
 
     try {
       // E-Mail-Template erstellen
@@ -217,23 +221,29 @@ ${formData.message}
 Eingegangen am: ${new Date().toLocaleString('de-DE')}
       `.trim();
 
-      // E-Mail an Geschäftsleitung senden
-      const { data, error } = await supabase.functions.invoke('send-email', {
-        body: {
+      // E-Mail an Geschäftsleitung senden über API-Route
+      const emailResponse = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           to: 'info@brennholz-koenig.de',
-          subject: ` Neue Kontaktanfrage: ${formData.product} - ${formData.name}`,
+          subject: `🔥 Neue Kontaktanfrage: ${formData.product} - ${formData.name}`,
           html: emailHtml,
           text: plainText,
           type: 'contact_form'
-        }
+        })
       });
 
-      if (error) {
-        console.error('E-Mail-Versand-Fehler:', error);
-        throw new Error('E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.');
+      const emailResult = await emailResponse.json();
+
+      if (!emailResult.success) {
+        console.error('E-Mail-Versand-Fehler:', emailResult.error);
+        throw new Error(emailResult.error || 'E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.');
       }
 
-      console.log('E-Mail erfolgreich gesendet:', data);
+      console.log('E-Mail erfolgreich gesendet:', emailResult);
 
       // Erfolgsmeldung anzeigen
       setSubmitStatus('success');
@@ -389,12 +399,12 @@ Eingegangen am: ${new Date().toLocaleString('de-DE')}
                     className="w-full px-3 sm:px-4 py-3 sm:py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C04020] focus:border-[#C04020] transition-all duration-300 text-sm font-medium pr-8 cursor-pointer hover:border-[#D4A520]"
                   >
                     <option value="Allgemeine Anfrage">Allgemeine Anfrage</option>
-                    <option value="Kaminholz Buche">Kaminholz Buche - Premium</option>
-                    <option value="Ofenholz Eiche">Ofenholz Eiche - Extra Stark</option>
-                    <option value="Brennholz Mix">Brennholz Mix - Bestseller</option>
-                    <option value="Anzündholz">Anzündholz - Trocken</option>
-                    <option value="Holzbriketts">Holzbriketts - Langbrenner</option>
-                    <option value="Premium Pellets">Premium Pellets</option>
+                    <option value="Industrieholz Buche Klasse 1">Industrieholz Buche Klasse 1</option>
+                    <option value="Industrieholz Buche Klasse 2">Industrieholz Buche Klasse 2</option>
+                    <option value="Scheitholz Buche 33cm">Scheitholz Buche 33cm</option>
+                    <option value="Scheitholz Buche 25cm">Scheitholz Buche 25cm</option>
+                    <option value="Scheitholz - Industrieholz Mix 33cm">Scheitholz - Industrieholz Mix 33cm</option>
+                    <option value="Scheitholz Fichte 33cm">Scheitholz Fichte 33cm</option>
                     <option value="Lieferung & Preise">Lieferung & Preise</option>
                     <option value="Beratung">Persönliche Beratung</option>
                   </select>

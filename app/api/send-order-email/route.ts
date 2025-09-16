@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabase } from '@/lib/supabase-server';
+import { supabase } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerSupabase();
     const { orderData, customerEmail, customerName, templateType = 'order_confirmation' } = await request.json();
 
     // Lade E-Mail-Template aus den Einstellungen
@@ -97,7 +96,7 @@ export async function POST(request: NextRequest) {
     const { data: smtpData, error: smtpError } = await supabase
       .from('app_settings')
       .select('setting_value')
-      .eq('setting_type', 'smtp_settings')
+      .eq('setting_type', 'smtp_config')
       .eq('setting_key', 'main')
       .single();
 

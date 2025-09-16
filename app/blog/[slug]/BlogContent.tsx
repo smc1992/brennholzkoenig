@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import SocialShare from '../../../components/SocialShare';
+import BlogComments from '../../../components/BlogComments';
 import Link from 'next/link';
 
 interface BlogPost {
@@ -167,7 +168,7 @@ export default function BlogContent({ slug }: BlogContentProps) {
         .neq('id', currentPostId)
         .limit(3);
 
-      const relatedPosts: BlogPost[] = (data || []).map(item => ({
+      const relatedPosts: BlogPost[] = (data || []).map((item: any) => ({
         id: String(item.id || ''),
         title: String(item.title || ''),
         content: item.content ? String(item.content) : undefined,
@@ -523,6 +524,12 @@ export default function BlogContent({ slug }: BlogContentProps) {
           </div>
         </section>
       )}
+      
+      {/* Kommentare */}
+      <BlogComments 
+        blogPostId={post.id} 
+        blogPostTitle={post.title}
+      />
     </article>
   );
 }

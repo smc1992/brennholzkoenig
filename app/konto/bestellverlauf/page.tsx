@@ -205,22 +205,22 @@ export default function OrderHistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 md:pt-24">
+    <div className="min-h-screen bg-gray-50 pt-20 sm:pt-24 md:pt-28">
       <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center py-4 space-x-4">
-            <Link href="/konto/dashboard" className="text-orange-600 hover:text-orange-700">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="flex items-center py-3 sm:py-4 space-x-3 sm:space-x-4">
+            <Link href="/konto/dashboard" className="text-orange-600 hover:text-orange-700 p-1">
               <i className="ri-arrow-left-line text-xl"></i>
             </Link>
-            <h1 className="text-2xl font-bold text-gray-900">Bestellverlauf</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">Bestellverlauf</h1>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
         {/* Filter und Suche */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="grid md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Suchen

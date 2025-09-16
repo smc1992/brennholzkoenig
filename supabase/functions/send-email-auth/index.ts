@@ -85,32 +85,102 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // SMTP-Einstellungen aus Datenbank laden
-    const { data: settingsData } = await supabase
-      .from('app_settings')
-      .select('key, value')
-      .eq('category', 'smtp')
+    // SMTP-Einstellungen aus zentraler Konfiguration laden
+    async function loadSMTPSettings() {
+      // 1) Primär: JSON-Konfiguration unter setting_type = 'smtp_config'
+      const { data: jsonRow } = await supabase
+        .from('app_settings')
+        .select('*')
+        .eq('setting_type', 'smtp_config')
+        .single()
 
-    const settings: Record<string, string> = {}
-    settingsData?.forEach(setting => {
-      settings[setting.key] = setting.value
-    })
+      if (jsonRow?.setting_value) {
+        try {
+          const parsed = JSON.parse(jsonRow.setting_value)
+          if (parsed.smtp_host && parsed.smtp_username && parsed.smtp_password) {
+            return {
+              host: parsed.smtp_host,
+              port: parseInt(String(parsed.smtp_port || '587')),
+              username: parsed.smtp_username,
+              password: parsed.smtp_password,
+              fromEmail: parsed.from_email || parsed.smtp_username,
+              fromName: parsed.from_name || 'Brennholzkönig',
+              secure: parsed.smtp_port == 465,
+              dkimPrivateKey: parsed.dkim_private_key || '',
+              dkimSelector: parsed.dkim_selector || 'default'
+            }
+          }
+        } catch (e) {
+          console.error('Ungültiges JSON in smtp_config:', e)
+        }
+      }
 
-    // SMTP-Konfiguration mit Fallback zu Umgebungsvariablen
-    const SMTP_HOST = settings.smtp_host || Deno.env.get('SMTP_HOST') || 'smtp.gmail.com'
-    const SMTP_PORT = parseInt(settings.smtp_port || Deno.env.get('SMTP_PORT') || '587')
-    const SMTP_USER = settings.smtp_username || Deno.env.get('SMTP_USER')
-    const SMTP_PASS = settings.smtp_password || Deno.env.get('SMTP_PASS')
-    const FROM_EMAIL = settings.smtp_from_email || Deno.env.get('FROM_EMAIL') || SMTP_USER
-    const FROM_NAME = settings.smtp_from_name || Deno.env.get('FROM_NAME') || 'Brennholzkönig'
+      // 2) Fallback: Key-Value-Konfiguration unter setting_type = 'smtp'
+      const { data: kvData } = await supabase
+        .from('app_settings')
+        .select('setting_key, setting_value')
+        .eq('setting_type', 'smtp')
+
+      if (kvData?.length > 0) {
+        const kv: Record<string, string> = {}
+        kvData.forEach((item: any) => {
+          kv[item.setting_key] = item.setting_value
+        })
+
+        if (kv.smtp_host && kv.smtp_username && kv.smtp_password) {
+          const port = parseInt(kv.smtp_port || '587')
+          return {
+            host: kv.smtp_host,
+            port: port,
+            username: kv.smtp_username,
+            password: kv.smtp_password,
+            fromEmail: kv.smtp_from_email || kv.smtp_username,
+            fromName: kv.smtp_from_name || 'Brennholzkönig',
+            secure: port === 465,
+            dkimPrivateKey: kv.smtp_dkim_private_key || '',
+            dkimSelector: kv.smtp_dkim_selector || 'default'
+          }
+        }
+      }
+
+      // 3) Fallback zu Umgebungsvariablen
+      const envHost = Deno.env.get('SMTP_HOST')
+      const envUser = Deno.env.get('SMTP_USER')
+      const envPass = Deno.env.get('SMTP_PASS')
+      
+      if (envHost && envUser && envPass) {
+        const port = parseInt(Deno.env.get('SMTP_PORT') || '587')
+        return {
+          host: envHost,
+          port: port,
+          username: envUser,
+          password: envPass,
+          fromEmail: Deno.env.get('FROM_EMAIL') || envUser,
+          fromName: Deno.env.get('FROM_NAME') || 'Brennholzkönig',
+          secure: port === 465,
+          dkimPrivateKey: Deno.env.get('DKIM_PRIVATE_KEY') || '',
+          dkimSelector: Deno.env.get('DKIM_SELECTOR') || 'default'
+        }
+      }
+
+      throw new Error('Keine SMTP-Konfiguration gefunden. Bitte konfigurieren Sie SMTP im Admin-Dashboard.')
+    }
+
+    const smtpConfig = await loadSMTPSettings()
+    const SMTP_HOST = smtpConfig.host
+    const SMTP_PORT = smtpConfig.port
+    const SMTP_USER = smtpConfig.username
+    const SMTP_PASS = smtpConfig.password
+    const FROM_EMAIL = smtpConfig.fromEmail
+    const FROM_NAME = smtpConfig.fromName
 
     if (!SMTP_USER || !SMTP_PASS) {
       throw new Error('SMTP-Konfiguration fehlt. Bitte konfigurieren Sie SMTP im Admin-Dashboard.')
     }
 
     // E-Mail-Authentifizierung prüfen
-    const dkimEnabled = settings.dkim_enabled === 'true'
-    const spfRecord = settings.spf_record
+    const dkimEnabled = !!smtpConfig.dkimPrivateKey
+    const spfRecord = '' // SPF wird über DNS konfiguriert, nicht in der App
     const domain = FROM_EMAIL.split('@')[1]
 
     // SPF-Validierung (wenn konfiguriert)
@@ -129,13 +199,13 @@ serve(async (req) => {
 
     // DKIM-Signatur generieren (wenn aktiviert)
     let dkimSignature = ''
-    if (dkimEnabled && settings.dkim_private_key && settings.dkim_domain) {
+    if (dkimEnabled && smtpConfig.dkimPrivateKey) {
       dkimSignature = generateDKIMSignature(
         emailHeaders,
         html || text || '',
-        settings.dkim_domain,
-        settings.dkim_selector || 'default',
-        settings.dkim_private_key
+        domain,
+        smtpConfig.dkimSelector,
+        smtpConfig.dkimPrivateKey
       )
     }
 
@@ -144,7 +214,7 @@ serve(async (req) => {
       connection: {
         hostname: SMTP_HOST,
         port: SMTP_PORT,
-        tls: SMTP_PORT === 465,
+        tls: smtpConfig.secure,
         auth: {
           username: SMTP_USER,
           password: SMTP_PASS,

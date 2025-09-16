@@ -250,18 +250,18 @@ export default function AddressesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 md:pt-24">
-      <div className="max-w-4xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Adressbuch</h1>
-        <div className="flex space-x-3">
+    <div className="min-h-screen bg-gray-50 pt-20 sm:pt-24 md:pt-28">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Adressbuch</h1>
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
           {customer && (customer.street || customer.city) && (
             <button
               onClick={addFromProfile}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-semibold transition-colors whitespace-nowrap cursor-pointer"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-semibold transition-colors cursor-pointer text-sm sm:text-base flex items-center justify-center"
             >
               <i className="ri-user-line mr-2"></i>
-              Aus Profil hinzufügen
+              <span className="truncate">Aus Profil hinzufügen</span>
             </button>
           )}
           <button
@@ -270,10 +270,10 @@ export default function AddressesPage() {
               setEditingAddress(null);
               setShowForm(true);
             }}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors whitespace-nowrap cursor-pointer"
+            className="bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold transition-colors cursor-pointer text-sm sm:text-base flex items-center justify-center"
           >
             <i className="ri-add-line mr-2"></i>
-            Neue Adresse
+            <span className="truncate">Neue Adresse</span>
           </button>
         </div>
       </div>
@@ -303,9 +303,9 @@ export default function AddressesPage() {
       )}
 
       {showForm && (
-        <div className="bg-white border-2 border-green-200 rounded-xl p-6 mb-8">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">
+        <div className="bg-white border-2 border-green-200 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate pr-4">
               {editingAddress ? 'Adresse bearbeiten' : 'Neue Adresse hinzufügen'}
             </h2>
             <button
@@ -314,9 +314,9 @@ export default function AddressesPage() {
                 setEditingAddress(null);
                 resetForm();
               }}
-              className="text-gray-500 hover:text-gray-700 cursor-pointer"
+              className="text-gray-500 hover:text-gray-700 cursor-pointer p-1 flex-shrink-0"
             >
-              <i className="ri-close-line text-2xl"></i>
+              <i className="ri-close-line text-xl sm:text-2xl"></i>
             </button>
           </div>
 

@@ -84,11 +84,68 @@ export default function OptimizedWarenkorbContent({
     };
   }, [subscribeToChanges, unsubscribeFromChanges]);
 
+  // Überwache Produktänderungen und aktualisiere Warenkorb
+  useEffect(() => {
+    if (products.length > 0 && cartItems.length > 0) {
+      const updatedCartItems = cartItems.map(cartItem => {
+        const updatedProduct = products.find(p => p.id === cartItem.id);
+        if (updatedProduct) {
+          // Aktualisiere Name und Bild aus der Datenbank
+          return {
+            ...cartItem,
+            name: updatedProduct.name,
+            image: updatedProduct.image_url || cartItem.image
+          };
+        }
+        return cartItem;
+      });
+      
+      // Prüfe ob sich etwas geändert hat
+      const hasChanges = updatedCartItems.some((item, index) => 
+        item.name !== cartItems[index]?.name || 
+        item.image !== cartItems[index]?.image
+      );
+      
+      if (hasChanges) {
+        console.log('🔄 Warenkorb: Produktdaten aktualisiert');
+        setCartItems(updatedCartItems);
+        saveCartToStorage(updatedCartItems);
+      }
+    }
+  }, [products]); // Reagiere auf Produktänderungen
+
   useEffect(() => {
     loadCartFromStorage();
     loadPricingTiers();
     loadShippingCosts();
   }, []);
+
+  // Neuberechnung der Preise wenn pricingTiers geladen sind
+  useEffect(() => {
+    if (pricingTiers.length > 0 && cartItems.length > 0) {
+      const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0);
+      
+      const updatedItems = cartItems.map(item => {
+        const basePrice = parseFloat(item.basePrice || item.price);
+        const pricing = calculatePriceWithTiers(basePrice, totalQuantity, pricingTiers, minOrderQuantity, item.has_quantity_discount || false);
+        return {
+          ...item,
+          price: pricing.price.toString()
+        };
+      });
+      
+      // Nur aktualisieren wenn sich Preise geändert haben
+      const hasChanges = updatedItems.some((item, index) => 
+        item.price !== cartItems[index]?.price
+      );
+      
+      if (hasChanges) {
+        console.log('🔄 Warenkorb: Preise mit Gesamtmenge neu berechnet:', totalQuantity, 'SRM');
+        setCartItems(updatedItems);
+        saveCartToStorage(updatedItems);
+      }
+    }
+  }, [pricingTiers, minOrderQuantity]);
 
   const loadCartFromStorage = async () => {
     if (typeof window !== 'undefined') {
@@ -97,28 +154,36 @@ export default function OptimizedWarenkorbContent({
         try {
           const parsedCart = JSON.parse(savedCart);
           
-          // Lade Produktdaten aus der Datenbank um has_quantity_discount zu erhalten
+          // Lade aktuelle Produktdaten aus der Datenbank (Name, Bild, has_quantity_discount)
           const productIds = parsedCart.map((item: any) => parseInt(item.id)).filter((id: number) => !isNaN(id));
           
           let productData: any[] = [];
           if (productIds.length > 0) {
             const { data } = await supabase
               .from('products')
-              .select('id, has_quantity_discount')
+              .select('id, name, image_url, has_quantity_discount, price')
               .in('id', productIds);
             productData = data || [];
           }
           
+          // Berechne Gesamtmenge für korrekte Preisberechnung
+          const totalQuantity = parsedCart.reduce((total: number, item: any) => total + item.quantity, 0);
+          
           const formattedCart = parsedCart.map((item: any) => {
             const product = productData.find(p => p.id === parseInt(item.id));
+            const basePrice = parseFloat(item.basePrice || item.price);
+            
+            // Verwende Gesamtmenge für Preisberechnung
+            const pricing = calculatePriceWithTiers(basePrice, totalQuantity, pricingTiers, minOrderQuantity, product?.has_quantity_discount || false);
+            
             return {
               id: parseInt(item.id),
-              name: item.name,
-              price: item.price,
-              basePrice: item.basePrice,
+              name: product?.name || item.name, // Verwende aktuellen Namen aus DB
+              price: pricing.price.toString(),
+              basePrice: item.basePrice || product?.price?.toString() || item.price,
               unit: item.unit,
               quantity: item.quantity,
-              image: item.image_url || '',
+              image: product?.image_url || item.image_url || '', // Verwende aktuelles Bild aus DB
               category: item.category,
               has_quantity_discount: product?.has_quantity_discount || false
             };
@@ -189,17 +254,33 @@ export default function OptimizedWarenkorbContent({
       return;
     }
 
-    const updatedItems = cartItems.map(item => {
+    // Berechne Gesamtmenge aller Artikel im Warenkorb
+    const totalQuantityInCart = cartItems.reduce((total, item) => {
       if (item.id === id) {
-        const basePrice = parseFloat(item.basePrice || item.price);
-        const pricing = calculatePriceWithTiers(basePrice, newQuantity, pricingTiers, minOrderQuantity, item.has_quantity_discount || false);
+        return total + newQuantity; // Verwende neue Menge für das geänderte Item
+      }
+      return total + item.quantity;
+    }, 0);
+
+    const updatedItems = cartItems.map(item => {
+      const basePrice = parseFloat(item.basePrice || item.price);
+      
+      if (item.id === id) {
+        // Verwende Gesamtmenge für Preisberechnung
+        const pricing = calculatePriceWithTiers(basePrice, totalQuantityInCart, pricingTiers, minOrderQuantity, item.has_quantity_discount || false);
         return {
           ...item,
           quantity: newQuantity,
           price: pricing.price.toString()
         };
+      } else {
+        // Aktualisiere auch andere Items mit der neuen Gesamtmenge
+        const pricing = calculatePriceWithTiers(basePrice, totalQuantityInCart, pricingTiers, minOrderQuantity, item.has_quantity_discount || false);
+        return {
+          ...item,
+          price: pricing.price.toString()
+        };
       }
-      return item;
     });
 
     setCartItems(updatedItems);
@@ -207,7 +288,21 @@ export default function OptimizedWarenkorbContent({
   };
 
   const removeFromCart = (id: number) => {
-    const updatedItems = cartItems.filter(item => item.id !== id);
+    const filteredItems = cartItems.filter(item => item.id !== id);
+    
+    // Berechne neue Gesamtmenge nach Entfernung
+    const newTotalQuantity = filteredItems.reduce((total, item) => total + item.quantity, 0);
+    
+    // Aktualisiere Preise für verbleibende Items basierend auf neuer Gesamtmenge
+    const updatedItems = filteredItems.map(item => {
+      const basePrice = parseFloat(item.basePrice || item.price);
+      const pricing = calculatePriceWithTiers(basePrice, newTotalQuantity, pricingTiers, minOrderQuantity, item.has_quantity_discount || false);
+      return {
+        ...item,
+        price: pricing.price.toString()
+      };
+    });
+    
     setCartItems(updatedItems);
     saveCartToStorage(updatedItems);
   };
@@ -226,6 +321,8 @@ export default function OptimizedWarenkorbContent({
         has_quantity_discount: item.has_quantity_discount
       }));
       localStorage.setItem('cart', JSON.stringify(cartData));
+      // Benachrichtige Header über Warenkorb-Änderung
+      window.dispatchEvent(new Event('cartUpdated'));
     }
   };
 
@@ -326,6 +423,8 @@ export default function OptimizedWarenkorbContent({
     setCartItems([]);
     if (typeof window !== 'undefined') {
       localStorage.removeItem('cart');
+      // Benachrichtige Header über Warenkorb-Änderung
+      window.dispatchEvent(new Event('cartUpdated'));
     }
   };
 
@@ -400,7 +499,12 @@ export default function OptimizedWarenkorbContent({
                   
                   <div className="space-y-6">
                     {cartItems.map((item) => {
+                      // Berechne Gesamtmenge für Zuschlag-Hinweis
+                      const totalQuantity = cartItems.reduce((total, cartItem) => total + cartItem.quantity, 0);
                       const priceInfo = getPriceInfoForQuantity(item.quantity, pricingTiers, minOrderQuantity);
+                      
+                      // Zeige Zuschlag-Hinweis nur wenn Gesamtmenge unter 6 SRM
+                      const showSurchargeInfo = totalQuantity < 6 && priceInfo.info && priceInfo.info.includes('30% Zuschlag');
                       
                       return (
                         <div key={item.id} className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 p-3 sm:p-4 border border-gray-200 rounded-lg">
@@ -443,7 +547,7 @@ export default function OptimizedWarenkorbContent({
                               </div>
                               <span className="text-xs sm:text-sm text-gray-500">{item.unit}</span>
                             </div>
-                            {priceInfo.info && (
+                            {showSurchargeInfo && (
                               <p className={`text-xs mt-1 ${priceInfo.color} text-center sm:text-left`}>
                                 {priceInfo.info}
                               </p>

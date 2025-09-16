@@ -31,12 +31,14 @@ import ContentManagementTab from './ContentManagementTab';
 import SEOTab from './SEOTab';
 import SEOManagementTab from './SEOManagementTab';
 import BlogManagementTab from './BlogManagementTab';
+import BlogCommentsTab from './BlogCommentsTab';
 import GoogleAdsTrackingTab from './GoogleAdsTrackingTab';
 import InventoryTab from './InventoryTab';
 import CategoriesTab from './CategoriesTab';
 import ShopSettingsTab from './ShopSettingsTab';
 // PWA functionality removed
 import SupportTab from './SupportTab';
+import QuickRepliesTab from './QuickRepliesTab';
 import FAQManagementTab from './FAQManagementTab';
 import InvoiceTab from './InvoiceTab';
 import InvoiceSettingsTab from './InvoiceSettingsTab';
@@ -159,7 +161,7 @@ export default function AdminDashboardClient({
     };
     
     // Session-Listener für automatische Behandlung von Auth-Änderungen
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       console.log('🔄 Auth State Change:', event, session?.user?.email);
       
       if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
@@ -342,6 +344,8 @@ export default function AdminDashboardClient({
       title: 'Website & Inhalte',
       items: [
         { id: 'content', label: 'Inhalte', icon: 'ri-file-text-line' },
+        { id: 'blog-management', label: 'Blog-Editor', icon: 'ri-article-line' },
+        { id: 'blog-comments', label: 'Kommentare', icon: 'ri-chat-1-line' },
         { id: 'media', label: 'Medien', icon: 'ri-image-line' },
         { id: 'seo', label: 'SEO', icon: 'ri-search-eye-line' }
       ]
@@ -350,6 +354,8 @@ export default function AdminDashboardClient({
       title: 'Support & System',
       items: [
         { id: 'support', label: 'Support', icon: 'ri-customer-service-2-line' },
+        { id: 'quick-replies', label: 'Schnellantworten', icon: 'ri-chat-quote-line' },
+        { id: 'faq', label: 'FAQ', icon: 'ri-question-answer-line' },
         { id: 'invoice-settings', label: 'Rechnungseinstellungen', icon: 'ri-settings-4-line' },
         { id: 'backup', label: 'Backup', icon: 'ri-archive-drawer-line' },
         { id: 'settings', label: 'Einstellungen', icon: 'ri-settings-line' }
@@ -403,6 +409,9 @@ export default function AdminDashboardClient({
       case 'support': 
         console.log('AdminDashboard: Rendering SupportTab');
         return <SupportTab />;
+      case 'quick-replies': 
+        console.log('AdminDashboard: Rendering QuickRepliesTab');
+        return <QuickRepliesTab />;
       case 'faq': 
         console.log('AdminDashboard: Rendering FAQManagementTab');
         return <FAQManagementTab />;
@@ -448,6 +457,9 @@ export default function AdminDashboardClient({
       case 'blog-management': 
         console.log('AdminDashboard: Rendering BlogManagementTab');
         return <BlogManagementTab />;
+      case 'blog-comments': 
+        console.log('AdminDashboard: Rendering BlogCommentsTab');
+        return <BlogCommentsTab />;
       case 'seo-management': 
         console.log('AdminDashboard: Rendering SEOManagementTab');
         return <SEOManagementTab />;
@@ -502,8 +514,18 @@ export default function AdminDashboardClient({
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
+          <div className="flex justify-between items-center h-16 lg:h-16">
+            <div className="flex items-center space-x-3 lg:space-x-4">
+              {/* Mobile Menu Button - Links positioniert */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="lg:hidden bg-gray-100 hover:bg-gray-200 text-gray-700 p-3 rounded-xl transition-all duration-200 active:scale-95 touch-manipulation"
+              >
+                <div className="w-6 h-6 flex items-center justify-center">
+                  <i className={`${isMobileMenuOpen ? 'ri-close-line' : 'ri-menu-line'} text-xl`}></i>
+                </div>
+              </button>
+              
               <div className="w-10 h-10 flex items-center justify-center bg-[#C04020] rounded-lg">
                 <i className="ri-admin-line text-white"></i>
               </div>
@@ -512,6 +534,10 @@ export default function AdminDashboardClient({
                   BRENNHOLZKÖNIG ADMIN
                 </h1>
                 <p className="text-sm text-gray-500">Händler-Dashboard</p>
+              </div>
+              {/* Mobile Title */}
+              <div className="sm:hidden">
+                <h1 className="text-lg font-bold text-[#1A1A1A]">Admin</h1>
               </div>
             </div>
 
@@ -532,34 +558,32 @@ export default function AdminDashboardClient({
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition-colors cursor-pointer"
-              >
-                <div className="w-5 h-5 flex items-center justify-center">
-                  <i className={`${isMobileMenuOpen ? 'ri-close-line' : 'ri-menu-line'} text-xl`}></i>
-                </div>
-              </button>
-
+            <div className="flex items-center space-x-2 lg:space-x-4">
+              {/* User Info - Hidden on mobile */}
               <div className="hidden sm:flex items-center space-x-3">
                 <div className="w-8 h-8 bg-[#C04020] rounded-full flex items-center justify-center text-white font-bold text-sm">
                   {adminUser?.name?.charAt(0) || 'A'}
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-[#1A1A1A]">{adminUser?.name || 'Admin'}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-medium text-[#1A1A1A]">{adminUser?.name || 'Admin'}</p>
                   <p className="text-xs text-gray-500">{adminUser?.role || 'Administrator'}</p>
                 </div>
               </div>
 
+              {/* Mobile User Avatar */}
+              <div className="sm:hidden w-8 h-8 bg-[#C04020] rounded-full flex items-center justify-center text-white font-bold text-sm">
+                {adminUser?.name?.charAt(0) || 'A'}
+              </div>
+
+              {/* Logout Button */}
               <button
                 onClick={handleLogout}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 lg:px-4 lg:py-2 rounded-xl font-medium transition-all duration-200 active:scale-95 touch-manipulation whitespace-nowrap"
               >
-                <div className="w-5 h-5 flex items-center justify-center sm:mr-2">
-                  <i className="ri-logout-circle-r-line"></i>
+                <div className="flex items-center">
+                  <i className="ri-logout-circle-r-line text-lg sm:mr-2"></i>
+                  <span className="hidden sm:inline">Abmelden</span>
                 </div>
-                <span className="hidden sm:inline">Abmelden</span>
               </button>
             </div>
           </div>
@@ -616,29 +640,75 @@ export default function AdminDashboardClient({
         </aside>
 
         {isMobileMenuOpen && (
-          <div className="lg:hidden fixed inset-0 z-50 bg-black/50">
-            <div className="fixed inset-y-0 left-0 w-80 bg-white shadow-xl overflow-y-auto">
-              <div className="p-6">
-                <div className="mb-6">
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <div className="w-5 h-5 flex items-center justify-center text-gray-400">
-                        <i className="ri-search-line"></i>
-                      </div>
+          <div className="lg:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setIsMobileMenuOpen(false)}>
+            <div className="fixed inset-y-0 left-0 w-80 bg-white shadow-xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              {/* Mobile Header */}
+              <div className="sticky top-0 bg-white border-b border-gray-200 p-4 z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 flex items-center justify-center bg-[#C04020] rounded-lg">
+                      <i className="ri-admin-line text-white"></i>
                     </div>
-                    <input
-                      type="text"
-                      placeholder="Suche..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent text-sm"
-                    />
+                    <div>
+                      <h2 className="text-lg font-bold text-[#1A1A1A]">Admin</h2>
+                      <p className="text-xs text-gray-500">Navigation</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <i className="ri-close-line text-xl text-gray-600"></i>
+                  </button>
+                </div>
+                
+                {/* Mobile Search */}
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <div className="w-5 h-5 flex items-center justify-center text-gray-400">
+                      <i className="ri-search-line"></i>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Suche..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent text-base"
+                  />
+                </div>
+              </div>
+              
+              <div className="p-4 pb-20">
+
+                {/* Quick Actions */}
+                <div className="mb-6">
+                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Schnellzugriff</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {popularItems.slice(0, 4).map(item => (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setActiveTab(item.id);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`flex flex-col items-center justify-center p-4 rounded-xl transition-all duration-200 ${
+                          activeTab === item.id
+                            ? 'bg-[#C04020] text-white shadow-lg scale-105'
+                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100 active:scale-95'
+                        }`}
+                      >
+                        <i className={`${item.icon} text-2xl mb-2`}></i>
+                        <span className="text-xs font-medium text-center leading-tight">{item.label}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
-
+                
+                {/* All Menu Items */}
                 <div className="mb-6">
-                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Häufig verwendet</h3>
-                  <div className="space-y-1">
+                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Alle Bereiche</h3>
+                  <div className="space-y-2">
                     {popularItems.map(item => (
                       <button
                         key={item.id}
@@ -646,27 +716,32 @@ export default function AdminDashboardClient({
                           setActiveTab(item.id);
                           setIsMobileMenuOpen(false);
                         }}
-                        className={`w-full flex items-center justify-between px-3 py-3 text-sm rounded-lg transition-colors ${
+                        className={`w-full flex items-center px-4 py-4 text-base rounded-xl transition-all duration-200 ${
                           activeTab === item.id
-                            ? 'bg-orange-100 text-orange-700 border-r-2 border-orange-500'
-                            : 'text-gray-700 hover:bg-gray-100'
+                            ? 'bg-[#C04020] text-white shadow-md'
+                            : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
                         }`}
                       >
-                        <div className="flex items-center">
-                          <i className={`${item.icon} mr-3`}></i>
-                          {item.label}
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center">
+                            <i className={`${item.icon} text-xl mr-4`}></i>
+                            <span className="font-medium">{item.label}</span>
+                          </div>
+                          <i className="ri-arrow-right-s-line text-lg opacity-50"></i>
                         </div>
                       </button>
                     ))}
                   </div>
                 </div>
 
+                {/* Kategorien */}
                 {filteredCategories.map(category => (
                   <div key={category.title} className="mb-6">
-                    <div className="flex items-center px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
-                      {category.title}
+                    <div className="flex items-center px-2 py-3 mb-3">
+                      <div className="w-1 h-6 bg-[#C04020] rounded-full mr-3"></div>
+                      <h3 className="text-sm font-bold text-gray-800">{category.title}</h3>
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       {category.items.map(item => (
                         <button
                           key={item.id}
@@ -674,17 +749,50 @@ export default function AdminDashboardClient({
                             setActiveTab(item.id);
                             setIsMobileMenuOpen(false);
                           }}
-                          className="w-full flex items-center justify-between px-3 py-3 text-sm rounded-lg transition-colors text-gray-700 hover:bg-gray-100"
+                          className={`w-full flex items-center px-4 py-4 text-base rounded-xl transition-all duration-200 ${
+                            activeTab === item.id
+                              ? 'bg-[#C04020] text-white shadow-md'
+                              : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
+                          }`}
                         >
-                          <div className="flex items-center">
-                            <i className={`${item.icon} mr-3`}></i>
-                            {item.label}
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center">
+                              <i className={`${item.icon} text-xl mr-4`}></i>
+                              <span className="font-medium">{item.label}</span>
+                            </div>
+                            <i className="ri-arrow-right-s-line text-lg opacity-50"></i>
                           </div>
                         </button>
                       ))}
                     </div>
                   </div>
                 ))}
+                
+                {/* Mobile Footer */}
+                <div className="mt-8 pt-6 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-[#C04020] rounded-full flex items-center justify-center text-white font-bold">
+                        {adminUser?.name?.charAt(0) || 'A'}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">{adminUser?.name || 'Admin'}</p>
+                        <p className="text-xs text-gray-500">{adminUser?.role || 'Administrator'}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center justify-center px-4 py-3 bg-red-50 text-red-600 rounded-xl font-medium transition-colors hover:bg-red-100 active:bg-red-200"
+                  >
+                    <i className="ri-logout-circle-r-line text-lg mr-2"></i>
+                    Abmelden
+                  </button>
+                </div>
               </div>
             </div>
           </div>

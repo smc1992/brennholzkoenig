@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Image from 'next/image';
 import { getCDNUrl } from '@/utils/cdn';
 
 interface ShopImageGalleryProps {
@@ -67,13 +68,15 @@ export default function ShopImageGallery({
       <div className={`space-y-4 ${className}`}>
         {/* Main Image */}
         <div className="relative group">
-          <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-            <img
+          <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
+            <Image
               src={getImageUrl(selectedImage)}
               alt={productName}
-              className="w-full h-full object-cover cursor-zoom-in transition-transform duration-300 group-hover:scale-105"
+              fill
+              className="object-cover cursor-zoom-in transition-transform duration-300 group-hover:scale-105"
               onClick={() => openLightbox(allImages.indexOf(selectedImage))}
               onError={() => handleImageError(selectedImage)}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </div>
           
@@ -105,17 +108,19 @@ export default function ShopImageGallery({
                 <button
                   key={index}
                   onClick={() => setSelectedImage(image)}
-                  className={`aspect-square rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                  className={`aspect-square rounded-lg overflow-hidden border-2 transition-all duration-200 relative ${
                     isSelected
                       ? 'border-[#C04020] ring-2 ring-[#C04020] ring-opacity-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <img
+                  <Image
                     src={getImageUrl(image)}
                     alt={`${productName} - Bild ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                     onError={() => handleImageError(image)}
+                    sizes="(max-width: 768px) 25vw, 20vw"
                   />
                 </button>
               );
@@ -170,11 +175,13 @@ export default function ShopImageGallery({
             )}
 
             {/* Main Lightbox Image */}
-            <div className="relative">
-              <img
+            <div className="relative w-full h-[80vh]">
+              <Image
                 src={getImageUrl(allImages[lightboxIndex])}
                 alt={`${productName} - Bild ${lightboxIndex + 1}`}
-                className="max-w-full max-h-[80vh] object-contain"
+                fill
+                className="object-contain"
+                sizes="100vw"
               />
               
               {/* Image Counter */}
@@ -190,16 +197,18 @@ export default function ShopImageGallery({
                   <button
                     key={index}
                     onClick={() => setLightboxIndex(index)}
-                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all relative ${
                       index === lightboxIndex
                         ? 'border-[#C04020]'
                         : 'border-gray-400 hover:border-gray-300'
                     }`}
                   >
-                    <img
+                    <Image
                       src={getImageUrl(image)}
                       alt={`Thumbnail ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="64px"
                     />
                   </button>
                 ))}

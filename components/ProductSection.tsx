@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getCDNUrl } from '@/utils/cdn';
 
 interface Product {
@@ -83,7 +84,7 @@ export default function ProductSection() {
       .channel('homepage-product-changes')
       .on('postgres_changes', 
           { event: '*', schema: 'public', table: 'products' }, 
-          (payload) => {
+          (payload: any) => {
             console.log('Homepage: Produktänderung erkannt, aktualisiere Daten...');
             fetchProducts();
           })
@@ -180,11 +181,13 @@ export default function ProductSection() {
             {products.map((product: Product) => (
               <div key={product.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 group">
                 {/* Product Image */}
-                <div className="relative">
-                  <img 
+                <div className="relative h-48 overflow-hidden">
+                  <Image 
                     src={getCDNUrl(product.image_url)} 
                     alt={product.name}
-                    className="w-full h-48 object-cover object-top"
+                    fill
+                    className="object-cover object-top"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                   {product.original_price && (
                     <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">

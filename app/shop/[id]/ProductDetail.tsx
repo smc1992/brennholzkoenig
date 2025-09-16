@@ -818,9 +818,23 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
                     <i className="ri-add-line"></i>
                   </button>
                 </div>
-                <span className="text-sm text-gray-500">
-                  max. {productData.stock_quantity} SRM
-                </span>
+                <div className="flex items-center space-x-2">
+                  <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                    productData.stock_quantity <= 5 
+                      ? 'bg-red-100 text-red-700' 
+                      : productData.stock_quantity <= 20 
+                      ? 'bg-yellow-100 text-yellow-700' 
+                      : 'bg-green-100 text-green-700'
+                  }`}>
+                    <i className="ri-database-2-line mr-1"></i>
+                    Lager: {productData.stock_quantity} {productData.unit}
+                  </span>
+                  {productData.stock_quantity <= 5 && (
+                    <span className="text-xs text-red-600 font-medium">
+                      Nur noch wenige verfügbar!
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="flex justify-between items-center text-lg font-bold text-[#1A1A1A] mb-6 p-4 bg-gray-50 rounded-lg">

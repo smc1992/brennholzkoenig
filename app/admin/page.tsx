@@ -3,6 +3,7 @@ import { createServerSupabase, adminQueries } from '@/lib/supabase-server'
 import AdminDashboardClient from './AdminDashboardClient'
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
+import QuickRepliesTab from './QuickRepliesTab'
 
 // Server-side Admin Dashboard mit Supabase SSR-Optimierung
 export default async function AdminPage() {

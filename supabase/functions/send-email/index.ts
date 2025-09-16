@@ -14,34 +14,105 @@ serve(async (req) => {
   try {
     const { to, subject, html, text, type = 'general' } = await req.json()
 
-    // SMTP-Konfiguration aus Umgebungsvariablen
-    const SMTP_HOST = Deno.env.get('SMTP_HOST') || 'smtp.gmail.com'
-    const SMTP_PORT = parseInt(Deno.env.get('SMTP_PORT') || '587')
-    const SMTP_USER = Deno.env.get('SMTP_USER')
-    const SMTP_PASS = Deno.env.get('SMTP_PASS')
-    const FROM_EMAIL = Deno.env.get('FROM_EMAIL') || SMTP_USER
-    const FROM_NAME = Deno.env.get('FROM_NAME') || 'Brennholzkönig'
+    // Supabase Client für SMTP-Einstellungen
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
-    if (!SMTP_USER || !SMTP_PASS) {
-      throw new Error('SMTP-Konfiguration fehlt. Bitte konfigurieren Sie SMTP im Admin-Dashboard.')
+    // SMTP-Einstellungen aus zentraler Konfiguration laden
+    async function loadSMTPSettings() {
+      // 1) Primär: JSON-Konfiguration unter setting_type = 'smtp_config'
+      const { data: jsonRow } = await supabase
+        .from('app_settings')
+        .select('*')
+        .eq('setting_type', 'smtp_config')
+        .single()
+
+      if (jsonRow?.setting_value) {
+        try {
+          const parsed = JSON.parse(jsonRow.setting_value)
+          if (parsed.smtp_host && parsed.smtp_username && parsed.smtp_password) {
+            return {
+              host: parsed.smtp_host,
+              port: parseInt(String(parsed.smtp_port || '587')),
+              username: parsed.smtp_username,
+              password: parsed.smtp_password,
+              fromEmail: parsed.from_email || parsed.smtp_username,
+              fromName: parsed.from_name || 'Brennholzkönig',
+              secure: parsed.smtp_port == 465
+            }
+          }
+        } catch (e) {
+          console.error('Ungültiges JSON in smtp_config:', e)
+        }
+      }
+
+      // 2) Fallback: Key-Value-Konfiguration unter setting_type = 'smtp'
+      const { data: kvData } = await supabase
+        .from('app_settings')
+        .select('setting_key, setting_value')
+        .eq('setting_type', 'smtp')
+
+      if (kvData?.length > 0) {
+        const kv: Record<string, string> = {}
+        kvData.forEach((item: any) => {
+          kv[item.setting_key] = item.setting_value
+        })
+
+        if (kv.smtp_host && kv.smtp_username && kv.smtp_password) {
+          const port = parseInt(kv.smtp_port || '587')
+          return {
+            host: kv.smtp_host,
+            port: port,
+            username: kv.smtp_username,
+            password: kv.smtp_password,
+            fromEmail: kv.smtp_from_email || kv.smtp_username,
+            fromName: kv.smtp_from_name || 'Brennholzkönig',
+            secure: port === 465
+          }
+        }
+      }
+
+      // 3) Fallback zu Umgebungsvariablen
+      const envHost = Deno.env.get('SMTP_HOST')
+      const envUser = Deno.env.get('SMTP_USER')
+      const envPass = Deno.env.get('SMTP_PASS')
+      
+      if (envHost && envUser && envPass) {
+        const port = parseInt(Deno.env.get('SMTP_PORT') || '587')
+        return {
+          host: envHost,
+          port: port,
+          username: envUser,
+          password: envPass,
+          fromEmail: Deno.env.get('FROM_EMAIL') || envUser,
+          fromName: Deno.env.get('FROM_NAME') || 'Brennholzkönig',
+          secure: port === 465
+        }
+      }
+
+      throw new Error('Keine SMTP-Konfiguration gefunden. Bitte konfigurieren Sie SMTP im Admin-Dashboard.')
     }
+
+    const smtpConfig = await loadSMTPSettings()
 
     // SMTP-Client konfigurieren
     const client = new SMTPClient({
       connection: {
-        hostname: SMTP_HOST,
-        port: SMTP_PORT,
-        tls: SMTP_PORT === 465,
+        hostname: smtpConfig.host,
+        port: smtpConfig.port,
+        tls: smtpConfig.secure,
         auth: {
-          username: SMTP_USER,
-          password: SMTP_PASS,
+          username: smtpConfig.username,
+          password: smtpConfig.password,
         },
       },
     })
 
     // E-Mail senden
     await client.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      from: `${smtpConfig.fromName} <${smtpConfig.fromEmail}>`,
       to: to,
       subject: subject,
       content: text,
@@ -50,11 +121,7 @@ serve(async (req) => {
 
     await client.close()
 
-    // Analytics Event für E-Mail-Versand
-    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    // Analytics Event für E-Mail-Versand (Supabase Client bereits initialisiert)
 
     // E-Mail-Event protokollieren
     await supabase

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
 interface Ticket {
@@ -39,6 +39,7 @@ export default function SupportPage() {
   const [user, setUser] = useState<any>(null);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [newTicket, setNewTicket] = useState({
     subject: '',
@@ -48,6 +49,10 @@ export default function SupportPage() {
   });
 
   const [newMessage, setNewMessage] = useState('');
+  const [showRating, setShowRating] = useState<string | null>(null);
+  const [rating, setRating] = useState(0);
+  const [feedback, setFeedback] = useState('');
+  const [submittingRating, setSubmittingRating] = useState(false);
 
   const categories = [
     { value: 'general', label: 'Allgemeine Anfrage' },
@@ -76,7 +81,45 @@ export default function SupportPage() {
 
   useEffect(() => {
     checkAuth();
+    setupCustomerRealtimeSubscriptions();
   }, []);
+
+  /** Setup Realtime listeners for tickets & messages */
+  const setupCustomerRealtimeSubscriptions = () => {
+    const ticketsChannel = supabase
+      .channel('customer-tickets-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'support_tickets' },
+        (payload: any) => {
+          // Reload tickets when any ticket changes
+          if (user) {
+            loadTickets(user.id);
+          }
+        }
+      )
+      .subscribe();
+
+    const messagesChannel = supabase
+      .channel('customer-messages-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'ticket_messages' },
+        (payload: any) => {
+          // Reload messages for the currently selected ticket
+          if (payload.eventType === 'INSERT' && selectedTicket) {
+            loadMessages(selectedTicket);
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup function
+    return () => {
+      ticketsChannel.unsubscribe();
+      messagesChannel.unsubscribe();
+    };
+  };
 
   const checkAuth = async () => {
     try {
@@ -159,6 +202,50 @@ export default function SupportPage() {
     }
   };
 
+  /** Auto-scroll to bottom of messages */
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  /** Submit ticket rating */
+  const submitRating = async (ticketId: string) => {
+    if (rating === 0) return;
+    
+    setSubmittingRating(true);
+    try {
+      const response = await fetch('/api/support/ratings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ticketId,
+          rating,
+          feedback: feedback.trim() || null
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setShowRating(null);
+        setRating(0);
+        setFeedback('');
+        setSuccess('Vielen Dank für Ihre Bewertung!');
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(data.error || 'Fehler beim Speichern der Bewertung');
+      }
+    } catch (error) {
+      console.error('Fehler beim Bewerten:', error);
+      setError('Fehler beim Speichern der Bewertung');
+    } finally {
+      setSubmittingRating(false);
+    }
+  };
+
+  /** Check if ticket can be rated */
+  const canRateTicket = (ticket: Ticket) => {
+    return ['resolved', 'closed'].includes(ticket.status);
+  };
+
   const loadMessages = async (ticketId: string) => {
     try {
       const { data, error } = await supabase
@@ -173,6 +260,9 @@ export default function SupportPage() {
       }
 
       setMessages(prev => ({ ...prev, [ticketId]: data || [] }));
+      
+      // Auto-scroll to bottom after loading messages
+      setTimeout(scrollToBottom, 100);
     } catch (error) {
       console.error('Fehler beim Laden der Nachrichten:', error);
     }
@@ -351,6 +441,9 @@ export default function SupportPage() {
       await loadMessages(selectedTicket);
       await loadTickets(user.id);
       setNewMessage('');
+      
+      // Auto-scroll to bottom after sending message
+      setTimeout(scrollToBottom, 200);
     } catch (error) {
       console.error('Fehler beim Senden der Nachricht:', error);
       setError('Es gab ein Problem beim Senden der Nachricht.');
@@ -425,16 +518,16 @@ export default function SupportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 md:pt-24">
-      <div className="max-w-6xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Support & Anfragen</h1>
+    <div className="min-h-screen bg-gray-50 pt-20 sm:pt-24 md:pt-28">
+      <div className="max-w-6xl mx-auto p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Support & Anfragen</h1>
         <button
           onClick={() => setShowNewTicket(true)}
-          className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors whitespace-nowrap cursor-pointer"
+          className="bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold transition-colors cursor-pointer text-sm sm:text-base flex items-center justify-center"
         >
           <i className="ri-add-line mr-2"></i>
-          Neue Anfrage
+          <span className="truncate">Neue Anfrage</span>
         </button>
       </div>
 
@@ -610,9 +703,23 @@ export default function SupportPage() {
                     {getCategoryLabel(ticket.category)}
                   </p>
 
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 mb-2">
                     Erstellt: {formatDate(ticket.created_at)}
                   </div>
+                  
+                  {/* Rating Button für abgeschlossene Tickets */}
+                  {canRateTicket(ticket) && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowRating(ticket.id);
+                      }}
+                      className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+                    >
+                      <i className="ri-star-line mr-1"></i>
+                      Bewerten
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -621,7 +728,7 @@ export default function SupportPage() {
           {/* Chat Bereich */}
           <div className="lg:col-span-2">
             {selectedTicket ? (
-              <div className="bg-white border rounded-xl h-96 flex flex-col">
+              <div className="bg-white border rounded-xl min-h-96 flex flex-col">
                 <div className="p-4 border-b">
                   <div className="flex justify-between items-start">
                     <div>
@@ -652,21 +759,40 @@ export default function SupportPage() {
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {messages[selectedTicket]?.map((message) => (
-                    <div key={message.id} className={`flex ${message.sender_type === 'customer' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg ${ 
-                        message.sender_type === 'customer' 
-                          ? 'bg-green-600 text-white' 
-                          : 'bg-gray-100 text-gray-900'
-                      }`}>
-                        <p className="text-sm mb-1">{message.content}</p>
-                        <div className={`text-xs ${message.sender_type === 'customer' ? 'text-green-100' : 'text-gray-500'}`}>
-                          {message.sender_name} • {formatDate(message.created_at)}
-                        </div>
+                <div 
+                  ref={messagesEndRef}
+                  className="flex-1 overflow-y-auto p-4 space-y-4 max-h-96 min-h-96"
+                  style={{ scrollBehavior: 'smooth' }}
+                >
+                  {!messages[selectedTicket] || messages[selectedTicket].length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                      <div className="text-center">
+                        <i className="ri-chat-3-line text-4xl mb-2"></i>
+                        <p>Noch keine Nachrichten</p>
+                        <p className="text-sm mt-1">Schreiben Sie Ihre erste Nachricht unten</p>
                       </div>
                     </div>
-                  ))}
+                  ) : (
+                    messages[selectedTicket]?.map((message) => (
+                      <div key={message.id} className={`flex ${message.sender_type === 'customer' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg shadow-sm ${ 
+                          message.sender_type === 'customer' 
+                            ? 'bg-green-600 text-white' 
+                            : 'bg-gray-100 text-gray-900 border'
+                        }`}>
+                          <p className="text-sm mb-1 whitespace-pre-wrap">{message.content}</p>
+                          
+                          {/* Attachments - Placeholder für zukünftige Implementierung */}
+                          {/* TODO: Attachments für Kunden-Bereich implementieren */}
+                          
+                          <div className={`text-xs mt-2 ${message.sender_type === 'customer' ? 'text-green-100' : 'text-gray-500'}`}>
+                            {message.sender_name} • {formatDate(message.created_at)}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  <div ref={messagesEndRef} />
                 </div>
 
                 <form onSubmit={sendMessage} className="p-4 border-t">
@@ -693,7 +819,7 @@ export default function SupportPage() {
                 </form>
               </div>
             ) : (
-              <div className="bg-white border rounded-xl h-96 flex items-center justify-center">
+              <div className="bg-white border rounded-xl min-h-96 flex items-center justify-center">
                 <div className="text-center">
                   <i className="ri-chat-3-line text-6xl text-gray-300 mb-4"></i>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Keine Unterhaltung ausgewählt</h3>
@@ -701,6 +827,70 @@ export default function SupportPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+      
+      {/* Rating Modal */}
+      {showRating && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Ticket bewerten
+            </h3>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Wie zufrieden waren Sie mit unserem Support?
+              </label>
+              <div className="flex space-x-2">
+                {[1, 2, 3, 4, 5].map(star => (
+                  <button
+                    key={star}
+                    onClick={() => setRating(star)}
+                    className={`text-2xl transition-colors ${
+                      star <= rating ? 'text-yellow-400' : 'text-gray-300'
+                    } hover:text-yellow-400`}
+                  >
+                    <i className="ri-star-fill"></i>
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Feedback (optional)
+              </label>
+              <textarea
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                placeholder="Teilen Sie uns Ihre Erfahrung mit..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                rows={3}
+                maxLength={500}
+              />
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowRating(null);
+                  setRating(0);
+                  setFeedback('');
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={() => submitRating(showRating)}
+                disabled={rating === 0 || submittingRating}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-colors"
+              >
+                {submittingRating ? 'Wird gesendet...' : 'Bewertung abgeben'}
+              </button>
+            </div>
           </div>
         </div>
       )}

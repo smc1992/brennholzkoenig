@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import Link from 'next/link';
+import Image from 'next/image';
 import { calculatePriceWithTiers } from '../../lib/pricing';
 import WishlistButton from '../../components/WishlistButton';
 import { getCDNUrl } from '../../utils/cdn';
@@ -237,7 +238,7 @@ export default function ProductGrid() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 product-grid">
           {filteredProducts.map((product) => {
             const productUrl = getProductUrl(product.id);
             const imageUrl = getCDNUrl(product.image_url);
@@ -249,22 +250,26 @@ export default function ProductGrid() {
               productUrl
             });
             
-            if (product.id === 4) {
-              console.log('🔍 ProductGrid: Scheitholz Buche 25 cm details:', product);
-            }
-
             return (
               <div key={product.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
                 {/* Product Image */}
-                <div className="relative aspect-square bg-gray-100">
+                <div className="relative bg-gray-100 product-image-container">
                   <Link href={`/shop/${productUrl}`}>
-                    <img
+                    <Image
                       src={imageUrl}
                       alt={product.name}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/api/placeholder?width=400&height=400&text=Bild+nicht+verfügbar';
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="hover:scale-105 transition-transform duration-300 cursor-pointer product-image"
+                      style={{
+                        objectFit: 'cover',
+                        objectPosition: 'center'
+                      }}
+                      priority={false}
+                      placeholder="blur"
+                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+                      onError={() => {
+                        // Fallback handled by Next.js Image component
                       }}
                     />
                   </Link>

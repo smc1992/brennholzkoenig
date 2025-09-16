@@ -98,6 +98,110 @@ export default function SEOTab() {
     }
   };
 
+  const runPageSpeedTest = async () => {
+    setSaving(true);
+    try {
+      const testUrl = 'https://brennholz-koenig.de';
+      const pagespeedUrl = `https://developers.google.com/speed/pagespeed/insights/?url=${encodeURIComponent(testUrl)}`;
+      
+      // Open PageSpeed Insights in new tab
+      window.open(pagespeedUrl, '_blank');
+      
+      setNotification('PageSpeed Insights in neuem Tab geöffnet');
+      setTimeout(() => setNotification(''), 3000);
+    } catch (error) {
+      console.error('Error opening PageSpeed test:', error);
+      setNotification('Fehler beim Öffnen des PageSpeed Tests');
+      setTimeout(() => setNotification(''), 3000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const runSSLCheck = async () => {
+    setSaving(true);
+    try {
+      const testUrl = 'https://brennholz-koenig.de';
+      const sslTestUrl = `https://www.ssllabs.com/ssltest/analyze.html?d=${encodeURIComponent(testUrl.replace('https://', ''))}`;
+      
+      // Open SSL Labs test in new tab
+      window.open(sslTestUrl, '_blank');
+      
+      setNotification('SSL Labs Test in neuem Tab geöffnet');
+      setTimeout(() => setNotification(''), 3000);
+    } catch (error) {
+      console.error('Error opening SSL test:', error);
+      setNotification('Fehler beim Öffnen des SSL Tests');
+      setTimeout(() => setNotification(''), 3000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const generateRobotsTxt = async () => {
+    setSaving(true);
+    try {
+      const robotsContent = `User-agent: *
+Allow: /
+
+Sitemap: https://brennholz-koenig.de/sitemap.xml
+
+# Disallow admin areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+
+# Allow important pages
+Allow: /shop
+Allow: /ueber-uns
+Allow: /kontakt
+Allow: /blog
+
+# Crawl-delay for bots
+Crawl-delay: 1`;
+      
+      // Create and download robots.txt file
+      const blob = new Blob([robotsContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'robots.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      setNotification('Robots.txt erfolgreich generiert und heruntergeladen');
+      setTimeout(() => setNotification(''), 3000);
+    } catch (error) {
+      console.error('Error generating robots.txt:', error);
+      setNotification('Fehler beim Generieren der robots.txt');
+      setTimeout(() => setNotification(''), 3000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const validateStructuredData = async () => {
+    setSaving(true);
+    try {
+      const testUrl = 'https://brennholz-koenig.de';
+      const validatorUrl = `https://search.google.com/test/rich-results?url=${encodeURIComponent(testUrl)}`;
+      
+      // Open Google Rich Results Test in new tab
+      window.open(validatorUrl, '_blank');
+      
+      setNotification('Google Rich Results Test in neuem Tab geöffnet');
+      setTimeout(() => setNotification(''), 3000);
+    } catch (error) {
+      console.error('Error opening structured data validator:', error);
+      setNotification('Fehler beim Öffnen des Schema.org Validators');
+      setTimeout(() => setNotification(''), 3000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const saveSEOImage = async (imageData: SEOImage) => {
     try {
       const { error } = await supabase
@@ -135,6 +239,8 @@ export default function SEOTab() {
     setSaving(true);
     try {
       const auditResults = [];
+      const warnings = [];
+      const errors = [];
 
       // Check missing SEO data
       const missingData = defaultPages.filter(page =>
@@ -142,29 +248,112 @@ export default function SEOTab() {
       );
 
       if (missingData.length > 0) {
-        auditResults.push(`${missingData.length} Seite(n) ohne SEO-Daten`);
+        errors.push(`${missingData.length} Seite(n) ohne SEO-Daten: ${missingData.map(p => p.name).join(', ')}`);
       }
 
       // Check meta descriptions
       const shortDescriptions = seoPages.filter(page =>
         !page.meta_description || page.meta_description.length < 120
       );
-
+      
       if (shortDescriptions.length > 0) {
-        auditResults.push(`${shortDescriptions.length} Seite(n) mit zu kurzer Meta-Description`);
+        warnings.push(`${shortDescriptions.length} Seite(n) mit zu kurzer Meta-Description (< 120 Zeichen)`);
+      }
+      
+      const longDescriptions = seoPages.filter(page =>
+        page.meta_description && page.meta_description.length > 160
+      );
+      
+      if (longDescriptions.length > 0) {
+        warnings.push(`${longDescriptions.length} Seite(n) mit zu langer Meta-Description (> 160 Zeichen)`);
       }
 
-      // Check images without alt text
-      const imagesWithoutAlt = seoImages.filter(img => !img.alt_text);
-      if (imagesWithoutAlt.length > 0) {
-        auditResults.push(`${imagesWithoutAlt.length} Bild(er) ohne Alt-Text`);
+      // Check page titles
+      const shortTitles = seoPages.filter(page =>
+        !page.page_title || page.page_title.length < 30
+      );
+      
+      if (shortTitles.length > 0) {
+        warnings.push(`${shortTitles.length} Seite(n) mit zu kurzem Title (< 30 Zeichen)`);
+      }
+      
+      const longTitles = seoPages.filter(page =>
+        page.page_title && page.page_title.length > 60
+      );
+      
+      if (longTitles.length > 0) {
+        warnings.push(`${longTitles.length} Seite(n) mit zu langem Title (> 60 Zeichen)`);
       }
 
-      if (auditResults.length === 0) {
-        setNotification('SEO-Audit erfolgreich: Keine Probleme gefunden!');
+      // Check missing Open Graph data
+      const missingOG = seoPages.filter(page =>
+        !page.og_title || !page.og_description || !page.og_image_url
+      );
+      
+      if (missingOG.length > 0) {
+        warnings.push(`${missingOG.length} Seite(n) ohne vollständige Open Graph Daten`);
+      }
+
+      // Check missing Twitter Card data
+      const missingTwitter = seoPages.filter(page =>
+        !page.twitter_title || !page.twitter_description
+      );
+      
+      if (missingTwitter.length > 0) {
+        warnings.push(`${missingTwitter.length} Seite(n) ohne Twitter Card Daten`);
+      }
+
+      // Check canonical URLs
+      const missingCanonical = seoPages.filter(page =>
+        !page.canonical_url
+      );
+      
+      if (missingCanonical.length > 0) {
+        warnings.push(`${missingCanonical.length} Seite(n) ohne Canonical URL`);
+      }
+
+      // Check robots directives
+      const missingRobots = seoPages.filter(page =>
+        !page.robots_directive
+      );
+      
+      if (missingRobots.length > 0) {
+        warnings.push(`${missingRobots.length} Seite(n) ohne Robots-Direktive`);
+      }
+
+      // Generate audit report
+      let auditReport = '=== SEO AUDIT BERICHT ===\n\n';
+      
+      if (errors.length === 0 && warnings.length === 0) {
+        auditReport += '✅ Alle SEO-Checks bestanden!\n\n';
+        auditReport += `Geprüfte Seiten: ${seoPages.length}\n`;
+        auditReport += `Verfügbare Seiten: ${defaultPages.length}\n`;
       } else {
-        setNotification(`SEO-Audit abgeschlossen: ${auditResults.join(', ')}`);
+        if (errors.length > 0) {
+          auditReport += '❌ FEHLER:\n';
+          errors.forEach(error => auditReport += `• ${error}\n`);
+          auditReport += '\n';
+        }
+        
+        if (warnings.length > 0) {
+          auditReport += '⚠️ WARNUNGEN:\n';
+          warnings.forEach(warning => auditReport += `• ${warning}\n`);
+          auditReport += '\n';
+        }
       }
+      
+      auditReport += '=== EMPFEHLUNGEN ===\n';
+      auditReport += '• Meta-Descriptions: 120-160 Zeichen\n';
+      auditReport += '• Page Titles: 30-60 Zeichen\n';
+      auditReport += '• Open Graph Daten für Social Media\n';
+      auditReport += '• Twitter Card Daten\n';
+      auditReport += '• Canonical URLs setzen\n';
+      auditReport += '• Robots-Direktiven definieren\n';
+      
+      // Show audit results in alert
+      alert(auditReport);
+      
+      setNotification(`SEO-Audit abgeschlossen: ${errors.length} Fehler, ${warnings.length} Warnungen`);
       setTimeout(() => setNotification(''), 5000);
     } catch (error) {
       console.error('Error running SEO audit:', error);
@@ -720,20 +909,52 @@ export default function SEOTab() {
                 <i className="ri-arrow-right-s-line text-gray-400"></i>
               </button>
 
-              <button className="w-full flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+              <button
+                onClick={runPageSpeedTest}
+                disabled={saving}
+                className="w-full flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+              >
                 <div className="flex items-center">
                   <i className="ri-speed-line text-orange-500 mr-3"></i>
                   <span>PageSpeed Test</span>
                 </div>
-                <i className="ri-external-link-line text-gray-400"></i>
+                <i className="ri-arrow-right-s-line text-gray-400"></i>
               </button>
 
-              <button className="w-full flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+              <button
+                onClick={runSSLCheck}
+                disabled={saving}
+                className="w-full flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+              >
                 <div className="flex items-center">
                   <i className="ri-shield-check-line text-orange-500 mr-3"></i>
                   <span>SSL-Check</span>
                 </div>
-                <i className="ri-external-link-line text-gray-400"></i>
+                <i className="ri-arrow-right-s-line text-gray-400"></i>
+              </button>
+
+              <button
+                onClick={generateRobotsTxt}
+                disabled={saving}
+                className="w-full flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+              >
+                <div className="flex items-center">
+                  <i className="ri-robot-line text-orange-500 mr-3"></i>
+                  <span>Robots.txt generieren</span>
+                </div>
+                <i className="ri-arrow-right-s-line text-gray-400"></i>
+              </button>
+
+              <button
+                onClick={validateStructuredData}
+                disabled={saving}
+                className="w-full flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+              >
+                <div className="flex items-center">
+                  <i className="ri-code-s-slash-line text-orange-500 mr-3"></i>
+                  <span>Schema.org validieren</span>
+                </div>
+                <i className="ri-arrow-right-s-line text-gray-400"></i>
               </button>
             </div>
           </div>

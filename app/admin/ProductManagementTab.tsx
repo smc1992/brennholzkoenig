@@ -3,6 +3,7 @@ import { useState, useEffect, FormEvent } from 'react';
 import { supabase } from '../../lib/supabase';
 import ProductImageUploader from '@/components/ProductImageUploader';
 import ProductImageGallery from '@/components/ProductImageGallery';
+import ProductImageGalleryWithCrop from '@/components/ProductImageGalleryWithCrop';
 
 export default function ProductManagementTab() {
   interface Product {
@@ -954,7 +955,7 @@ export default function ProductManagementTab() {
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Produktbilder</label>
-                  <ProductImageGallery
+                  <ProductImageGalleryWithCrop
                     productData={currentProductData}
                     onImagesChange={(images) => {
                       // Update main image URL
@@ -976,6 +977,9 @@ export default function ProductManagementTab() {
                       console.log('Bilder aktualisiert:', { mainImage: mainImage?.url, additional: additionalUrls });
                     }}
                     maxImages={6}
+                    aspectRatio={1}
+                    minWidth={400}
+                    minHeight={400}
                   />
                   
                   {/* Hidden textarea for form submission */}
