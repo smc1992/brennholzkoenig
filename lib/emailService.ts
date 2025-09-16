@@ -149,30 +149,49 @@ export async function createEmailTransporter() {
     fromEmail: settings.smtp_from_email
   });
 
-  // Alternative Lösung: eval-basierter require für Server-Side
+  // Verbesserte nodemailer Import-Logik
   let nodemailer;
   try {
     // Versuche ES-Module Import
     const nodemailerModule = await import('nodemailer');
     nodemailer = nodemailerModule.default || nodemailerModule;
+    console.log('[SMTP] Nodemailer erfolgreich als ES-Module geladen');
   } catch (error) {
-    // Fallback zu CommonJS require
-    nodemailer = eval('require')('nodemailer');
+    console.warn('[SMTP] ES-Module Import fehlgeschlagen, versuche CommonJS:', error);
+    try {
+      // Fallback zu CommonJS require
+      nodemailer = eval('require')('nodemailer');
+      console.log('[SMTP] Nodemailer erfolgreich als CommonJS geladen');
+    } catch (requireError) {
+      console.error('[SMTP] Beide Import-Methoden fehlgeschlagen:', requireError);
+      throw new Error('Nodemailer konnte nicht geladen werden');
+    }
   }
 
   if (!nodemailer || typeof nodemailer.createTransport !== 'function') {
     throw new Error('Nodemailer konnte nicht korrekt geladen werden');
   }
 
-  const transporter = nodemailer.createTransport({
+  const transportConfig = {
     host: settings.smtp_host,
     port: parseInt(settings.smtp_port),
-    secure: settings.smtp_secure === 'true', // true für 465, false für andere Ports
+    secure: settings.smtp_secure === 'true',
     auth: {
       user: settings.smtp_username,
       pass: settings.smtp_password,
     },
+    // Timeout-Konfiguration hinzufügen
+    connectionTimeout: 10000, // 10 Sekunden
+    greetingTimeout: 5000,    // 5 Sekunden
+    socketTimeout: 10000,     // 10 Sekunden
+  };
+
+  console.log('[SMTP] Erstelle Transporter mit Konfiguration:', {
+    ...transportConfig,
+    auth: { user: transportConfig.auth.user, pass: '***' }
   });
+
+  const transporter = nodemailer.createTransport(transportConfig);
 
   return { transporter, settings };
 }
@@ -190,6 +209,8 @@ export async function sendEmail({
   html?: string;
 }) {
   try {
+    console.log(`[SMTP] Starte E-Mail-Versand an ${to} mit Betreff: ${subject}`);
+    
     const { transporter, settings } = await createEmailTransporter();
 
     const mailOptions = {
@@ -200,12 +221,40 @@ export async function sendEmail({
       html
     };
 
-    const result = await transporter.sendMail(mailOptions);
-    console.log('E-Mail erfolgreich gesendet:', result.messageId);
-    return { success: true, messageId: result.messageId };
+    console.log('[SMTP] Mail-Optionen:', {
+      from: mailOptions.from,
+      to: mailOptions.to,
+      subject: mailOptions.subject,
+      hasText: !!mailOptions.text,
+      hasHtml: !!mailOptions.html
+    });
+
+    // Timeout-Wrapper für sendMail
+    const sendMailWithTimeout = () => {
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('E-Mail-Versand Timeout nach 15 Sekunden'));
+        }, 15000);
+
+        transporter.sendMail(mailOptions)
+           .then((result: any) => {
+             clearTimeout(timeout);
+             resolve(result);
+           })
+           .catch((error: any) => {
+             clearTimeout(timeout);
+             reject(error);
+           });
+      });
+    };
+
+    const result = await sendMailWithTimeout();
+    console.log('[SMTP] E-Mail erfolgreich gesendet:', (result as any).messageId);
+    return { success: true, messageId: (result as any).messageId };
   } catch (error) {
-    console.error('Fehler beim Senden der E-Mail:', error);
-    return { success: false, error: (error as any).message };
+    console.error('[SMTP] Fehler beim Senden der E-Mail:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
+    return { success: false, error: errorMessage };
   }
 }
 
