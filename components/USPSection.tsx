@@ -128,7 +128,7 @@ export default function USPSection() {
                     page="home"
                     section="usp"
                     contentType="main_usp_title"
-                    fallback="70% HÖHERER HEIZWERT"
+                    fallback="70% HÖHERE HEIZLEISTUNG"
                     tag="span"
                   />
                 </span>

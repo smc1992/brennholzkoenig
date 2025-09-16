@@ -182,7 +182,7 @@ export default function QualifierSection() {
                   <span className="font-bold">Qualmt nicht</span>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center justify-center text-center sm:text-left">
-                  <i className="ri-check-circle-line mb-1 sm:mb-0 sm:mr-2 text-[#D4A520] text-sm sm:text-base flex-shrink-0"></i>
+                  <i className="ri-sparkling-line mb-1 sm:mb-0 sm:mr-2 text-[#D4A520] text-sm sm:text-base flex-shrink-0"></i>
                   <span className="font-bold">Sauber brennend</span>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center justify-center text-center sm:text-left">

@@ -109,7 +109,7 @@ export default function HeroSection() {
             page="home" 
             section="hero" 
             contentType="subtitle"
-            fallback="Premium Brennholz mit 70% höherem Heizwert - Sparen Sie durchschnittlich 721€ jährlich"
+            fallback="Premium Brennholz mit 70% höherer Heizleistung - Sparen Sie durchschnittlich 721€ jährlich"
             tag="p"
             className="text-lg sm:text-xl lg:text-2xl text-white/95 font-bold mb-6 sm:mb-8 drop-shadow-lg leading-tight text-center sm:text-left max-w-3xl"
           />
@@ -134,7 +134,7 @@ export default function HeroSection() {
                 <div className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0 mt-0.5 sm:mt-0">
                   <i className="ri-money-euro-circle-line text-[#2C5545] text-xl sm:text-2xl"></i>
                 </div>
-                <span className="font-bold leading-tight">70% weniger Heizkosten durch höheren Heizwert</span>
+                <span className="font-bold leading-tight">70% weniger Heizkosten durch höhere Heizleistung</span>
               </div>
               <div className="flex items-start sm:items-center">
                 <div className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0 mt-0.5 sm:mt-0">

@@ -70,10 +70,10 @@ export default function ComparisonSection() {
                 <tbody className="divide-y divide-gray-200">
                   {[{
                     icon: 'ri-fire-line',
-                    title: 'Heizwert',
+                    title: 'Heizleistung',
                     desc: 'Energiegehalt pro kg',
-                    other: 'Standard (4,2 kWh/kg)',
-                    us: '70% HÖHER (7,1 kWh/kg)',
+                    other: '1470 KWh',
+                    us: '70% HÖHER (2499 KWh)',
                     delay: 400
                   }, {
                     icon: 'ri-drop-line',
@@ -108,7 +108,7 @@ export default function ComparisonSection() {
                     title: 'Lagerbedingungen',
                     desc: 'Perfekte Lagerung',
                     other: 'Outdoor-Lagerung',
-                    us: 'PERFEKT LAGERBEDINGUNGEN',
+                    us: 'PERFEKTE LAGERBEDINGUNGEN',
                     delay: 1400
                   }, {
                     icon: 'ri-award-line',
