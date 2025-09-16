@@ -221,29 +221,47 @@ ${formData.message}
 Eingegangen am: ${new Date().toLocaleString('de-DE')}
       `.trim();
 
-      // E-Mail an Geschäftsleitung senden über API-Route
-      const emailResponse = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: 'info@brennholz-koenig.de',
-          subject: `🔥 Neue Kontaktanfrage: ${formData.product} - ${formData.name}`,
-          html: emailHtml,
-          text: plainText,
-          type: 'contact_form'
+      // Kontaktanfrage in Datenbank speichern
+      const { data: contactData, error: contactError } = await supabase
+        .from('contact_requests')
+        .insert({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone || null,
+          subject: formData.subject || null,
+          message: formData.message,
+          product_category: formData.product,
+          status: 'new',
+          created_at: new Date().toISOString()
         })
-      });
+        .select()
+        .single();
 
-      const emailResult = await emailResponse.json();
-
-      if (!emailResult.success) {
-        console.error('E-Mail-Versand-Fehler:', emailResult.error);
-        throw new Error(emailResult.error || 'E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.');
+      if (contactError) {
+        console.error('Fehler beim Speichern der Kontaktanfrage:', contactError);
+        throw new Error('Kontaktanfrage konnte nicht gespeichert werden. Bitte versuchen Sie es später erneut.');
       }
 
-      console.log('E-Mail erfolgreich gesendet:', emailResult);
+      console.log('Kontaktanfrage erfolgreich gespeichert:', contactData);
+
+      // E-Mail-Versand im Hintergrund versuchen (ohne Fehler bei Problemen)
+      try {
+        await fetch('/api/send-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            to: 'info@brennholz-koenig.de',
+            subject: `🔥 Neue Kontaktanfrage: ${formData.product} - ${formData.name}`,
+            html: emailHtml,
+            text: plainText,
+            type: 'contact_form'
+          })
+        });
+      } catch (emailError) {
+        console.warn('E-Mail-Versand fehlgeschlagen, aber Anfrage wurde gespeichert:', emailError);
+      }
 
       // Erfolgsmeldung anzeigen
       setSubmitStatus('success');

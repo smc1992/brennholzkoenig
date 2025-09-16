@@ -112,6 +112,7 @@ export default function CostCalculatorSection() {
                 <div className="font-bold text-blue-700 mb-1">Ab 25 SRM</div>
                 <div className="text-blue-600">-2,50€ Rabatt pro SRM</div>
                 <div className="text-xs text-gray-600 mt-1">Großmengen</div>
+                <div className="text-xs text-blue-700 mt-2 font-medium">Nur für Industrieholz Klasse 2</div>
               </div>
             </div>
           </div>

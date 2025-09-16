@@ -26,6 +26,11 @@ export const getCDNUrl = (filename: string, seoSlug?: string): string => {
     return filename;
   }
   
+  // Wenn der Pfad bereits mit /api/cdn/ beginnt, verwende ihn direkt
+  if (filename.startsWith('/api/cdn/')) {
+    return filename;
+  }
+  
   // Bereinige den Dateinamen von führenden Slashes
   let cleanFilename = filename;
   if (cleanFilename.startsWith('/')) {
