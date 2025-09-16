@@ -1,4 +1,16 @@
 {
   "port": 3000,
-  "healthCheckPath": "/"
+  "healthCheckPath": "/_health",
+  "buildCommand": "npm run build",
+  "startCommand": "npm start",
+  "environment": {
+    "NODE_ENV": "production",
+    "NEXT_TELEMETRY_DISABLED": "1"
+  },
+  "volumes": [],
+  "networks": [],
+  "labels": {
+    "coolify.managed": "true",
+    "coolify.type": "application"
+  }
 }
