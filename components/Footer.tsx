@@ -20,7 +20,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center mb-4">
               <img 
-                src="/images/brennholzkoenig-logo-white.webp?v=1" 
+                src="/images/Brennholzkönig%20Industrielles%20Shield%20Logo.webp" 
                 alt="Brennholzkönig Logo" 
                 className="h-20 w-auto object-contain"
               />

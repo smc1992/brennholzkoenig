@@ -23,8 +23,8 @@ export default function DataPreloader() {
     const prefetchResources = () => {
       // Prefetch wichtige Bilder
       const criticalImages = [
-        '/images/brennholzkoenig-logo.webp?v=1', // Logo
-        '/images/brennholzkoenig-logo-white.webp?v=1', // Footer Logo
+        '/images/Brennholzkönig%20transparent.webp?v=4&t=1695730300', // Logo
+        '/images/Brennholzkönig%20Industrielles%20Shield%20Logo.webp', // Footer Logo
       ];
 
       criticalImages.forEach(src => {
