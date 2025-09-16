@@ -80,7 +80,7 @@ async function testNetworkConnection() {
         
         portResults[port] = { status: 'open', error: null };
       } catch (error: any) {
-        (portResults as any)[port] = { 
+        portResults[port] = { 
           status: 'blocked', 
           error: error instanceof Error ? error.message : 'Unbekannter Fehler' 
         };
