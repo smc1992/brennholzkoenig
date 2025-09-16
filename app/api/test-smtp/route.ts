@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendEmail, testSMTPConnection } from '@/lib/emailService';
 
-// Erzwinge Node.js Runtime und dynamische Ausführung (wichtig für Nodemailer)
+// Node.js Runtime für nodemailer
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const revalidate = false;
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('[SMTP-Test] Test gestartet');
+    
     const body = await request.json();
     const { to, testEmail, subject, html, text } = body;
 
-    // Unterstütze beide Formate: { testEmail } und { to, subject, html, text }
+    // E-Mail-Adresse bestimmen
     const recipientEmail = to || testEmail;
     
     if (!recipientEmail) {
@@ -21,17 +22,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Teste zuerst die SMTP-Verbindung
+    console.log(`[SMTP-Test] Teste Verbindung und sende E-Mail an: ${recipientEmail}`);
+
+    // Teste SMTP-Verbindung
     const connectionTest = await testSMTPConnection();
     if (!connectionTest.success) {
+      console.error('[SMTP-Test] Verbindungstest fehlgeschlagen:', connectionTest.error);
       return NextResponse.json(
         { success: false, error: `SMTP-Verbindung fehlgeschlagen: ${connectionTest.error}` },
         { status: 500 }
       );
     }
 
-    // Verwende die vom Frontend gesendeten Inhalte oder Fallback-Werte
-    const emailSubject = subject || 'SMTP-Test von Brennholzkönig Admin Dashboard';
+    console.log('[SMTP-Test] Verbindungstest erfolgreich, sende Test-E-Mail');
+
+    // E-Mail-Inhalte
+    const emailSubject = subject || 'SMTP-Test von Brennholzkönig';
     const emailHtml = html || `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #C04020;">SMTP-Test erfolgreich!</h2>
@@ -44,7 +50,7 @@ export async function POST(request: NextRequest) {
         </p>
       </div>
     `;
-    const emailText = text || `Dies ist eine Test-E-Mail von Ihrem Brennholzkönig Admin Dashboard.\n\nWenn Sie diese E-Mail erhalten, funktioniert Ihre SMTP-Konfiguration korrekt.\n\nGesendet am: ${new Date().toLocaleString('de-DE')}`;
+    const emailText = text || `SMTP-Test von Brennholzkönig\n\nWenn Sie diese E-Mail erhalten, funktioniert Ihre SMTP-Konfiguration korrekt.\n\nGesendet am: ${new Date().toLocaleString('de-DE')}`;
 
     // Sende Test-E-Mail
     const emailResult = await sendEmail({
@@ -55,21 +61,25 @@ export async function POST(request: NextRequest) {
     });
 
     if (emailResult.success) {
+      console.log('[SMTP-Test] Test-E-Mail erfolgreich gesendet:', emailResult.messageId);
       return NextResponse.json({
         success: true,
         message: 'Test-E-Mail erfolgreich gesendet',
         messageId: emailResult.messageId
       });
     } else {
+      console.error('[SMTP-Test] E-Mail-Versand fehlgeschlagen:', emailResult.error);
       return NextResponse.json(
         { success: false, error: emailResult.error },
         { status: 500 }
       );
     }
+    
   } catch (error) {
-    console.error('Fehler beim SMTP-Test:', error);
+    console.error('[SMTP-Test] Unerwarteter Fehler:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
     return NextResponse.json(
-      { success: false, error: 'Interner Serverfehler beim SMTP-Test' },
+      { success: false, error: 'SMTP-Test fehlgeschlagen: ' + errorMessage },
       { status: 500 }
     );
   }
