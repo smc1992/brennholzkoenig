@@ -361,6 +361,21 @@ export default function ProductImageGalleryWithCrop({
         }
       }
 
+      // Bild aus image_mappings Datenbank löschen
+      if (imageToRemove.id.startsWith('mapping-')) {
+        const mappingId = imageToRemove.id.replace('mapping-', '');
+        const { error: dbError } = await supabase
+          .from('image_mappings')
+          .delete()
+          .eq('id', mappingId);
+        
+        if (dbError) {
+          console.error('Fehler beim Löschen aus Datenbank:', dbError);
+          alert('Fehler beim Löschen aus der Datenbank');
+          return;
+        }
+      }
+
       // Bild aus Liste entfernen
       const updatedImages = images.filter(img => img.id !== imageId);
       
@@ -370,9 +385,34 @@ export default function ProductImageGalleryWithCrop({
       }
       
       setImages(updatedImages);
+      
+      // Produktdaten in der products Tabelle aktualisieren
+       if (productData?.id) {
+         await updateProductImagesInDatabase(updatedImages);
+       }
     } catch (error) {
       console.error('Fehler beim Löschen des Bildes:', error);
       alert('Fehler beim Löschen des Bildes');
+    }
+  };
+
+  const updateProductImagesInDatabase = async (updatedImages: ImageItem[]) => {
+    if (!productData?.id) return;
+    
+    const mainImage = updatedImages.find(img => img.isMain);
+    const additionalImages = updatedImages.filter(img => !img.isMain).map(img => img.url);
+    
+    const { error } = await supabase
+      .from('products')
+      .update({
+        image_url: mainImage?.url || null,
+        additional_images: additionalImages,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', productData.id);
+    
+    if (error) {
+      console.error('Fehler beim Aktualisieren der Produktbilder:', error);
     }
   };
 
