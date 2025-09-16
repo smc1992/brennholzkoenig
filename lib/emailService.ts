@@ -23,10 +23,26 @@ function toBoolString(value: any): string {
   return 'false';
 }
 
-// Lade SMTP-Einstellungen aus der Datenbank (unterstützt sowohl 'smtp_config' als auch Fallback 'smtp')
+// Lade SMTP-Einstellungen (unterstützt Umgebungsvariablen, 'smtp_config' und Fallback 'smtp')
 export async function loadSMTPSettings(): Promise<SMTPSettings | null> {
   try {
-    // 1) Primär: JSON-Konfiguration unter setting_type = 'smtp_config'
+    console.log('[SMTP] Lade SMTP-Einstellungen...');
+    
+    // 1) Primär: Umgebungsvariablen (für Coolify/Hetzner)
+    if (process.env.EMAIL_SERVER_HOST && process.env.EMAIL_SERVER_USER && process.env.EMAIL_SERVER_PASSWORD) {
+      console.log('[SMTP] Umgebungsvariablen-Konfiguration gefunden');
+      return {
+        smtp_host: process.env.EMAIL_SERVER_HOST,
+        smtp_port: process.env.EMAIL_SERVER_PORT || '587',
+        smtp_secure: process.env.EMAIL_SERVER_PORT === '465' ? 'true' : 'false',
+        smtp_username: process.env.EMAIL_SERVER_USER,
+        smtp_password: process.env.EMAIL_SERVER_PASSWORD,
+        smtp_from_email: process.env.EMAIL_FROM || process.env.EMAIL_SERVER_USER,
+        smtp_from_name: 'Brennholzkönig'
+      };
+    }
+    
+    // 2) Fallback: JSON-Konfiguration unter setting_type = 'smtp_config'
     const { data: jsonRows, error: jsonError } = await supabase
       .from('app_settings')
       .select('*')
@@ -83,7 +99,7 @@ export async function loadSMTPSettings(): Promise<SMTPSettings | null> {
       console.warn('[SMTP] Keine Einträge in setting_type = "smtp_config" gefunden, versuche Fallback auf smtp...');
     }
 
-    // 2) Fallback: Key-Value-Konfiguration unter setting_type = 'smtp'
+    // 3) Fallback: Key-Value-Konfiguration unter setting_type = 'smtp'
     const { data: kvData, error: kvError } = await supabase
       .from('app_settings')
       .select('setting_key, setting_value')
@@ -169,27 +185,57 @@ export async function createEmailTransporter() {
     throw new Error('Nodemailer createTransport Funktion nicht verfügbar');
   }
 
-  // Einfache SMTP-Konfiguration ohne Timeouts
-  const transportConfig = {
-    host: settings.smtp_host,
-    port: parseInt(settings.smtp_port),
-    secure: settings.smtp_secure === 'true', // true für Port 465 (SSL)
-    auth: {
-      user: settings.smtp_username,
-      pass: settings.smtp_password,
+  // Multi-Port-Fallback für Hetzner
+  const portConfigs = [
+    {
+      port: parseInt(settings.smtp_port),
+      secure: settings.smtp_secure === 'true',
+      name: `Port ${settings.smtp_port} (Konfiguriert)`
     },
-  };
+    {
+      port: 587,
+      secure: false,
+      name: 'Port 587 (STARTTLS)'
+    },
+    {
+      port: 25,
+      secure: false,
+      name: 'Port 25 (Standard)'
+    }
+  ];
 
-  console.log('[SMTP] Erstelle Transporter:', {
-    host: transportConfig.host,
-    port: transportConfig.port,
-    secure: transportConfig.secure,
-    user: transportConfig.auth.user
-  });
+  for (const config of portConfigs) {
+    try {
+      console.log(`[SMTP] Versuche Verbindung mit ${config.name}`);
+      
+      const transportConfig = {
+        host: settings.smtp_host,
+        port: config.port,
+        secure: config.secure,
+        auth: {
+          user: settings.smtp_username,
+          pass: settings.smtp_password,
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 5000,
+        socketTimeout: 10000
+      };
 
-  const transporter = nodemailer.createTransport(transportConfig);
+      const transporter = nodemailer.createTransport(transportConfig);
+      
+      // Teste Verbindung
+      await transporter.verify();
+      
+      console.log(`[SMTP] Erfolgreich verbunden mit ${config.name}`);
+      return { transporter, settings };
+      
+    } catch (error) {
+      console.warn(`[SMTP] ${config.name} fehlgeschlagen:`, error instanceof Error ? error.message : error);
+      continue;
+    }
+  }
 
-  return { transporter, settings };
+  throw new Error('Alle SMTP-Port-Konfigurationen fehlgeschlagen');
 }
 
 // Sende E-Mail mit dynamischen SMTP-Einstellungen
