@@ -20,8 +20,8 @@ export default function Footer() {
           <div>
             <div className="flex items-center mb-4">
               <img 
-                src="https://static.readdy.ai/image/5cb98375ce345c7331a1619afba21cba/501398866eb96573186841197a5add47.webp" 
-                alt="Brennholz Logo" 
+                src="/images/brennholzkoenig-logo-white.webp" 
+                alt="Brennholzkönig Logo" 
                 className="h-20 w-auto object-contain"
               />
             </div>

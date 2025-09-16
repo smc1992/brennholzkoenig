@@ -119,7 +119,7 @@ export default function Header() {
           <div className="flex justify-between items-center h-16 md:h-20" style={{overflow: 'visible'}}>
             <Link href="/" className="flex items-center flex-shrink-0">
               <img
-                src="https://public.readdy.ai/ai/img_res/86db7336-c7fd-4211-8615-9dceb4ceb922.jpg"
+                src="/images/brennholzkoenig-logo.webp"
                 alt="Brennholzkönig Logo"
                 className="h-12 md:h-20 w-auto object-contain"
               />
@@ -171,7 +171,7 @@ export default function Header() {
           <div className="flex justify-between items-center h-16 md:h-20" style={{pointerEvents: 'auto'}}>
             <Link href="/" className="flex items-center flex-shrink-0">
               <img
-                src="https://public.readdy.ai/ai/img_res/86db7336-c7fd-4211-8615-9dceb4ceb922.jpg"
+                src="/images/brennholzkoenig-logo.webp"
                 alt="Brennholzkönig Logo"
                 className="h-12 md:h-20 w-auto object-contain"
               />
