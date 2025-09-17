@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
           .from('app_settings')
           .insert({
             setting_type: 'email_log',
-            setting_name: `order_notification_${Date.now()}`,
+            setting_key: `order_notification_${Date.now()}`,
             setting_value: JSON.stringify({
               type: 'order_confirmation_customer',
               order_number: orderData.order_number,
@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
           .from('app_settings')
           .insert({
             setting_type: 'email_log',
-            setting_name: `admin_notification_${Date.now()}`,
+            setting_key: `admin_notification_${Date.now()}`,
             setting_value: JSON.stringify({
               type: 'order_confirmation_admin',
               order_number: orderData.order_number,

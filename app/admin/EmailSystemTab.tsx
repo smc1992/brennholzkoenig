@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 
 interface EmailTemplate {
   id: number;
-  setting_name: string;
+  setting_key: string;
   setting_type: string;
   setting_value: string;
   template: any; // Parsed JSON from setting_value
@@ -21,7 +21,7 @@ interface EmailLogData {
 
 interface EmailLog {
   id: number;
-  setting_name: string;
+  setting_key: string;
   setting_type: string;
   setting_value: string;
   log_data: EmailLogData;
@@ -227,7 +227,7 @@ export default function EmailSystemTab() {
         result = await supabase
           .from('app_settings')
           .update({
-            setting_name: templateForm.name,
+            setting_key: templateForm.name,
             setting_value: JSON.stringify(templateData),
             updated_at: new Date().toISOString()
           })
@@ -238,7 +238,7 @@ export default function EmailSystemTab() {
         result = await supabase
           .from('app_settings')
           .insert({
-            setting_name: templateForm.name,
+            setting_key: templateForm.name,
             setting_type: 'email_template',
             setting_value: JSON.stringify(templateData),
             description: `E-Mail Template: ${templateForm.name}`,

@@ -92,7 +92,7 @@ export default function AdminConfigTab() {
         result = await supabase
           .from('app_settings')
           .insert({
-            setting_name: 'admin_configuration',
+            setting_key: 'admin_configuration',
             setting_type: 'admin_config',
             setting_value: JSON.stringify(configData),
             description: 'Administrator-Konfiguration',
