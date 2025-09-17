@@ -93,10 +93,10 @@ function generateEmailHeader(): string {
     <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; border-bottom: 4px solid #C04020;">
       <img src="${COMPANY_INFO.logo_url}" alt="${COMPANY_INFO.name} Logo" style="height: 80px; width: auto; margin-bottom: 20px;" />
       <h1 style="color: #C04020; font-size: 28px; font-weight: bold; margin: 0; font-family: 'Inter', Arial, sans-serif;">
-        🔥 ${COMPANY_INFO.name}
+        🔥 Brennholzkönig
       </h1>
       <p style="color: #6c757d; font-size: 16px; margin: 5px 0 0; font-family: Arial, sans-serif;">
-        ${COMPANY_INFO.business}
+        Thorsten Vey Brennholzhandel
       </p>
     </div>
   `;
