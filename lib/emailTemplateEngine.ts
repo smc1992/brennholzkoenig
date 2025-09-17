@@ -178,32 +178,8 @@ export function replacePlaceholders(content: string, data: TemplateData): string
   result = result.replace(/{{order_total}}/g, data.order_total ? `${data.order_total}` : '0,00 €');
   result = result.replace(/{{order_date}}/g, data.order_date || new Date().toLocaleDateString('de-DE'));
   
-  // Automatisches Hinzufügen von Header und Footer wenn nicht vorhanden
-  if (!result.includes('Brennholzkönig') || !result.includes(COMPANY_INFO.phone)) {
-    const emailHeader = generateEmailHeader();
-    const emailFooter = generateEmailFooter();
-    
-    // Wrap content in professional email structure
-    result = `
-      <!DOCTYPE html>
-      <html lang="de">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>E-Mail von ${COMPANY_INFO.name}</title>
-      </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
-        <div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-          ${emailHeader}
-          <div style="padding: 30px 20px;">
-            ${result}
-          </div>
-          ${emailFooter}
-        </div>
-      </body>
-      </html>
-    `;
-  }
+  // Templates enthalten bereits vollständige HTML-Struktur mit Header und Footer
+  // Keine automatische Generierung mehr erforderlich
   
   // Fallback für nicht ersetzte Platzhalter (leere Strings)
   result = result.replace(/{{[^}]+}}/g, '');
