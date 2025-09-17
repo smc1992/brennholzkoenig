@@ -266,33 +266,56 @@ export default function EmailSystemTab() {
   const insertPlaceholder = (placeholder: string) => {
     if (templateForm.editor_mode === 'visual') {
       // Insert into visual editor
-      const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        const span = document.createElement('span');
-        span.className = 'inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm mx-1';
-        span.textContent = placeholder;
-        span.contentEditable = 'false';
-        span.style.userSelect = 'none';
-        range.deleteContents();
-        range.insertNode(span);
-        
-        // Cursor nach dem Platzhalter positionieren
-        range.setStartAfter(span);
-        range.collapse(true);
-        selection.removeAllRanges();
-        selection.addRange(range);
-        
-        // Content aktualisieren
-        const editor = document.querySelector('[contenteditable="true"]') as HTMLDivElement;
-        if (editor) {
+      const editor = document.querySelector('[contenteditable="true"]') as HTMLDivElement;
+      if (editor) {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          
+          // Erstelle Platzhalter-Element
+          const span = document.createElement('span');
+          span.className = 'inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm mx-1';
+          span.textContent = placeholder;
+          span.contentEditable = 'false';
+          span.style.userSelect = 'none';
+          span.style.display = 'inline-block';
+          span.style.margin = '0 2px';
+          
+          // Füge Platzhalter ein
+          range.deleteContents();
+          range.insertNode(span);
+          
+          // Cursor nach dem Platzhalter positionieren
+          range.setStartAfter(span);
+          range.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(range);
+          
+          // Content aktualisieren
+          setTemplateForm(prev => ({ ...prev, html_content: editor.innerHTML }));
+        } else {
+          // Fallback: Am Ende einfügen
+          editor.focus();
+          const span = document.createElement('span');
+          span.className = 'inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm mx-1';
+          span.textContent = placeholder;
+          span.contentEditable = 'false';
+          span.style.userSelect = 'none';
+          span.style.display = 'inline-block';
+          span.style.margin = '0 2px';
+          
+          editor.appendChild(span);
+          
+          // Cursor nach dem Platzhalter setzen
+          const range = document.createRange();
+          const selection = window.getSelection();
+          range.setStartAfter(span);
+          range.collapse(true);
+          selection?.removeAllRanges();
+          selection?.addRange(range);
+          
           setTemplateForm(prev => ({ ...prev, html_content: editor.innerHTML }));
         }
-      } else {
-        // Fallback: Am Ende einfügen
-        const currentContent = templateForm.html_content;
-        const newContent = currentContent + ` <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm mx-1" contenteditable="false" style="user-select: none;">${placeholder}</span> `;
-        setTemplateForm(prev => ({ ...prev, html_content: newContent }));
       }
     } else {
       // Insert into code editor
@@ -303,10 +326,18 @@ export default function EmailSystemTab() {
         const text = textarea.value;
         const newText = text.substring(0, start) + placeholder + text.substring(end);
         setTemplateForm(prev => ({ ...prev, html_content: newText }));
+        
+        // Cursor nach dem Platzhalter positionieren
         setTimeout(() => {
           textarea.focus();
           textarea.setSelectionRange(start + placeholder.length, start + placeholder.length);
         }, 0);
+      } else {
+        // Fallback: Direkt zum Content hinzufügen
+        setTemplateForm(prev => ({ 
+          ...prev, 
+          html_content: prev.html_content + placeholder 
+        }));
       }
     }
   };

@@ -72,6 +72,9 @@ export async function loadEmailTemplate(type: string): Promise<EmailTemplate | n
 export function replacePlaceholders(content: string, data: TemplateData): string {
   let result = content;
   
+  // Entferne HTML-Platzhalter-Spans falls vorhanden (aus Visual Editor)
+  result = result.replace(/<span[^>]*class="[^"]*bg-blue-100[^"]*"[^>]*>([^<]+)<\/span>/g, '$1');
+  
   // Standard-Platzhalter ersetzen
   Object.entries(data).forEach(([key, value]) => {
     const placeholder = `{{${key}}}`;
@@ -82,6 +85,9 @@ export function replacePlaceholders(content: string, data: TemplateData): string
   // Spezielle Formatierungen
   result = result.replace(/{{order_total}}/g, data.order_total ? `${data.order_total}` : '0,00 €');
   result = result.replace(/{{order_date}}/g, data.order_date || new Date().toLocaleDateString('de-DE'));
+  
+  // Fallback für nicht ersetzte Platzhalter (leere Strings)
+  result = result.replace(/{{[^}]+}}/g, '');
   
   return result;
 }
