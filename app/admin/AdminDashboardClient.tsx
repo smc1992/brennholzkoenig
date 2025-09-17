@@ -42,6 +42,7 @@ import QuickRepliesTab from './QuickRepliesTab';
 import FAQManagementTab from './FAQManagementTab';
 import InvoiceTab from './InvoiceTab';
 import InvoiceSettingsTab from './InvoiceSettingsTab';
+import AdminConfigTab from './AdminConfigTab';
 
 interface AdminDashboardProps {
   adminUser: any;
@@ -357,6 +358,7 @@ export default function AdminDashboardClient({
         { id: 'quick-replies', label: 'Schnellantworten', icon: 'ri-chat-quote-line' },
         { id: 'faq', label: 'FAQ', icon: 'ri-question-answer-line' },
         { id: 'invoice-settings', label: 'Rechnungseinstellungen', icon: 'ri-settings-4-line' },
+        { id: 'admin-config', label: 'Admin-Konfiguration', icon: 'ri-admin-line' },
         { id: 'backup', label: 'Backup', icon: 'ri-archive-drawer-line' },
         { id: 'settings', label: 'Einstellungen', icon: 'ri-settings-line' }
       ]
@@ -487,6 +489,9 @@ export default function AdminDashboardClient({
       case 'settings': 
          console.log('AdminDashboard: Rendering DashboardSettingsTab');
          return <DashboardSettingsTab />;
+      case 'admin-config':
+         console.log('AdminDashboard: Rendering AdminConfigTab');
+         return <AdminConfigTab />;
        default: return <StatsTab stats={stats} onRefresh={loadStats} onTabChange={setActiveTab} />;
     }
   };

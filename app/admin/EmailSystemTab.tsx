@@ -191,44 +191,98 @@ export default function EmailSystemTab() {
     try {
       setSaving(true);
       
+      // Validierung
+      if (!templateForm.name.trim()) {
+        alert('Bitte geben Sie einen Template-Namen ein.');
+        return;
+      }
+      
+      if (!templateForm.subject.trim()) {
+        alert('Bitte geben Sie einen Betreff ein.');
+        return;
+      }
+      
+      if (!templateForm.html_content.trim()) {
+        alert('Bitte geben Sie einen E-Mail-Inhalt ein.');
+        return;
+      }
+      
       const templateData = {
         subject: templateForm.subject,
         html_content: templateForm.html_content,
-        text_content: templateForm.text_content,
+        text_content: templateForm.text_content || templateForm.html_content.replace(/<[^>]*>/g, ''),
         type: templateForm.type,
         active: templateForm.active,
         triggers: templateForm.triggers,
         attachments: templateForm.attachments,
+        target_audience: templateForm.type === 'order_confirmation' ? 'customer' : 'customer', // customer oder admin
+        admin_notification: templateForm.triggers?.order_confirmation || false,
+        created_at: editingTemplate ? undefined : new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
+      let result;
       if (editingTemplate) {
         // Update existing template
-        await supabase
+        result = await supabase
           .from('app_settings')
           .update({
             setting_name: templateForm.name,
-            setting_value: JSON.stringify(templateData)
+            setting_value: JSON.stringify(templateData),
+            updated_at: new Date().toISOString()
           })
-          .eq('id', editingTemplate.id);
+          .eq('id', editingTemplate.id)
+          .select();
       } else {
         // Create new template
-        await supabase
+        result = await supabase
           .from('app_settings')
           .insert({
             setting_name: templateForm.name,
             setting_type: 'email_template',
             setting_value: JSON.stringify(templateData),
-            description: `E-Mail Template: ${templateForm.name}`
-          });
+            description: `E-Mail Template: ${templateForm.name}`,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select();
       }
+      
+      if (result.error) {
+        throw result.error;
+      }
+      
+      console.log('Template saved successfully:', result.data);
 
+      // Form zurücksetzen
+      setTemplateForm({
+        name: '',
+        subject: '',
+        html_content: '',
+        text_content: '',
+        type: 'order_confirmation',
+        active: true,
+        preview_mode: false,
+        editor_mode: 'visual',
+        attachments: [],
+        triggers: {
+          order_confirmation: false,
+          shipping_notification: false,
+          newsletter: false,
+          low_stock: false
+        }
+      });
+      
       setShowTemplateModal(false);
-      loadEmailSettings(); // Reload templates
+      setEditingTemplate(null);
+      
+      // Templates neu laden
+      await loadEmailSettings();
+      
       alert(editingTemplate ? 'Template erfolgreich aktualisiert!' : 'Template erfolgreich erstellt!');
     } catch (error) {
       console.error('Error saving template:', error);
-      alert('Fehler beim Speichern des Templates');
+      alert(`Fehler beim Speichern des Templates: ${(error as Error).message}`);
     } finally {
       setSaving(false);
     }
@@ -2116,6 +2170,33 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`
                     <h4 className="text-sm font-semibold text-blue-800 mb-3">Automatische Trigger</h4>
                     <div className="space-y-3">
                       
+                      {/* Template-Typ Auswahl */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Template-Zielgruppe
+                        </label>
+                        <select
+                          value={templateForm.type === 'admin_notification' ? 'admin' : 'customer'}
+                          onChange={(e) => {
+                            const isAdmin = e.target.value === 'admin';
+                            setTemplateForm(prev => ({
+                              ...prev,
+                              type: isAdmin ? 'admin_notification' : 'order_confirmation'
+                            }));
+                          }}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                        >
+                          <option value="customer">Kunde (Bestellbestätigung)</option>
+                          <option value="admin">Administrator (Benachrichtigung)</option>
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {templateForm.type === 'admin_notification' 
+                            ? 'Diese E-Mail wird an die Admin-E-Mail-Adresse gesendet'
+                            : 'Diese E-Mail wird an den Kunden gesendet'
+                          }
+                        </p>
+                      </div>
+
                       {/* Bestellbestätigung Trigger */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
@@ -2137,7 +2218,7 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`
                           </label>
                         </div>
                         <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                          Bestellbestätigung
+                          {templateForm.type === 'admin_notification' ? 'An Admin' : 'An Kunde'}
                         </span>
                       </div>
 
