@@ -116,51 +116,63 @@ export class ModernInvoiceBuilder {
           memoryUsage: process.memoryUsage()
         });
         
-        this.browser = await puppeteer.launch({
+        // Bewährte Praktiken für Container-Umgebungen basierend auf Community-Feedback
+         const browserArgs = [
+           '--no-sandbox',
+           '--disable-setuid-sandbox',
+           '--disable-dev-shm-usage',
+           '--disable-gpu',
+           '--disable-software-rasterizer',
+           '--disable-background-timer-throttling',
+           '--disable-backgrounding-occluded-windows',
+           '--disable-renderer-backgrounding',
+           '--disable-extensions',
+           '--disable-default-apps',
+           '--disable-sync',
+           '--no-first-run',
+           '--no-default-browser-check',
+           '--memory-pressure-off',
+           '--disable-ipc-flooding-protection',
+           '--disable-background-networking',
+           '--disable-client-side-phishing-detection',
+           '--disable-hang-monitor',
+           '--disable-popup-blocking',
+           '--disable-prompt-on-repost',
+           '--metrics-recording-only',
+           '--force-color-profile=srgb'
+         ];
+         
+         // Container-spezifische Optimierungen
+         if (isProduction) {
+           browserArgs.push(
+             '--single-process',  // Kritisch für Container-Stabilität
+             '--disable-web-security',
+             '--disable-features=VizDisplayCompositor',
+             '--disable-breakpad',
+             '--disable-component-extensions-with-background-pages',
+             '--disable-features=TranslateUI',
+             '--use-mock-keychain',
+             '--password-store=basic'
+           );
+         }
+         
+         this.browser = await puppeteer.launch({
            headless: true,
-          executablePath,
-          args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-gpu',
-            '--no-first-run',
-            '--no-zygote',
-            '--single-process',
-            '--disable-web-security',
-            '--disable-features=VizDisplayCompositor,AudioServiceOutOfProcess',
-            '--disable-background-timer-throttling',
-            '--disable-backgrounding-occluded-windows',
-            '--disable-renderer-backgrounding',
-            '--disable-extensions',
-            '--disable-plugins',
-            '--disable-default-apps',
-            '--disable-ipc-flooding-protection',
-            '--disable-background-networking',
-            '--disable-sync',
-            '--metrics-recording-only',
-            '--no-default-browser-check',
-            '--no-experiments',
-            '--no-pings',
-            '--password-store=basic',
-            '--use-mock-keychain',
-            '--disable-accelerated-2d-canvas',
-            '--disable-accelerated-jpeg-decoding',
-            '--disable-accelerated-mjpeg-decode',
-            '--disable-accelerated-video-decode',
-            '--disable-accelerated-video-encode',
-            '--disable-app-list-dismiss-on-blur',
-            '--disable-background-mode',
-            '--force-color-profile=srgb',
-            '--memory-pressure-off',
-            '--max_old_space_size=4096'
-          ],
-          timeout: 120000,
-          protocolTimeout: 120000,
-          handleSIGINT: false,
-          handleSIGTERM: false,
-          handleSIGHUP: false
-        });
+           executablePath,
+           args: browserArgs,
+           timeout: 60000,         // Reduziert für schnellere Fehlererkennnung
+           protocolTimeout: 60000,
+           handleSIGINT: false,
+           handleSIGTERM: false,
+           handleSIGHUP: false,
+           ignoreDefaultArgs: false,  // Verwende Standard-Args
+           defaultViewport: {
+             width: 1024,
+             height: 768,
+             deviceScaleFactor: 1
+           },
+           pipe: true  // Verwende Pipes statt WebSocket für bessere Stabilität
+         });
         
         // Browser-Verbindung testen
         const pages = await this.browser.pages();

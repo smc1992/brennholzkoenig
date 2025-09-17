@@ -90,24 +90,38 @@ curl -X POST "https://deine-domain.com/api/invoice-builder" \
 
 ## Troubleshooting
 
+### Problem: "Protocol error (Target.setAutoAttach): Target closed"
+
+**Ursache:** Browser-Prozess wird unerwartet beendet, meist durch Memory-Mangel <mcreference link="https://github.com/puppeteer/puppeteer/issues/10855" index="1">1</mcreference>
+
+**Lösung:**
+1. Memory auf mindestens 2GB erhöhen (KRITISCH!)
+2. `--single-process` Flag nur in Produktion verwenden
+3. `pipe: true` für bessere Stabilität
+4. Non-root User verwenden (pptruser)
+
 ### Problem: "Failed to launch chrome!"
 
 **Lösung:**
 1. Prüfe ob `Dockerfile.puppeteer` verwendet wird
-2. Stelle sicher dass Memory ≥ 1GB ist
+2. Stelle sicher dass Memory ≥ 2GB ist <mcreference link="https://raslasarslas.medium.com/how-to-make-puppeteer-in-docker-both-in-local-en-prod-env-bb92628b2da6" index="4">4</mcreference>
 3. Prüfe Build-Logs auf Chrome-Installation
+4. Verwende non-root User (pptruser)
 
 ### Problem: "spawn ENOENT"
 
 **Lösung:**
 1. Prüfe `PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable`
 2. Restart der Anwendung
+3. Prüfe Chrome-Installation im Container
 
-### Problem: Memory-Fehler
+### Problem: Memory-Fehler / OOM Kills
 
 **Lösung:**
-1. Memory auf 1.5GB oder 2GB erhöhen
+1. Memory auf 2GB oder mehr erhöhen <mcreference link="https://pptr.dev/troubleshooting" index="5">5</mcreference>
 2. CPU auf 1000m erhöhen
+3. `--memory-pressure-off` Flag verwenden
+4. Container-Logs auf OOM-Kills prüfen
 
 ### Problem: Build schlägt fehl
 
@@ -115,6 +129,7 @@ curl -X POST "https://deine-domain.com/api/invoice-builder" \
 1. Prüfe ob alle Umgebungsvariablen gesetzt sind
 2. Verwende `Dockerfile.puppeteer` statt Standard-Dockerfile
 3. Prüfe GitHub-Repository-Zugriff
+4. Verwende bewährte Chrome-Installation <mcreference link="https://dev.to/cloudx/how-to-use-puppeteer-inside-a-docker-container-568c" index="5">5</mcreference>
 
 ## Coolify-spezifische Konfiguration
 
