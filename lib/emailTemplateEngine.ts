@@ -79,7 +79,7 @@ const COMPANY_INFO = {
   phone: '+49 176 71085234',
   email: 'info@brennholz-koenig.de',
   website: 'www.brennholzkoenig.de',
-  logo_url: '/images/Brennholzkönig%20transparent.webp?v=4&t=1695730300',
+  logo_url: 'https://brennholz-koenig.de/images/Brennholzkönig%20transparent.webp?v=4&t=1695730300',
   business_hours: {
     weekdays: 'Montag - Freitag: 8:00 - 18:00 Uhr',
     saturday: 'Samstag: 9:00 - 16:00 Uhr',
