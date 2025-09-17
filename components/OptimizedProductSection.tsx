@@ -145,17 +145,20 @@ export default function OptimizedProductSection({
       if (existingIndex >= 0) {
         currentCart[existingIndex].quantity += quantity;
       } else {
+        console.log('🛒 Adding product to cart:', product);
+        console.log('🖼️ Product image_url:', product.image_url);
         currentCart.push({
           id: product.id.toString(),
           name: product.name,
           category: product.category,
           price: product.price.toString(),
           basePrice: product.price,
-          image_url: product.image_url,
+          image_url: product.image_url || '',
           unit: product.unit,
           quantity: quantity,
           stock_quantity: product.stock_quantity
         });
+        console.log('💾 Cart item saved:', currentCart[currentCart.length - 1]);
       }
       
       localStorage.setItem('cart', JSON.stringify(currentCart));

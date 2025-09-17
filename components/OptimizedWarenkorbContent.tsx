@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { calculatePriceWithTiers, getPriceInfoForQuantity } from '../lib/pricing';
+import { getCDNUrl } from '../utils/cdn';
 import Link from 'next/link';
 
 interface CartItem {
@@ -150,12 +151,15 @@ export default function OptimizedWarenkorbContent({
   const loadCartFromStorage = async () => {
     if (typeof window !== 'undefined') {
       const savedCart = localStorage.getItem('cart');
+      console.log('🛒 Loading cart from localStorage:', savedCart);
       if (savedCart) {
         try {
           const parsedCart = JSON.parse(savedCart);
+          console.log('📦 Parsed cart data:', parsedCart);
           
           // Lade aktuelle Produktdaten aus der Datenbank (Name, Bild, has_quantity_discount)
           const productIds = parsedCart.map((item: any) => parseInt(item.id)).filter((id: number) => !isNaN(id));
+          console.log('🔍 Product IDs to fetch:', productIds);
           
           let productData: any[] = [];
           if (productIds.length > 0) {
@@ -164,6 +168,7 @@ export default function OptimizedWarenkorbContent({
               .select('id, name, image_url, has_quantity_discount, price')
               .in('id', productIds);
             productData = data || [];
+            console.log('📊 Product data from DB:', productData);
           }
           
           // Berechne Gesamtmenge für korrekte Preisberechnung
@@ -176,7 +181,7 @@ export default function OptimizedWarenkorbContent({
             // Verwende Gesamtmenge für Preisberechnung
             const pricing = calculatePriceWithTiers(basePrice, totalQuantity, pricingTiers, minOrderQuantity, product?.has_quantity_discount || false);
             
-            return {
+            const formattedItem = {
               id: parseInt(item.id),
               name: product?.name || item.name, // Verwende aktuellen Namen aus DB
               price: pricing.price.toString(),
@@ -187,11 +192,16 @@ export default function OptimizedWarenkorbContent({
               category: item.category,
               has_quantity_discount: product?.has_quantity_discount || false
             };
+            console.log('🖼️ Formatted cart item:', formattedItem);
+            return formattedItem;
           });
+          console.log('✅ Final formatted cart:', formattedCart);
           setCartItems(formattedCart);
         } catch (error) {
           console.error('Fehler beim Laden des Warenkorbs:', error);
         }
+      } else {
+        console.log('📭 No cart data in localStorage');
       }
     }
     setIsLoading(false);
@@ -511,7 +521,7 @@ export default function OptimizedWarenkorbContent({
                           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 mx-auto sm:mx-0">
                             {item.image ? (
                               <img 
-                                src={item.image} 
+                                src={getCDNUrl(item.image)} 
                                 alt={item.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {

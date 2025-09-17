@@ -11,6 +11,7 @@ import GoogleAnalytics from '../components/GoogleAnalytics';
 import FacebookPixel from '../components/FacebookPixel';
 import PushNotifications from '@/components/PushNotifications';
 import GoogleAdsTracking from '../components/GoogleAdsTracking';
+import MicrosoftClarity from '../components/MicrosoftClarity';
 // PWA functionality removed
 import AnalyticsTracker from '@/components/AnalyticsTracker';
 import { QueryProvider } from '@/components/QueryProvider';
@@ -116,6 +117,7 @@ export default function RootLayout({
           <GoogleAnalytics />
           <FacebookPixel pixelId="123456789012345" />
           <GoogleAdsTracking />
+          <MicrosoftClarity />
           <AnalyticsTracker />
           <PerformanceMonitor />
           <PushNotifications />

@@ -162,42 +162,43 @@ export function useRealtimeSync(): RealtimeSyncHook {
 
     console.log('🔄 Activating real-time subscription for products and images...');
     
-    const channel = supabase
-      .channel('products_and_images_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'products'
-        },
-        (payload: any) => {
-          console.log('Product change detected:', payload);
-          // Refresh products when any product changes
-          refreshProducts();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'image_mappings'
-        },
-        (payload: any) => {
-          console.log('Image mapping change detected:', payload);
-          // Refresh products to get updated image URLs
-          refreshProducts();
-          
-          // Dispatch custom event for image components
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('imageChange', {
-              detail: { 
-                action: payload.eventType,
-                productId: payload.new?.product_id || payload.old?.product_id,
-                seoSlug: payload.new?.seo_slug || payload.old?.seo_slug
-              }
-            }));
+    try {
+      const channel = supabase
+        .channel('products_and_images_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'products'
+          },
+          (payload: any) => {
+            console.log('Product change detected:', payload);
+            // Refresh products when any product changes
+            refreshProducts();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'image_mappings'
+          },
+          (payload: any) => {
+            console.log('Image mapping change detected:', payload);
+            // Refresh products to get updated image URLs
+            refreshProducts();
+            
+            // Dispatch custom event for image components
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('imageChange', {
+                detail: { 
+                  action: payload.eventType,
+                  productId: payload.new?.product_id || payload.old?.product_id,
+                  seoSlug: payload.new?.seo_slug || payload.old?.seo_slug
+                }
+              }));
           }
         }
       )
@@ -205,10 +206,25 @@ export function useRealtimeSync(): RealtimeSyncHook {
         console.log('Real-time subscription status:', status);
         if (status === 'SUBSCRIBED') {
           console.log('✅ Real-time subscription active for products and images');
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          console.warn('⚠️ Real-time subscription failed:', status);
+          console.log('📡 Falling back to periodic refresh only');
+          // Don't retry immediately to avoid spam
+          setTimeout(() => {
+            if (!subscription) {
+              console.log('🔄 Retrying real-time subscription...');
+              subscribeToChanges();
+            }
+          }, 30000); // Retry after 30 seconds
         }
       });
     
-    setSubscription(channel);
+      setSubscription(channel);
+    } catch (error) {
+      console.error('❌ Failed to setup real-time subscription:', error);
+      console.log('📡 Continuing with periodic refresh fallback');
+      // Continue without real-time updates - periodic refresh will handle updates
+    }
   }, [subscription, refreshProducts]);
 
   const unsubscribeFromChanges = useCallback(() => {

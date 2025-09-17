@@ -704,6 +704,43 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
       processedItems.push(deliveryItem);
     }
     
+    // Füge Gutschein als separate Position hinzu falls vorhanden
+    if (order.discount_amount && parseFloat(order.discount_amount) > 0) {
+      let discountDescription = 'Gutschein/Rabatt';
+      
+      // Hole Gutschein-Details falls discount_code_id vorhanden
+      if (order.discount_code_id) {
+        try {
+          const { data: discountCode } = await supabase
+            .from('discount_codes')
+            .select('code, description')
+            .eq('id', order.discount_code_id)
+            .single();
+          
+          if (discountCode) {
+            discountDescription = `Gutschein (${discountCode.code})`;
+            if (discountCode.description) {
+              discountDescription += ` - ${discountCode.description}`;
+            }
+          }
+        } catch (error) {
+          console.warn('Could not fetch discount code details:', error);
+        }
+      }
+      
+      const discountItem = {
+        description: discountDescription,
+        quantity: 1,
+        unit_price: -parseFloat(order.discount_amount),
+        total_price: -parseFloat(order.discount_amount),
+        product_code: 'DISCOUNT',
+        tax_included: companySettings.default_tax_included || false
+      };
+      
+      console.log('🎫 Adding discount item:', discountItem);
+      processedItems.push(discountItem);
+    }
+    
     // Berechne Summen basierend auf Steuereinstellung
      let calculatedSubtotal = 0;
      let calculatedTaxAmount = 0;
