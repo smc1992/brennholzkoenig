@@ -101,8 +101,16 @@ export class ModernInvoiceBuilder {
       }
       
       console.log('🚀 Launching new Puppeteer browser...');
+      
+      // Produktionsumgebung erkennen und entsprechende Konfiguration verwenden
+      const isProduction = process.env.NODE_ENV === 'production';
+      const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || (isProduction ? '/usr/bin/chromium-browser' : undefined);
+      
+      console.log('Environment:', { isProduction, executablePath });
+      
       this.browser = await puppeteer.launch({
         headless: true,
+        executablePath,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -118,7 +126,17 @@ export class ModernInvoiceBuilder {
           '--disable-renderer-backgrounding',
           '--disable-extensions',
           '--disable-plugins',
-          '--disable-default-apps'
+          '--disable-default-apps',
+          '--disable-ipc-flooding-protection',
+          '--disable-background-networking',
+          '--disable-default-apps',
+          '--disable-sync',
+          '--metrics-recording-only',
+          '--no-default-browser-check',
+          '--no-experiments',
+          '--no-pings',
+          '--password-store=basic',
+          '--use-mock-keychain'
         ],
         timeout: 90000,
         protocolTimeout: 90000
@@ -128,9 +146,27 @@ export class ModernInvoiceBuilder {
       await new Promise(resolve => setTimeout(resolve, 1000));
       console.log('✅ Browser initialized successfully');
     } catch (error) {
-      console.error('❌ Failed to initialize Puppeteer browser:', error);
+      const err = error as Error;
+      console.error('❌ Failed to initialize Puppeteer browser:', err);
+      console.error('Error details:', {
+        message: err.message,
+        stack: err.stack,
+        environment: process.env.NODE_ENV,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH
+      });
+      
+      // Detaillierte Fehlermeldung für Produktionsumgebung
+      if (process.env.NODE_ENV === 'production') {
+        console.error('🚨 Production PDF generation failed. Possible causes:');
+        console.error('1. Chromium not installed in Docker container');
+        console.error('2. Missing system dependencies');
+        console.error('3. Insufficient memory or resources');
+        console.error('4. Security restrictions in container');
+        console.error('💡 Solution: Use Dockerfile.puppeteer for proper Chromium support');
+      }
+      
       this.browser = null;
-      throw error;
+      throw new Error(`PDF generation failed: ${err.message}. Check server logs for details.`);
     }
   }
 

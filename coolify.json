@@ -1,16 +1,23 @@
 {
   "port": 3000,
-  "healthCheckPath": "/_health",
+  "healthCheckPath": "/api/_health",
   "buildCommand": "npm run build",
   "startCommand": "npm start",
+  "dockerfile": "Dockerfile.puppeteer",
   "environment": {
     "NODE_ENV": "production",
-    "NEXT_TELEMETRY_DISABLED": "1"
+    "NEXT_TELEMETRY_DISABLED": "1",
+    "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "true",
+    "PUPPETEER_EXECUTABLE_PATH": "/usr/bin/google-chrome-stable"
   },
   "volumes": [],
   "networks": [],
   "labels": {
     "coolify.managed": "true",
     "coolify.type": "application"
+  },
+  "resources": {
+    "memory": "1024Mi",
+    "cpu": "500m"
   }
 }

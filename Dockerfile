@@ -1,5 +1,20 @@
 FROM node:18-alpine
 
+# Puppeteer-Abhängigkeiten installieren
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    && rm -rf /var/cache/apk/*
+
+# Puppeteer konfigurieren um das installierte Chromium zu verwenden
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
 # Arbeitsverzeichnis erstellen
 WORKDIR /app
 

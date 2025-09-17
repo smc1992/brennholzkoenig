@@ -1,0 +1,60 @@
+FROM node:18-slim
+
+# Puppeteer-Abhängigkeiten für Debian installieren
+RUN apt-get update \
+    && apt-get install -y wget gnupg \
+    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 \
+      --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
+# Puppeteer konfigurieren
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+
+# Arbeitsverzeichnis erstellen
+WORKDIR /app
+
+# Build-Args für Supabase-Umgebungsvariablen definieren
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG NEXT_PUBLIC_SERVICE_ROLE_KEY
+ARG NEXT_PUBLIC_SITE_URL
+
+# Umgebungsvariablen setzen
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+
+# Supabase-Umgebungsvariablen für Build-Zeit setzen
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV NEXT_PUBLIC_SERVICE_ROLE_KEY=$NEXT_PUBLIC_SERVICE_ROLE_KEY
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+
+# Abhängigkeiten installieren
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Anwendungsdateien kopieren
+COPY . .
+
+# Anwendung bauen (mit verfügbaren Umgebungsvariablen)
+RUN npm run build
+
+# Port freigeben
+EXPOSE 3000
+
+# Non-root user für Sicherheit
+RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
+    && mkdir -p /home/pptruser/Downloads \
+    && chown -R pptruser:pptruser /home/pptruser \
+    && chown -R pptruser:pptruser /app
+
+# Als non-root user ausführen
+USER pptruser
+
+# Server starten
+CMD ["npm", "run", "start"]
