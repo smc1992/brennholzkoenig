@@ -79,9 +79,9 @@ export async function POST(request: NextRequest) {
     // Sende E-Mail an Kunden
     for (const template of customerTemplates) {
       try {
-        const subject = replacePlaceholders(template.template.subject, templateData);
-        const htmlContent = replacePlaceholders(template.template.html_content, templateData);
-        const textContent = replacePlaceholders(
+        const subject = await replacePlaceholders(template.template.subject, templateData);
+        const htmlContent = await replacePlaceholders(template.template.html_content, templateData);
+        const textContent = await replacePlaceholders(
           template.template.text_content || template.template.html_content.replace(/<[^>]*>/g, ''), 
           templateData
         );
@@ -156,9 +156,9 @@ export async function POST(request: NextRequest) {
     // Sende E-Mail an Admin
     for (const template of adminTemplates) {
       try {
-        const subject = replacePlaceholders(template.template.subject, templateData);
-        const htmlContent = replacePlaceholders(template.template.html_content, templateData);
-        const textContent = replacePlaceholders(
+        const subject = await replacePlaceholders(template.template.subject, templateData);
+        const htmlContent = await replacePlaceholders(template.template.html_content, templateData);
+        const textContent = await replacePlaceholders(
           template.template.text_content || template.template.html_content.replace(/<[^>]*>/g, ''), 
           templateData
         );

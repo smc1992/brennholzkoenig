@@ -148,8 +148,50 @@ function generateEmailFooter(): string {
   `;
 }
 
+// Lade globale E-Mail-Signatur
+async function loadGlobalSignature(): Promise<{ enabled: boolean; html_signature: string; text_signature: string } | null> {
+  try {
+    const { data: signatureData } = await supabase
+      .from('app_settings')
+      .select('setting_value')
+      .eq('setting_key', 'global_email_signature')
+      .eq('setting_type', 'email_config')
+      .single();
+
+    if (signatureData) {
+      return JSON.parse(signatureData.setting_value);
+    }
+  } catch (error) {
+    console.error('Error loading global signature:', error);
+  }
+  return null;
+}
+
+// Füge globale Signatur zu E-Mail hinzu
+async function appendGlobalSignature(content: string): Promise<string> {
+  const signature = await loadGlobalSignature();
+  
+  if (!signature || !signature.enabled) {
+    return content;
+  }
+
+  // Prüfe ob es HTML-Content ist
+  if (content.includes('<html') || content.includes('<!DOCTYPE')) {
+    // HTML-Signatur vor dem schließenden </body> Tag einfügen
+    if (content.includes('</body>')) {
+      return content.replace('</body>', `${signature.html_signature}</body>`);
+    } else {
+      // Falls kein </body> Tag, am Ende hinzufügen
+      return content + signature.html_signature;
+    }
+  } else {
+    // Text-Signatur für Plain-Text E-Mails
+    return content + signature.text_signature;
+  }
+}
+
 // Ersetze Platzhalter in Template-Inhalt
-export function replacePlaceholders(content: string, data: TemplateData): string {
+export async function replacePlaceholders(content: string, data: TemplateData): Promise<string> {
   let result = content;
   
   // Entferne HTML-Platzhalter-Spans falls vorhanden (aus Visual Editor)
@@ -180,6 +222,9 @@ export function replacePlaceholders(content: string, data: TemplateData): string
   
   // Templates enthalten bereits vollständige HTML-Struktur mit Header und Footer
   // Keine automatische Generierung mehr erforderlich
+  
+  // Globale E-Mail-Signatur hinzufügen
+  result = await appendGlobalSignature(result);
   
   // Fallback für nicht ersetzte Platzhalter (leere Strings)
   result = result.replace(/{{[^}]+}}/g, '');
@@ -219,9 +264,9 @@ export async function sendTemplateEmail(
     };
 
     // Platzhalter ersetzen
-    const subject = replacePlaceholders(template.template.subject, completeData);
-    const htmlContent = replacePlaceholders(template.template.html_content, completeData);
-    const textContent = replacePlaceholders(template.template.text_content, completeData);
+    const subject = await replacePlaceholders(template.template.subject, completeData);
+    const htmlContent = await replacePlaceholders(template.template.html_content, completeData);
+    const textContent = await replacePlaceholders(template.template.text_content, completeData);
 
     console.log(`[EmailTemplate] Sende E-Mail an: ${recipientEmail}`);
     console.log(`[EmailTemplate] Betreff: ${subject}`);

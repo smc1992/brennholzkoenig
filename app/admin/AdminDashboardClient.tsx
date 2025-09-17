@@ -43,6 +43,7 @@ import FAQManagementTab from './FAQManagementTab';
 import InvoiceTab from './InvoiceTab';
 import InvoiceSettingsTab from './InvoiceSettingsTab';
 import AdminConfigTab from './AdminConfigTab';
+import EmailSignatureTab from './EmailSignatureTab';
 
 interface AdminDashboardProps {
   adminUser: any;
@@ -337,6 +338,7 @@ export default function AdminDashboardClient({
         { id: 'marketing', label: 'Marketing', icon: 'ri-megaphone-line' },
         { id: 'automation', label: 'Automatisierung', icon: 'ri-robot-line' },
         { id: 'email', label: 'E-Mail System', icon: 'ri-mail-line' },
+        { id: 'email-signature', label: 'E-Mail Signatur', icon: 'ri-quill-pen-line' },
         { id: 'sms-system', label: 'SMS System', icon: 'ri-message-3-line' },
         { id: 'push-notifications', label: 'Push-Benachrichtigungen', icon: 'ri-notification-line' }
       ]
@@ -468,6 +470,9 @@ export default function AdminDashboardClient({
       case 'email': 
         console.log('AdminDashboard: Rendering EmailSystemTab');
         return <EmailSystemTab />;
+      case 'email-signature': 
+        console.log('AdminDashboard: Rendering EmailSignatureTab');
+        return <EmailSignatureTab />;
       case 'email-automation': 
         console.log('AdminDashboard: Rendering EmailAutomationTab');
         return <EmailAutomationTab />;
