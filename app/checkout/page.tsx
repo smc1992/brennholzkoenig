@@ -153,6 +153,8 @@ export default function CheckoutPage() {
   const [pricingTiers, setPricingTiers] = useState<any[]>([]);
   const [shippingCosts, setShippingCosts] = useState({ standard: 43.5, express: 139 });
   const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
+  const [vatRate, setVatRate] = useState(19); // Standard-Steuersatz, wird aus DB geladen
+  const [taxIncluded, setTaxIncluded] = useState(false); // Ob Preise Bruttopreise sind
 
   // Lieferoptionen - werden dynamisch aus der Datenbank geladen
   const getDeliveryOptions = () => [
@@ -194,6 +196,12 @@ export default function CheckoutPage() {
         .from('app_settings')
         .select('setting_key, setting_value')
         .in('setting_key', ['minimum_order_quantity', 'shipping_cost_standard', 'shipping_cost_express']);
+      
+      // Lade Steuersatz und Steuereinstellungen aus invoice_settings
+      const { data: invoiceSettings } = await supabase
+        .from('invoice_settings')
+        .select('vat_rate, default_tax_included')
+        .single();
 
       if (settingsData) {
         const settings: any = {};
@@ -211,6 +219,19 @@ export default function CheckoutPage() {
           express: parseFloat(settings.shipping_cost_express) || 139
         });
       }
+      
+      // Setze Steuersatz und Steuereinstellungen aus invoice_settings
+        if (invoiceSettings) {
+          if (invoiceSettings.vat_rate) {
+            setVatRate(parseFloat(invoiceSettings.vat_rate));
+            console.log('✅ Steuersatz geladen:', invoiceSettings.vat_rate + '%');
+          }
+          if (invoiceSettings.default_tax_included !== undefined) {
+            setTaxIncluded(invoiceSettings.default_tax_included);
+            console.log('✅ Steuereinstellung geladen: Preise sind', invoiceSettings.default_tax_included ? 'Brutto' : 'Netto');
+            console.log('🔍 Debug: taxIncluded =', invoiceSettings.default_tax_included, 'vatRate =', invoiceSettings.vat_rate);
+          }
+        }
 
       // Lade Preisstaffeln
       const { data: tiersData } = await supabase
@@ -344,9 +365,46 @@ export default function CheckoutPage() {
     
     const selectedOption = getDeliveryOptions().find((opt) => opt.type === selectedDelivery);
     const shipping = selectedOption ? selectedOption.price : 43.5;
-    const total = Math.max(0, subtotal - discountAmount + shipping);
     
-    return { subtotal, discountAmount, shipping, total };
+    if (taxIncluded) {
+      // Bruttopreise: Steuer ist bereits in den Preisen enthalten
+      const grossAmount = Math.max(0, subtotal - discountAmount + shipping);
+      const netAmount = grossAmount / (1 + vatRate / 100);
+      const taxAmount = grossAmount - netAmount;
+      
+      console.log('🧮 Brutto-Berechnung:', {
+        grossAmount,
+        netAmount,
+        taxAmount,
+        vatRate,
+        formula: `${grossAmount} / (1 + ${vatRate}/100) = ${netAmount}`
+      });
+      
+      return { 
+        subtotal, 
+        discountAmount, 
+        shipping, 
+        netAmount, 
+        taxAmount, 
+        taxRate: vatRate,
+        total: grossAmount 
+      };
+    } else {
+      // Nettopreise: Steuer muss hinzugerechnet werden
+      const netAmount = Math.max(0, subtotal - discountAmount + shipping);
+      const taxAmount = netAmount * (vatRate / 100);
+      const total = netAmount + taxAmount;
+      
+      return { 
+        subtotal, 
+        discountAmount, 
+        shipping, 
+        netAmount, 
+        taxAmount, 
+        taxRate: vatRate,
+        total 
+      };
+    }
   };
 
   // Prüft, ob die Gesamtmenge der Bestellung die Mindestbestellmenge erfüllt
@@ -659,7 +717,7 @@ export default function CheckoutPage() {
       };
       
       const orderNumber = generateOrderNumber();
-      const { subtotal, discountAmount, shipping, total } = calculateTotal();
+      const { subtotal, discountAmount, shipping, netAmount, taxAmount, taxRate, total } = calculateTotal();
 
       // Validiere und bereinige alle Datenfelder für UUID-Kompatibilität
       const orderData = {
@@ -1711,8 +1769,12 @@ export default function CheckoutPage() {
 
               <div className="border-t pt-4">
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">Zwischensumme</span>
-                  <span className="text-gray-900">{subtotal.toFixed(2)} €</span>
+                  <span className="text-gray-600">
+                    {taxIncluded ? 'Zwischensumme (Netto)' : 'Zwischensumme'}
+                  </span>
+                  <span className="text-gray-900">
+                    {taxIncluded ? calculateTotal().netAmount.toFixed(2) : subtotal.toFixed(2)} €
+                  </span>
                 </div>
                 {appliedDiscount && (
                   <div className="flex justify-between text-sm mb-2">
@@ -1720,11 +1782,17 @@ export default function CheckoutPage() {
                     <span className="text-green-600">-{discountAmount.toFixed(2)} €</span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm mb-4">
+                <div className="flex justify-between text-sm mb-2">
                   <span className="text-gray-600">Versandkosten</span>
                   <span className="text-gray-900">
                     €{shipping.toFixed(2)}
                   </span>
+                </div>
+                <div className="flex justify-between text-sm mb-4">
+                  <span className="text-gray-600">
+                    {taxIncluded ? 'inkl.' : 'zzgl.'} {calculateTotal().taxRate}% MwSt.
+                  </span>
+                  <span className="text-gray-900">€{calculateTotal().taxAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t pt-4">
                   <span>Gesamtsumme</span>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Auftragsbestätigung {{order.number}}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap');
+    
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    
+    @media print {
+      .no-print { display: none !important; }
+      
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      
+      .container {
+        margin: 0;
+        padding: 20mm 15mm;
+        box-shadow: none;
+        width: 210mm;
+        min-height: 297mm;
+      }
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 11pt;
+      line-height: 1.4;
+      color: #1a1a1a;
+      background: white;
+    }
+    
+    .container {
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 20mm 15mm;
+      background: white;
+      min-height: 297mm;
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 40pt;
+      padding-bottom: 20pt;
+      border-bottom: 2pt solid #C04020;
+    }
+    
+    .logo-section {
+      flex: 1;
+    }
+    
+    .logo {
+      max-width: 120pt;
+      max-height: 60pt;
+      margin-bottom: 10pt;
+    }
+    
+    .brand-name {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 24pt;
+      font-weight: 400;
+      color: #C04020;
+      margin-bottom: 5pt;
+      letter-spacing: 1pt;
+    }
+    
+    .brand-tagline {
+      font-size: 9pt;
+      color: #666;
+      font-style: italic;
+    }
+    
+    .issuer-section {
+      text-align: right;
+      flex: 1;
+    }
+    
+    .issuer-name {
+      font-size: 14pt;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 8pt;
+    }
+    
+    .issuer-address {
+      font-size: 9pt;
+      color: #666;
+      line-height: 1.3;
+      margin-bottom: 8pt;
+    }
+    
+    .issuer-contact {
+      font-size: 9pt;
+      color: #666;
+      line-height: 1.3;
+    }
+    
+    /* Title */
+    .page-title {
+      text-align: center;
+      font-size: 28pt;
+      font-weight: 700;
+      color: #C04020;
+      margin-bottom: 30pt;
+      text-transform: uppercase;
+      letter-spacing: 2pt;
+    }
+    
+    /* Order Confirmation */
+    .order-confirmation {
+      margin-bottom: 40pt;
+      padding: 25pt;
+      background: #f8f9fa;
+      border: 1pt solid #ddd;
+      border-left: 4pt solid #C04020;
+      border-radius: 8pt;
+      font-size: 11pt;
+      line-height: 1.6;
+      box-shadow: 0 2pt 8pt rgba(192, 64, 32, 0.08);
+    }
+    
+    .order-confirmation h3 {
+      margin: 0 0 20pt 0;
+      font-size: 14pt;
+      font-weight: 700;
+      color: #C04020;
+      display: flex;
+      align-items: center;
+    }
+    
+    .order-confirmation h3::before {
+      content: '📋';
+      margin-right: 10pt;
+      font-size: 16pt;
+    }
+    
+    .confirmation-text {
+      margin-bottom: 25pt;
+      line-height: 1.7;
+      text-align: justify;
+    }
+    
+    .signature-fields {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40pt;
+    }
+    
+    .signature-field {
+      width: 45%;
+      border-bottom: 1pt solid #333;
+      padding-bottom: 3pt;
+      text-align: center;
+      font-size: 10pt;
+      color: #666;
+      min-height: 30pt;
+    }
+    
+    /* Delivery Address */
+    .delivery-address {
+      margin-bottom: 40pt;
+      padding: 25pt;
+      background: #f8f9fa;
+      border: 1pt solid #ddd;
+      border-left: 4pt solid #C04020;
+      border-radius: 8pt;
+      font-size: 11pt;
+      line-height: 1.6;
+      box-shadow: 0 2pt 8pt rgba(192, 64, 32, 0.08);
+    }
+    
+    .delivery-address h3 {
+      margin: 0 0 20pt 0;
+      font-size: 14pt;
+      font-weight: 700;
+      color: #C04020;
+      display: flex;
+      align-items: center;
+    }
+    
+    .delivery-address h3::before {
+      content: '🚚';
+      margin-right: 10pt;
+      font-size: 16pt;
+    }
+    
+    .delivery-zone {
+      margin-top: 20pt;
+      padding: 15pt;
+      background: #fff;
+      border: 1pt solid #ddd;
+      border-radius: 6pt;
+      min-height: 80pt;
+      font-size: 12pt;
+      line-height: 1.5;
+    }
+    
+    .confirmation-statement {
+      margin-top: 25pt;
+      padding: 20pt;
+      background: #fff;
+      border: 1pt solid #ddd;
+      border-radius: 6pt;
+      text-align: center;
+      font-weight: 600;
+      font-size: 12pt;
+    }
+    
+    .final-signature {
+      margin-top: 40pt;
+      border-bottom: 1pt solid #333;
+      padding-bottom: 3pt;
+      text-align: center;
+      font-size: 10pt;
+      color: #666;
+      width: 60%;
+      margin-left: auto;
+      margin-right: auto;
+      min-height: 30pt;
+    }
+    
+    /* Footer */
+    .footer {
+      margin-top: 50pt;
+      padding-top: 20pt;
+      border-top: 1pt solid #ddd;
+      font-size: 8pt;
+      line-height: 1.3;
+      color: #666;
+      text-align: center;
+    }
+    
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 15pt;
+    }
+    
+    .footer-section {
+      flex: 1;
+      min-width: 120pt;
+    }
+    
+    .footer-section.left {
+      text-align: left;
+    }
+    
+    .footer-section.center {
+      text-align: center;
+    }
+    
+    .footer-section.right {
+      text-align: right;
+    }
+    
+    .footer-section strong {
+      font-weight: 600;
+      color: #333;
+      display: block;
+      margin-bottom: 2pt;
+    }
+    
+    .footer-section p {
+      margin: 0;
+      line-height: 1.2;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-section">
+        {{#if company.logo_url}}
+          <img src="{{company.logo_url}}" alt="{{company.name}} Logo" class="logo">
+        {{else}}
+          <div>
+            <h1 class="brand-name">🔥 BRENNHOLZKÖNIG</h1>
+            <p class="brand-tagline">Premium Brennholz direkt vom Produzenten</p>
+          </div>
+        {{/if}}
+      </div>
+      
+      <div class="issuer-section">
+        <div class="issuer-name">{{company.name}}</div>
+        <div class="issuer-address">
+          {{company.address_line1}}<br>
+          {{#if company.address_line2}}{{company.address_line2}}<br>{{/if}}
+          {{company.postal_code}} {{company.city}}
+        </div>
+        <div class="issuer-contact">
+          {{#if company.phone}}📞 {{company.phone}}<br>{{/if}}
+          {{#if company.email}}✉️ {{company.email}}<br>{{/if}}
+          {{#if company.website}}🌐 {{company.website}}<br>{{/if}}
+          {{#if company.tax_id}}🏢 USt-IdNr.: {{company.tax_id}}{{/if}}
+        </div>
+      </div>
+    </header>
+    
+    <!-- Page Title -->
+    <h1 class="page-title">Auftragsbestätigung</h1>
+    
+    <!-- Order Confirmation -->
+    <section class="order-confirmation">
+      <h3>Auftragsbestätigung:</h3>
+      <div class="confirmation-text">
+        Ich erteile / Wir erteilen den Auftrag für die Brennholzlieferung 
+        gemäß obigem Angebot. Die AGBs und Lieferbedingung frei 
+        Bordsteinkante habe ich gelesen und akzeptiert. Für ausdrücklich 
+        gewünschte Lieferungen auf das Grundstück übernehmen wir keine 
+        Haftung.
+      </div>
+      <div class="signature-fields">
+        <div class="signature-field">Ort, Datum</div>
+        <div class="signature-field">Unterschrift des Auftraggebers</div>
+      </div>
+    </section>
+    
+    <!-- Delivery Address -->
+    <section class="delivery-address">
+      <h3>Lieferadresse (Zone 2):</h3>
+      <div class="delivery-zone">
+        {{#if delivery_address}}
+          {{#if delivery_address.company}}{{delivery_address.company}}<br>{{/if}}
+          {{delivery_address.name}}<br>
+          {{delivery_address.street}} {{delivery_address.house_number}}<br>
+          {{#if delivery_address.line2}}{{delivery_address.line2}}<br>{{/if}}
+          {{delivery_address.postal_code}} {{delivery_address.city}}
+        {{else}}
+          {{#if customer.company}}{{customer.company}}<br>{{/if}}
+          {{customer.name}}<br>
+          {{customer.address.street}} {{customer.address.house_number}}<br>
+          {{#if customer.address.line2}}{{customer.address.line2}}<br>{{/if}}
+          {{customer.address.postal_code}} {{customer.address.city}}
+        {{/if}}
+      </div>
+      <div class="confirmation-statement">
+        Hiermit bestätige ich den ordnungsgemäßen Zustand und Erhalt der bestellten Ware.
+      </div>
+      <div class="final-signature">Datum, Unterschrift</div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-section left">
+          <strong>{{company.name}}</strong>
+          <p>{{company.address_line1}}</p>
+          <p>{{company.postal_code}} {{company.city}}</p>
+          {{#if company.phone}}<p>Mobil: {{company.phone}}</p>{{/if}}
+          {{#if company.email}}<p>Email: {{company.email}}</p>{{/if}}
+          {{#if company.website}}<p>Internet: {{company.website}}</p>{{/if}}
+        </div>
+        
+        <div class="footer-section center">
+          <strong>Bestellung</strong>
+          {{#if order.number}}<p>Bestell-Nr.: {{order.number}}</p>{{/if}}
+          {{#if order.date}}<p>Datum: {{order.date}}</p>{{/if}}
+        </div>
+        
+        <div class="footer-section right">
+          {{#if company.registration}}<p>Steuer-Nr.: {{company.registration}}</p>{{/if}}
+          {{#if company.tax_id}}<p>USt-Ident-Nr.: {{company.tax_id}}</p>{{/if}}
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

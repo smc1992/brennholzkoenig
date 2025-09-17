@@ -422,6 +422,134 @@
       font-size: 14pt;
     }
     
+    /* Order Confirmation Page */
+    .order-confirmation-page {
+      padding: 20mm 15mm;
+    }
+    
+    .page-title {
+      text-align: center;
+      font-size: 28pt;
+      font-weight: 700;
+      color: #C04020;
+      margin-bottom: 30pt;
+      text-transform: uppercase;
+      letter-spacing: 2pt;
+    }
+    
+    /* Order Confirmation */
+    .order-confirmation {
+      margin-bottom: 40pt;
+      padding: 25pt;
+      background: #f8f9fa;
+      border: 1pt solid #ddd;
+      border-left: 4pt solid #C04020;
+      border-radius: 8pt;
+      font-size: 11pt;
+      line-height: 1.6;
+      box-shadow: 0 2pt 8pt rgba(192, 64, 32, 0.08);
+    }
+    
+    .order-confirmation h3 {
+      margin: 0 0 20pt 0;
+      font-size: 14pt;
+      font-weight: 700;
+      color: #C04020;
+      display: flex;
+      align-items: center;
+    }
+    
+    .order-confirmation h3::before {
+      content: '📋';
+      margin-right: 10pt;
+      font-size: 16pt;
+    }
+    
+    .confirmation-text {
+      margin-bottom: 25pt;
+      line-height: 1.7;
+      text-align: justify;
+    }
+    
+    .signature-fields {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40pt;
+    }
+    
+    .signature-field {
+      width: 45%;
+      border-bottom: 1pt solid #333;
+      padding-bottom: 3pt;
+      text-align: center;
+      font-size: 10pt;
+      color: #666;
+      min-height: 30pt;
+    }
+    
+    /* Delivery Address */
+    .delivery-address {
+      margin-bottom: 40pt;
+      padding: 25pt;
+      background: #f8f9fa;
+      border: 1pt solid #ddd;
+      border-left: 4pt solid #C04020;
+      border-radius: 8pt;
+      font-size: 11pt;
+      line-height: 1.6;
+      box-shadow: 0 2pt 8pt rgba(192, 64, 32, 0.08);
+    }
+    
+    .delivery-address h3 {
+      margin: 0 0 20pt 0;
+      font-size: 14pt;
+      font-weight: 700;
+      color: #C04020;
+      display: flex;
+      align-items: center;
+    }
+    
+    .delivery-address h3::before {
+      content: '🚚';
+      margin-right: 10pt;
+      font-size: 16pt;
+    }
+    
+    .delivery-zone {
+      margin-top: 20pt;
+      padding: 15pt;
+      background: #fff;
+      border: 1pt solid #ddd;
+      border-radius: 6pt;
+      min-height: 80pt;
+      font-size: 12pt;
+      line-height: 1.5;
+    }
+    
+    .confirmation-statement {
+      margin-top: 25pt;
+      padding: 20pt;
+      background: #fff;
+      border: 1pt solid #ddd;
+      border-radius: 6pt;
+      text-align: center;
+      font-weight: 600;
+      font-size: 12pt;
+    }
+    
+    .final-signature {
+      margin-top: 40pt;
+      border-bottom: 1pt solid #333;
+      padding-bottom: 3pt;
+      text-align: center;
+      font-size: 10pt;
+      color: #666;
+      width: 60%;
+      margin-left: auto;
+      margin-right: auto;
+      min-height: 30pt;
+    }
+    
     /* Notes */
     .notes {
       margin-bottom: 30pt;
@@ -617,7 +745,32 @@
         </thead>
         <tbody>
           {{#each items}}
+          {{#if (gt @index 3)}}
+          {{#if (eq @index 4)}}
+          </tbody>
+      </table>
+    </section>
+    
+    <!-- Page Break for Additional Items -->
+    <div style="page-break-before: always;"></div>
+    
+    <!-- Continued Items Table -->
+    <section class="items-section">
+      <h3 style="margin: 20pt 0 10pt 0; font-size: 12pt; color: #333;">Auftrag/Lieferschein/Rechnung Nr. (Fortsetzung):</h3>
+      <table class="items-table">
+        <thead>
           <tr>
+            <th class="description">Produkt</th>
+            <th class="category">Kategorie</th>
+            <th class="quantity">Menge</th>
+            <th class="unit-price">Einzelpreis</th>
+            <th class="total">Gesamtpreis</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{/if}}
+          {{/if}}
+          <tr {{#if (gt @index 3)}}class="continued-item"{{/if}}>
             <td class="description">{{this.name}}</td>
             <td class="category">{{#if this.category}}{{this.category}}{{else}}Brennholz{{/if}}</td>
             <td class="quantity number">{{formatNumber this.quantity}} SRM</td>
@@ -638,7 +791,7 @@
             <td style="padding: 4pt; text-align: right; font-weight: 600;">{{formatCurrency totals.subtotal}}</td>
           </tr>
           <tr>
-            <td style="padding: 4pt; text-align: left;">zzgl. {{totals.tax_rate}}% MwSt.:</td>
+            <td style="padding: 4pt; text-align: left;">{{#if company.default_tax_included}}inkl.{{else}}zzgl.{{/if}} {{totals.tax_rate}}% MwSt.:</td>
             <td style="padding: 4pt; text-align: right;">{{formatCurrency totals.tax}}</td>
           </tr>
           <tr style="border-top: 2pt solid #333; font-weight: 600; font-size: 10pt;">
@@ -698,6 +851,89 @@
           {{#if company.tax_id}}<p>USt-Ident-Nr.: {{company.tax_id}}</p>{{/if}}
         </div>
       </div>
+    </footer>
+    
+    <!-- Dynamic Page Break for Order Confirmation -->
+    {{#if (gt items.length 4)}}
+    <div style="page-break-before: always;"></div>
+    {{else}}
+    <div style="page-break-before: always;"></div>
+    {{/if}}
+    
+    <!-- Order Confirmation Page -->
+    <div class="order-confirmation-page">
+      <!-- Header -->
+      <header class="header">
+        <div class="logo-section">
+          {{#if company.logo_url}}
+            <img src="{{company.logo_url}}" alt="{{company.name}} Logo" class="logo">
+          {{else}}
+            <div>
+              <h1 class="brand-name">🔥 BRENNHOLZKÖNIG</h1>
+              <p class="brand-tagline">Premium Brennholz direkt vom Produzenten</p>
+            </div>
+          {{/if}}
+        </div>
+        
+        <div class="issuer-section">
+          <div class="issuer-name">{{company.name}}</div>
+          <div class="issuer-address">
+            {{company.address_line1}}<br>
+            {{#if company.address_line2}}{{company.address_line2}}<br>{{/if}}
+            {{company.postal_code}} {{company.city}}
+          </div>
+          <div class="issuer-contact">
+            {{#if company.phone}}📞 {{company.phone}}<br>{{/if}}
+            {{#if company.email}}✉️ {{company.email}}<br>{{/if}}
+            {{#if company.website}}🌐 {{company.website}}<br>{{/if}}
+            {{#if company.tax_id}}🏢 USt-IdNr.: {{company.tax_id}}{{/if}}
+          </div>
+        </div>
+      </header>
+      
+      <!-- Page Title -->
+      <h1 class="page-title">Auftragsbestätigung</h1>
+      
+      <!-- Order Confirmation -->
+      <section class="order-confirmation">
+        <h3>Auftragsbestätigung:</h3>
+        <div class="confirmation-text">
+          Ich erteile / Wir erteilen den Auftrag für die Brennholzlieferung 
+          gemäß obigem Angebot. Die AGBs und Lieferbedingung frei 
+          Bordsteinkante habe ich gelesen und akzeptiert. Für ausdrücklich 
+          gewünschte Lieferungen auf das Grundstück übernehmen wir keine 
+          Haftung.
+        </div>
+        <div class="signature-fields">
+          <div class="signature-field">Ort, Datum</div>
+          <div class="signature-field">Unterschrift des Auftraggebers</div>
+        </div>
+      </section>
+      
+      <!-- Delivery Address -->
+      <section class="delivery-address">
+        <h3>Lieferadresse (Zone 2):</h3>
+        <div class="delivery-zone">
+          {{#if delivery_address}}
+            {{#if delivery_address.company}}{{delivery_address.company}}<br>{{/if}}
+            {{delivery_address.name}}<br>
+            {{delivery_address.street}} {{delivery_address.house_number}}<br>
+            {{#if delivery_address.line2}}{{delivery_address.line2}}<br>{{/if}}
+            {{delivery_address.postal_code}} {{delivery_address.city}}
+          {{else}}
+            {{#if customer.company}}{{customer.company}}<br>{{/if}}
+            {{customer.name}}<br>
+            {{customer.address.street}} {{customer.address.house_number}}<br>
+            {{#if customer.address.line2}}{{customer.address.line2}}<br>{{/if}}
+            {{customer.address.postal_code}} {{customer.address.city}}
+          {{/if}}
+        </div>
+        <div class="confirmation-statement">
+          Hiermit bestätige ich den ordnungsgemäßen Zustand und Erhalt der bestellten Ware.
+        </div>
+        <div class="final-signature">Datum, Unterschrift</div>
+      </section>
+    </div>
     </footer>
   </div>
   

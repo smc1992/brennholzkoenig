@@ -18,10 +18,13 @@ interface Product {
 
 interface OrderItem {
   id: string;
-  product_id: string;
+  order_id: string;
+  product_name: string;
+  product_category?: string;
   quantity: number;
-  price_per_unit: number;
-  products?: Product;
+  unit_price: number;
+  total_price: number;
+  tax_included?: boolean;
 }
 
 interface Order {
@@ -49,6 +52,7 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState('');
+  const [productImages, setProductImages] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -63,13 +67,10 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
           .from('orders')
           .select(`
             *,
-            order_items:order_items(
-              *,
-              products:products(*)
-            )
+            order_items:order_items(*)
           `)
           .eq('id', orderId)
-          .eq('customer_email', user.email)
+          .eq('delivery_email', user.email)
           .single();
 
         if (error) throw error;
@@ -78,6 +79,23 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
           return;
         }
         setOrder(data);
+        
+        // Lade Produktbilder basierend auf product_name
+        if (data.order_items && data.order_items.length > 0) {
+          const productNames = data.order_items.map((item: any) => item.product_name);
+          const { data: products } = await supabase
+            .from('products')
+            .select('name, image_url')
+            .in('name', productNames);
+          
+          if (products) {
+            const imageMap: {[key: string]: string} = {};
+            products.forEach((product: any) => {
+              imageMap[product.name] = product.image_url;
+            });
+            setProductImages(imageMap);
+          }
+        }
       } catch (error: unknown) {
         console.error('Fehler beim Laden der Bestelldetails:', error);
         setError('Bestellung konnte nicht geladen werden');
@@ -88,6 +106,14 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
 
     fetchOrderDetails();
   }, [orderId]);
+  
+  // Hilfsfunktion für Produktbilder
+  const getImageUrl = (url: string): string | undefined => {
+    if (!url) return undefined;
+    if (url.startsWith('http')) return url;
+    if (url.startsWith('/')) return url;
+    return `/images/${url}`;
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('de-DE', {
@@ -151,7 +177,7 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-20 sm:pt-24 md:pt-28">
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4">
           <div className="flex items-center py-4 space-x-4">
@@ -179,28 +205,36 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
               <div className="space-y-4">
                 {order.order_items.map((item) => (
                   <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                      {item.products?.image_url ? (
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                      {productImages[item.product_name] ? (
                         <img
-                          src={item.products.image_url}
-                          alt={item.products.name}
+                          src={getImageUrl(productImages[item.product_name])}
+                          alt={item.product_name}
                           className="w-full h-full object-cover rounded-lg"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            target.parentElement!.innerHTML = '<i class="ri-package-line text-gray-400 text-xl"></i>';
+                          }}
                         />
                       ) : (
-                        <i className="ri-image-line text-gray-400 text-xl"></i>
+                        <i className="ri-package-line text-gray-400 text-xl"></i>
                       )}
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{item.products?.name}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{item.products?.description}</p>
-                      <div className="flex items-center space-x-4 mt-2">
-                        <span className="text-sm text-gray-600">Menge: {item.quantity}</span>
-                        <span className="text-sm text-gray-600">Preis: {item.price_per_unit.toFixed(2)}€</span>
+                      <h3 className="font-medium text-gray-900">{item.product_name}</h3>
+                      {item.product_category && (
+                        <p className="text-sm text-gray-600 mt-1">{item.product_category}</p>
+                      )}
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
+                        <span className="text-sm text-gray-600 whitespace-nowrap">Menge: {item.quantity}</span>
+                        <span className="text-sm text-gray-600 whitespace-nowrap">Einzelpreis: {item.unit_price.toFixed(2)}€</span>
+                        <span className="text-sm font-medium text-gray-900 whitespace-nowrap">Gesamt: {item.total_price.toFixed(2)}€</span>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-gray-900">
-                        {(item.quantity * item.price_per_unit).toFixed(2)}€
+                        {item.total_price.toFixed(2)}€
                       </p>
                     </div>
                   </div>

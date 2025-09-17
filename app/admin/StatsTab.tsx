@@ -112,7 +112,7 @@ export default function StatsTab({ stats, onRefresh, onTabChange }: StatsTabProp
         // Produktionsreife parallele Datenabfrage
         const [ordersRes, productsRes] = await Promise.all([
           supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(10),
-          supabase.from('products').select('*').order('created_at', { ascending: false }).limit(10)
+          supabase.from('products').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(10)
         ]);
 
         if (ordersRes.error) {

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { getCDNUrl } from '@/utils/cdn';
+import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 
 interface Product {
   id: number;
@@ -51,6 +52,7 @@ export default function OptimizedProductSection({
   loadTime = 0, 
   error: serverError = null 
 }: OptimizedProductSectionProps = {}) {
+  const { updateProductStockOptimistically } = useRealtimeSync();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState<boolean>(initialProducts.length === 0);
@@ -102,7 +104,7 @@ export default function OptimizedProductSection({
       .channel('homepage-product-changes')
       .on('postgres_changes', 
           { event: '*', schema: 'public', table: 'products' }, 
-          (payload) => {
+          (payload: { eventType: string; new: any; old: any; schema: string; table: string }) => {
             console.log('Homepage: Produktänderung erkannt, aktualisiere Daten...');
             fetchProducts();
           })
@@ -157,6 +159,25 @@ export default function OptimizedProductSection({
       }
       
       localStorage.setItem('cart', JSON.stringify(currentCart));
+      
+      // Optimistische UI-Updates für sofortige SRM-Verfügbarkeits-Anzeige
+      updateProductStockOptimistically(product.id, quantity);
+      
+      // Lokale Produktdaten auch sofort aktualisieren
+      setProducts(prevProducts => 
+        prevProducts.map(p => 
+          p.id === product.id 
+            ? { ...p, stock_quantity: Math.max(0, p.stock_quantity - quantity) }
+            : p
+        )
+      );
+      
+      // Dispatch Event für andere Komponenten
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('stockUpdated', {
+          detail: { productId: product.id.toString(), quantityChange: quantity }
+        }));
+      }
     }
   };
 

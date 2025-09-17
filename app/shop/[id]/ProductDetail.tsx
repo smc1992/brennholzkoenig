@@ -148,7 +148,7 @@ function getPriceInfoForQuantity(quantity: number, tiers: PricingTier[], minOrde
 
 export default function ProductDetail({ productId }: ProductDetailProps) {
   const router = useRouter();
-  const { products, subscribeToChanges, unsubscribeFromChanges } = useRealtimeSync();
+  const { products, subscribeToChanges, unsubscribeFromChanges, updateProductStockOptimistically } = useRealtimeSync();
   const [productData, setProductData] = useState<Product | null>(null);
   const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([]);
   const [quantity, setQuantity] = useState<number>(1);
@@ -536,8 +536,24 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
 
       localStorage.setItem('cart', JSON.stringify(currentCart));
 
+      // Optimistische UI-Updates für sofortige Feedback
+      updateProductStockOptimistically(parseInt(productData.id), quantity);
+      
+      // Lokale Produktdaten auch sofort aktualisieren
+      setProductData(prev => prev ? {
+        ...prev,
+        stock_quantity: Math.max(0, prev.stock_quantity - quantity)
+      } : null);
+
       setNotificationData({ productName: productData.name, quantity });
       setShowNotification(true);
+      
+      // Dispatch Event für andere Komponenten
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('stockUpdated', {
+          detail: { productId: productData.id, quantityChange: quantity }
+        }));
+      }
 
       if (typeof window !== 'undefined' && (window as any).trackEvent) {
         (window as any).trackEvent('add_to_cart', {

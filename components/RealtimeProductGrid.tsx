@@ -46,7 +46,7 @@ export default function RealtimeProductGrid({
   loadTime = 0, 
   error: serverError = null 
 }: RealtimeProductGridProps = {}) {
-  const { products: realtimeProducts, isLoading, error: realtimeError, refreshProducts } = useRealtimeSync();
+  const { products: realtimeProducts, isLoading, error: realtimeError, refreshProducts, updateProductStockOptimistically } = useRealtimeSync();
   
   // Verwende Server-Side Daten wenn verfügbar, sonst Real-time Daten
   const products = initialProducts.length > 0 ? initialProducts : realtimeProducts;
@@ -66,6 +66,31 @@ export default function RealtimeProductGrid({
       setFilteredProducts(products.filter(product => product.category === selectedCategory));
     }
   }, [products, selectedCategory]);
+
+  // Listen for optimistic stock updates from other components
+  useEffect(() => {
+    const handleStockUpdate = (event: CustomEvent) => {
+      const { productId, quantityChange } = event.detail;
+      updateProductStockOptimistically(parseInt(productId), quantityChange);
+    };
+
+    const handleOptimisticUpdate = (event: CustomEvent) => {
+      // Updates are already handled by the useRealtimeSync hook
+      console.log('Optimistic stock update received:', event.detail);
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('stockUpdated', handleStockUpdate as EventListener);
+      window.addEventListener('optimisticStockUpdate', handleOptimisticUpdate as EventListener);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('stockUpdated', handleStockUpdate as EventListener);
+        window.removeEventListener('optimisticStockUpdate', handleOptimisticUpdate as EventListener);
+      }
+    };
+  }, [updateProductStockOptimistically]);
 
   // Get unique categories
   const categories = ['Alle', ...Array.from(new Set(products.map(product => product.category)))];

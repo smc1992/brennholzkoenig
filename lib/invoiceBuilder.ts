@@ -35,8 +35,11 @@ export interface InvoiceData {
   payment_terms?: string;
   notes?: string;
   delivery_address?: {
+    name: string;
+    company?: string;
     street: string;
     house_number: string;
+    line2?: string;
     postal_code: string;
     city: string;
   };
@@ -53,6 +56,7 @@ export interface CompanySettings {
   company_website?: string;
   tax_id?: string;
   vat_rate?: number;
+  default_tax_included?: boolean;
   bank_name?: string;
   bank_iban?: string;
   bank_bic?: string;
@@ -211,7 +215,8 @@ export class ModernInvoiceBuilder {
         tax_id: companySettings.tax_id,
         logo_url: companySettings.logo_url,
         ceo: companySettings.company_ceo,
-        registration: companySettings.company_registration
+        registration: companySettings.company_registration,
+        default_tax_included: companySettings.default_tax_included
       },
       customer: {
         name: invoiceData.customer.name,

@@ -74,7 +74,7 @@ export const adminQueries = {
     try {
       // Parallele Abfragen für bessere Performance
       const [productsCount, ordersCount, categoriesCount] = await Promise.all([
-        supabase.from('products').select('id', { count: 'exact', head: true }),
+        supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true),
         supabase.from('orders').select('id', { count: 'exact', head: true }),
         supabase.from('product_categories').select('id', { count: 'exact', head: true })
       ])

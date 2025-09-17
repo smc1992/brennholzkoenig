@@ -59,6 +59,21 @@ export async function GET(request: NextRequest) {
           }
         });
 
+      case 'order-confirmation':
+        // Auftragsbestätigung generieren
+        const orderConfirmationHtml = await invoiceBuilder.generatePreview(
+          invoiceData,
+          companySettings,
+          'order-confirmation'
+        );
+        
+        return new NextResponse(orderConfirmationHtml, {
+          headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-cache'
+          }
+        });
+
       case 'screenshot':
         // Screenshot für Vorschau
         const screenshot = await invoiceBuilder.generateScreenshot(
@@ -110,6 +125,7 @@ export async function POST(request: NextRequest) {
       invoiceId, 
       orderId, 
       templateId = 'default',
+      action = 'generate',
       options = {},
       saveToFile = true 
     } = body;
@@ -125,11 +141,12 @@ export async function POST(request: NextRequest) {
     const { invoiceData, companySettings } = await loadInvoiceData(invoiceId, orderId);
     const invoiceBuilder = getInvoiceBuilder();
 
-    // PDF generieren
+    // PDF generieren basierend auf Action
+    const actualTemplateId = action === 'order-confirmation' ? 'order-confirmation' : templateId;
     const pdfBuffer = await invoiceBuilder.generatePDF(
       invoiceData,
       companySettings,
-      templateId,
+      actualTemplateId,
       {
         format: options.format || 'A4',
         margin: options.margin || {
@@ -598,7 +615,8 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
     company_email: invoiceSettings?.company_email || 'info@brennholz-koenig.de',
     company_website: invoiceSettings?.company_website || 'www.brennholz-koenig.de',
     tax_id: invoiceSettings?.tax_id || 'DE200789994',
-    vat_rate: invoiceSettings?.vat_rate || 19,
+    vat_rate: invoiceSettings?.vat_rate ? parseFloat(invoiceSettings.vat_rate) : 19,
+    default_tax_included: invoiceSettings?.default_tax_included || false,
     bank_name: invoiceSettings?.bank_name || 'Sparkasse Bad Hersfeld-Rotenburg',
     bank_iban: invoiceSettings?.bank_iban || 'DE89 5325 0000 0000 1234 56',
     bank_bic: invoiceSettings?.bank_bic || 'HELADEF1HER',
@@ -628,6 +646,15 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
         city: order.delivery_city
       }
     },
+    delivery_address: {
+      name: `${order.delivery_first_name} ${order.delivery_last_name}`,
+      company: order.delivery_company || '',
+      street: order.delivery_street,
+      house_number: order.delivery_house_number,
+      line2: order.delivery_notes || '',
+      postal_code: order.delivery_postal_code,
+      city: order.delivery_city
+    },
     items: [],
     subtotal_amount: 0,
     tax_amount: 0,
@@ -654,12 +681,28 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
          unit_price: parseFloat(item.unit_price),
          total_price: parseFloat(item.total_price),
          product_code: item.product_code || item.id,
-         tax_included: item.tax_included || false  // Steuereinstellung aus Datenbank
+         tax_included: item.tax_included !== undefined ? item.tax_included : companySettings.default_tax_included || false  // Steuereinstellung aus Datenbank oder global
        };
       
       console.log(`📦 Converted item ${index + 1}:`, convertedItem);
+      console.log(`🔍 Tax setting for item ${index + 1}: tax_included=${convertedItem.tax_included}, default_tax_included=${companySettings.default_tax_included}`);
       return convertedItem;
     });
+    
+    // Füge Lieferkosten als separate Position hinzu falls vorhanden
+    if (order.delivery_price && parseFloat(order.delivery_price) > 0) {
+      const deliveryItem = {
+        description: `Lieferung (${order.delivery_type === 'express' ? 'Express 24-48h' : 'Standard'})`,
+        quantity: 1,
+        unit_price: parseFloat(order.delivery_price),
+        total_price: parseFloat(order.delivery_price),
+        product_code: 'DELIVERY',
+        tax_included: companySettings.default_tax_included || false
+      };
+      
+      console.log('🚚 Adding delivery item:', deliveryItem);
+      processedItems.push(deliveryItem);
+    }
     
     // Berechne Summen basierend auf Steuereinstellung
      let calculatedSubtotal = 0;
@@ -692,11 +735,24 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
      // Gesamte Netto-Summe
      calculatedSubtotal = bruttoToNettoSum + nettoSum;
      
-     // Steuer berechnen (immer auf Netto-Basis)
-     calculatedTaxAmount = calculatedSubtotal * (companySettings.vat_rate || 19) / 100;
-     
-     // Brutto-Summe
-     calculatedTotal = calculatedSubtotal + calculatedTaxAmount;
+     // Steuer berechnen basierend auf Steuereinstellung
+     if (taxIncludedItems.length > 0 && taxExcludedItems.length === 0) {
+       // Alle Items haben Steuer enthalten: Steuer aus Brutto-Summe berechnen
+       const originalBruttoSum = taxIncludedItems.reduce((sum: number, item: any) => sum + item.total_price, 0);
+       calculatedTaxAmount = originalBruttoSum - calculatedSubtotal;
+       calculatedTotal = originalBruttoSum;
+     } else if (taxExcludedItems.length > 0 && taxIncludedItems.length === 0) {
+       // Alle Items sind Netto: Steuer hinzurechnen
+       calculatedTaxAmount = calculatedSubtotal * (invoiceData.tax_rate || 19) / 100;
+       calculatedTotal = calculatedSubtotal + calculatedTaxAmount;
+     } else {
+       // Gemischte Items: Komplexe Berechnung
+       const bruttoSum = taxIncludedItems.reduce((sum: number, item: any) => sum + item.total_price, 0);
+       const nettoTaxAmount = bruttoSum - bruttoToNettoSum;
+       const additionalTaxAmount = nettoSum * (invoiceData.tax_rate || 19) / 100;
+       calculatedTaxAmount = nettoTaxAmount + additionalTaxAmount;
+       calculatedTotal = bruttoSum + nettoSum + additionalTaxAmount;
+     }
     
     console.log('💰 Calculated totals from items:', {
       items_count: processedItems.length,

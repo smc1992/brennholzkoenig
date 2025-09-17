@@ -160,6 +160,8 @@ export default function WishlistPage() {
     if (!url) return '/api/placeholder?width=400&height=400&text=Bild+nicht+verfügbar';
     // Wenn es bereits eine vollständige URL ist, verwende sie direkt
     if (url.startsWith('http')) return url;
+    // Wenn es ein absoluter Pfad ist (beginnt mit /), verwende ihn direkt
+    if (url.startsWith('/')) return url;
     // Wenn es ein Storage-Filename ist, konvertiere zu CDN-URL
     return getCDNUrl(`products/${url}`);
   };

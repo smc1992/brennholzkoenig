@@ -28,6 +28,7 @@ interface RealtimeSyncHook {
   refreshProducts: () => Promise<void>;
   subscribeToChanges: () => void;
   unsubscribeFromChanges: () => void;
+  updateProductStockOptimistically: (productId: number, quantityChange: number) => void;
 }
 
 // Fallback-Produkte für sofortige Anzeige
@@ -80,6 +81,28 @@ export function useRealtimeSync(): RealtimeSyncHook {
   const [error, setError] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<any>(null);
   const [isUnmounting, setIsUnmounting] = useState<boolean>(false);
+
+  // Optimistische Update-Funktion für sofortige UI-Updates
+  const updateProductStockOptimistically = useCallback((productId: number, quantityChange: number) => {
+    setProducts(prevProducts => 
+      prevProducts.map(product => 
+        product.id === productId 
+          ? { 
+              ...product, 
+              stock_quantity: Math.max(0, product.stock_quantity - quantityChange),
+              in_stock: (product.stock_quantity - quantityChange) > 0
+            }
+          : product
+      )
+    );
+    
+    // Dispatch custom event für andere Komponenten
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('optimisticStockUpdate', {
+        detail: { productId, quantityChange, timestamp: Date.now() }
+      }));
+    }
+  }, []);
 
   const refreshProducts = useCallback(async () => {
     try {
@@ -235,7 +258,8 @@ export function useRealtimeSync(): RealtimeSyncHook {
     error,
     refreshProducts,
     subscribeToChanges,
-    unsubscribeFromChanges
+    unsubscribeFromChanges,
+    updateProductStockOptimistically
   };
 }
 

@@ -21,11 +21,15 @@ export async function POST(request: NextRequest) {
     });
     
     // Lade Rechnungseinstellungen aus invoice_settings Tabelle
-    const { data: invoiceSettings } = await supabase
+    const { data: invoiceSettings, error: settingsError } = await supabase
       .from('invoice_settings')
       .select('*')
       .limit(1)
       .single();
+      
+    if (settingsError) {
+      console.error('❌ Error loading invoice settings:', settingsError);
+    }
     
     console.log('📋 Loaded invoice settings:', invoiceSettings);
     
@@ -40,7 +44,8 @@ export async function POST(request: NextRequest) {
       company_email: invoiceSettings?.company_email || 'info@brennholz-koenig.de',
       company_website: invoiceSettings?.company_website || 'www.brennholz-koenig.de',
       tax_id: invoiceSettings?.tax_id || 'DE200789994',
-      vat_rate: invoiceSettings?.vat_rate || 19,
+      vat_rate: invoiceSettings?.vat_rate ? parseFloat(invoiceSettings.vat_rate) : 19,
+      default_tax_included: invoiceSettings?.default_tax_included || false,
       bank_name: invoiceSettings?.bank_name || 'Sparkasse Bad Hersfeld-Rotenburg',
       bank_iban: invoiceSettings?.bank_iban || 'DE89 5325 0000 0000 1234 56',
       bank_bic: invoiceSettings?.bank_bic || 'HELADEF1HER',
@@ -149,7 +154,9 @@ export async function POST(request: NextRequest) {
           due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
           status: 'draft',
           subtotal_amount: order.subtotal_amount,
-          tax_amount: (parseFloat(order.subtotal_amount || '0') * 0.19).toFixed(2),
+          tax_amount: finalSettings.default_tax_included 
+            ? (parseFloat(order.subtotal_amount || '0') * (finalSettings.vat_rate / (100 + finalSettings.vat_rate))).toFixed(2)
+            : (parseFloat(order.subtotal_amount || '0') * (finalSettings.vat_rate / 100)).toFixed(2),
           total_amount: order.total_amount,
           payment_terms: finalSettings.invoice_payment_terms || 'Zahlbar innerhalb von 14 Tagen.'
         };
@@ -169,8 +176,12 @@ export async function POST(request: NextRequest) {
         delivery_city: 'Musterstadt',
         delivery_phone: '+49 123 456789',
         delivery_email: 'max@example.com',
-        subtotal_amount: '250.00',
-        total_amount: '297.50',
+        subtotal_amount: finalSettings.default_tax_included 
+          ? (250 / (1 + finalSettings.vat_rate / 100)).toFixed(2)  // Netto aus Brutto
+          : '250.00',  // Bereits Netto
+        total_amount: finalSettings.default_tax_included 
+          ? '250.00'  // Brutto (Eingangspreis)
+          : (250 + (250 * finalSettings.vat_rate / 100)).toFixed(2),  // Netto + Steuer
         customers: {
           first_name: 'Max',
           last_name: 'Mustermann',
@@ -191,9 +202,15 @@ export async function POST(request: NextRequest) {
         invoice_date: new Date().toISOString(),
         due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
         status: 'draft',
-        subtotal_amount: '250.00',
-        tax_amount: '47.50',
-        total_amount: '297.50',
+        subtotal_amount: finalSettings.default_tax_included 
+          ? (250 / (1 + finalSettings.vat_rate / 100)).toFixed(2)  // Netto aus Brutto
+          : '250.00',  // Bereits Netto
+        tax_amount: finalSettings.default_tax_included 
+          ? (250 * (finalSettings.vat_rate / (100 + finalSettings.vat_rate))).toFixed(2)  // Steuer aus Brutto
+          : (250 * finalSettings.vat_rate / 100).toFixed(2),  // Steuer auf Netto
+        total_amount: finalSettings.default_tax_included 
+          ? '250.00'  // Brutto (Eingangspreis)
+          : (250 + (250 * finalSettings.vat_rate / 100)).toFixed(2),  // Netto + Steuer
         payment_terms: finalSettings.invoice_payment_terms || 'Zahlbar innerhalb von 14 Tagen.'
       };
     }
@@ -267,7 +284,8 @@ export async function POST(request: NextRequest) {
         email: finalSettings.company_email,
         website: finalSettings.company_website,
         tax_id: finalSettings.tax_id,
-        logo_url: finalSettings.logo_url
+        logo_url: finalSettings.logo_url,
+        default_tax_included: finalSettings.default_tax_included
       },
       payment: {
         bank_name: finalSettings.bank_name,
@@ -346,12 +364,28 @@ export async function POST(request: NextRequest) {
          };
        })
         : [],
-       totals: {
+      totals: {
         subtotal: parseFloat(invoiceData.subtotal_amount).toFixed(2),
         tax: parseFloat(invoiceData.tax_amount).toFixed(2),
+        tax_rate: finalSettings.vat_rate,
         total: parseFloat(invoiceData.total_amount).toFixed(2)
       }
     };
+    
+    // Füge Lieferkosten als separate Position hinzu falls vorhanden
+    if (orderData.delivery_price && parseFloat(orderData.delivery_price) > 0) {
+      const deliveryItem = {
+        name: `Lieferung (${orderData.delivery_type === 'express' ? 'Express 24-48h' : 'Standard'})`,
+        category: 'Lieferung',
+        quantity: 1,
+        unit: 'Stk',
+        unitPrice: parseFloat(orderData.delivery_price).toFixed(2),
+        totalPrice: parseFloat(orderData.delivery_price).toFixed(2)
+      };
+      
+      console.log('🚚 Adding delivery item to preview:', deliveryItem);
+      templateData.items.push(deliveryItem);
+    }
     
     console.log('🎯 FINAL TEMPLATE DATA:', {
       items_count: templateData.items?.length || 0,

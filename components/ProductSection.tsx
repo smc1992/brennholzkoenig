@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getCDNUrl } from '@/utils/cdn';
+import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 
 interface Product {
   id: number;
@@ -43,6 +44,7 @@ const productUrlMapping: { [key: number]: string } = {
 };
 
 export default function ProductSection() {
+  const { updateProductStockOptimistically } = useRealtimeSync();
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -118,6 +120,25 @@ export default function ProductSection() {
       }
       return [...prevCart, cartItem];
     });
+
+    // Optimistische UI-Updates für sofortige SRM-Verfügbarkeits-Anzeige
+    updateProductStockOptimistically(product.id, quantity);
+    
+    // Lokale Produktdaten auch sofort aktualisieren
+    setProducts(prevProducts => 
+      prevProducts.map(p => 
+        p.id === product.id 
+          ? { ...p, stock_quantity: Math.max(0, p.stock_quantity - quantity) }
+          : p
+      )
+    );
+    
+    // Dispatch Event für andere Komponenten
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('stockUpdated', {
+        detail: { productId: product.id.toString(), quantityChange: quantity }
+      }));
+    }
   };
 
   const formatPrice = (price: number): string => {
