@@ -145,7 +145,7 @@ export default function EmailSystemTab() {
       setEditingTemplate(template);
       const templateData = template.template;
       setTemplateForm({
-        name: template.setting_name,
+        name: template.setting_key,
         subject: templateData.subject || '',
         html_content: templateData.html_content || '',
         text_content: templateData.text_content || '',
@@ -1111,7 +1111,7 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`
                             <i className={`${typeConfig.icon} text-${typeConfig.color}-600`}></i>
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-bold text-gray-900">{template.setting_name}</h4>
+                            <h4 className="font-bold text-gray-900">{template.setting_key}</h4>
                             <p className="text-sm text-gray-600">{getTemplateTypeLabel(templateData.type)}</p>
                           </div>
                         </div>
