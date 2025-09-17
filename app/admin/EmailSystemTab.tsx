@@ -1284,7 +1284,9 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`
                     {[
                       '{{customer_name}}', '{{order_number}}', '{{order_total}}', 
                       '{{order_date}}', '{{delivery_address}}', '{{tracking_number}}',
-                      '{{product_list}}', '{{company_name}}', '{{support_email}}'
+                      '{{product_list}}', '{{company_name}}', '{{company_business}}',
+                      '{{company_address}}', '{{company_phone}}', '{{company_email}}',
+                      '{{company_website}}', '{{support_email}}'
                     ].map(placeholder => (
                       <span 
                         key={placeholder}

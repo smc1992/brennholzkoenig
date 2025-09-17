@@ -68,6 +68,86 @@ export async function loadEmailTemplate(type: string): Promise<EmailTemplate | n
   }
 }
 
+// Firmen-Informationen für E-Mail-Templates
+const COMPANY_INFO = {
+  name: 'Thorsten Vey',
+  business: 'Brennholzhandel',
+  address: 'Frankfurter Straße 3',
+  postal_code: '36419',
+  city: 'Buttlar',
+  country: 'Deutschland',
+  phone: '+49 176 71085234',
+  email: 'info@brennholz-koenig.de',
+  website: 'www.brennholzkoenig.de',
+  logo_url: '/images/Brennholzkönig%20transparent.webp?v=4&t=1695730300',
+  business_hours: {
+    weekdays: 'Montag - Freitag: 8:00 - 18:00 Uhr',
+    saturday: 'Samstag: 9:00 - 16:00 Uhr',
+    sunday: 'Sonntag: Nach Vereinbarung'
+  }
+};
+
+// Generiere professionelle E-Mail-Header mit Logo und Firmeninfo
+function generateEmailHeader(): string {
+  return `
+    <div style="background: linear-gradient(135deg, #C04020, #A03318); padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+      <img src="${COMPANY_INFO.logo_url}" alt="${COMPANY_INFO.name} Logo" style="height: 80px; width: auto; margin-bottom: 20px; filter: brightness(0) invert(1);" />
+      <h1 style="color: white; font-size: 28px; font-weight: bold; margin: 0; font-family: 'Inter', Arial, sans-serif;">
+        🔥 ${COMPANY_INFO.name}
+      </h1>
+      <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin: 5px 0 0; font-family: Arial, sans-serif;">
+        ${COMPANY_INFO.business}
+      </p>
+    </div>
+  `;
+}
+
+// Generiere professionelle E-Mail-Footer mit vollständiger Firmenadresse
+function generateEmailFooter(): string {
+  return `
+    <div style="background: #f8f9fa; padding: 30px 20px; margin-top: 30px; border-radius: 0 0 8px 8px; border-top: 3px solid #C04020;">
+      <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px;">
+          <div>
+            <h3 style="color: #C04020; font-size: 16px; font-weight: bold; margin: 0 0 10px 0;">📍 Kontakt</h3>
+            <p style="margin: 0; color: #333; font-size: 14px; line-height: 1.6;">
+              <strong>${COMPANY_INFO.name}</strong><br>
+              ${COMPANY_INFO.business}<br>
+              ${COMPANY_INFO.address}<br>
+              ${COMPANY_INFO.postal_code} ${COMPANY_INFO.city}<br>
+              ${COMPANY_INFO.country}
+            </p>
+          </div>
+          <div>
+            <h3 style="color: #C04020; font-size: 16px; font-weight: bold; margin: 0 0 10px 0;">📞 Erreichbarkeit</h3>
+            <p style="margin: 0; color: #333; font-size: 14px; line-height: 1.6;">
+              <strong>Telefon:</strong> ${COMPANY_INFO.phone}<br>
+              <strong>E-Mail:</strong> ${COMPANY_INFO.email}<br>
+              <strong>Website:</strong> ${COMPANY_INFO.website}
+            </p>
+          </div>
+        </div>
+        
+        <div style="border-top: 1px solid #ddd; padding-top: 20px; margin-top: 20px;">
+          <h3 style="color: #C04020; font-size: 16px; font-weight: bold; margin: 0 0 10px 0;">🕒 Geschäftszeiten</h3>
+          <p style="margin: 0; color: #333; font-size: 14px; line-height: 1.6;">
+            ${COMPANY_INFO.business_hours.weekdays}<br>
+            ${COMPANY_INFO.business_hours.saturday}<br>
+            ${COMPANY_INFO.business_hours.sunday}
+          </p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+          <p style="margin: 0; color: #666; font-size: 12px;">
+            Diese E-Mail wurde automatisch vom ${COMPANY_INFO.name} System generiert.<br>
+            Bei Fragen wenden Sie sich gerne an uns: ${COMPANY_INFO.email}
+          </p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 // Ersetze Platzhalter in Template-Inhalt
 export function replacePlaceholders(content: string, data: TemplateData): string {
   let result = content;
@@ -75,8 +155,20 @@ export function replacePlaceholders(content: string, data: TemplateData): string
   // Entferne HTML-Platzhalter-Spans falls vorhanden (aus Visual Editor)
   result = result.replace(/<span[^>]*class="[^"]*bg-blue-100[^"]*"[^>]*>([^<]+)<\/span>/g, '$1');
   
+  // Erweiterte Template-Daten mit Firmeninformationen
+  const enhancedData = {
+    ...data,
+    company_name: COMPANY_INFO.name,
+    company_business: COMPANY_INFO.business,
+    company_address: `${COMPANY_INFO.address}, ${COMPANY_INFO.postal_code} ${COMPANY_INFO.city}`,
+    company_phone: COMPANY_INFO.phone,
+    company_email: COMPANY_INFO.email,
+    company_website: COMPANY_INFO.website,
+    support_email: COMPANY_INFO.email
+  };
+  
   // Standard-Platzhalter ersetzen
-  Object.entries(data).forEach(([key, value]) => {
+  Object.entries(enhancedData).forEach(([key, value]) => {
     const placeholder = `{{${key}}}`;
     const regex = new RegExp(placeholder.replace(/[{}]/g, '\\$&'), 'g');
     result = result.replace(regex, String(value || ''));
@@ -85,6 +177,33 @@ export function replacePlaceholders(content: string, data: TemplateData): string
   // Spezielle Formatierungen
   result = result.replace(/{{order_total}}/g, data.order_total ? `${data.order_total}` : '0,00 €');
   result = result.replace(/{{order_date}}/g, data.order_date || new Date().toLocaleDateString('de-DE'));
+  
+  // Automatisches Hinzufügen von Header und Footer wenn nicht vorhanden
+  if (!result.includes('Brennholzkönig') || !result.includes(COMPANY_INFO.phone)) {
+    const emailHeader = generateEmailHeader();
+    const emailFooter = generateEmailFooter();
+    
+    // Wrap content in professional email structure
+    result = `
+      <!DOCTYPE html>
+      <html lang="de">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>E-Mail von ${COMPANY_INFO.name}</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+        <div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          ${emailHeader}
+          <div style="padding: 30px 20px;">
+            ${result}
+          </div>
+          ${emailFooter}
+        </div>
+      </body>
+      </html>
+    `;
+  }
   
   // Fallback für nicht ersetzte Platzhalter (leere Strings)
   result = result.replace(/{{[^}]+}}/g, '');
