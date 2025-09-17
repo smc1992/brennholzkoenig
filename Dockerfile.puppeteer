@@ -47,21 +47,13 @@ COPY . .
 # Anwendung bauen (mit verfügbaren Umgebungsvariablen)
 RUN npm run build
 
-# Port freigeben
-EXPOSE 3000
-
-# Arbeitsverzeichnis und Berechtigungen setzen
-WORKDIR /home/pptruser/app
+# Benutzer-Verzeichnis vorbereiten
 RUN mkdir -p /home/pptruser/Downloads \
+    && chown -R pptruser:pptruser /app \
     && chown -R pptruser:pptruser /home/pptruser
 
-# Abhängigkeiten als root installieren
-COPY package.json package-lock.json ./
-RUN npm ci --only=production
-
-# App-Code kopieren und Berechtigungen setzen
-COPY . .
-RUN chown -R pptruser:pptruser /home/pptruser/app
+# Port freigeben
+EXPOSE 3000
 
 # Als non-root user ausführen (kritisch für Chrome-Stabilität)
 USER pptruser
