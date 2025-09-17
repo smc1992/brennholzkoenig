@@ -91,7 +91,7 @@ const COMPANY_INFO = {
 function generateEmailHeader(): string {
   return `
     <div style="background: linear-gradient(135deg, #C04020, #A03318); padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
-      <img src="${COMPANY_INFO.logo_url}" alt="${COMPANY_INFO.name} Logo" style="height: 80px; width: auto; margin-bottom: 20px; filter: brightness(0) invert(1);" />
+      <img src="${COMPANY_INFO.logo_url}" alt="${COMPANY_INFO.name} Logo" style="height: 80px; width: auto; margin-bottom: 20px;" />
       <h1 style="color: white; font-size: 28px; font-weight: bold; margin: 0; font-family: 'Inter', Arial, sans-serif;">
         🔥 ${COMPANY_INFO.name}
       </h1>
