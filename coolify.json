@@ -17,7 +17,7 @@
     "coolify.type": "application"
   },
   "resources": {
-    "memory": "1024Mi",
-    "cpu": "500m"
-  }
+     "memory": "2048Mi",
+     "cpu": "1000m"
+   }
 }

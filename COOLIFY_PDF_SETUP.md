@@ -41,13 +41,19 @@ NEXT_PUBLIC_SITE_URL=https://deine-domain.com
 
 ### 4. Resource-Limits setzen
 
-**Wichtig für PDF-Generierung:**
+**KRITISCH für PDF-Generierung:**
 
 Unter **Resources**:
 ```
-Memory Limit: 1024Mi (mindestens!)
-CPU Limit: 500m (mindestens!)
+Memory Limit: 2048Mi (empfohlen für stabile PDF-Generierung!)
+CPU Limit: 1000m (empfohlen!)
+
+# Minimum-Anforderungen:
+Memory Limit: 1536Mi (absolutes Minimum)
+CPU Limit: 500m (absolutes Minimum)
 ```
+
+**Hinweis:** Der Fehler "Target closed" tritt oft bei zu wenig Memory auf!
 
 ### 5. Health Check konfigurieren
 

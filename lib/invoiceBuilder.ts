@@ -86,88 +86,142 @@ export class ModernInvoiceBuilder {
   }
 
   private async initializeBrowser() {
-    try {
-      // Schließe alten Browser falls vorhanden
-      if (this.browser) {
-        try {
-          // Warte kurz bevor Browser geschlossen wird
-          await new Promise(resolve => setTimeout(resolve, 500));
-          await this.browser.close();
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        } catch (e) {
-          console.warn('Error closing old browser:', e);
+    const maxRetries = 3;
+    let lastError: Error | null = null;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🚀 Launching Puppeteer browser (attempt ${attempt}/${maxRetries})...`);
+        
+        // Schließe alten Browser falls vorhanden
+        if (this.browser) {
+          try {
+            await this.browser.close();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          } catch (e) {
+            console.warn('Error closing old browser:', e);
+          }
+          this.browser = null;
         }
-        this.browser = null;
+        
+        // Produktionsumgebung erkennen und entsprechende Konfiguration verwenden
+        const isProduction = process.env.NODE_ENV === 'production';
+        const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || 
+          (isProduction ? '/usr/bin/google-chrome-stable' : undefined);
+        
+        console.log('Environment:', { 
+          isProduction, 
+          executablePath, 
+          attempt,
+          memoryUsage: process.memoryUsage()
+        });
+        
+        this.browser = await puppeteer.launch({
+           headless: true,
+          executablePath,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-web-security',
+            '--disable-features=VizDisplayCompositor,AudioServiceOutOfProcess',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding',
+            '--disable-extensions',
+            '--disable-plugins',
+            '--disable-default-apps',
+            '--disable-ipc-flooding-protection',
+            '--disable-background-networking',
+            '--disable-sync',
+            '--metrics-recording-only',
+            '--no-default-browser-check',
+            '--no-experiments',
+            '--no-pings',
+            '--password-store=basic',
+            '--use-mock-keychain',
+            '--disable-accelerated-2d-canvas',
+            '--disable-accelerated-jpeg-decoding',
+            '--disable-accelerated-mjpeg-decode',
+            '--disable-accelerated-video-decode',
+            '--disable-accelerated-video-encode',
+            '--disable-app-list-dismiss-on-blur',
+            '--disable-background-mode',
+            '--force-color-profile=srgb',
+            '--memory-pressure-off',
+            '--max_old_space_size=4096'
+          ],
+          timeout: 120000,
+          protocolTimeout: 120000,
+          handleSIGINT: false,
+          handleSIGTERM: false,
+          handleSIGHUP: false
+        });
+        
+        // Browser-Verbindung testen
+        const pages = await this.browser.pages();
+        console.log(`✅ Browser initialized successfully with ${pages.length} pages`);
+        
+        // Event-Handler für Browser-Disconnect
+        this.browser.on('disconnected', () => {
+          console.warn('⚠️ Browser disconnected unexpectedly');
+          this.browser = null;
+        });
+        
+        return; // Erfolgreiche Initialisierung
+        
+      } catch (error) {
+        lastError = error as Error;
+        console.error(`❌ Browser initialization attempt ${attempt} failed:`, lastError.message);
+        
+        if (this.browser) {
+          try {
+            await this.browser.close();
+          } catch (e) {
+            console.warn('Error closing failed browser:', e);
+          }
+          this.browser = null;
+        }
+        
+        // Warte vor nächstem Versuch
+        if (attempt < maxRetries) {
+          const delay = attempt * 2000; // Exponential backoff
+          console.log(`⏳ Waiting ${delay}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
       }
-      
-      console.log('🚀 Launching new Puppeteer browser...');
-      
-      // Produktionsumgebung erkennen und entsprechende Konfiguration verwenden
-      const isProduction = process.env.NODE_ENV === 'production';
-      const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || (isProduction ? '/usr/bin/chromium-browser' : undefined);
-      
-      console.log('Environment:', { isProduction, executablePath });
-      
-      this.browser = await puppeteer.launch({
-        headless: true,
-        executablePath,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-gpu',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-          '--disable-web-security',
-          '--disable-features=VizDisplayCompositor',
-          '--disable-background-timer-throttling',
-          '--disable-backgrounding-occluded-windows',
-          '--disable-renderer-backgrounding',
-          '--disable-extensions',
-          '--disable-plugins',
-          '--disable-default-apps',
-          '--disable-ipc-flooding-protection',
-          '--disable-background-networking',
-          '--disable-default-apps',
-          '--disable-sync',
-          '--metrics-recording-only',
-          '--no-default-browser-check',
-          '--no-experiments',
-          '--no-pings',
-          '--password-store=basic',
-          '--use-mock-keychain'
-        ],
-        timeout: 90000,
-        protocolTimeout: 90000
-      });
-      
-      // Warte nach Browser-Start
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('✅ Browser initialized successfully');
-    } catch (error) {
-      const err = error as Error;
-      console.error('❌ Failed to initialize Puppeteer browser:', err);
-      console.error('Error details:', {
-        message: err.message,
-        stack: err.stack,
-        environment: process.env.NODE_ENV,
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH
-      });
-      
-      // Detaillierte Fehlermeldung für Produktionsumgebung
-      if (process.env.NODE_ENV === 'production') {
-        console.error('🚨 Production PDF generation failed. Possible causes:');
-        console.error('1. Chromium not installed in Docker container');
-        console.error('2. Missing system dependencies');
-        console.error('3. Insufficient memory or resources');
-        console.error('4. Security restrictions in container');
-        console.error('💡 Solution: Use Dockerfile.puppeteer for proper Chromium support');
-      }
-      
-      this.browser = null;
-      throw new Error(`PDF generation failed: ${err.message}. Check server logs for details.`);
     }
+    
+    // Alle Versuche fehlgeschlagen
+    console.error('❌ All browser initialization attempts failed');
+    console.error('Error details:', {
+      message: lastError?.message,
+      stack: lastError?.stack,
+      environment: process.env.NODE_ENV,
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+      memoryUsage: process.memoryUsage()
+    });
+    
+    // Detaillierte Fehlermeldung für Produktionsumgebung
+    if (process.env.NODE_ENV === 'production') {
+      console.error('🚨 Production PDF generation failed. Possible causes:');
+      console.error('1. Insufficient memory (need ≥1GB)');
+      console.error('2. Chrome/Chromium not properly installed');
+      console.error('3. Container resource limits too low');
+      console.error('4. Browser process killed by OOM killer');
+      console.error('5. Network/protocol timeout issues');
+      console.error('💡 Solutions:');
+      console.error('- Increase memory limit to 2GB');
+      console.error('- Use Dockerfile.puppeteer');
+      console.error('- Check container logs for OOM kills');
+      console.error('- Verify Chrome installation path');
+    }
+    
+    throw new Error(`PDF generation failed after ${maxRetries} attempts: ${lastError?.message}. Check server logs for details.`);
   }
 
   /**
