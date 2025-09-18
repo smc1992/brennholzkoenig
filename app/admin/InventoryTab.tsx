@@ -65,6 +65,7 @@ export default function InventoryTab() {
       const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select('*')
+        .eq('is_active', true)
         .order('name');
 
       if (productsError) {
@@ -536,7 +537,7 @@ export default function InventoryTab() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {movements.map((movement) => {
-                    const product = products.find(p => p.id === movement.product_id.toString());
+                    const product = products.find(p => p.id.toString() === movement.product_id.toString());
                     return (
                       <tr key={movement.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

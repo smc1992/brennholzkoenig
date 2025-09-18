@@ -9,7 +9,17 @@
     
     @page {
       size: A4;
-      margin: 0;
+      margin: 20mm 15mm 25mm 15mm;
+      
+      @top-center {
+        content: element(running-header);
+        width: 100%;
+      }
+      
+      @bottom-center {
+        content: element(running-footer);
+        width: 100%;
+      }
     }
     
     @media print {
@@ -22,10 +32,31 @@
       
       .container {
         margin: 0;
-        padding: 20mm 15mm;
+        padding: 0;
         box-shadow: none;
         width: 210mm;
         min-height: 297mm;
+      }
+      
+      .header {
+        position: running(running-header);
+        margin: 0;
+        width: 100%;
+      }
+      
+      .footer {
+        position: running(running-footer);
+        margin: 0;
+        width: 100%;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+      }
+      
+      .content-wrapper {
+        margin: 0;
+        padding: 10mm 0;
       }
       
       table {
@@ -60,16 +91,17 @@
         page-break-before: auto;
       }
       
-      .footer {
-        /* Footer-Styles werden von normalen CSS-Regeln übernommen */
-      }
-      
       .page-break {
         page-break-before: always;
       }
       
       .page-break-avoid {
         page-break-inside: avoid;
+      }
+      
+      /* Ensure header and footer appear on every page */
+      .order-confirmation-page .header {
+        display: none; /* Hide duplicate header on order confirmation page */
       }
     }
     
@@ -91,9 +123,14 @@
       width: 210mm;
       min-height: 297mm;
       margin: 0;
-      padding: 20mm 15mm;
+      padding: 0;
       background: white;
       box-shadow: none;
+    }
+    
+    .content-wrapper {
+      padding: 15mm 15mm 10mm 15mm;
+      margin: 0;
     }
     
     /* Header */
@@ -101,7 +138,7 @@
       background: linear-gradient(135deg, #C04020 0%, #A03318 100%) !important;
       color: white !important;
       padding: 12pt 20pt;
-      margin: -20mm -15mm 15pt -15mm;
+      margin: 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -110,6 +147,7 @@
       min-height: 40pt;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
+      width: 100%;
     }
     
     .header::before {
@@ -691,6 +729,8 @@
       </div>
     </header>
     
+    <div class="content-wrapper">
+    
     <!-- Recipient (DIN 5008) -->
     <section class="recipient-section">
       <div class="recipient">
@@ -826,34 +866,6 @@
     </section>
     {{/if}}
     
-    <!-- Footer -->
-    <footer class="footer">
-      <div class="footer-content">
-        <div class="footer-section left">
-          <strong>{{company.name}}</strong>
-          <p>{{company.address_line1}}</p>
-          <p>{{company.postal_code}} {{company.city}}</p>
-          {{#if company.phone}}<p>Mobil: {{company.phone}}</p>{{/if}}
-          {{#if company.email}}<p>Email: {{company.email}}</p>{{/if}}
-          {{#if company.website}}<p>Internet: {{company.website}}</p>{{/if}}
-        </div>
-        
-        {{#if payment.iban}}
-        <div class="footer-section center">
-          <strong>Bankverbindung</strong>
-          {{#if payment.bank_name}}<p>{{payment.bank_name}}</p>{{/if}}
-          <p>IBAN: {{payment.iban}}</p>
-          <p>BIC: {{payment.bic}}</p>
-        </div>
-        {{/if}}
-        
-        <div class="footer-section right">
-          {{#if company.registration}}<p>Steuer-Nr.: {{company.registration}}</p>{{/if}}
-          {{#if company.tax_id}}<p>USt-Ident-Nr.: {{company.tax_id}}</p>{{/if}}
-        </div>
-      </div>
-    </footer>
-    
     <!-- Dynamic Page Break for Order Confirmation -->
     {{#if (gt items.length 4)}}
     <div style="page-break-before: always;"></div>
@@ -863,34 +875,6 @@
     
     <!-- Order Confirmation Page -->
     <div class="order-confirmation-page">
-      <!-- Header -->
-      <header class="header">
-        <div class="logo-section">
-          {{#if company.logo_url}}
-            <img src="{{company.logo_url}}" alt="{{company.name}} Logo" class="logo">
-          {{else}}
-            <div>
-              <h1 class="brand-name">🔥 BRENNHOLZKÖNIG</h1>
-              <p class="brand-tagline">Premium Brennholz direkt vom Produzenten</p>
-            </div>
-          {{/if}}
-        </div>
-        
-        <div class="issuer-section">
-          <div class="issuer-name">{{company.name}}</div>
-          <div class="issuer-address">
-            {{company.address_line1}}<br>
-            {{#if company.address_line2}}{{company.address_line2}}<br>{{/if}}
-            {{company.postal_code}} {{company.city}}
-          </div>
-          <div class="issuer-contact">
-            {{#if company.phone}}📞 {{company.phone}}<br>{{/if}}
-            {{#if company.email}}✉️ {{company.email}}<br>{{/if}}
-            {{#if company.website}}🌐 {{company.website}}<br>{{/if}}
-            {{#if company.tax_id}}🏢 USt-IdNr.: {{company.tax_id}}{{/if}}
-          </div>
-        </div>
-      </header>
       
       <!-- Page Title -->
       <h1 class="page-title">Auftragsbestätigung</h1>
@@ -935,6 +919,35 @@
         <div class="final-signature">Datum, Unterschrift</div>
       </section>
     </div>
+    
+    </div> <!-- End content-wrapper -->
+    
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-section left">
+          <strong>{{company.name}}</strong>
+          <p>{{company.address_line1}}</p>
+          <p>{{company.postal_code}} {{company.city}}</p>
+          {{#if company.phone}}<p>Mobil: {{company.phone}}</p>{{/if}}
+          {{#if company.email}}<p>Email: {{company.email}}</p>{{/if}}
+          {{#if company.website}}<p>Internet: {{company.website}}</p>{{/if}}
+        </div>
+        
+        {{#if payment.iban}}
+        <div class="footer-section center">
+          <strong>Bankverbindung</strong>
+          {{#if payment.bank_name}}<p>{{payment.bank_name}}</p>{{/if}}
+          <p>IBAN: {{payment.iban}}</p>
+          <p>BIC: {{payment.bic}}</p>
+        </div>
+        {{/if}}
+        
+        <div class="footer-section right">
+          {{#if company.registration}}<p>Steuer-Nr.: {{company.registration}}</p>{{/if}}
+          {{#if company.tax_id}}<p>USt-Ident-Nr.: {{company.tax_id}}</p>{{/if}}
+        </div>
+      </div>
     </footer>
   </div>
   

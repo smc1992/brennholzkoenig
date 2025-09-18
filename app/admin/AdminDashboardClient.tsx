@@ -44,6 +44,7 @@ import InvoiceTab from './InvoiceTab';
 import InvoiceSettingsTab from './InvoiceSettingsTab';
 import AdminConfigTab from './AdminConfigTab';
 import EmailSignatureTab from './EmailSignatureTab';
+import StockMonitoringTab from './StockMonitoringTab';
 
 interface AdminDashboardProps {
   adminUser: any;
@@ -311,6 +312,7 @@ export default function AdminDashboardClient({
         { id: 'products', label: 'Produkte', icon: 'ri-stack-line' },
         { id: 'categories', label: 'Kategorien', icon: 'ri-folder-line' },
         { id: 'inventory', label: 'Lager', icon: 'ri-archive-line' },
+        { id: 'stock-monitoring', label: 'Lagerbestand-Überwachung', icon: 'ri-eye-line' },
         { id: 'suppliers', label: 'Lieferanten', icon: 'ri-truck-line' },
         { id: 'shop-settings', label: 'Shop-Einstellungen', icon: 'ri-settings-3-line' }
       ]
@@ -407,6 +409,9 @@ export default function AdminDashboardClient({
       case 'inventory': 
         console.log('AdminDashboard: Rendering InventoryTab');
         return <InventoryTab />;
+      case 'stock-monitoring': 
+        console.log('AdminDashboard: Rendering StockMonitoringTab');
+        return <StockMonitoringTab />;
       case 'suppliers': 
         console.log('AdminDashboard: Rendering SuppliersTab');
         return <SuppliersTab />;

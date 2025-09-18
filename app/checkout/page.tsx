@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { calculatePriceWithTiers } from '../../lib/pricing';
+import { checkProductLowStockById } from '@/lib/stockMonitoring';
 
 // Funktion zur Generierung einer Kundennummer basierend auf Email
 function generateCustomerNumber(email: string): string {
@@ -879,6 +880,14 @@ export default function CheckoutPage() {
           }
 
           console.log(`Lagerbestand aktualisiert für ${item.name}: ${currentStock} → ${newStock}`);
+          
+          // Check for low stock and send alert if necessary
+          try {
+            await checkProductLowStockById(item.id);
+          } catch (stockCheckError) {
+            console.error(`Fehler bei der Lagerbestand-Prüfung für ${item.name}:`, stockCheckError);
+            // Non-critical error, don't fail the order
+          }
         } catch (error) {
           console.error(`Fehler beim Aktualisieren des Lagers für ${item.name}:`, error);
           // Continue with other items even if one fails

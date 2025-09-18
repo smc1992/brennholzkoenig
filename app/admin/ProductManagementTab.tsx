@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import ProductImageUploader from '@/components/ProductImageUploader';
 import ProductImageGallery from '@/components/ProductImageGallery';
 import ProductImageGalleryWithCrop from '@/components/ProductImageGalleryWithCrop';
+import { checkProductLowStockById } from '@/lib/stockMonitoring';
 
 export default function ProductManagementTab() {
   interface Product {
@@ -332,6 +333,16 @@ export default function ProductManagementTab() {
           .eq('id', productId);
 
         if (error) throw error;
+
+        // Check for low stock after bulk stock update
+        if (bulkAction === 'stock_update') {
+          try {
+            await checkProductLowStockById(productId);
+          } catch (stockCheckError) {
+            console.error(`Fehler bei der Lagerbestand-Prüfung für Produkt ${productId}:`, stockCheckError);
+            // Non-critical error, don't fail the bulk action
+          }
+        }
       }
 
       setSelectedProducts([]);
@@ -387,6 +398,14 @@ export default function ProductManagementTab() {
         });
 
       if (movementError) throw movementError;
+
+      // Check for low stock and send alert if necessary
+      try {
+        await checkProductLowStockById(productId);
+      } catch (stockCheckError) {
+        console.error('Fehler bei der Lagerbestand-Prüfung:', stockCheckError);
+        // Non-critical error, don't fail the stock update
+      }
 
       loadData();
       alert('Lagerbestand erfolgreich aktualisiert!');
