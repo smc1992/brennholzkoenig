@@ -31,19 +31,19 @@ interface EmailTemplate {
 // Lade aktive E-Mail-Templates aus der Datenbank
 export async function loadEmailTemplate(type: string): Promise<EmailTemplate | null> {
   try {
+    // Lade alle E-Mail-Templates
     const { data, error } = await supabase
       .from('app_settings')
       .select('*')
-      .eq('setting_type', 'email_template')
-      .single();
+      .eq('setting_type', 'email_template');
 
     if (error || !data) {
       console.warn(`Kein Template für Typ '${type}' gefunden:`, error);
       return null;
     }
 
-    const templates = Array.isArray(data) ? data : [data];
-    const template = templates.find(t => {
+    // Finde das passende Template
+    const template = data.find((t: any) => {
       try {
         const parsed = JSON.parse(t.setting_value);
         return parsed.type === type && parsed.active;

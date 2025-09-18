@@ -1,5 +1,55 @@
 import { supabase } from './supabase';
 
+interface EmailOptions {
+  to: string;
+  subject: string;
+  html?: string;
+  text?: string;
+  from?: string;
+  replyTo?: string;
+}
+
+// Lade globale E-Mail-Signatur
+async function loadGlobalSignature(): Promise<{ enabled: boolean; html_signature: string; text_signature: string } | null> {
+  try {
+    const { data: signatureData } = await supabase
+      .from('app_settings')
+      .select('setting_value')
+      .eq('setting_key', 'global_email_signature')
+      .eq('setting_type', 'email_config')
+      .single();
+
+    if (signatureData) {
+      return JSON.parse(signatureData.setting_value);
+    }
+  } catch (error) {
+    console.error('Error loading global signature:', error);
+  }
+  return null;
+}
+
+// Füge globale Signatur zu E-Mail hinzu
+async function appendGlobalSignature(content: string, isHtml: boolean = true): Promise<string> {
+  const signature = await loadGlobalSignature();
+  
+  if (!signature || !signature.enabled) {
+    return content;
+  }
+
+  if (isHtml) {
+    // HTML-Signatur vor dem schließenden </body> Tag einfügen
+    if (content.includes('</body>')) {
+      return content.replace('</body>', `${signature.html_signature}</body>`);
+    } else {
+      // Falls kein </body> Tag, am Ende hinzufügen
+      return content + signature.html_signature;
+    }
+  } else {
+    // Text-Signatur für Plain-Text E-Mails
+    return content + signature.text_signature;
+  }
+}
+
 interface SMTPSettings {
   smtp_host: string;
   smtp_port: string;
@@ -283,7 +333,7 @@ export async function createEmailTransporter() {
   throw new Error('Alle SMTP-Port-Konfigurationen fehlgeschlagen');
 }
 
-// Sende E-Mail mit dynamischen SMTP-Einstellungen
+// Sende E-Mail mit dynamischen SMTP-Einstellungen und globaler Signatur
 export async function sendEmail({
   to,
   subject,
@@ -300,12 +350,26 @@ export async function sendEmail({
     
     const { transporter, settings } = await createEmailTransporter();
 
+    // Globale Signatur zu HTML und Text hinzufügen
+    let finalHtml = html;
+    let finalText = text;
+
+    if (html) {
+      finalHtml = await appendGlobalSignature(html, true);
+      console.log('[SMTP] Globale HTML-Signatur hinzugefügt');
+    }
+
+    if (text) {
+      finalText = await appendGlobalSignature(text, false);
+      console.log('[SMTP] Globale Text-Signatur hinzugefügt');
+    }
+
     const mailOptions = {
       from: `${settings.smtp_from_name || 'Brennholzkönig'} <${settings.smtp_from_email}>`,
       to,
       subject,
-      text,
-      html
+      text: finalText,
+      html: finalHtml
     };
 
     console.log('[SMTP] Sende E-Mail mit Optionen:', {
