@@ -180,8 +180,8 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`
       })
     }
 
-    // E-Mail senden
-    const mailOptions = {
+    // Kunden-E-Mail vorbereiten
+    const customerMailOptions = {
       from: `"${smtpConfig.smtp_from_name}" <${smtpConfig.smtp_from_email}>`,
       to: customerData.email,
       subject: emailSubject,
@@ -189,30 +189,88 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`
       text: emailText,
     }
 
-    // E-Mail senden
-    console.log('📧 Sende E-Mail an:', customerData.email)
+    // Admin-E-Mail vorbereiten
+    const adminSubject = `Neue Bestellung #{order_id} eingegangen - Brennholzkönig`.replace('{order_id}', orderData.id)
+    const adminHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Neue Bestellung - Admin Benachrichtigung</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background-color: white; }
+        .header { background-color: #C04020; color: white; padding: 20px; text-align: center; }
+        .content { padding: 30px; }
+        .order-details { background-color: #f9f9f9; padding: 20px; margin: 20px 0; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="font-size: 24px; font-weight: bold;">🔥 Brennholzkönig Admin</div>
+            <p>Neue Bestellung eingegangen</p>
+        </div>
+        <div class="content">
+            <h2>Neue Bestellung erhalten!</h2>
+            <div class="order-details">
+                <h3>Bestelldetails</h3>
+                <p><strong>Bestellnummer:</strong> #${orderData.id}</p>
+                <p><strong>Bestelldatum:</strong> ${new Date().toLocaleDateString('de-DE')}</p>
+                <p><strong>Gesamtbetrag:</strong> ${orderData.total}€</p>
+                <p><strong>Kunde:</strong> ${customerData.name}</p>
+                <p><strong>E-Mail:</strong> ${customerData.email}</p>
+                <p><strong>Lieferadresse:</strong><br>${customerData.address}<br>${customerData.postalCode} ${customerData.city}</p>
+            </div>
+            <p>Bitte bearbeiten Sie diese Bestellung zeitnah.</p>
+        </div>
+    </div>
+</body>
+</html>`
+
+    const adminMailOptions = {
+      from: `"${smtpConfig.smtp_from_name}" <${smtpConfig.smtp_from_email}>`,
+      to: smtpConfig.smtp_from_email, // Admin-E-Mail an die From-Adresse
+      subject: adminSubject,
+      html: adminHtml,
+      text: `Neue Bestellung eingegangen!\n\nBestellnummer: #${orderData.id}\nKunde: ${customerData.name}\nE-Mail: ${customerData.email}\nGesamtbetrag: ${orderData.total}€\nLieferadresse: ${customerData.address}, ${customerData.postalCode} ${customerData.city}`
+    }
+
+    console.log('📧 Sende E-Mails an:', {
+      customer: customerData.email,
+      admin: smtpConfig.smtp_from_email
+    })
     console.log('📧 SMTP-Konfiguration:', {
       host: smtpConfig.smtp_host,
       port: smtpConfig.smtp_port,
-      from: mailOptions.from
+      from: customerMailOptions.from
     })
 
     if (shouldSimulate) {
-      // Entwicklungsmodus: E-Mail simulieren
-      console.log('🔧 ENTWICKLUNGSMODUS: E-Mail wird simuliert')
-      console.log('📧 E-Mail-Details:', {
-        to: mailOptions.to,
-        subject: mailOptions.subject,
-        from: mailOptions.from,
-        htmlPreview: mailOptions.html.substring(0, 200) + '...'
+      // Entwicklungsmodus: E-Mails simulieren
+      console.log('🔧 ENTWICKLUNGSMODUS: E-Mails werden simuliert')
+      console.log('📧 Kunden-E-Mail:', {
+        to: customerMailOptions.to,
+        subject: customerMailOptions.subject,
+        from: customerMailOptions.from
       })
-      console.log('✅ E-Mail erfolgreich simuliert (Entwicklungsmodus)')
+      console.log('📧 Admin-E-Mail:', {
+        to: adminMailOptions.to,
+        subject: adminMailOptions.subject,
+        from: adminMailOptions.from
+      })
+      console.log('✅ Beide E-Mails erfolgreich simuliert (Entwicklungsmodus)')
     } else {
       // Produktionsmodus: Echten E-Mail-Versand durchführen
-      console.log('🚀 PRODUKTIONSMODUS: Sende echte E-Mail')
+      console.log('🚀 PRODUKTIONSMODUS: Sende echte E-Mails')
       if (transporter) {
-        await transporter.sendMail(mailOptions)
-        console.log('✅ E-Mail erfolgreich versendet')
+        // Kunden-E-Mail senden
+        await transporter.sendMail(customerMailOptions)
+        console.log('✅ Kunden-E-Mail erfolgreich versendet')
+        
+        // Admin-E-Mail senden
+        await transporter.sendMail(adminMailOptions)
+        console.log('✅ Admin-E-Mail erfolgreich versendet')
       } else {
         throw new Error('Transporter nicht verfügbar')
       }
@@ -222,8 +280,14 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`
       success: true,
       message: 'Bestellbestätigung erfolgreich versendet',
       emailDetails: {
-        to: customerData.email,
-        subject: mailOptions.subject,
+        customer: {
+          to: customerData.email,
+          subject: customerMailOptions.subject
+        },
+        admin: {
+          to: adminMailOptions.to,
+          subject: adminMailOptions.subject
+        },
         orderId: orderData.id,
         total: orderData.total
       }
