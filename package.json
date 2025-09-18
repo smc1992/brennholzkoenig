@@ -39,6 +39,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.21",
+    "dotenv": "^17.2.2",
     "handlebars": "^4.7.8",
     "jspdf": "^3.0.2",
     "jspdf-autotable": "^5.0.2",

@@ -23,7 +23,7 @@ export default function LocationMap() {
                 </div>
                 <div>
                   <h3 className="text-lg sm:text-xl font-black text-[#1A1A1A] mb-2" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-                    ADRESSE
+                    ABHOLADRESSE
                   </h3>
                   <div className="space-y-1">
                     <p className="font-bold text-base sm:text-lg">Brennholzkönig</p>
@@ -58,10 +58,6 @@ export default function LocationMap() {
                     <span>Kostenlose Parkplätze direkt vor Ort</span>
                   </div>
                   <div className="flex items-center">
-                    <i className="ri-road-map-line text-[#D4A520] mr-2 flex-shrink-0"></i>
-                    <span>5 Minuten von der A4 Abfahrt Bad Hersfeld</span>
-                  </div>
-                  <div className="flex items-center">
                     <i className="ri-calendar-check-line text-[#D4A520] mr-2 flex-shrink-0"></i>
                     <span>Termine nach Vereinbarung - bitte vorab anrufen</span>
                   </div>
@@ -72,7 +68,7 @@ export default function LocationMap() {
 
           <div className="relative h-96 sm:h-[500px] bg-gray-100 rounded-2xl overflow-hidden shadow-xl w-full">
             <iframe 
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2497.8!2d9.9!3d50.8!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTDCsDQ4JzAwLjAiTiA5wrA1NCcwMC4wIkU!5e0!3m2!1sde!2sde!4v1234567890123"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2497.8!2d9.9!3d50.8!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47a3a8b8b8b8b8b8%3A0x8b8b8b8b8b8b8b8b!2sAm%20Rainbaum%2019a%2C%2036132%20Eiterfeld-Gro%C3%9Fentaft%2C%20Germany!5e0!3m2!1sde!2sde!4v1234567890123"
               width="100%" 
               height="100%" 
               style={{ border: 0, width: '100%', height: '100%', display: 'block' }} 

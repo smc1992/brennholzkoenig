@@ -46,7 +46,26 @@ export async function POST(request: NextRequest) {
     
     switch (triggerType) {
       case 'order_confirmation':
-        const orderData = testData || {
+        const orderData = testData ? {
+          id: testData.orderId || 'test_order_123',
+          number: testData.orderId || 'BK-TEST-001',
+          total: testData.totalAmount || 89.99,
+          date: new Date().toISOString(),
+          customer: {
+            name: testData.customerName || 'Max Mustermann',
+            email: testData.customerEmail || 'test@example.com'
+          },
+          products: testData.products || [
+            {
+              name: 'Brennholz Buche 25cm',
+              quantity: 1,
+              price: 79.99
+            }
+          ],
+          delivery_address: testData.deliveryAddress ? 
+            `${testData.deliveryAddress.street}, ${testData.deliveryAddress.zipCode} ${testData.deliveryAddress.city}` :
+            'Musterstraße 123, 12345 Musterstadt'
+        } : {
           id: 'test_order_123',
           number: 'BK-TEST-001',
           total: 89.99,

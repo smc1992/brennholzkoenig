@@ -1,174 +1,240 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import nodemailer from 'nodemailer'
+
+// Template-Platzhalter ersetzen
+function replacePlaceholders(template: string, data: Record<string, any>): string {
+  let result = template
+  Object.keys(data).forEach(key => {
+    const placeholder = `{${key}}`
+    const value = data[key] || ''
+    result = result.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), value)
+  })
+  return result
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const { orderData, customerEmail, customerName, templateType = 'order_confirmation' } = await request.json();
+    console.log('🔥 === E-MAIL ROUTE GESTARTET ===')
+    console.log('🔥 NODE_ENV:', process.env.NODE_ENV)
+    
+    const { orderData, customerData } = await request.json()
 
-    // Lade E-Mail-Template aus den Einstellungen
-    const { data: templateData, error: templateError } = await supabase
-      .from('app_settings')
-      .select('setting_value')
-      .eq('setting_type', 'email_template')
-      .like('setting_value', `%"type":"${templateType}"%`)
-      .eq('setting_value->>is_active', 'true')
-      .single();
-
-    let emailTemplate;
-    if (templateError || !templateData) {
-      console.log('Kein Template gefunden, verwende Standard-Template');
-      // Fallback: Standard-Template
-      emailTemplate = {
-        subject: '🔥 Bestellbestätigung Brennholzkönig - Bestellung #{orderId}',
-        content: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
-            <div style="background-color: #C04020; padding: 30px 20px; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 28px;">🔥 Brennholzkönig</h1>
-              <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0; font-size: 16px;">Premium Brennholz aus der Region</p>
-            </div>
-            <div style="padding: 40px 30px; background-color: #ffffff;">
-              <h2 style="color: #1f2937; margin-bottom: 25px; font-size: 24px;">Hallo {customerName},</h2>
-              <p style="color: #4b5563; font-size: 16px; line-height: 1.7; margin-bottom: 25px;">
-                vielen Dank für Ihre Bestellung! Wir haben Ihre Bestellung erhalten und bearbeiten sie umgehend.
-              </p>
-              <div style="background-color: #fef3c7; padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 4px solid #f59e0b;">
-                <h3 style="color: #92400e; margin: 0 0 15px 0; font-size: 18px;">📋 Bestelldetails:</h3>
-                <p style="color: #92400e; margin: 0; font-size: 14px;">
-                  <strong>Bestellnummer:</strong> {orderId}<br>
-                  <strong>Bestelldatum:</strong> {orderDate}<br>
-                  <strong>Gesamtbetrag:</strong> €{totalAmount}
-                </p>
-              </div>
-              <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <h4 style="color: #1f2937; margin: 0 0 10px 0;">Bestellte Artikel:</h4>
-                {orderItems}
-              </div>
-              <div style="background-color: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
-                <h4 style="color: #065f46; margin: 0 0 10px 0;">So geht es weiter:</h4>
-                <ul style="color: #065f46; margin: 0; padding-left: 20px;">
-                  <li>Wir melden uns innerhalb von 24 Stunden bei Ihnen</li>
-                  <li>Gemeinsam vereinbaren wir einen passenden Liefertermin</li>
-                  <li>Lieferung direkt zu Ihnen nach Hause</li>
-                  <li>Bezahlung bequem bei Lieferung</li>
-                </ul>
-              </div>
-              <div style="text-align: center; margin: 30px 0;">
-                <p style="color: #6b7280; font-size: 14px;">Bei Fragen stehen wir Ihnen gerne zur Verfügung:</p>
-                <p style="color: #1f2937; font-weight: bold;">📞 +49 176 71085234 | ✉️ info@brennholz-koenig.de</p>
-              </div>
-              <p style="color: #4b5563; font-size: 16px; line-height: 1.7;">
-                Freundliche Grüße,<br>
-                Ihr Brennholzkönig-Team<br>
-                <strong>Thorsten Vey - Brennholzhandel</strong>
-              </p>
-            </div>
-          </div>
-        `
-      };
-    } else {
-      emailTemplate = JSON.parse(templateData.setting_value);
+    // Validierung der Eingabedaten
+    if (!orderData || !customerData) {
+      return NextResponse.json(
+        { success: false, message: 'Fehlende Bestell- oder Kundendaten' },
+        { status: 400 }
+      )
     }
 
-    // Ersetze Platzhalter im Template
-    let emailSubject = emailTemplate.subject
-      .replace(/{customerName}/g, customerName)
-      .replace(/{orderId}/g, orderData.orderNumber)
-      .replace(/{orderDate}/g, new Date().toLocaleDateString('de-DE'))
-      .replace(/{totalAmount}/g, orderData.totalAmount?.toFixed(2) || '0.00');
+    // Supabase Client initialisieren
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
 
-    // Erstelle Artikel-Liste für E-Mail
-    const orderItemsHtml = orderData.items?.map((item: any) => 
-      `<div style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-        <strong>${item.name}</strong><br>
-        Menge: ${item.quantity} ${item.unit || 'Stück'} × €${parseFloat(item.price).toFixed(2)} = €${(item.quantity * parseFloat(item.price)).toFixed(2)}
-      </div>`
-    ).join('') || '<p>Artikel-Details werden nachgereicht</p>';
-
-    let emailContent = emailTemplate.content
-      .replace(/{customerName}/g, customerName)
-      .replace(/{orderId}/g, orderData.orderNumber)
-      .replace(/{orderDate}/g, new Date().toLocaleDateString('de-DE'))
-      .replace(/{totalAmount}/g, orderData.totalAmount?.toFixed(2) || '0.00')
-      .replace(/{orderItems}/g, orderItemsHtml)
-      .replace(/{deliveryAddress}/g, orderData.deliveryAddress || 'Adresse wird nachgereicht');
-
-    // Lade SMTP-Einstellungen
-    const { data: smtpData, error: smtpError } = await supabase
+    // SMTP-Einstellungen aus der app_settings Tabelle laden
+    const { data: smtpSettings, error: smtpError } = await supabase
       .from('app_settings')
-      .select('setting_value')
-      .eq('setting_type', 'smtp_config')
-      .eq('setting_key', 'main')
-      .single();
+      .select('*')
+      .eq('setting_type', 'smtp')
 
-    if (smtpError || !smtpData) {
-      console.error('SMTP-Einstellungen nicht gefunden:', smtpError);
-      return NextResponse.json({ 
-        success: false, 
-        error: 'SMTP-Einstellungen nicht konfiguriert' 
-      }, { status: 500 });
+    // Fallback SMTP-Konfiguration für Entwicklung
+    let smtpConfig: Record<string, string> = {
+      smtp_host: 'smtp.gmail.com',
+      smtp_port: '587',
+      smtp_secure: 'false',
+      smtp_username: 'test@gmail.com',
+      smtp_password: 'test-password',
+      smtp_from_email: 'noreply@brennholzkoenig.de',
+      smtp_from_name: 'Brennholzkönig'
     }
 
-    const smtpSettings = JSON.parse(smtpData.setting_value);
-
-    // Sende E-Mail über Edge Function
-    const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-email`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
-      },
-      body: JSON.stringify({
-        to: customerEmail,
-        subject: emailSubject,
-        html: emailContent,
-        smtp_settings: smtpSettings,
-        type: templateType
+    // Wenn SMTP-Einstellungen in der Datenbank vorhanden sind, diese verwenden
+    if (smtpSettings && smtpSettings.length > 0) {
+      const dbConfig: Record<string, string> = {}
+      smtpSettings.forEach((setting: any) => {
+        dbConfig[setting.setting_key] = setting.setting_value
       })
-    });
-
-    const emailResult = await emailResponse.json();
-
-    if (!emailResult.success) {
-      console.error('E-Mail-Versand fehlgeschlagen:', emailResult.error);
-      return NextResponse.json({ 
-        success: false, 
-        error: emailResult.error || 'E-Mail-Versand fehlgeschlagen' 
-      }, { status: 500 });
+      smtpConfig = { ...smtpConfig, ...dbConfig }
     }
 
-    // Protokolliere E-Mail-Versand
-    try {
-      await supabase
-        .from('app_settings')
-        .insert({
-          setting_type: 'email_log',
-          setting_key: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          setting_value: JSON.stringify({
-            to: customerEmail,
-            subject: emailSubject,
-            template_type: templateType,
-            order_id: orderData.orderNumber,
-            sent_at: new Date().toISOString(),
-            status: 'sent'
-          }),
-          created_at: new Date().toISOString()
-        });
-    } catch (logError) {
-      console.error('Fehler beim Protokollieren:', logError);
-      // Nicht kritisch, E-Mail wurde trotzdem gesendet
+    // E-Mail-Template aus Admin-Bereich laden
+    const { data: emailTemplates, error: templateError } = await supabase
+      .from('email_templates')
+      .select('*')
+      .eq('template_key', 'order_confirmation')
+      .eq('is_active', true)
+      .limit(1)
+
+    let emailTemplate = null
+    if (emailTemplates && emailTemplates.length > 0) {
+      emailTemplate = emailTemplates[0]
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'E-Mail erfolgreich gesendet',
-      template_used: emailTemplate.name || 'Standard-Template'
-    });
+    // Fallback-Template falls keines in der DB vorhanden ist
+    if (!emailTemplate) {
+      emailTemplate = {
+        subject: 'Bestellbestätigung #{order_id} - Brennholzkönig',
+        html_content: `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Bestellbestätigung - Brennholzkönig</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background-color: white; }
+        .header { background-color: #C04020; color: white; padding: 20px; text-align: center; }
+        .content { padding: 30px; }
+        .order-details { background-color: #f9f9f9; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .footer { background-color: #1A1A1A; color: white; padding: 20px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="font-size: 24px; font-weight: bold;">🔥 Brennholzkönig</div>
+            <p>Premium Brennholz direkt vom Produzenten</p>
+        </div>
+        <div class="content">
+            <h2>Vielen Dank für Ihre Bestellung!</h2>
+            <p>Hallo {customer_name},</p>
+            <p>wir haben Ihre Bestellung erfolgreich erhalten und bestätigen hiermit den Eingang.</p>
+            <div class="order-details">
+                <h3>Bestelldetails</h3>
+                <p><strong>Bestellnummer:</strong> #{order_id}</p>
+                <p><strong>Bestelldatum:</strong> {order_date}</p>
+                <p><strong>Gesamtbetrag:</strong> {total_amount}€</p>
+                <p><strong>Lieferadresse:</strong><br>{delivery_address}</p>
+            </div>
+            <p>Ihre Bestellung wird schnellstmöglich bearbeitet. Sie erhalten eine weitere E-Mail, sobald Ihre Bestellung versendet wurde.</p>
+        </div>
+        <div class="footer">
+            <p>Brennholzkönig - Ihr Partner für Premium Brennholz</p>
+            <p>Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de</p>
+        </div>
+    </div>
+</body>
+</html>`,
+        text_content: `Vielen Dank für Ihre Bestellung!
 
+Hallo {customer_name},
+
+wir haben Ihre Bestellung erfolgreich erhalten und bestätigen hiermit den Eingang.
+
+Bestelldetails:
+- Bestellnummer: #{order_id}
+- Bestelldatum: {order_date}
+- Gesamtbetrag: {total_amount}€
+- Lieferadresse: {delivery_address}
+
+Ihre Bestellung wird schnellstmöglich bearbeitet.
+
+Brennholzkönig - Ihr Partner für Premium Brennholz
+Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`
+      }
+    }
+
+    // Template-Daten vorbereiten
+    const templateData = {
+      customer_name: customerData.name,
+      order_id: orderData.id,
+      order_date: new Date().toLocaleDateString('de-DE'),
+      total_amount: orderData.total,
+      delivery_address: `${customerData.address}\n${customerData.postalCode} ${customerData.city}`,
+      order_tracking_url: `https://brennholzkoenig.de/konto/bestellungen/${orderData.id}`
+    }
+
+    // Platzhalter im Template ersetzen
+    const emailSubject = replacePlaceholders(emailTemplate.subject, templateData)
+    const emailHtml = replacePlaceholders(emailTemplate.html_content, templateData)
+    const emailText = emailTemplate.text_content ? replacePlaceholders(emailTemplate.text_content, templateData) : ''
+
+    // Prüfe ob wir in der Entwicklung sind oder echte SMTP-Daten haben
+    const isDevelopment = process.env.NODE_ENV === 'development'
+    // Im Entwicklungsmodus simulieren wir standardmäßig, es sei denn FORCE_REAL_EMAIL=true
+    const forceRealEmail = process.env.FORCE_REAL_EMAIL === 'true'
+    const shouldSimulate = isDevelopment && !forceRealEmail
+    
+    console.log('🔍 E-Mail-Modus-Check:', {
+      NODE_ENV: process.env.NODE_ENV,
+      isDevelopment,
+      forceRealEmail,
+      shouldSimulate,
+      passwordLength: smtpConfig.smtp_password?.length || 0
+    })
+
+    // Nodemailer Transporter nur erstellen wenn nötig
+    let transporter = null
+    if (!shouldSimulate) {
+      transporter = nodemailer.createTransport({
+        host: smtpConfig.smtp_host,
+        port: parseInt(smtpConfig.smtp_port),
+        secure: smtpConfig.smtp_secure === 'true',
+        auth: {
+          user: smtpConfig.smtp_username,
+          pass: smtpConfig.smtp_password,
+        },
+      })
+    }
+
+    // E-Mail senden
+    const mailOptions = {
+      from: `"${smtpConfig.smtp_from_name}" <${smtpConfig.smtp_from_email}>`,
+      to: customerData.email,
+      subject: emailSubject,
+      html: emailHtml,
+      text: emailText,
+    }
+
+    // E-Mail senden
+    console.log('📧 Sende E-Mail an:', customerData.email)
+    console.log('📧 SMTP-Konfiguration:', {
+      host: smtpConfig.smtp_host,
+      port: smtpConfig.smtp_port,
+      from: mailOptions.from
+    })
+
+    if (shouldSimulate) {
+      // Entwicklungsmodus: E-Mail simulieren
+      console.log('🔧 ENTWICKLUNGSMODUS: E-Mail wird simuliert')
+      console.log('📧 E-Mail-Details:', {
+        to: mailOptions.to,
+        subject: mailOptions.subject,
+        from: mailOptions.from,
+        htmlPreview: mailOptions.html.substring(0, 200) + '...'
+      })
+      console.log('✅ E-Mail erfolgreich simuliert (Entwicklungsmodus)')
+    } else {
+      // Produktionsmodus: Echten E-Mail-Versand durchführen
+      console.log('🚀 PRODUKTIONSMODUS: Sende echte E-Mail')
+      if (transporter) {
+        await transporter.sendMail(mailOptions)
+        console.log('✅ E-Mail erfolgreich versendet')
+      } else {
+        throw new Error('Transporter nicht verfügbar')
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Bestellbestätigung erfolgreich versendet',
+      emailDetails: {
+        to: customerData.email,
+        subject: mailOptions.subject,
+        orderId: orderData.id,
+        total: orderData.total
+      }
+    });
+    
   } catch (error) {
-    console.error('Fehler beim E-Mail-Versand:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Interner Server-Fehler beim E-Mail-Versand' 
-    }, { status: 500 });
+    console.error('Fehler:', error);
+    
+    return NextResponse.json(
+      { success: false, message: 'Fehler aufgetreten' },
+      { status: 500 }
+    );
   }
 }

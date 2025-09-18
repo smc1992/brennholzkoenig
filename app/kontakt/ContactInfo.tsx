@@ -39,9 +39,19 @@ export default function ContactInfo() {
               DIREKTE <span className="text-[#C04020]">KONTAKTMÖGLICHKEITEN</span>
             </h2>
 
-            <p className="text-lg text-gray-700 mb-8" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+            <p className="text-lg text-gray-700 mb-4" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
               Erreichen Sie unsere Brennholz-Experten vom Brennholzkönig auf verschiedenen Wegen
             </p>
+            
+            <div className="bg-[#C04020] text-white rounded-xl p-4 mb-8">
+              <div className="flex items-center">
+                <i className="ri-store-3-line text-2xl mr-3 flex-shrink-0"></i>
+                <div>
+                  <h3 className="font-bold text-lg mb-1">ABHOLMARKT</h3>
+                  <p className="text-sm opacity-90">Besuche nur mit persönlichem Termin möglich</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Contact Options */}

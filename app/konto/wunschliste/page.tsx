@@ -208,12 +208,12 @@ export default function WishlistPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {wishlistItems.map((item) => (
-              <div key={item.id} className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                <div className="relative">
+              <div key={item.id} className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow flex flex-col min-h-[450px] sm:min-h-[500px] lg:min-h-[550px]">
+                <div className="relative flex-shrink-0">
                   <img 
                     src={getImageUrl(item.product.image_url)} 
                     alt={item.product.name}
-                    className="w-full h-48 object-cover"
+                    className="w-full h-36 sm:h-40 lg:h-44 object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.src = '/api/placeholder?width=400&height=400&text=Bild+nicht+verfügbar';
@@ -227,65 +227,69 @@ export default function WishlistPage() {
                   </button>
                 </div>
                 
-                <div className="p-6">
-                  <div className="mb-2">
-                    <span className="inline-block px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
-                      {item.product.category}
-                    </span>
-                  </div>
-                  
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{item.product.name}</h3>
-                  
-                  {item.product.description && (
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.product.description}</p>
-                  )}
-                  
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <span className="text-2xl font-bold text-orange-600">
-                        {item.product.price}€
-                      </span>
-                      <span className="text-sm text-gray-500 ml-1">/ {item.product.unit}</span>
+                <div className="p-4 sm:p-5 lg:p-6 flex-1 flex flex-col justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 lg:mb-4 line-clamp-2">{item.product.name}</h3>
+                    
+                    {item.product.description && (
+                      <p className="text-sm text-gray-600 mb-3 sm:mb-4 lg:mb-5 line-clamp-2">{item.product.description}</p>
+                    )}
+                    
+                    <div className="flex items-center justify-between mb-3 sm:mb-4 lg:mb-5">
+                      <div>
+                        <span className="text-2xl font-bold text-orange-600">
+                          {item.product.price}€
+                        </span>
+                        <span className="text-sm text-gray-500 ml-1">/ {item.product.unit}</span>
+                      </div>
+                      
+                      {item.product.stock_quantity !== undefined && (
+                        <div className={`text-xs px-2 py-1 rounded-full ${
+                          item.product.stock_quantity > 0 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {item.product.stock_quantity > 0 
+                            ? `${item.product.stock_quantity} ${item.product.unit} verfügbar`
+                            : 'Ausverkauft'
+                          }
+                        </div>
+                      )}
                     </div>
                     
-                    {item.product.stock_quantity !== undefined && (
-                      <div className={`text-xs px-2 py-1 rounded-full ${
-                        item.product.stock_quantity > 0 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {item.product.stock_quantity > 0 
-                          ? `${item.product.stock_quantity} ${item.product.unit} verfügbar`
-                          : 'Ausverkauft'
-                        }
-                      </div>
-                    )}
+                    <div className="mb-3 sm:mb-4 lg:mb-5">
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                        {item.product.category}
+                      </span>
+                    </div>
                   </div>
                   
-                  <div className="flex gap-2">
-                    <Link 
-                      href={`/shop/${item.product.id}`}
-                      className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-center whitespace-nowrap"
-                    >
-                      Details
-                    </Link>
-                    <button
-                      onClick={() => addToCart(item.product.id)}
-                      disabled={item.product.stock_quantity === 0}
-                      className={`flex-1 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
-                        item.product.stock_quantity === 0
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-orange-600 text-white hover:bg-orange-700'
-                      }`}
-                    >
-                      <i className="ri-shopping-cart-line mr-1"></i>
-                      {item.product.stock_quantity === 0 ? 'Ausverkauft' : 'In den Warenkorb'}
-                    </button>
+                  <div className="mt-auto">
+                    <div className="flex gap-2 mb-2 sm:mb-3 lg:mb-4">
+                      <Link 
+                        href={`/shop/${item.product.id}`}
+                        className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-center whitespace-nowrap"
+                      >
+                        Details
+                      </Link>
+                      <button
+                        onClick={() => addToCart(item.product.id)}
+                        disabled={item.product.stock_quantity === 0}
+                        className={`flex-1 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                          item.product.stock_quantity === 0
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-orange-600 text-white hover:bg-orange-700'
+                        }`}
+                      >
+                        <i className="ri-shopping-cart-line mr-1"></i>
+                        {item.product.stock_quantity === 0 ? 'Ausverkauft' : 'In den Warenkorb'}
+                      </button>
+                    </div>
+                    
+                    <p className="text-xs text-gray-500">
+                      Hinzugefügt am {new Date(item.created_at).toLocaleDateString('de-DE')}
+                    </p>
                   </div>
-                  
-                  <p className="text-xs text-gray-500 mt-3">
-                    Hinzugefügt am {new Date(item.created_at).toLocaleDateString('de-DE')}
-                  </p>
                 </div>
               </div>
             ))}

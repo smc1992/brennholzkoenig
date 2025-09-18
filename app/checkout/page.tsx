@@ -890,6 +890,7 @@ export default function CheckoutPage() {
         const emailData = {
           orderData: {
             orderNumber: orderNumber,
+            createdAt: new Date().toISOString(),
             items: cartItems.map((item) => ({
               name: item.name,
               quantity: item.quantity,
@@ -897,16 +898,23 @@ export default function CheckoutPage() {
               unit: 'SRM',
             })),
             totalAmount: total,
-            deliveryAddress: `${deliveryData.firstName} ${deliveryData.lastName}\n${deliveryData.street} ${deliveryData.houseNumber}\n${deliveryData.postalCode} ${deliveryData.city}`,
+            deliveryDate: deliveryData.preferredDeliveryMonth && deliveryData.preferredDeliveryYear 
+              ? new Date(parseInt(deliveryData.preferredDeliveryYear), parseInt(deliveryData.preferredDeliveryMonth) - 1, 1).toISOString()
+              : null,
+            paymentMethod: 'Barzahlung bei Lieferung',
+            notes: deliveryData.deliveryNotes
           },
-          customerEmail: deliveryData.email,
-          customerName: `${deliveryData.firstName} ${deliveryData.lastName}`,
-          templateType: 'order_confirmation'
+          customerData: {
+            name: `${deliveryData.firstName} ${deliveryData.lastName}`,
+            email: deliveryData.email,
+            phone: deliveryData.phone,
+            deliveryAddress: `${deliveryData.street} ${deliveryData.houseNumber}, ${deliveryData.postalCode} ${deliveryData.city}`
+          }
         };
 
         console.log('Sende Bestellbestätigung an:', deliveryData.email);
         
-        // Send confirmation email using configurable templates
+        // Send confirmation email using Nodemailer service
         const emailResponse = await fetch('/api/send-order-email', {
           method: 'POST',
           headers: {
@@ -918,7 +926,7 @@ export default function CheckoutPage() {
         const emailResult = await emailResponse.json();
         
         if (emailResult.success) {
-          console.log('✅ Bestellbestätigung erfolgreich gesendet:', emailResult.template_used);
+          console.log('✅ Bestellbestätigung erfolgreich gesendet');
         } else {
           console.error('❌ E-Mail-Versand fehlgeschlagen:', emailResult.error);
         }
