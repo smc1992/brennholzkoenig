@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { sendTemplateEmail } from '@/lib/emailTemplateService';
+import { sendTemplateEmail } from '@/lib/emailTemplateEngine';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Supabase-Client wird in der Funktion initialisiert, um Build-Probleme zu vermeiden
+function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,6 +20,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const supabase = getSupabaseClient();
 
     // Bestellung laden
     const { data: order, error: orderError } = await supabase
@@ -131,7 +136,8 @@ export async function POST(request: NextRequest) {
         sendTemplateEmail(
           'order_cancellation',
           customer.email,
-          customerTemplateData
+          customerTemplateData,
+          {}
         ).catch((error: any) => {
           console.error('Fehler beim Senden der Kunden-E-Mail:', error);
           return { success: false, error: 'Kunden-E-Mail konnte nicht gesendet werden' };
@@ -145,7 +151,8 @@ export async function POST(request: NextRequest) {
       sendTemplateEmail(
         'admin_order_cancellation',
         adminEmail,
-        adminTemplateData
+        adminTemplateData,
+        {}
       ).catch((error: any) => {
         console.error('Fehler beim Senden der Admin-E-Mail:', error);
         return { success: false, error: 'Admin-E-Mail konnte nicht gesendet werden' };
