@@ -890,25 +890,21 @@ export default function CheckoutPage() {
         const emailData = {
           orderData: {
             orderNumber: orderNumber,
-            createdAt: new Date().toISOString(),
+            id: order.id,
+            total: total,
             items: cartItems.map((item) => ({
               name: item.name,
               quantity: item.quantity,
-              price: item.price,
-              unit: 'SRM',
-            })),
-            totalAmount: total,
-            deliveryDate: deliveryData.preferredDeliveryMonth && deliveryData.preferredDeliveryYear 
-              ? new Date(parseInt(deliveryData.preferredDeliveryYear), parseInt(deliveryData.preferredDeliveryMonth) - 1, 1).toISOString()
-              : null,
-            paymentMethod: 'Barzahlung bei Lieferung',
-            notes: deliveryData.deliveryNotes
+              price: item.price
+            }))
           },
           customerData: {
             name: `${deliveryData.firstName} ${deliveryData.lastName}`,
             email: deliveryData.email,
             phone: deliveryData.phone,
-            deliveryAddress: `${deliveryData.street} ${deliveryData.houseNumber}, ${deliveryData.postalCode} ${deliveryData.city}`
+            address: `${deliveryData.street} ${deliveryData.houseNumber}`,
+            postalCode: deliveryData.postalCode,
+            city: deliveryData.city
           }
         };
 
