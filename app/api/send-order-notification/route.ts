@@ -163,8 +163,9 @@ export async function POST(request: NextRequest) {
           templateData
         );
 
-        // Admin-spezifische Anpassungen
-        const adminSubject = `[NEUE BESTELLUNG] ${subject}`;
+        // Admin-spezifische Anpassungen - stelle sicher dass subject ein String ist
+        const resolvedSubject = await Promise.resolve(subject);
+        const adminSubject = `[NEUE BESTELLUNG] ${resolvedSubject}`;
         const adminHtml = `
           <div style="background-color: #f0f0f0; padding: 15px; margin-bottom: 20px; border-left: 4px solid #C04020; border-radius: 4px;">
             <h3 style="margin: 0 0 10px 0; color: #C04020;">🔔 Admin-Benachrichtigung</h3>
