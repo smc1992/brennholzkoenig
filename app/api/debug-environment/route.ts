@@ -10,7 +10,12 @@ export async function GET(request: NextRequest) {
 
     // Supabase Client erstellen
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error(`Missing Supabase credentials: URL=${!!supabaseUrl}, Key=${!!supabaseKey}`)
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // SMTP-Konfiguration aus der Datenbank laden
@@ -29,7 +34,9 @@ export async function GET(request: NextRequest) {
       NODE_ENV: process.env.NODE_ENV,
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'SET' : 'NOT_SET',
       SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT_SET',
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'SET' : 'NOT_SET',
       FORCE_REAL_EMAIL: process.env.FORCE_REAL_EMAIL,
+      usedKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE_ROLE' : 'ANON_KEY',
       timestamp: new Date().toISOString(),
       userAgent: request.headers.get('user-agent'),
       host: request.headers.get('host'),
