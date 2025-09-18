@@ -1,10 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
+import { createLegacyServerSupabase } from './supabase-server';
 import { triggerLowStockAlert } from './emailTriggerEngine';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Verwende Server-Side Supabase-Instanz für bessere Build-Kompatibilität
+const getSupabase = () => createLegacyServerSupabase();
 
 export interface Product {
   id: string;
@@ -30,6 +28,7 @@ export async function checkProductLowStock(product: Product): Promise<boolean> {
       });
       
       // Aktualisiere den stock_status auf "Niedrig"
+      const supabase = getSupabase();
       await supabase
         .from('products')
         .update({ stock_status: 'Niedrig' })
@@ -44,6 +43,7 @@ export async function checkProductLowStock(product: Product): Promise<boolean> {
   
   // Wenn Lagerbestand wieder über Mindestbestand ist, status auf "OK" setzen
   if (product.stock_status === 'Niedrig' && product.stock_quantity > product.min_stock_level) {
+    const supabase = getSupabase();
     await supabase
       .from('products')
       .update({ stock_status: 'OK' })
@@ -58,6 +58,7 @@ export async function checkProductLowStock(product: Product): Promise<boolean> {
  */
 export async function checkProductLowStockById(productId: string): Promise<boolean> {
   try {
+    const supabase = getSupabase();
     const { data: product, error } = await supabase
       .from('products')
       .select('id, name, stock_quantity, min_stock_level, stock_status')
@@ -81,6 +82,7 @@ export async function checkProductLowStockById(productId: string): Promise<boole
  */
 export async function checkAllProductsLowStock(): Promise<{ checked: number; alerts: number }> {
   try {
+    const supabase = getSupabase();
     const { data: products, error } = await supabase
       .from('products')
       .select('id, name, stock_quantity, min_stock_level, stock_status')

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { calculatePriceWithTiers } from '../../lib/pricing';
-import { checkProductLowStockById } from '@/lib/stockMonitoring';
+// Stock monitoring wird über API-Route gehandhabt
 
 // Funktion zur Generierung einer Kundennummer basierend auf Email
 function generateCustomerNumber(email: string): string {
@@ -883,7 +883,17 @@ export default function CheckoutPage() {
           
           // Check for low stock and send alert if necessary
           try {
-            await checkProductLowStockById(item.id);
+            const response = await fetch('/api/stock-monitoring/check', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ productId: item.id }),
+            });
+            
+            if (!response.ok) {
+              console.warn(`Stock-Monitoring-API-Aufruf fehlgeschlagen für ${item.name}`);
+            }
           } catch (stockCheckError) {
             console.error(`Fehler bei der Lagerbestand-Prüfung für ${item.name}:`, stockCheckError);
             // Non-critical error, don't fail the order
