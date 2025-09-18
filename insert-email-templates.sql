@@ -1,0 +1,36 @@
+-- Standard E-Mail-Templates für Brennholzkönig
+-- Diese Templates werden in der app_settings Tabelle mit setting_type 'email_template' gespeichert
+
+-- Template 1: Bestellbestätigung
+INSERT INTO app_settings (setting_type, setting_key, setting_value, description, created_at, updated_at) VALUES
+('email_template', 'order_confirmation', '{
+  "template_key": "order_confirmation",
+  "template_name": "Bestellbestätigung",
+  "template_type": "order_confirmation",
+  "subject": "Ihre Bestellung bei Brennholzkönig - Bestätigung #{order_id}",
+  "html_content": "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Bestellbestätigung</title>\n    <style>\n        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }\n        .container { max-width: 600px; margin: 0 auto; background-color: white; }\n        .header { background-color: #C04020; color: white; padding: 20px; text-align: center; }\n        .logo { font-size: 24px; font-weight: bold; }\n        .content { padding: 30px; }\n        .order-details { background-color: #f9f9f9; padding: 20px; margin: 20px 0; border-radius: 8px; }\n        .footer { background-color: #1A1A1A; color: white; padding: 20px; text-align: center; }\n        .button { background-color: #C04020; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0; }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <div class=\"logo\">🔥 Brennholzkönig</div>\n            <p>Premium Brennholz direkt vom Produzenten</p>\n        </div>\n        \n        <div class=\"content\">\n            <h2>Vielen Dank für Ihre Bestellung!</h2>\n            <p>Hallo {customer_name},</p>\n            <p>wir haben Ihre Bestellung erfolgreich erhalten und bestätigen hiermit den Eingang.</p>\n            \n            <div class=\"order-details\">\n                <h3>Bestelldetails</h3>\n                <p><strong>Bestellnummer:</strong> #{order_id}</p>\n                <p><strong>Bestelldatum:</strong> {order_date}</p>\n                <p><strong>Gesamtbetrag:</strong> {total_amount}€</p>\n                <p><strong>Lieferadresse:</strong><br>\n                {delivery_address}</p>\n            </div>\n            \n            <p>Ihre Bestellung wird schnellstmöglich bearbeitet. Sie erhalten eine weitere E-Mail, sobald Ihre Bestellung versendet wurde.</p>\n            \n            <a href=\"{order_tracking_url}\" class=\"button\">Bestellung verfolgen</a>\n        </div>\n        \n        <div class=\"footer\">\n            <p>Brennholzkönig - Ihr Partner für Premium Brennholz</p>\n            <p>Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de</p>\n        </div>\n    </div>\n</body>\n</html>",
+  "text_content": "Vielen Dank für Ihre Bestellung!\n\nHallo {customer_name},\n\nwir haben Ihre Bestellung erfolgreich erhalten und bestätigen hiermit den Eingang.\n\nBestelldetails:\n- Bestellnummer: #{order_id}\n- Bestelldatum: {order_date}\n- Gesamtbetrag: {total_amount}€\n- Lieferadresse: {delivery_address}\n\nIhre Bestellung wird schnellstmöglich bearbeitet. Sie erhalten eine weitere E-Mail, sobald Ihre Bestellung versendet wurde.\n\nBestellung verfolgen: {order_tracking_url}\n\nBrennholzkönig - Ihr Partner für Premium Brennholz\nBei Fragen erreichen Sie uns unter: info@brennholz-koenig.de",
+  "variables": ["customer_name", "order_id", "order_date", "total_amount", "delivery_address", "order_tracking_url"],
+  "is_active": true,
+  "description": "Automatische Bestätigung nach Bestelleingang"
+}', 'Email template: Bestellbestätigung', NOW(), NOW())
+ON CONFLICT (setting_type, setting_key) DO UPDATE SET
+  setting_value = EXCLUDED.setting_value,
+  updated_at = NOW();
+
+-- Template 2: Admin Neue Bestellung
+INSERT INTO app_settings (setting_type, setting_key, setting_value, description, created_at, updated_at) VALUES
+('email_template', 'admin_new_order', '{
+  "template_key": "admin_new_order",
+  "template_name": "Admin: Neue Bestellung",
+  "template_type": "admin_notification",
+  "subject": "Neue Bestellung #{order_id} eingegangen",
+  "html_content": "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Neue Bestellung</title>\n    <style>\n        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }\n        .container { max-width: 600px; margin: 0 auto; background-color: white; }\n        .header { background-color: #1A1A1A; color: white; padding: 20px; text-align: center; }\n        .content { padding: 30px; }\n        .order-summary { background-color: #fff3cd; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #ffc107; }\n        .customer-info { background-color: #f8f9fa; padding: 15px; margin: 15px 0; border-radius: 5px; }\n        .button { background-color: #C04020; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0; }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h2>🔔 Neue Bestellung eingegangen</h2>\n        </div>\n        \n        <div class=\"content\">\n            <h3>Bestelldetails</h3>\n            \n            <div class=\"order-summary\">\n                <p><strong>Bestellnummer:</strong> #{order_id}</p>\n                <p><strong>Bestelldatum:</strong> {order_date}</p>\n                <p><strong>Gesamtbetrag:</strong> {total_amount}€</p>\n                <p><strong>Zahlungsstatus:</strong> {payment_status}</p>\n            </div>\n            \n            <div class=\"customer-info\">\n                <h4>Kundeninformationen</h4>\n                <p><strong>Name:</strong> {customer_name}</p>\n                <p><strong>E-Mail:</strong> {customer_email}</p>\n                <p><strong>Telefon:</strong> {customer_phone}</p>\n                <p><strong>Lieferadresse:</strong><br>{delivery_address}</p>\n            </div>\n            \n            <h4>Bestellte Artikel</h4>\n            <div>{order_items}</div>\n            \n            <a href=\"{admin_order_url}\" class=\"button\">Bestellung im Admin bearbeiten</a>\n        </div>\n    </div>\n</body>\n</html>",
+  "text_content": "Neue Bestellung eingegangen\n\nBestelldetails:\n- Bestellnummer: #{order_id}\n- Bestelldatum: {order_date}\n- Gesamtbetrag: {total_amount}€\n- Zahlungsstatus: {payment_status}\n\nKundeninformationen:\n- Name: {customer_name}\n- E-Mail: {customer_email}\n- Telefon: {customer_phone}\n- Lieferadresse: {delivery_address}\n\nBestellte Artikel:\n{order_items}\n\nBestellung im Admin bearbeiten: {admin_order_url}",
+  "variables": ["order_id", "order_date", "total_amount", "payment_status", "customer_name", "customer_email", "customer_phone", "delivery_address", "order_items", "admin_order_url"],
+  "is_active": true,
+  "description": "Admin-Benachrichtigung bei neuen Bestellungen"
+}', 'Email template: Admin: Neue Bestellung', NOW(), NOW())
+ON CONFLICT (setting_type, setting_key) DO UPDATE SET
+  setting_value = EXCLUDED.setting_value,
+  updated_at = NOW();

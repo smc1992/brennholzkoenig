@@ -31,7 +31,7 @@ export async function getEmailTemplate(templateKey: string): Promise<EmailTempla
       .single();
 
     if (error || !data) {
-      console.error('Template not found:', templateKey, error);
+      console.error('Template not found in database:', templateKey, error);
       return null;
     }
 
