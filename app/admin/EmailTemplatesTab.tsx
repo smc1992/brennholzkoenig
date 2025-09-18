@@ -175,6 +175,167 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`,
     description: 'Benachrichtigung bei Versand der Bestellung'
   },
   {
+    template_key: 'order_cancellation',
+    template_name: 'Bestellstornierung',
+    template_type: 'order_confirmation',
+    subject: 'Ihre Bestellung #{order_number} wurde storniert',
+    html_content: `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bestellstornierung</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background-color: white; }
+        .header { background-color: #C04020; color: white; padding: 20px; text-align: center; }
+        .logo { font-size: 24px; font-weight: bold; }
+        .content { padding: 30px; }
+        .cancellation-info { background-color: #fff3cd; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #ffc107; }
+        .footer { background-color: #1A1A1A; color: white; padding: 20px; text-align: center; }
+        .button { background-color: #C04020; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🔥 Brennholzkönig</div>
+            <p>Premium Brennholz direkt vom Produzenten</p>
+        </div>
+        
+        <div class="content">
+            <h2>Bestellung storniert</h2>
+            <p>Hallo {{customer_name}},</p>
+            <p>Ihre Bestellung wurde erfolgreich storniert.</p>
+            
+            <div class="cancellation-info">
+                <h3>Stornierte Bestellung</h3>
+                <p><strong>Bestellnummer:</strong> #{{order_number}}</p>
+                <p><strong>Bestelldatum:</strong> {{order_date}}</p>
+                <p><strong>Stornierungsdatum:</strong> {{cancellation_date}}</p>
+                <p><strong>Betrag:</strong> {{order_total}}</p>
+            </div>
+            
+            <p>Falls Sie eine Zahlung geleistet haben, wird diese in den nächsten 3-5 Werktagen auf Ihr Konto zurückerstattet.</p>
+            
+            <p>Bei Fragen zur Stornierung oder Rückerstattung stehen wir Ihnen gerne zur Verfügung.</p>
+            
+            <a href="{{shop_url}}" class="button">Weiter einkaufen</a>
+        </div>
+        
+        <div class="footer">
+            <p>Brennholzkönig - Ihr Partner für Premium Brennholz</p>
+            <p>Bei Fragen erreichen Sie uns unter: {{support_email}}</p>
+        </div>
+    </div>
+</body>
+</html>`,
+    text_content: `Bestellung storniert
+
+Hallo {{customer_name}},
+
+Ihre Bestellung wurde erfolgreich storniert.
+
+Stornierte Bestellung:
+- Bestellnummer: #{{order_number}}
+- Bestelldatum: {{order_date}}
+- Stornierungsdatum: {{cancellation_date}}
+- Betrag: {{order_total}}
+
+Falls Sie eine Zahlung geleistet haben, wird diese in den nächsten 3-5 Werktagen auf Ihr Konto zurückerstattet.
+
+Bei Fragen zur Stornierung oder Rückerstattung stehen wir Ihnen gerne zur Verfügung.
+
+Weiter einkaufen: {{shop_url}}
+
+Brennholzkönig - Ihr Partner für Premium Brennholz
+Bei Fragen erreichen Sie uns unter: {{support_email}}`,
+    variables: ['customer_name', 'order_number', 'order_date', 'cancellation_date', 'order_total', 'shop_url', 'support_email'],
+    is_active: true,
+    description: 'Benachrichtigung an Kunden bei Bestellstornierung'
+  },
+  {
+    template_key: 'admin_order_cancellation',
+    template_name: 'Admin: Bestellstornierung',
+    template_type: 'admin_notification',
+    subject: 'Bestellung #{order_number} wurde storniert',
+    html_content: `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bestellstornierung</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background-color: white; }
+        .header { background-color: #1A1A1A; color: white; padding: 20px; text-align: center; }
+        .content { padding: 30px; }
+        .cancellation-summary { background-color: #fff3cd; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #ffc107; }
+        .customer-info { background-color: #f8f9fa; padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .button { background-color: #C04020; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>⚠️ Bestellung storniert</h2>
+        </div>
+        
+        <div class="content">
+            <h3>Stornierungsdetails</h3>
+            
+            <div class="cancellation-summary">
+                <p><strong>Bestellnummer:</strong> #{{order_number}}</p>
+                <p><strong>Bestelldatum:</strong> {{order_date}}</p>
+                <p><strong>Stornierungsdatum:</strong> {{cancellation_date}}</p>
+                <p><strong>Betrag:</strong> {{order_total}}</p>
+                <p><strong>Status:</strong> Storniert</p>
+            </div>
+            
+            <div class="customer-info">
+                <h4>Kundeninformationen</h4>
+                <p><strong>Name:</strong> {{customer_name}}</p>
+                <p><strong>E-Mail:</strong> {{customer_email}}</p>
+                <p><strong>Telefon:</strong> {{customer_phone}}</p>
+            </div>
+            
+            <h4>Stornierte Artikel</h4>
+            <div>{{order_items}}</div>
+            
+            <p><strong>Hinweis:</strong> Prüfen Sie, ob eine Rückerstattung erforderlich ist.</p>
+            
+            <a href="{{admin_order_url}}" class="button">Bestellung im Admin anzeigen</a>
+        </div>
+    </div>
+</body>
+</html>`,
+    text_content: `Bestellung storniert
+
+Stornierungsdetails:
+- Bestellnummer: #{{order_number}}
+- Bestelldatum: {{order_date}}
+- Stornierungsdatum: {{cancellation_date}}
+- Betrag: {{order_total}}
+- Status: Storniert
+
+Kundeninformationen:
+- Name: {{customer_name}}
+- E-Mail: {{customer_email}}
+- Telefon: {{customer_phone}}
+
+Stornierte Artikel:
+{{order_items}}
+
+Hinweis: Prüfen Sie, ob eine Rückerstattung erforderlich ist.
+
+Bestellung im Admin anzeigen: {{admin_order_url}}`,
+    variables: ['order_number', 'order_date', 'cancellation_date', 'order_total', 'customer_name', 'customer_email', 'customer_phone', 'order_items', 'admin_order_url'],
+    is_active: true,
+    description: 'Admin-Benachrichtigung bei Bestellstornierung'
+  },
+  {
     template_key: 'admin_new_order',
     template_name: 'Admin: Neue Bestellung',
     template_type: 'admin_notification',

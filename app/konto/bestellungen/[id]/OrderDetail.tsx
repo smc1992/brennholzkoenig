@@ -50,8 +50,10 @@ interface OrderDetailProps {
 
 export default function OrderDetail({ orderId }: OrderDetailProps) {
   const [order, setOrder] = useState<Order | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [productImages, setProductImages] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
@@ -139,11 +141,61 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'pending': return 'Ausstehend';
-      case 'confirmed': return 'Bestätigt';
+      case 'processing': return 'In Bearbeitung';
       case 'shipped': return 'Versandt';
       case 'delivered': return 'Geliefert';
       case 'cancelled': return 'Storniert';
       default: return status;
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!order) return;
+    
+    setCancelling(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('/api/cancel-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orderId: order.id }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Fehler beim Stornieren der Bestellung');
+      }
+
+      // Bestellung neu laden um den aktualisierten Status zu zeigen
+      const { data: updatedOrder, error: fetchError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (*)
+        `)
+        .eq('id', orderId)
+        .single();
+
+      if (fetchError) {
+        console.error('Fehler beim Neuladen der Bestellung:', fetchError);
+      } else {
+        setOrder(updatedOrder);
+      }
+
+      setShowCancelDialog(false);
+      
+      // Erfolgreiche Stornierung anzeigen
+      alert('Ihre Bestellung wurde erfolgreich storniert. Sie erhalten eine Bestätigungs-E-Mail.');
+      
+    } catch (err) {
+      console.error('Fehler beim Stornieren:', err);
+      setError(err instanceof Error ? err.message : 'Unbekannter Fehler beim Stornieren');
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -321,8 +373,12 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
                   Bestellung erneut bestellen
                 </button>
                 {order.status === 'pending' && (
-                  <button className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors whitespace-nowrap">
-                    Bestellung stornieren
+                  <button 
+                    onClick={() => setShowCancelDialog(true)}
+                    disabled={cancelling}
+                    className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {cancelling ? 'Storniere...' : 'Bestellung stornieren'}
                   </button>
                 )}
                 <button className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap">
@@ -333,6 +389,37 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
           </div>
         </div>
       </div>
+
+      {/* Bestätigungsdialog für Stornierung */}
+      {showCancelDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Bestellung stornieren
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Sind Sie sicher, dass Sie die Bestellung #{order?.order_number} stornieren möchten? 
+              Diese Aktion kann nicht rückgängig gemacht werden.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCancelDialog(false)}
+                disabled={cancelling}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={handleCancelOrder}
+                disabled={cancelling}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {cancelling ? 'Storniere...' : 'Ja, stornieren'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
