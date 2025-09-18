@@ -18,16 +18,55 @@ export async function GET(request: NextRequest) {
     
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // SMTP-Konfiguration aus der Datenbank laden
-    const { data: smtpConfig, error: smtpError } = await supabase
-      .from('smtp_settings')
+    // SMTP-Konfiguration aus der Datenbank laden (neue app_settings Struktur)
+    const { data: smtpSettings, error: smtpError } = await supabase
+      .from('app_settings')
       .select('*')
-      .single()
+      .eq('setting_type', 'smtp')
 
-    // E-Mail-Templates prüfen
-    const { data: emailTemplates, error: templateError } = await supabase
-      .from('email_templates')
+    // SMTP-Konfiguration in ein Objekt umwandeln
+    let smtpConfig: any = null
+    if (smtpSettings && smtpSettings.length > 0) {
+      smtpConfig = {}
+      smtpSettings.forEach((setting: any) => {
+        smtpConfig[setting.setting_key] = setting.setting_value
+      })
+      // Füge Zeitstempel hinzu für Kompatibilität
+      smtpConfig.created_at = smtpSettings[0]?.created_at
+      smtpConfig.updated_at = smtpSettings[0]?.updated_at
+    }
+
+    // E-Mail-Templates prüfen (aus app_settings)
+    const { data: templateSettings, error: templateError } = await supabase
+      .from('app_settings')
       .select('*')
+      .eq('setting_type', 'email_template')
+
+    // Templates in ein Array umwandeln
+    const emailTemplates = templateSettings ? templateSettings.map((setting: any) => {
+      try {
+        const template = JSON.parse(setting.setting_value)
+        return {
+          id: setting.id,
+          name: template.template_name || setting.setting_key,
+          subject: template.subject || '',
+          html_content: template.html_content || '',
+          text_content: template.text_content || '',
+          created_at: setting.created_at,
+          updated_at: setting.updated_at
+        }
+      } catch (e) {
+        return {
+          id: setting.id,
+          name: setting.setting_key,
+          subject: 'Parse Error',
+          html_content: '',
+          text_content: '',
+          created_at: setting.created_at,
+          updated_at: setting.updated_at
+        }
+      }
+    }) : []
 
     // Environment-Informationen sammeln
     const environmentInfo = {
@@ -51,9 +90,11 @@ export async function GET(request: NextRequest) {
       smtp_username: smtpConfig.smtp_username,
       smtp_from_email: smtpConfig.smtp_from_email,
       smtp_from_name: smtpConfig.smtp_from_name,
+      smtp_provider: smtpConfig.smtp_provider,
       smtp_password_length: smtpConfig.smtp_password?.length || 0,
       created_at: smtpConfig.created_at,
-      updated_at: smtpConfig.updated_at
+      updated_at: smtpConfig.updated_at,
+      settings_count: Object.keys(smtpConfig).length - 2 // Minus created_at und updated_at
     } : null
 
     // E-Mail-Templates Info
