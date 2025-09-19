@@ -9,7 +9,7 @@ export interface Product {
   name: string;
   stock_quantity: number;
   min_stock_level: number;
-  stock_status: string;
+  in_stock: boolean;
 }
 
 /**
@@ -27,12 +27,14 @@ export async function checkProductLowStock(product: Product): Promise<boolean> {
         admin_email: 'admin@brennholzkoenig.de' // Standard Admin-E-Mail
       });
       
-      // Aktualisiere den stock_status auf "Niedrig"
-      const supabase = getSupabase();
-      await supabase
-        .from('products')
-        .update({ stock_status: 'Niedrig' })
-        .eq('id', product.id);
+      // Aktualisiere den in_stock Status falls nötig
+      if (product.stock_quantity === 0) {
+        const supabase = getSupabase();
+        await supabase
+          .from('products')
+          .update({ in_stock: false })
+          .eq('id', product.id);
+      }
         
       return true;
     } catch (error) {
@@ -41,12 +43,12 @@ export async function checkProductLowStock(product: Product): Promise<boolean> {
     }
   }
   
-  // Wenn Lagerbestand wieder über Mindestbestand ist, status auf "OK" setzen
-  if (product.stock_status === 'Niedrig' && product.stock_quantity > product.min_stock_level) {
+  // Wenn Lagerbestand wieder verfügbar ist, in_stock auf true setzen
+  if (!product.in_stock && product.stock_quantity > 0) {
     const supabase = getSupabase();
     await supabase
       .from('products')
-      .update({ stock_status: 'OK' })
+      .update({ in_stock: true })
       .eq('id', product.id);
   }
   
@@ -61,7 +63,7 @@ export async function checkProductLowStockById(productId: string): Promise<boole
     const supabase = getSupabase();
     const { data: product, error } = await supabase
       .from('products')
-      .select('id, name, stock_quantity, min_stock_level, stock_status')
+      .select('id, name, stock_quantity, min_stock_level, in_stock')
       .eq('id', productId)
       .single();
 
@@ -85,7 +87,7 @@ export async function checkAllProductsLowStock(): Promise<{ checked: number; ale
     const supabase = getSupabase();
     const { data: products, error } = await supabase
       .from('products')
-      .select('id, name, stock_quantity, min_stock_level, stock_status')
+      .select('id, name, stock_quantity, min_stock_level, in_stock')
       .not('min_stock_level', 'is', null);
 
     if (error) {

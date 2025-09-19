@@ -15,7 +15,7 @@ interface Category {
   updated_at: string;
 }
 
-const CategoriesTab = () => {
+export default function CategoriesTab() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -436,6 +436,4 @@ const CategoriesTab = () => {
       )}
     </div>
   );
-};
-
-export default CategoriesTab;
+}

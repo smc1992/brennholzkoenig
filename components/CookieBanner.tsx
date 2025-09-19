@@ -21,24 +21,45 @@ export default function CookieBanner() {
   useEffect(() => {
     try {
       const consent = localStorage.getItem('cookie-consent');
+      console.log('CookieBanner: Checking consent...', consent ? 'Found' : 'Not found');
+      
       if (!consent) {
+        console.log('CookieBanner: No consent found, showing banner');
         setIsVisible(true);
+      } else {
+        const consentData = JSON.parse(consent);
+        const consentDate = new Date(consentData.timestamp);
+        const now = new Date();
+        const monthsAgo = new Date();
+        monthsAgo.setMonth(monthsAgo.getMonth() - 12); // 12 Monate Gültigkeit
+        
+        if (consentDate < monthsAgo) {
+          console.log('CookieBanner: Consent expired (older than 12 months), showing banner');
+          localStorage.removeItem('cookie-consent'); // Abgelaufene Einwilligung löschen
+          setIsVisible(true);
+        } else {
+          const remainingDays = Math.ceil((consentDate.getTime() + (12 * 30 * 24 * 60 * 60 * 1000) - now.getTime()) / (24 * 60 * 60 * 1000));
+          console.log('CookieBanner: Valid consent found, hiding banner. Expires in', remainingDays, 'days');
+          setIsVisible(false);
+        }
       }
     } catch (error) {
-      console.error('Error checking cookie consent:', error);
+      console.error('CookieBanner: Error checking cookie consent:', error);
       setIsVisible(true);
     }
   }, []);
 
   const savePreferences = (prefs: CookiePreferences) => {
     try {
-      localStorage.setItem('cookie-consent', JSON.stringify({
+      const consentData = {
         timestamp: new Date().toISOString(),
         preferences: prefs
-      }));
+      };
+      localStorage.setItem('cookie-consent', JSON.stringify(consentData));
+      console.log('CookieBanner: Preferences saved:', consentData);
       setIsVisible(false);
     } catch (error) {
-      console.error('Error saving cookie preferences:', error);
+      console.error('CookieBanner: Error saving cookie preferences:', error);
     }
   };
 

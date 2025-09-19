@@ -22,14 +22,29 @@ export default function GoogleAnalytics() {
   }, []);
 
   useEffect(() => {
-    if (!isMountedRef.current || typeof window === 'undefined') return;
+    if (!isMountedRef.current || typeof window === 'undefined') {
+      console.log('GoogleAnalytics: Component not mounted or window undefined');
+      return;
+    }
+
+    console.log('GoogleAnalytics: Checking cookie consent...');
 
     // Prüfe Cookie-Einwilligung
     const consent = localStorage.getItem('cookie-consent');
-    if (!consent) return;
+    if (!consent) {
+      console.log('GoogleAnalytics: No cookie consent found');
+      return;
+    }
 
-    const preferences = JSON.parse(consent);
-    if (!preferences.analytics) return;
+    console.log('GoogleAnalytics: Cookie consent found:', consent);
+
+    const consentData = JSON.parse(consent);
+    if (!consentData.preferences || !consentData.preferences.analytics) {
+      console.log('GoogleAnalytics: Analytics not allowed in preferences:', consentData.preferences);
+      return;
+    }
+
+    console.log('GoogleAnalytics: Analytics allowed, loading tracking scripts...');
 
     // Lade Tracking-Scripts wenn Einwilligung vorhanden
     loadTrackingScripts();

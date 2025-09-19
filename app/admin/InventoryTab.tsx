@@ -55,6 +55,18 @@ export default function InventoryTab() {
 
   // Using the centralized Supabase client from lib/supabase.ts
 
+  // Funktion zur Berechnung des aktuellen Bestands aus Bewegungen
+  const getCurrentStock = (productId: string): number => {
+    const productMovements = movements.filter(m => m.product_id === productId);
+    return productMovements.reduce((total, movement) => {
+      if (movement.movement_type === 'in') {
+        return total + movement.quantity;
+      } else {
+        return total - movement.quantity;
+      }
+    }, 0);
+  };
+
   useEffect(() => {
     loadInventoryData();
   }, []);
@@ -221,9 +233,10 @@ export default function InventoryTab() {
   const exportInventoryReport = () => {
     const csvContent = [
       'Produkt,SKU,Aktueller Bestand,Mindestbestand,Maximalbestand,Wert (€)',
-      ...products.map(product => 
-        `"${product.name}","${product.sku || ''}",${product.stock_quantity || 0},${product.min_stock_level || 0},${product.max_stock_level || 0},${((product.cost_price || 0) * (product.stock_quantity || 0)).toFixed(2)}`
-      )
+      ...products.map(product => {
+        const currentStock = getCurrentStock(product.id);
+        return `"${product.name}","${product.sku || ''}",${currentStock},${product.min_stock_level || 0},${product.max_stock_level || 0},${((product.price || 0) * currentStock).toFixed(2)}`;
+      })
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -235,7 +248,7 @@ export default function InventoryTab() {
 
   const getTotalInventoryValue = () => {
     return products.reduce((total, product) => 
-      total + ((product.cost_price || 0) * (product.stock_quantity || 0)), 0
+      total + ((product.price || 0) * getCurrentStock(product.id)), 0
     );
   };
 
@@ -406,8 +419,8 @@ export default function InventoryTab() {
                         {product.sku || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-bold text-gray-900">{product.stock_quantity || 0}</div>
-                        <div className="text-xs text-gray-500">Stück</div>
+                        <div className="text-sm font-bold text-gray-900">{getCurrentStock(product.id)}</div>
+                        <div className="text-xs text-gray-500">SRM</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <input
@@ -431,14 +444,14 @@ export default function InventoryTab() {
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        €{((product.cost_price || 0) * (product.stock_quantity || 0)).toFixed(2)}
+                        €{((product.price || 0) * getCurrentStock(product.id)).toFixed(2)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {(product.stock_quantity || 0) <= 0 ? (
+                        {getCurrentStock(product.id) <= 0 ? (
                           <span className="px-2 py-1 text-xs font-bold rounded-full bg-red-100 text-red-800">
                             Ausverkauft
                           </span>
-                        ) : (product.stock_quantity || 0) <= (product.min_stock_level || 0) ? (
+                        ) : getCurrentStock(product.id) <= (product.min_stock_level || 0) ? (
                           <span className="px-2 py-1 text-xs font-bold rounded-full bg-orange-100 text-orange-800">
                             Niedriger Bestand
                           </span>
