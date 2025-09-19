@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { calculatePriceWithTiers } from '../../lib/pricing';
 import { trackPurchase } from '@/components/GoogleAnalytics';
+import { getCDNUrl } from '@/utils/cdn';
 // Stock monitoring wird über API-Route gehandhabt
 
 // Funktion zur Generierung einer Kundennummer basierend auf Email
@@ -109,7 +110,7 @@ interface CartItem {
   name: string;
   price: number;
   quantity: number;
-  image: string;
+  image_url: string;
   unit: string;
   has_quantity_discount?: boolean;
 }
@@ -144,6 +145,17 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { products, subscribeToChanges, unsubscribeFromChanges } = useRealtimeSync();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+
+  // Hilfsfunktion für CDN-URLs
+  const getImageUrl = (url: string) => {
+    if (!url) return '/api/placeholder?width=400&height=400&text=Bild+nicht+verfügbar';
+    // Wenn es bereits eine vollständige URL ist, verwende sie direkt
+    if (url.startsWith('http')) return url;
+    // Wenn es ein absoluter Pfad ist (beginnt mit /), verwende ihn direkt
+    if (url.startsWith('/')) return url;
+    // Wenn es ein Storage-Filename ist, konvertiere zu CDN-URL
+    return getCDNUrl(`products/${url}`);
+  };
   const [currentStep, setCurrentStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -342,7 +354,7 @@ export default function CheckoutPage() {
       const hasChanges = updatedCartItems.some((item, index) => 
         item.name !== cartItems[index]?.name || 
         item.price !== cartItems[index]?.price ||
-        item.image !== cartItems[index]?.image
+        item.image_url !== cartItems[index]?.image_url
       );
       
       if (hasChanges) {
@@ -1779,7 +1791,7 @@ export default function CheckoutPage() {
                     {cartItems.map((item) => (
                       <div key={`mobile-${item.id}`} className="flex items-center space-x-3 text-sm">
                         <img
-                          src={item.image || '/api/placeholder?width=40&height=40'}
+                          src={getImageUrl(item.image_url)}
                           alt={item.name}
                           className="w-10 h-10 object-cover rounded"
                           onError={(e) => {
@@ -1807,7 +1819,7 @@ export default function CheckoutPage() {
                 {cartItems.map((item) => (
                   <div key={`desktop-${item.id}`} className="flex items-center space-x-4">
                     <img
-                      src={item.image || '/api/placeholder?width=64&height=64'}
+                      src={getImageUrl(item.image_url)}
                       alt={item.name}
                       className="w-16 h-16 object-cover rounded-lg"
                       onError={(e) => {
