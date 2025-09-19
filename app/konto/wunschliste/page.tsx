@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { getCDNUrl } from '@/utils/cdn';
+import { trackAddToCart } from '@/components/GoogleAnalytics';
 
 // Using the centralized Supabase client from lib/supabase.ts
 
@@ -145,6 +146,15 @@ export default function WishlistPage() {
       
       // Warenkorb speichern
       localStorage.setItem('cart', JSON.stringify(existingCart));
+      
+      // Google Analytics Event tracken
+      trackAddToCart(
+        productId,
+        product.name,
+        product.category,
+        quantity,
+        product.price
+      );
       
       // Erfolgs-Benachrichtigung
       alert(`${product.name} wurde zum Warenkorb hinzugefügt!`);

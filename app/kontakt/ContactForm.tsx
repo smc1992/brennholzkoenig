@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { trackContact, trackQuoteRequest } from '@/components/GoogleAnalytics';
 
 interface ContactFormData {
   name: string;
@@ -217,6 +218,14 @@ export default function ContactForm() {
       // Analytics-Fehler nur loggen, nicht blockieren
       if (analyticsResult.status === 'rejected') {
         console.warn('Analytics-Event konnte nicht gespeichert werden:', analyticsResult.reason);
+      }
+
+      // Google Analytics Event tracken
+      trackContact('contact_form', 'website');
+
+      // Track quote request if it's a product or price inquiry
+      if (['Preise', 'Kaminholz', 'Brennholz', 'Anzündholz', 'Holzbriketts', 'Lieferung'].includes(formData.product)) {
+        trackQuoteRequest(formData.product, 1, 'contact_form');
       }
 
       // Erfolg - zur Bestätigungsseite navigieren

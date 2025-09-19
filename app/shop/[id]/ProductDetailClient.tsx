@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Product, PricingTier } from '@/data/products/products-query';
 import { SEOMetadata } from '@/components/SEOMetadata';
@@ -8,6 +8,7 @@ import WishlistButton from '@/components/WishlistButton';
 import CartNotification from '@/components/CartNotification';
 import ProductImageGalleryDisplay from '@/components/ProductImageGalleryDisplay';
 import { getCDNUrl } from '@/utils/cdn';
+import { trackAddToCart, trackViewProduct } from '@/components/GoogleAnalytics';
 
 interface ProductDetailClientProps {
   product: Product;
@@ -88,12 +89,12 @@ export default function ProductDetailClient({ product: initialProduct, pricingTi
     if (url.startsWith('http')) return url;
     // Wenn es bereits mit /images/ beginnt, füge stabiles Cache-Busting hinzu
     if (url.startsWith('/images/')) {
-      const timestamp = product.updated_at ? new Date(product.updated_at).getTime() : 0;
+      const timestamp = initialProduct.updated_at ? new Date(initialProduct.updated_at).getTime() : 0;
       return `${url}?t=${timestamp}`;
     }
     // Wenn es eine CDN-URL ist, füge Cache-Busting hinzu
     if (url.startsWith('/api/cdn/')) {
-      const timestamp = product.updated_at ? new Date(product.updated_at).getTime() : 0;
+      const timestamp = initialProduct.updated_at ? new Date(initialProduct.updated_at).getTime() : 0;
       return `${url}?t=${timestamp}`;
     }
     // Für andere Fälle verwende getCDNUrl
@@ -103,6 +104,16 @@ export default function ProductDetailClient({ product: initialProduct, pricingTi
   // Verwende Server-Daten direkt
   const product = initialProduct;
   const pricingTiers = initialPricingTiers;
+  
+  // Track product view beim Laden der Seite
+  useEffect(() => {
+    trackViewProduct(
+      product.id,
+      product.name,
+      product.category,
+      product.price
+    );
+  }, [product.id, product.name, product.category, product.price]);
   const isLoading = false;
   const error = null;
 
@@ -184,6 +195,15 @@ export default function ProductDetailClient({ product: initialProduct, pricingTi
       
       // Warenkorb speichern
       localStorage.setItem('cart', JSON.stringify(existingCart));
+      
+      // Google Analytics Event tracken
+      trackAddToCart(
+        product.id,
+        product.name,
+        product.category,
+        quantity,
+        pricing.price
+      );
       
       // Notification anzeigen
       setNotificationData({

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { calculatePriceWithTiers } from '../../lib/pricing';
+import { trackPurchase } from '@/components/GoogleAnalytics';
 // Stock monitoring wird über API-Route gehandhabt
 
 // Funktion zur Generierung einer Kundennummer basierend auf Email
@@ -965,6 +966,43 @@ export default function CheckoutPage() {
           // Non-critical error, don't fail the order
         }
       }
+
+      // Track purchase event for Google Analytics
+      try {
+        const purchaseItems = cartItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          category: 'Brennholz',
+          quantity: item.quantity,
+          price: parseFloat(item.price.toString())
+        }));
+
+        trackPurchase(
+          orderNumber,
+          total,
+          purchaseItems,
+          taxAmount,
+          shipping
+        );
+      } catch (error) {
+        console.error('Error tracking purchase event:', error);
+        // Non-critical error, don't fail the order
+      }
+
+      // Track purchase event for Google Analytics
+      trackPurchase(
+        orderNumber,
+        total,
+        cartItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          category: 'Brennholz',
+          quantity: item.quantity,
+          price: item.price
+        })),
+        taxAmount,
+        shipping
+      );
 
       // Clear cart and discount
       localStorage.removeItem('cart');

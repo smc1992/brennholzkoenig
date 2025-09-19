@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { trackPurchase } from '../../components/GoogleAnalytics';
 
 interface OrderConfirmationProps {
   orderNumber: string;
@@ -16,7 +17,18 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
 
   useEffect(() => {
     setIsVisible(true);
-  }, []);
+    
+    // Track purchase event for Google Analytics
+    if (orderNumber) {
+      trackPurchase(
+        orderNumber, // transactionId
+        0, // value - will be updated with actual order value when available
+        [], // items - will be populated with actual items when order data is available
+        0, // tax
+        0  // shipping
+      );
+    }
+  }, [orderNumber]);
 
   return (
     <div className="min-h-screen bg-[#F5F0E0] py-8 md:py-16">
