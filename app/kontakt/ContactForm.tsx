@@ -270,7 +270,7 @@ export default function ContactForm() {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent transition-colors"
                   placeholder="Ihr vollständiger Name"
                 />
               </div>
@@ -286,7 +286,7 @@ export default function ContactForm() {
                   required
                   value={formData.email}
                   onChange={handleEmailChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent transition-colors ${
                     emailError ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="ihre.email@beispiel.de"
@@ -306,7 +306,7 @@ export default function ContactForm() {
                   id="phone"
                   value={formData.phone}
                   onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent transition-colors"
                   placeholder="+49 123 456789"
                 />
               </div>
@@ -320,7 +320,7 @@ export default function ContactForm() {
                   id="product"
                   value={formData.product}
                   onChange={(e) => setFormData(prev => ({ ...prev, product: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent transition-colors"
                 >
                   <option value="Allgemeine Anfrage">Allgemeine Anfrage</option>
                   <option value="Kaminholz">Kaminholz</option>
@@ -343,7 +343,7 @@ export default function ContactForm() {
                   id="subject"
                   value={formData.subject}
                   onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent transition-colors"
                   placeholder="Kurze Beschreibung Ihres Anliegens"
                 />
               </div>
@@ -359,7 +359,7 @@ export default function ContactForm() {
                   rows={5}
                   value={formData.message}
                   onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors resize-vertical"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent transition-colors resize-vertical"
                   placeholder="Beschreiben Sie Ihr Anliegen ausführlich..."
                 />
               </div>
@@ -380,7 +380,7 @@ export default function ContactForm() {
                 className={`w-full py-4 px-6 rounded-lg font-semibold text-white transition-all duration-300 ${
                   isSubmitting || emailError
                     ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl'
+                    : 'bg-gradient-to-r from-[#C04020] to-[#D4A520] hover:from-[#A03318] hover:to-[#B8941C] transform hover:scale-[1.02] shadow-lg hover:shadow-xl'
                 }`}
               >
                 {isSubmitting ? (
@@ -399,7 +399,7 @@ export default function ContactForm() {
               {/* Datenschutz-Hinweis */}
               <p className="text-xs text-gray-500 text-center">
                 Mit dem Absenden stimmen Sie unserer{' '}
-                <a href="/datenschutz" className="text-amber-600 hover:text-amber-700 underline">
+                <a href="/datenschutz" className="text-[#C04020] hover:text-[#A03318] underline">
                   Datenschutzerklärung
                 </a>{' '}
                 zu. Ihre Daten werden vertraulich behandelt.

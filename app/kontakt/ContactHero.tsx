@@ -12,12 +12,13 @@ export default function ContactHero() {
 
   return (
     <section 
-      className="relative min-h-screen flex items-center overflow-hidden mt-16 md:mt-20"
+      className="relative min-h-screen flex items-center overflow-hidden"
       style={{
         backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4)), url('https://readdy.ai/api/search-image?query=Premium%20firewood%20warehouse%20with%20stacked%20dry%20wood%20logs%2C%20professional%20firewood%20business%20setting%2C%20wooden%20atmosphere%20with%20natural%20lighting%2C%20cozy%20rustic%20wood%20storage%20facility%2C%20organized%20firewood%20display%20in%20German%20countryside%2C%20warm%20wood%20textures%20and%20timber%20stacks%2C%20professional%20lumber%20yard%20environment&width=1920&height=1080&seq=contact-hero-wood-v3&orientation=landscape')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundAttachment: 'fixed'
+        backgroundAttachment: 'fixed',
+        paddingTop: '105px'
       }}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
