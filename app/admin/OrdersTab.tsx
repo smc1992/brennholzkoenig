@@ -21,6 +21,10 @@ interface Order {
   created_at: string;
   updated_at?: string;
   
+  // Gutschein-Felder
+  discount_amount?: string;
+  discount_code_id?: number;
+  
   // Lieferadresse
   delivery_first_name?: string;
   delivery_last_name?: string;
@@ -63,6 +67,13 @@ interface Order {
     unit_price: string;
     total_price: string;
   }>;
+  discount_codes?: {
+    id: number;
+    code: string;
+    description: string;
+    discount_type: string;
+    discount_value: string;
+  };
 }
 
 export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
@@ -116,6 +127,13 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
             quantity,
             unit_price,
             total_price
+          ),
+          discount_codes (
+            id,
+            code,
+            description,
+            discount_type,
+            discount_value
           )
         `)
         .order('created_at', { ascending: false });
@@ -487,6 +505,186 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
     }
   };
 
+  const sendShippingNotification = async (orderId: string) => {
+    try {
+      // Get order details with customer information
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            id,
+            product_name,
+            product_category,
+            quantity,
+            unit_price,
+            total_price
+          )
+        `)
+        .eq('id', orderId)
+        .single();
+
+      if (orderError || !orderData) {
+        throw new Error('Bestellung nicht gefunden');
+      }
+
+      // Prepare customer data
+      const customerName = `${orderData.delivery_first_name || ''} ${orderData.delivery_last_name || ''}`.trim();
+      const customerEmail = orderData.delivery_email;
+      
+      if (!customerEmail) {
+        throw new Error('Keine E-Mail-Adresse für den Kunden gefunden');
+      }
+
+      // Build complete delivery address with fallback logic
+      const deliveryAddressParts = [];
+      
+      // Add street and house number
+      if (orderData.delivery_street) {
+        const streetPart = orderData.delivery_house_number 
+          ? `${orderData.delivery_street} ${orderData.delivery_house_number}`
+          : orderData.delivery_street;
+        deliveryAddressParts.push(streetPart);
+      }
+      
+      // Add postal code and city
+      if (orderData.delivery_postal_code || orderData.delivery_city) {
+        const cityPart = [orderData.delivery_postal_code, orderData.delivery_city]
+          .filter(Boolean)
+          .join(' ');
+        if (cityPart) {
+          deliveryAddressParts.push(cityPart);
+        }
+      }
+      
+      const deliveryAddress = deliveryAddressParts.length > 0 
+        ? deliveryAddressParts.join(', ')
+        : 'Lieferadresse nicht verfügbar';
+      
+      console.log('🏠 Lieferadresse-Debug:', {
+        street: orderData.delivery_street,
+        houseNumber: orderData.delivery_house_number,
+        postalCode: orderData.delivery_postal_code,
+        city: orderData.delivery_city,
+        finalAddress: deliveryAddress
+      });
+      
+      // Format product list for template
+      const productList = orderData.order_items?.map((item: any) => 
+        `${item.quantity}x ${item.product_name} (${parseFloat(item.unit_price).toFixed(2)}€)`
+      ).join('<br>') || 'Keine Produkte';
+
+      // Prepare template data for the email template engine
+      const templateData = {
+        customer_name: customerName,
+        customer_email: customerEmail,
+        order_number: orderData.order_number,
+        order_total: parseFloat(orderData.total_amount).toFixed(2) + '€',
+        order_date: new Date(orderData.created_at).toLocaleDateString('de-DE'),
+        delivery_address: deliveryAddress,
+        tracking_number: `BK-${orderData.order_number}`,
+        product_list: productList,
+        delivery_method: orderData.delivery_type || 'Standard',
+        estimated_delivery: orderData.preferred_delivery_month && orderData.preferred_delivery_year 
+          ? `${orderData.preferred_delivery_month} ${orderData.preferred_delivery_year}`
+          : 'Nach Vereinbarung',
+        tracking_url: `https://brennholzkoenig.de/konto/bestellungen/${orderData.order_number}`
+      };
+
+      // Use template engine to send email with Versandbenachrichtigung template
+      const emailResponse = await fetch('/api/send-template-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'template',
+          templateKey: 'Versandbenachrichtigung',
+          to: customerEmail,
+          variables: templateData
+        }),
+      });
+
+      const emailResult = await emailResponse.json();
+      
+      if (!emailResult.success) {
+        throw new Error(emailResult.error || 'E-Mail-Versand fehlgeschlagen');
+      }
+
+      console.log('✅ Versandbenachrichtigung erfolgreich gesendet an:', customerEmail);
+    } catch (error) {
+      console.error('❌ Fehler beim Senden der Versandbenachrichtigung:', error);
+      throw error;
+    }
+  };
+
+  const sendDeliveryNotification = async (orderId: string) => {
+    try {
+      // Get order details with customer information
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            id,
+            product_name,
+            product_category,
+            quantity,
+            unit_price,
+            total_price
+          )
+        `)
+        .eq('id', orderId)
+        .single();
+
+      if (orderError || !orderData) {
+        throw new Error('Bestellung nicht gefunden');
+      }
+
+      // Prepare email data
+      const customerName = `${orderData.delivery_first_name || ''} ${orderData.delivery_last_name || ''}`.trim();
+      const customerEmail = orderData.delivery_email;
+      
+      if (!customerEmail) {
+        throw new Error('Keine E-Mail-Adresse für den Kunden gefunden');
+      }
+
+      const deliveryAddress = `${orderData.delivery_street || ''} ${orderData.delivery_house_number || ''}, ${orderData.delivery_postal_code || ''} ${orderData.delivery_city || ''}`.trim();
+      
+      // Format product list
+      const productList = orderData.order_items?.map((item: any) => 
+        `${item.quantity}x ${item.product_name} (${parseFloat(item.unit_price).toFixed(2)}€)`
+      ).join(', ') || 'Keine Produkte';
+
+      // Send email using template
+      const emailResponse = await fetch('/api/send-delivery-notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customerEmail,
+          customerName,
+          orderNumber: orderData.order_number,
+          orderDate: new Date(orderData.created_at).toLocaleDateString('de-DE'),
+          deliveryAddress,
+          productList
+        }),
+      });
+
+      const emailResult = await emailResponse.json();
+      
+      if (!emailResult.success) {
+        throw new Error(emailResult.error || 'E-Mail-Versand fehlgeschlagen');
+      }
+
+      console.log('✅ Lieferbenachrichtigung erfolgreich gesendet an:', customerEmail);
+    } catch (error) {
+      console.error('❌ Fehler beim Senden der Lieferbenachrichtigung:', error);
+      throw error;
+    }
+  };
+
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       const { error } = await supabase
@@ -508,11 +706,35 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
         )
       );
 
+      // Send shipping notification email when status changes to "shipped"
+      if (newStatus === 'shipped') {
+        try {
+          await sendShippingNotification(orderId);
+        } catch (emailError) {
+          console.error('Error sending shipping notification:', emailError);
+          // Don't fail the status update if email fails
+        }
+      }
+
+      // Send delivery notification email when status changes to "delivered"
+      if (newStatus === 'delivered') {
+        try {
+          await sendDeliveryNotification(orderId);
+        } catch (emailError) {
+          console.error('Error sending delivery notification:', emailError);
+          // Don't fail the status update if email fails
+        }
+      }
+
       // Specific messages for status changes that affect inventory
       if (newStatus === 'confirmed') {
         alert(`Bestellstatus erfolgreich auf "${getStatusText(newStatus)}" geändert.\n\nDer Lagerbestand wurde automatisch aktualisiert.`);
       } else if (newStatus === 'cancelled') {
         alert(`Bestellstatus erfolgreich auf "${getStatusText(newStatus)}" geändert.\n\nDer Lagerbestand wurde automatisch zurückgebucht.`);
+      } else if (newStatus === 'shipped') {
+        alert(`Bestellstatus erfolgreich auf "${getStatusText(newStatus)}" geändert.\n\nEine Versandbenachrichtigung wurde an den Kunden gesendet.`);
+      } else if (newStatus === 'delivered') {
+        alert(`Bestellstatus erfolgreich auf "${getStatusText(newStatus)}" geändert.\n\nEine Lieferbenachrichtigung wurde an den Kunden gesendet.`);
       } else {
         alert(`Bestellstatus erfolgreich auf "${getStatusText(newStatus)}" geändert.`);
       }
@@ -1057,6 +1279,20 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
                       <span className="font-medium">Lieferkosten:</span> €
                       {parseFloat(selectedOrder.delivery_price).toFixed(2)}
                     </p>
+                    {selectedOrder.discount_amount && parseFloat(selectedOrder.discount_amount) > 0 && (
+                      <p>
+                        <span className="font-medium">Gutschein:</span>{' '}
+                        <span className="text-green-600 font-medium">
+                          {selectedOrder.discount_codes?.code || 'Rabattcode'} 
+                          (-€{parseFloat(selectedOrder.discount_amount).toFixed(2)})
+                        </span>
+                        {selectedOrder.discount_codes?.description && (
+                          <span className="text-gray-500 text-sm block ml-20">
+                            {selectedOrder.discount_codes.description}
+                          </span>
+                        )}
+                      </p>
+                    )}
                     <p>
                       <span className="font-bold">Gesamtsumme:</span> €
                       {parseFloat(selectedOrder.total_amount).toFixed(2)}
@@ -1118,6 +1354,23 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
                           €{parseFloat(selectedOrder.delivery_price).toFixed(2)}
                         </td>
                       </tr>
+                      {selectedOrder.discount_amount && parseFloat(selectedOrder.discount_amount) > 0 && (
+                        <tr>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            Gutschein: {selectedOrder.discount_codes?.code || 'Rabatt'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">
+                            {selectedOrder.discount_codes?.description || 'Rabattcode'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 text-right">1x</td>
+                          <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                            -€{parseFloat(selectedOrder.discount_amount).toFixed(2)}
+                          </td>
+                          <td className="px-4 py-3 text-sm font-bold text-green-600 text-right">
+                            -€{parseFloat(selectedOrder.discount_amount).toFixed(2)}
+                          </td>
+                        </tr>
+                      )}
                       <tr>
                         <td colSpan={4} className="px-4 py-3 text-lg font-bold text-gray-900 text-right">
                           Gesamtsumme:

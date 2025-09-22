@@ -287,13 +287,6 @@
      .admin-content {
        overflow: hidden !important;
      }
-     
-     /* Blog content tables */
-     .blog-content table {
-       overflow: hidden !important;
-       display: table !important;
-       white-space: normal !important;
-     }
    }
  }
 
@@ -307,19 +300,86 @@
 
 /* Mobile-optimierte Tabellen */
 .blog-content table {
-  display: block;
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  display: table;
+  table-layout: fixed;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.blog-content table th,
+.blog-content table td {
+  padding: 0.75rem;
+  text-align: left;
+  border: 1px solid #e5e7eb;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  white-space: normal;
+  width: auto;
+  vertical-align: top;
+}
+
+.blog-content table th {
+  background: linear-gradient(to right, #C04020, #A03318);
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+}
+
+.blog-content table td {
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.blog-content table tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.blog-content table tr:hover {
+  background-color: #fef2f2;
+  transition: background-color 0.2s ease;
+}
+
+/* Responsive Tabellen-Container */
+.blog-content .table-container {
   overflow-x: auto;
-  white-space: nowrap;
+  margin: 1.5rem 0;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  -webkit-overflow-scrolling: touch;
+}
+
+.blog-content .table-container table {
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 @media (max-width: 768px) {
   .blog-content table {
     font-size: 0.875rem;
+    min-width: 600px;
+    width: 600px;
   }
   
-  .blog-content th,
-  .blog-content td {
-    padding: 0.5rem !important;
+  .blog-content table th,
+  .blog-content table td {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .blog-content .table-container {
+    margin: 1rem -1rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
   }
 }
 
@@ -444,9 +504,9 @@
   line-height: 1.4 !important;
 }
 
-/* Drop Caps für ersten Absatz */
-.blog-content h2:first-of-type + p::first-letter,
-.blog-content p:first-of-type::first-letter {
+/* Drop Caps für ersten Absatz - nur für direkte Absätze, nicht in Tabellen oder Listen */
+.blog-content > p:first-of-type::first-letter,
+.blog-content > h2:first-of-type + p::first-letter {
   font-size: 4rem !important;
   font-weight: 900 !important;
   color: #C04020 !important;
@@ -454,6 +514,24 @@
   margin-right: 0.75rem !important;
   margin-top: 0.25rem !important;
   line-height: 1 !important;
+}
+
+/* Verhindere Drop Caps in Tabellen, Listen und anderen Containern */
+.blog-content table p::first-letter,
+.blog-content ul p::first-letter,
+.blog-content ol p::first-letter,
+.blog-content blockquote p::first-letter,
+.blog-content div p::first-letter,
+.blog-content td::first-letter,
+.blog-content th::first-letter,
+.blog-content li::first-letter {
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  color: inherit !important;
+  float: none !important;
+  margin-right: 0 !important;
+  margin-top: 0 !important;
+  line-height: inherit !important;
 }
 
 /* Listen-Marker in Markenfarbe */
@@ -469,7 +547,7 @@
 }
 
 .blog-content strong {
-  @apply font-semibold text-gray-900;
+  @apply font-semibold text-gray-900 bg-yellow-100 px-1 rounded;
 }
 
 .blog-content em {
@@ -477,12 +555,12 @@
 }
 
 .blog-content a {
-  @apply text-green-600 font-medium no-underline;
+  @apply text-orange-600 font-medium no-underline;
   transition: all 0.2s ease;
 }
 
 .blog-content a:hover {
-  @apply text-green-700 underline;
+  @apply text-orange-700 underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
 }
@@ -504,7 +582,7 @@
   content: '✓';
   position: absolute;
   left: -1.5rem;
-  color: #10b981;
+  color: #C04020;
   font-weight: bold;
   font-size: 1.1rem;
 }
@@ -521,40 +599,18 @@
   content: counter(list-counter) '.';
   position: absolute;
   left: -2rem;
-  color: #10b981;
+  color: #C04020;
   font-weight: bold;
   font-size: 1.1rem;
 }
 
 .blog-content blockquote {
-  @apply border-l-4 border-green-500 bg-gradient-to-r from-green-50 to-transparent py-4 px-6 my-8 italic text-gray-800 rounded-r-lg;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+  @apply border-l-4 border-orange-500 bg-gradient-to-r from-orange-50 to-transparent py-4 px-6 my-8 italic text-gray-800 rounded-r-lg;
+  box-shadow: 0 2px 8px rgba(192, 64, 32, 0.1);
 }
 
 .blog-content blockquote p {
   @apply mb-0 text-lg font-medium;
-}
-
-.blog-content table {
-  @apply w-full border-collapse my-8 rounded-lg overflow-hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.blog-content th {
-  @apply bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4 text-left font-semibold text-lg;
-}
-
-.blog-content td {
-  @apply border-b border-gray-200 px-6 py-4 text-gray-700 text-lg;
-}
-
-.blog-content tr:nth-child(even) {
-  @apply bg-gray-50;
-}
-
-.blog-content tr:hover {
-  @apply bg-green-50;
-  transition: background-color 0.2s ease;
 }
 
 .blog-content hr {
@@ -562,7 +618,7 @@
 }
 
 .blog-content code {
-  @apply bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800;
+  @apply bg-gray-100 px-2 py-1 rounded text-sm font-mono text-orange-800;
   border: 1px solid #e5e7eb;
 }
 
@@ -587,31 +643,36 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .blog-content h1 {
-    @apply text-3xl mt-8 mb-4;
+    font-size: 2rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
   }
   
   .blog-content h2 {
-    @apply text-2xl mt-6 mb-3;
+    font-size: 1.75rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
   }
   
   .blog-content h2::before {
-    left: -0.75rem;
-    width: 3px;
-    height: 1.5rem;
+    width: 2rem;
+    height: 0.25rem;
   }
   
   .blog-content h3 {
-    @apply text-xl mt-5 mb-3;
+    font-size: 1.5rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
   }
   
   .blog-content p,
   .blog-content li {
-    @apply text-base;
+    font-size: 1rem;
   }
   
   .blog-content ul,
   .blog-content ol {
-    @apply pl-4;
+    padding-left: 1rem;
   }
   
   .blog-content ul li::before {
@@ -620,11 +681,6 @@
   
   .blog-content ol li::before {
     left: -1.5rem;
-  }
-  
-  .blog-content th,
-  .blog-content td {
-    @apply px-3 py-2 text-sm;
   }
 }
 

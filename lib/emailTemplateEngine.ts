@@ -1,5 +1,23 @@
 import { supabase } from './supabase';
 import { sendEmail } from './emailService';
+import { createClient } from '@supabase/supabase-js';
+
+// Admin Supabase-Client mit Service Role Key für Template-Operationen
+function getAdminSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Missing Supabase environment variables');
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
+}
 
 interface TemplateData {
   customer_name?: string;
@@ -31,7 +49,11 @@ interface EmailTemplate {
 // Lade aktive E-Mail-Templates aus der Datenbank
 export async function loadEmailTemplate(type: string): Promise<EmailTemplate | null> {
   try {
-    // Lade alle E-Mail-Templates
+    console.log(`[loadEmailTemplate] Suche Template für Typ: ${type}`);
+    
+    console.log('[loadEmailTemplate] Verwende normalen Client mit angepasster RLS-Policy');
+    
+    // Lade alle E-Mail-Templates mit normalem Client
     const { data, error } = await supabase
       .from('app_settings')
       .select('*')
@@ -42,10 +64,14 @@ export async function loadEmailTemplate(type: string): Promise<EmailTemplate | n
       return null;
     }
 
+    console.log(`[loadEmailTemplate] Gefundene Templates:`, data.length);
+    console.log(`[loadEmailTemplate] Templates:`, data?.map((t: any) => ({ key: t.setting_key, value: t.setting_value?.substring(0, 100) })));
+    
     // Finde das passende Template
     const template = data.find((t: any) => {
       try {
         const parsed = JSON.parse(t.setting_value);
+        console.log(`[loadEmailTemplate] Prüfe Template '${t.setting_key}': type=${parsed.type}, active=${parsed.active}`);
         return parsed.type === type && parsed.active;
       } catch (e) {
         console.error('Fehler beim Parsen des Templates:', e);
@@ -55,9 +81,20 @@ export async function loadEmailTemplate(type: string): Promise<EmailTemplate | n
 
     if (!template) {
       console.warn(`Kein aktives Template für Typ '${type}' gefunden`);
+      // Debug: Zeige alle verfügbaren Template-Typen
+      const availableTypes = data.map((t: any) => {
+        try {
+          const parsed = JSON.parse(t.setting_value);
+          return `${t.setting_key} (type: ${parsed.type}, active: ${parsed.active})`;
+        } catch (e) {
+          return `${t.setting_key} (parse error)`;
+        }
+      });
+      console.log(`[loadEmailTemplate] Verfügbare Templates:`, availableTypes);
       return null;
     }
 
+    console.log(`[loadEmailTemplate] Template gefunden: ${template.setting_key}`);
     return {
       ...template,
       template: JSON.parse(template.setting_value)
