@@ -52,8 +52,11 @@ function replaceVariables(text: string, variables: EmailVariables): string {
   let result = text;
   
   Object.entries(variables).forEach(([key, value]) => {
-    const regex = new RegExp(`\\{${key}\\}`, 'g');
-    result = result.replace(regex, String(value));
+    // Unterstütze sowohl {{variable}} als auch {variable} Format
+    const doubleRegex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+    const singleRegex = new RegExp(`\\{${key}\\}`, 'g');
+    result = result.replace(doubleRegex, String(value));
+    result = result.replace(singleRegex, String(value));
   });
   
   return result;
@@ -172,15 +175,17 @@ export async function sendOrderConfirmation(
     total_amount: number;
     delivery_address: string;
     order_tracking_url?: string;
+    order_items?: string;
   }
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   return sendTemplateEmail('order_confirmation', customerEmail, {
     customer_name: orderData.customer_name,
     order_id: orderData.order_id,
     order_date: orderData.order_date,
-    total_amount: orderData.total_amount.toFixed(2),
+    total_amount: parseFloat(String(orderData.total_amount)).toFixed(2),
     delivery_address: orderData.delivery_address,
-    order_tracking_url: orderData.order_tracking_url || `https://brennholzkoenig.de/konto/bestellungen/${orderData.order_id}`
+    order_tracking_url: orderData.order_tracking_url || `https://brennholzkoenig.de/konto/bestellungen/${orderData.order_id}`,
+    order_items: orderData.order_items || 'Keine Artikel angegeben'
   });
 }
 
@@ -231,7 +236,7 @@ export async function sendAdminNewOrderNotification(
   return sendTemplateEmail('admin_new_order', adminEmail, {
     order_id: orderData.order_id,
     order_date: orderData.order_date,
-    total_amount: orderData.total_amount.toFixed(2),
+    total_amount: parseFloat(String(orderData.total_amount)).toFixed(2),
     payment_status: orderData.payment_status,
     customer_name: orderData.customer_name,
     customer_email: orderData.customer_email,

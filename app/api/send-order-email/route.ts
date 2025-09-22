@@ -23,7 +23,8 @@ export async function POST(request: NextRequest) {
       order_date: new Date().toLocaleDateString('de-DE'),
       total_amount: orderData.total,
       delivery_address: `${customerData.address}\n${customerData.postalCode} ${customerData.city}`,
-      order_tracking_url: `https://brennholzkoenig.de/konto/bestellungen/${orderData.id}`
+      order_tracking_url: `https://brennholzkoenig.de/konto/bestellungen/${orderData.id}`,
+      order_items: orderData.items?.map((item: any) => `${item.quantity}x ${item.name} - ${item.price}€`).join('\n') || 'Keine Artikel angegeben'
     }
 
     // Admin-Benachrichtigungsdaten vorbereiten
