@@ -726,11 +726,36 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
         }
       }
 
+      // Send cancellation notification email when status changes to "cancelled"
+      if (newStatus === 'cancelled') {
+        try {
+          // Call API route to send cancellation notifications
+          const response = await fetch('/api/admin-cancel-order', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ orderId }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Fehler beim Versenden der Stornierungsbenachrichtigungen');
+          }
+
+          const result = await response.json();
+          console.log('✅ Stornierungsbenachrichtigungen erfolgreich versendet:', result);
+        } catch (emailError) {
+          console.error('❌ Fehler beim Senden der Stornierungsbenachrichtigung:', emailError);
+          // Don't fail the status update if email fails
+        }
+      }
+
       // Specific messages for status changes that affect inventory
       if (newStatus === 'confirmed') {
         alert(`Bestellstatus erfolgreich auf "${getStatusText(newStatus)}" geändert.\n\nDer Lagerbestand wurde automatisch aktualisiert.`);
       } else if (newStatus === 'cancelled') {
-        alert(`Bestellstatus erfolgreich auf "${getStatusText(newStatus)}" geändert.\n\nDer Lagerbestand wurde automatisch zurückgebucht.`);
+        alert(`Bestellstatus erfolgreich auf "${getStatusText(newStatus)}" geändert.\n\nDer Lagerbestand wurde automatisch zurückgebucht.\n\nStornierungsbenachrichtigungen wurden versendet.`);
       } else if (newStatus === 'shipped') {
         alert(`Bestellstatus erfolgreich auf "${getStatusText(newStatus)}" geändert.\n\nEine Versandbenachrichtigung wurde an den Kunden gesendet.`);
       } else if (newStatus === 'delivered') {

@@ -366,55 +366,98 @@ export default function CheckoutPage() {
   }, [products]); // Entferne cartItems aus Dependencies um Loop zu vermeiden
 
   const calculateTotal = () => {
-    const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    
-    let discountAmount = 0;
-    if (appliedDiscount) {
-      if (appliedDiscount.discount_type === 'percentage') {
-        discountAmount = (subtotal * appliedDiscount.discount_value) / 100;
-      } else {
-        discountAmount = appliedDiscount.discount_value;
-      }
-    }
+    const subtotalBrutto = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
     
     const selectedOption = getDeliveryOptions().find((opt) => opt.type === selectedDelivery);
-    const shipping = selectedOption ? selectedOption.price : 43.5;
+    const shippingBrutto = selectedOption ? selectedOption.price : 43.5;
     
     if (taxIncluded) {
       // Bruttopreise: Steuer ist bereits in den Preisen enthalten
-      const grossAmount = Math.max(0, subtotal - discountAmount + shipping);
-      const netAmount = grossAmount / (1 + vatRate / 100);
-      const taxAmount = grossAmount - netAmount;
       
-      console.log('🧮 Brutto-Berechnung:', {
-        grossAmount,
-        netAmount,
-        taxAmount,
-        vatRate,
-        formula: `${grossAmount} / (1 + ${vatRate}/100) = ${netAmount}`
+      // 1. Rabatt vom Bruttopreis abziehen (wie gefordert)
+      let discountAmountBrutto = 0;
+      if (appliedDiscount) {
+        if (appliedDiscount.discount_type === 'percentage') {
+          discountAmountBrutto = Math.round((subtotalBrutto * appliedDiscount.discount_value) / 100 * 100) / 100;
+        } else {
+          discountAmountBrutto = Math.round(appliedDiscount.discount_value * 100) / 100;
+        }
+      }
+      
+      // 2. Zwischensumme brutto nach Rabatt
+      const subtotalAfterDiscountBrutto = Math.max(0, subtotalBrutto - discountAmountBrutto);
+      
+      // 3. Netto-Beträge berechnen (mit korrekter Rundung)
+      const subtotalAfterDiscountNetto = Math.round((subtotalAfterDiscountBrutto / (1 + vatRate / 100)) * 100) / 100;
+      const shippingNetto = Math.round((shippingBrutto / (1 + vatRate / 100)) * 100) / 100;
+      
+      // 4. Gesamt-Netto-Betrag (Waren + Versand)
+      const totalNetto = Math.round((subtotalAfterDiscountNetto + shippingNetto) * 100) / 100;
+      
+      // 5. MwSt.-Betrag berechnen (Waren + Versand)
+      const taxAmountWaren = Math.round((subtotalAfterDiscountNetto * vatRate / 100) * 100) / 100;
+      const taxAmountVersand = Math.round((shippingNetto * vatRate / 100) * 100) / 100;
+      const taxAmountGesamt = Math.round((taxAmountWaren + taxAmountVersand) * 100) / 100;
+      
+      // 6. Gesamt-Brutto-Betrag
+      const totalBrutto = Math.round((subtotalAfterDiscountBrutto + shippingBrutto) * 100) / 100;
+      
+      console.log('🧮 Brutto-Berechnung (Transparent):', {
+        subtotalBrutto,
+        discountAmountBrutto,
+        subtotalAfterDiscountBrutto,
+        subtotalAfterDiscountNetto,
+        shippingBrutto,
+        shippingNetto,
+        totalNetto,
+        taxAmountWaren,
+        taxAmountVersand,
+        taxAmountGesamt,
+        totalBrutto,
+        vatRate
       });
       
       return { 
-        subtotal, 
-        discountAmount, 
-        shipping, 
-        netAmount, 
-        taxAmount, 
+        subtotal: subtotalBrutto, // Zwischensumme vor Rabatt (brutto)
+        subtotalAfterDiscount: subtotalAfterDiscountBrutto, // Zwischensumme nach Rabatt (brutto)
+        subtotalNetto: subtotalAfterDiscountNetto, // Netto-Zwischensumme nach Rabatt
+        discountAmount: discountAmountBrutto, 
+        shipping: shippingBrutto, 
+        shippingNetto: shippingNetto,
+        netAmount: totalNetto, 
+        taxAmount: taxAmountGesamt, // MwSt. gesamt (Waren + Versand)
+        taxAmountWaren: taxAmountWaren, // MwSt. nur Waren
+        taxAmountVersand: taxAmountVersand, // MwSt. nur Versand
         taxRate: vatRate,
-        total: grossAmount 
+        total: totalBrutto 
       };
     } else {
       // Nettopreise: Steuer muss hinzugerechnet werden
-      const netAmount = Math.max(0, subtotal - discountAmount + shipping);
-      const taxAmount = netAmount * (vatRate / 100);
-      const total = netAmount + taxAmount;
+      let discountAmount = 0;
+      if (appliedDiscount) {
+        if (appliedDiscount.discount_type === 'percentage') {
+          discountAmount = Math.round((subtotalBrutto * appliedDiscount.discount_value) / 100 * 100) / 100;
+        } else {
+          discountAmount = Math.round(appliedDiscount.discount_value * 100) / 100;
+        }
+      }
+      
+      const subtotalAfterDiscount = Math.max(0, subtotalBrutto - discountAmount);
+      const netAmount = Math.max(0, subtotalBrutto - discountAmount + shippingBrutto);
+      const taxAmount = Math.round((netAmount * vatRate / 100) * 100) / 100;
+      const total = Math.round((netAmount + taxAmount) * 100) / 100;
       
       return { 
-        subtotal, 
+        subtotal: subtotalBrutto, 
+        subtotalAfterDiscount: subtotalAfterDiscount,
+        subtotalNetto: subtotalAfterDiscount,
         discountAmount, 
-        shipping, 
+        shipping: shippingBrutto, 
+        shippingNetto: shippingBrutto,
         netAmount, 
         taxAmount, 
+        taxAmountWaren: Math.round((subtotalAfterDiscount * vatRate / 100) * 100) / 100,
+        taxAmountVersand: Math.round((shippingBrutto * vatRate / 100) * 100) / 100,
         taxRate: vatRate,
         total 
       };
@@ -1015,6 +1058,50 @@ export default function CheckoutPage() {
         taxAmount,
         shipping
       );
+
+      // Send order confirmation emails
+      try {
+        console.log('Sende Bestellbestätigungs-E-Mails...');
+        
+        const emailData = {
+          orderData: {
+            orderNumber: orderNumber,
+            items: cartItems.map((item) => ({
+              name: item.name,
+              quantity: item.quantity,
+              price: item.price.toString(),
+              unit: item.unit || 'SRM',
+            })),
+            totalAmount: total.toString(),
+            deliveryAddress: `${deliveryData.firstName} ${deliveryData.lastName}\n${deliveryData.street} ${deliveryData.houseNumber}\n${deliveryData.postalCode} ${deliveryData.city}`,
+          },
+          customerEmail: deliveryData.email,
+          customerName: `${deliveryData.firstName} ${deliveryData.lastName}`,
+          templateType: 'order_confirmation'
+        };
+
+        console.log('Sende E-Mail-Daten:', emailData);
+        
+        const emailResponse = await fetch('/api/send-order-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(emailData),
+        });
+
+        const emailResult = await emailResponse.json();
+        
+        if (emailResult.success) {
+          console.log('✅ Bestellbestätigungs-E-Mails erfolgreich gesendet');
+        } else {
+          console.error('❌ E-Mail-Versand fehlgeschlagen:', emailResult.error);
+          // E-Mail-Fehler soll die Bestellung nicht blockieren
+        }
+      } catch (emailError) {
+        console.error('❌ Fehler beim E-Mail-Versand:', emailError);
+        // E-Mail-Fehler soll die Bestellung nicht blockieren
+      }
 
       // Clear cart and discount
       localStorage.removeItem('cart');
@@ -1841,35 +1928,41 @@ export default function CheckoutPage() {
               </div>
 
               <div className="border-t pt-4">
+                {/* Zwischensumme */}
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">
-                    {taxIncluded ? 'Zwischensumme (Netto)' : 'Zwischensumme'}
-                  </span>
+                  <span className="text-gray-600">Zwischensumme</span>
                   <span className="text-gray-900">
-                    {taxIncluded ? calculateTotal().netAmount.toFixed(2) : subtotal.toFixed(2)} €
+                    {calculateTotal().subtotal.toFixed(2)} €
                   </span>
                 </div>
+                
+                {/* Rabatt */}
                 {appliedDiscount && (
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-green-600">Rabatt ({appliedDiscount.code})</span>
-                    <span className="text-green-600">-{discountAmount.toFixed(2)} €</span>
+                    <span className="text-green-600">–{calculateTotal().discountAmount.toFixed(2)} €</span>
                   </div>
                 )}
+                
+                {/* Versandkosten */}
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-gray-600">Versandkosten</span>
                   <span className="text-gray-900">
-                    €{shipping.toFixed(2)}
+                    {calculateTotal().shipping.toFixed(2)} €
                   </span>
                 </div>
-                <div className="flex justify-between text-sm mb-4">
-                  <span className="text-gray-600">
-                    {taxIncluded ? 'inkl.' : 'zzgl.'} {calculateTotal().taxRate}% MwSt.
-                  </span>
-                  <span className="text-gray-900">€{calculateTotal().taxAmount.toFixed(2)}</span>
+                
+                {/* MwSt. Hinweis */}
+                <div className="flex justify-between text-xs text-gray-500 mb-4">
+                  <span>inkl. {calculateTotal().taxRate}% MwSt.</span>
+                  <span>{calculateTotal().taxAmount.toFixed(2)} €</span>
                 </div>
+                {/* Gesamtsumme */}
                 <div className="flex justify-between text-lg font-bold border-t pt-4">
                   <span>Gesamtsumme</span>
-                  <span>{total.toFixed(2)} €</span>
+                  <div className="text-right">
+                    <div className="text-lg font-bold">{calculateTotal().total.toFixed(2)} €</div>
+                  </div>
                 </div>
               </div>
 

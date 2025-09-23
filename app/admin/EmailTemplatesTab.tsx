@@ -175,8 +175,8 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`,
     description: 'Benachrichtigung bei Versand der Bestellung'
   },
   {
-    template_key: 'order_cancellation',
-    template_name: 'Bestellstornierung',
+    template_key: 'customer_order_cancellation',
+    template_name: 'Kunden: Bestellstornierung',
     template_type: 'order_confirmation',
     subject: 'Ihre Bestellung #{order_number} wurde storniert',
     html_content: `
@@ -253,7 +253,7 @@ Brennholzkönig - Ihr Partner für Premium Brennholz
 Bei Fragen erreichen Sie uns unter: {{support_email}}`,
     variables: ['customer_name', 'order_number', 'order_date', 'cancellation_date', 'order_total', 'shop_url', 'support_email'],
     is_active: true,
-    description: 'Benachrichtigung an Kunden bei Bestellstornierung'
+    description: 'Benachrichtigung an Kunden bei Bestellstornierung (Kunde)'
   },
   {
     template_key: 'admin_order_cancellation',
@@ -333,7 +333,7 @@ Hinweis: Prüfen Sie, ob eine Rückerstattung erforderlich ist.
 Bestellung im Admin anzeigen: {{admin_order_url}}`,
     variables: ['order_number', 'order_date', 'cancellation_date', 'order_total', 'customer_name', 'customer_email', 'customer_phone', 'order_items', 'admin_order_url'],
     is_active: true,
-    description: 'Admin-Benachrichtigung bei Bestellstornierung'
+    description: 'Admin-Benachrichtigung bei Bestellstornierung (Admin)'
   },
   {
     template_key: 'admin_new_order',

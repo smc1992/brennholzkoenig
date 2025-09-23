@@ -37,7 +37,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
     supabase
       .from('pricing_tiers')
       .select('*')
-      .eq('product_id', actualProductId)
+      .eq('is_active', true)
   ]);
 
   if (productResult.error || !productResult.data) {

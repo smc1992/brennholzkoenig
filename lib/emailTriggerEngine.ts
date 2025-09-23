@@ -8,6 +8,8 @@ interface TemplateData {
 interface TriggerConfig {
   order_confirmation: boolean;
   shipping_notification: boolean;
+  customer_order_cancellation: boolean;
+  admin_order_cancellation: boolean;
   newsletter: boolean;
   low_stock: boolean;
   out_of_stock: boolean;
@@ -58,6 +60,24 @@ interface OutOfStockData {
   admin_email: string;
   admin_inventory_url: string;
   reorder_url: string;
+}
+
+interface CancellationData {
+  order_number: string;
+  order_id: string;
+  cancellation_date: string;
+  cancellation_reason?: string;
+  total_amount: number;
+  customer: {
+    name: string;
+    email: string;
+  };
+  products: Array<{
+    name: string;
+    quantity: number;
+    price: number;
+  }>;
+  admin_email?: string;
 }
 
 /**
@@ -189,6 +209,122 @@ export async function triggerShippingNotification(shippingData: ShippingData): P
     return result.success;
   } catch (error) {
     console.error('Fehler beim Senden der Versandbenachrichtigung:', error);
+    return false;
+  }
+}
+
+/**
+ * Löst E-Mail-Benachrichtigungen für Kunden-Bestellstornierungen aus
+ */
+export async function triggerCustomerOrderCancellation(cancellationData: CancellationData): Promise<boolean> {
+  try {
+    const templates = await getActiveTemplatesWithTriggers();
+    
+    // Finde Template mit aktiviertem Kunden-Stornierungstrigger
+    const customerTemplate = templates.find(t => 
+      t.template.triggers?.customer_order_cancellation === true && 
+      t.setting_key === 'email_template_order_cancellation'
+    );
+
+    if (!customerTemplate) {
+      console.log('Kein aktives Kunden-Stornierungstemplate gefunden');
+      return true; // Kein Fehler, nur kein Template aktiv
+    }
+
+    const customerTemplateData = {
+      customer_name: cancellationData.customer.name,
+      order_number: cancellationData.order_number,
+      cancellation_date: cancellationData.cancellation_date,
+      cancellation_reason: cancellationData.cancellation_reason || 'Auf Kundenwunsch',
+      total_amount: cancellationData.total_amount.toFixed(2),
+      product_list: cancellationData.products.map(p => 
+        `${p.quantity}x ${p.name} (${p.price.toFixed(2)}€)`
+      ).join(', '),
+      company_name: 'Brennholzkönig',
+      support_email: 'support@brennholz-koenig.de',
+      refund_info: 'Die Rückerstattung erfolgt innerhalb von 3-5 Werktagen auf das ursprüngliche Zahlungsmittel.'
+    };
+
+    const result = await sendTemplateEmail(
+      'order_cancellation',
+      cancellationData.customer.email,
+      customerTemplateData
+    );
+
+    if (result.success) {
+      console.log(`Stornierungsbestätigung für Kunde ${cancellationData.customer.email} gesendet`);
+      await logEmailTrigger('customer_order_cancellation', cancellationData.customer.email, cancellationData.order_number);
+    }
+
+    return result.success;
+  } catch (error) {
+    console.error('Fehler beim Senden der Kunden-Stornierungsbenachrichtigung:', error);
+    return false;
+  }
+}
+
+/**
+ * Löst E-Mail-Benachrichtigungen für Admin-Bestellstornierungen aus
+ */
+export async function triggerAdminOrderCancellation(cancellationData: CancellationData): Promise<boolean> {
+  try {
+    const templates = await getActiveTemplatesWithTriggers();
+    
+    // Finde Template mit aktiviertem Admin-Stornierungstrigger
+    const adminTemplate = templates.find(t => 
+      t.template.triggers?.admin_order_cancellation === true && 
+      t.setting_key === 'email_template_admin_order_cancellation'
+    );
+
+    if (!adminTemplate || !cancellationData.admin_email) {
+      console.log('Kein aktives Admin-Stornierungstemplate gefunden oder keine Admin-E-Mail angegeben');
+      return true; // Kein Fehler, nur kein Template aktiv oder keine Admin-E-Mail
+    }
+
+    const adminTemplateData = {
+      order_number: cancellationData.order_number,
+      order_id: cancellationData.order_id,
+      customer_name: cancellationData.customer.name,
+      customer_email: cancellationData.customer.email,
+      cancellation_date: cancellationData.cancellation_date,
+      cancellation_reason: cancellationData.cancellation_reason || 'Auf Kundenwunsch',
+      total_amount: cancellationData.total_amount.toFixed(2),
+      product_list: cancellationData.products.map(p => 
+        `${p.quantity}x ${p.name} (${p.price.toFixed(2)}€)`
+      ).join(', '),
+      admin_dashboard_url: `${process.env.NEXT_PUBLIC_BASE_URL}/admin`,
+      order_details_url: `${process.env.NEXT_PUBLIC_BASE_URL}/admin/orders/${cancellationData.order_id}`
+    };
+
+    const result = await sendTemplateEmail(
+      'admin_order_cancellation',
+      cancellationData.admin_email,
+      adminTemplateData
+    );
+
+    if (result.success) {
+      console.log(`Admin-Benachrichtigung über Stornierung an ${cancellationData.admin_email} gesendet`);
+      await logEmailTrigger('admin_order_cancellation', cancellationData.admin_email, cancellationData.order_number);
+    }
+
+    return result.success;
+  } catch (error) {
+    console.error('Fehler beim Senden der Admin-Stornierungsbenachrichtigung:', error);
+    return false;
+  }
+}
+
+/**
+ * Löst E-Mail-Benachrichtigungen für Bestellstornierungen aus (beide: Kunde und Admin)
+ */
+export async function triggerOrderCancellation(cancellationData: CancellationData): Promise<boolean> {
+  try {
+    const customerSuccess = await triggerCustomerOrderCancellation(cancellationData);
+    const adminSuccess = await triggerAdminOrderCancellation(cancellationData);
+    
+    return customerSuccess && adminSuccess;
+  } catch (error) {
+    console.error('Fehler beim Senden der Stornierungsbenachrichtigungen:', error);
     return false;
   }
 }

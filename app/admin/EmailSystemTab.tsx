@@ -74,8 +74,11 @@ export default function EmailSystemTab() {
     triggers: {
       order_confirmation: false,
       shipping_notification: false,
+      customer_order_cancellation: false,
+      admin_order_cancellation: false,
       newsletter: false,
-      low_stock: false
+      low_stock: false,
+      out_of_stock: false
     }
   });
   const [showPreview, setShowPreview] = useState(false);
@@ -84,11 +87,36 @@ export default function EmailSystemTab() {
   // Using the centralized Supabase client from lib/supabase.ts
 
   useEffect(() => {
+    console.log('🚀 EmailSystemTab mounted, starting to load data...');
+    testSupabaseConnection();
     loadEmailSettings();
     loadEmailLogs();
   }, []);
 
+  useEffect(() => {
+    console.log('📧 EmailTemplates state changed:', emailTemplates.length, emailTemplates);
+  }, [emailTemplates]);
+
+  const testSupabaseConnection = async () => {
+    console.log('🔍 Testing Supabase connection...');
+    try {
+      const { data, error } = await supabase
+        .from('app_settings')
+        .select('count')
+        .limit(1);
+      
+      if (error) {
+        console.error('❌ Supabase connection error:', error);
+      } else {
+        console.log('✅ Supabase connection successful:', data);
+      }
+    } catch (err) {
+      console.error('❌ Supabase connection failed:', err);
+    }
+  };
+
   const loadEmailSettings = async () => {
+    console.log('🔄 Loading email settings and templates...');
     try {
       const { data: smtpData } = await supabase
         .from('app_settings')
@@ -99,24 +127,61 @@ export default function EmailSystemTab() {
       if (smtpData) {
         const settings = JSON.parse(smtpData.setting_value);
         setEmailSettings(settings);
+        console.log('✅ SMTP settings loaded');
       }
 
-      const { data: templatesData } = await supabase
+      // Load templates from the app_settings table
+      console.log('🔍 Querying app_settings table for email templates...');
+      const { data: templatesData, error: templatesError } = await supabase
         .from('app_settings')
         .select('*')
-        .eq('setting_type', 'email_template');
+        .eq('setting_type', 'email_template')
+        .order('created_at', { ascending: false });
 
-      if (templatesData) {
-        setEmailTemplates(templatesData.map((t: any) => ({ 
-          ...t,
-          template: JSON.parse(t.setting_value)
-        })));
+      if (templatesError) {
+        console.error('❌ Error loading email templates:', templatesError);
+      } else {
+        console.log('📧 Raw templates data:', templatesData);
+        console.log('📧 Templates count:', templatesData?.length || 0);
+        
+        if (templatesData && templatesData.length > 0) {
+          const mappedTemplates = templatesData.map((t: any) => {
+            try {
+              console.log('📧 Parsing template:', t.setting_key, 'Value:', t.setting_value);
+              const templateData = JSON.parse(t.setting_value);
+              return { 
+                id: t.id,
+                setting_key: t.setting_key,
+                setting_type: t.setting_type,
+                setting_value: t.setting_value,
+                template: templateData
+              };
+            } catch (error) {
+              console.error('❌ JSON parsing error for template:', t.setting_key, 'Error:', error);
+              console.error('❌ Problematic JSON:', t.setting_value);
+              // Return template with null data to avoid breaking the entire list
+              return { 
+                id: t.id,
+                setting_key: t.setting_key,
+                setting_type: t.setting_type,
+                setting_value: t.setting_value,
+                template: null
+              };
+            }
+          });
+          console.log('📧 Mapped templates:', mappedTemplates);
+          setEmailTemplates(mappedTemplates);
+        } else {
+          console.log('📧 No templates found in database');
+          setEmailTemplates([]);
+        }
       }
 
     } catch (error) {
-      console.error('Error loading email settings:', error);
+      console.error('❌ Error loading email settings:', error);
     } finally {
       setLoading(false);
+      console.log('✅ Email settings loading completed');
     }
   };
 
@@ -157,8 +222,11 @@ export default function EmailSystemTab() {
         triggers: templateData.triggers || {
           order_confirmation: false,
           shipping_notification: false,
+          customer_order_cancellation: false,
+          admin_order_cancellation: false,
           newsletter: false,
-          low_stock: false
+          low_stock: false,
+          out_of_stock: false
         }
       });
     } else {
@@ -178,8 +246,11 @@ export default function EmailSystemTab() {
         triggers: {
           order_confirmation: false,
           shipping_notification: false,
+          customer_order_cancellation: false,
+          admin_order_cancellation: false,
           newsletter: false,
-          low_stock: false
+          low_stock: false,
+          out_of_stock: false
         }
       });
     }
@@ -223,24 +294,25 @@ export default function EmailSystemTab() {
 
       let result;
       if (editingTemplate) {
-        // Update existing template
+        // Update existing template in app_settings table
         result = await supabase
           .from('app_settings')
           .update({
             setting_key: templateForm.name,
             setting_value: JSON.stringify(templateData),
+            description: `E-Mail Template: ${templateForm.name}`,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingTemplate.id)
           .select();
       } else {
-        // Create new template
+        // Create new template in app_settings table
         result = await supabase
           .from('app_settings')
           .insert({
             setting_key: templateForm.name,
-            setting_type: 'email_template',
             setting_value: JSON.stringify(templateData),
+            setting_type: 'email_template',
             description: `E-Mail Template: ${templateForm.name}`,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -268,8 +340,11 @@ export default function EmailSystemTab() {
         triggers: {
           order_confirmation: false,
           shipping_notification: false,
+          customer_order_cancellation: false,
+          admin_order_cancellation: false,
           newsletter: false,
-          low_stock: false
+          low_stock: false,
+          out_of_stock: false
         }
       });
       
@@ -1126,6 +1201,24 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {emailTemplates.map((template) => {
                     const templateData = template.template;
+                    
+                    // Skip templates with malformed JSON
+                    if (!templateData) {
+                      return (
+                        <div key={template.id} className="bg-red-50 border border-red-200 rounded-lg p-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 flex items-center justify-center bg-red-100 rounded-lg">
+                              <i className="ri-error-warning-line text-red-600"></i>
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-bold text-red-900">{template.setting_key}</h4>
+                              <p className="text-sm text-red-600">Fehlerhaftes JSON - Template kann nicht geladen werden</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                    
                     const typeIcons: Record<string, { icon: string; color: string }> = {
                       'order_confirmation': { icon: 'ri-check-line', color: 'green' },
                       'shipping_notification': { icon: 'ri-truck-line', color: 'blue' },
@@ -2281,6 +2374,56 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`
                         </span>
                       </div>
 
+                      {/* Kunden-Bestellstornierung Trigger */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="trigger-customer-order-cancellation"
+                            checked={templateForm.triggers?.customer_order_cancellation || false}
+                            onChange={(e) => setTemplateForm(prev => ({
+                              ...prev,
+                              triggers: {
+                                ...prev.triggers,
+                                customer_order_cancellation: e.target.checked
+                              }
+                            }))}
+                            className="mr-2"
+                          />
+                          <label htmlFor="trigger-customer-order-cancellation" className="text-sm text-gray-700">
+                            Bei Bestellstornierung an Kunde senden
+                          </label>
+                        </div>
+                        <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded">
+                          An Kunde
+                        </span>
+                      </div>
+
+                      {/* Admin-Bestellstornierung Trigger */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="trigger-admin-order-cancellation"
+                            checked={templateForm.triggers?.admin_order_cancellation || false}
+                            onChange={(e) => setTemplateForm(prev => ({
+                              ...prev,
+                              triggers: {
+                                ...prev.triggers,
+                                admin_order_cancellation: e.target.checked
+                              }
+                            }))}
+                            className="mr-2"
+                          />
+                          <label htmlFor="trigger-admin-order-cancellation" className="text-sm text-gray-700">
+                            Bei Bestellstornierung an Admin senden
+                          </label>
+                        </div>
+                        <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded">
+                          An Admin
+                        </span>
+                      </div>
+
                       {/* Newsletter Trigger */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
@@ -2328,6 +2471,31 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`
                         </div>
                         <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded">
                           Lagerwarnung
+                        </span>
+                      </div>
+
+                      {/* Ausverkauft Trigger */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="trigger-out-of-stock"
+                            checked={templateForm.triggers?.out_of_stock || false}
+                            onChange={(e) => setTemplateForm(prev => ({
+                              ...prev,
+                              triggers: {
+                                ...prev.triggers,
+                                out_of_stock: e.target.checked
+                              }
+                            }))}
+                            className="mr-2"
+                          />
+                          <label htmlFor="trigger-out-of-stock" className="text-sm text-gray-700">
+                            Bei ausverkauftem Produkt senden
+                          </label>
+                        </div>
+                        <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded">
+                          Ausverkauft
                         </span>
                       </div>
 

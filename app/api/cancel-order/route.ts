@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     if (customer?.email) {
       emailPromises.push(
         sendTemplateEmail(
-          'order_cancellation',
+          'customer_order_cancellation',
           customer.email,
           customerTemplateData,
           {}

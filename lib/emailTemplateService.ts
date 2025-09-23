@@ -24,10 +24,10 @@ interface EmailVariables {
 export async function getEmailTemplate(templateKey: string): Promise<EmailTemplate | null> {
   try {
     const { data, error } = await supabase
-      .from('app_settings')
+      .from('email_templates')
       .select('*')
-      .eq('setting_type', 'email_template')
-      .eq('setting_key', templateKey)
+      .eq('name', templateKey)
+      .eq('is_active', true)
       .single();
 
     if (error || !data) {
@@ -35,8 +35,18 @@ export async function getEmailTemplate(templateKey: string): Promise<EmailTempla
       return null;
     }
 
-    const template = JSON.parse(data.setting_value) as EmailTemplate;
-    template.id = data.id;
+    const template: EmailTemplate = {
+      id: data.id,
+      template_key: data.name,
+      template_name: data.name,
+      subject: data.subject,
+      html_content: data.html_content,
+      text_content: data.text_content || '',
+      variables: [], // Variables werden aus dem Content extrahiert
+      is_active: data.is_active,
+      template_type: data.type as EmailTemplate['template_type'],
+      description: data.description || ''
+    };
     
     return template;
   } catch (error) {
@@ -376,16 +386,24 @@ export async function getEmailLogs(limit: number = 50): Promise<any[]> {
 export async function getActiveEmailTemplates(): Promise<EmailTemplate[]> {
   try {
     const { data, error } = await supabase
-      .from('app_settings')
+      .from('email_templates')
       .select('*')
-      .eq('setting_type', 'email_template')
+      .eq('is_active', true)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
 
     const templates = data?.map((item: any) => ({
       id: item.id,
-      ...JSON.parse(item.setting_value),
+      template_key: item.name,
+      template_name: item.name,
+      subject: item.subject,
+      html_content: item.html_content,
+      text_content: item.text_content || '',
+      variables: [], // Variables werden aus dem Content extrahiert
+      is_active: item.is_active,
+      template_type: item.type as EmailTemplate['template_type'],
+      description: item.description || '',
       created_at: item.created_at,
       updated_at: item.updated_at
     })) || [];
