@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-image { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+        img { max-width: 200px; height: auto; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Image Loading Debug Test</h1>
+    
+    <div class="test-image">
+        <h3>Test 1: Direct /images/ URL</h3>
+        <img src="/images/scheitholz-industrieholz-mix-33-cm-1757489188236.webp" 
+             alt="Test Image 1"
+             onload="console.log('✅ Image 1 loaded successfully'); document.getElementById('status1').innerHTML = '✅ Loaded'"
+             onerror="console.log('❌ Image 1 failed to load'); document.getElementById('status1').innerHTML = '❌ Failed'">
+        <div id="status1">Loading...</div>
+    </div>
+
+    <div class="test-image">
+        <h3>Test 2: /api/cdn/products/ URL</h3>
+        <img src="/api/cdn/products/1756679692645-sbgcne0s2nm.webp" 
+             alt="Test Image 2"
+             onload="console.log('✅ Image 2 loaded successfully'); document.getElementById('status2').innerHTML = '✅ Loaded'"
+             onerror="console.log('❌ Image 2 failed to load'); document.getElementById('status2').innerHTML = '❌ Failed'">
+        <div id="status2">Loading...</div>
+    </div>
+
+    <div class="test-image">
+        <h3>Test 3: Placeholder URL</h3>
+        <img src="/api/placeholder?width=400&height=400&text=Bild+nicht+verfügbar" 
+             alt="Test Image 3"
+             onload="console.log('✅ Image 3 (placeholder) loaded successfully'); document.getElementById('status3').innerHTML = '✅ Loaded'"
+             onerror="console.log('❌ Image 3 (placeholder) failed to load'); document.getElementById('status3').innerHTML = '❌ Failed'">
+        <div id="status3">Loading...</div>
+    </div>
+
+    <script>
+        // Test fetch requests
+        async function testImageUrls() {
+            const urls = [
+                '/images/scheitholz-industrieholz-mix-33-cm-1757489188236.webp',
+                '/api/cdn/products/1756679692645-sbgcne0s2nm.webp',
+                '/api/placeholder?width=400&height=400&text=Test'
+            ];
+
+            for (const url of urls) {
+                try {
+                    const response = await fetch(url, { method: 'HEAD' });
+                    console.log(`Fetch test for ${url}: ${response.status} ${response.statusText}`);
+                } catch (error) {
+                    console.error(`Fetch test for ${url} failed:`, error);
+                }
+            }
+        }
+
+        // Run tests after page load
+        window.addEventListener('load', () => {
+            console.log('🔍 Starting image debug tests...');
+            testImageUrls();
+        });
+    </script>
+</body>
+</html>

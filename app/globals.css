@@ -16,6 +16,33 @@
   }
 }
 
+/* Section spacing optimization for large screens */
+@media (min-width: 1024px) {
+  /* Reduce excessive spacing between sections on large screens */
+  section.py-16 {
+    @apply py-12;
+  }
+  
+  section.py-20 {
+    @apply py-16;
+  }
+  
+  /* Specific adjustments for sections with md:py-20 */
+  section.md\:py-20 {
+    @apply lg:py-14;
+  }
+  
+  /* Optimize spacing for adjacent sections */
+  section + section {
+    margin-top: -2rem;
+  }
+  
+  /* Prevent negative margin for first section */
+  section:first-of-type {
+    margin-top: 0;
+  }
+}
+
 /* Mobile-optimized form inputs */
 @layer components {
   .checkout-input {
@@ -226,19 +253,13 @@
      
      /* Removed all conflicting CSS rules to allow Next.js Image component to work properly */
      
-     /* Next.js Image component optimization for product grid */
+     /* Product grid image styling - simplified approach */
      .product-grid .product-image-container {
        position: relative;
        width: 100%;
-       aspect-ratio: 4/3;
+       aspect-ratio: 1/1;
        overflow: hidden;
        background-color: #f3f4f6;
-       
-       /* Fallback for Safari and older browsers that don't support aspect-ratio */
-       @supports not (aspect-ratio: 4/3) {
-         height: 0;
-         padding-bottom: 75%; /* 4:3 aspect ratio = 3/4 = 0.75 = 75% */
-       }
      }
      
      .product-grid .product-image {
@@ -247,33 +268,6 @@
        object-fit: cover;
        object-position: center;
        transition: transform 0.3s ease;
-       
-       /* Safari-specific fixes */
-       -webkit-object-fit: cover;
-       -webkit-object-position: center;
-     }
-     
-     /* Additional Safari fallback for containers without aspect-ratio support */
-     @supports not (aspect-ratio: 4/3) {
-       .product-grid .product-image-container::before {
-         content: '';
-         float: left;
-         padding-top: 75%; /* 4:3 aspect ratio */
-       }
-       
-       .product-grid .product-image-container::after {
-         content: '';
-         display: block;
-         clear: both;
-       }
-       
-       .product-grid .product-image {
-         position: absolute;
-         top: 0;
-         left: 0;
-         width: 100%;
-         height: 100%;
-       }
      }
      
      .product-grid .product-image:hover {

@@ -19,33 +19,44 @@ interface EmailVariables {
 }
 
 /**
- * Lädt ein E-Mail-Template aus der Datenbank
+ * Lädt ein E-Mail-Template aus der Datenbank (app_settings Tabelle)
  */
 export async function getEmailTemplate(templateKey: string): Promise<EmailTemplate | null> {
   try {
     const { data, error } = await supabase
-      .from('email_templates')
+      .from('app_settings')
       .select('*')
-      .eq('name', templateKey)
-      .eq('is_active', true)
-      .single();
+      .eq('setting_type', 'email_template')
+      .eq('setting_key', templateKey);
 
-    if (error || !data) {
-      console.error('Template not found in database:', templateKey, error);
+    if (error || !data || data.length === 0) {
+      console.error('Template not found in app_settings:', templateKey, error);
+      return null;
+    }
+
+    // Take the first result instead of using .single()
+    const templateRecord = data[0];
+
+    // Parse the JSON setting_value
+    let templateData;
+    try {
+      templateData = JSON.parse(templateRecord.setting_value);
+    } catch (parseError) {
+      console.error('Failed to parse template JSON:', templateKey, parseError);
       return null;
     }
 
     const template: EmailTemplate = {
       id: data.id,
-      template_key: data.name,
-      template_name: data.name,
-      subject: data.subject,
-      html_content: data.html_content,
-      text_content: data.text_content || '',
-      variables: [], // Variables werden aus dem Content extrahiert
-      is_active: data.is_active,
-      template_type: data.type as EmailTemplate['template_type'],
-      description: data.description || ''
+      template_key: templateKey,
+      template_name: templateData.template_name || templateKey,
+      subject: templateData.subject || '',
+      html_content: templateData.html_content || '',
+      text_content: templateData.text_content || '',
+      variables: templateData.variables || [],
+      is_active: templateData.is_active !== false, // Default to true if not specified
+      template_type: templateData.template_type || 'custom',
+      description: templateData.description || ''
     };
     
     return template;

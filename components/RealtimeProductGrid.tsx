@@ -191,15 +191,15 @@ export default function RealtimeProductGrid({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="product-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredProducts.map((product) => {
-            const productUrl = getProductUrl(product.id);
+            const productUrl = productUrlMapping[product.id] || `product-${product.id}`;
             const imageUrl = getCDNUrl(product.image_url);
-
+            
             return (
               <div key={product.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
                 {/* Product Image */}
-                <div className="relative aspect-square bg-gray-100">
+                <div className="relative aspect-square bg-gradient-to-br from-gray-50 to-gray-100 max-h-80 overflow-hidden">
                   <Link href={`/shop/${productUrl}`}>
                     <img
                       src={imageUrl}
