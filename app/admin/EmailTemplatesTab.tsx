@@ -35,7 +35,7 @@ const DEFAULT_TEMPLATES: Omit<EmailTemplate, 'id' | 'created_at' | 'updated_at'>
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }
         .container { max-width: 600px; margin: 0 auto; background-color: white; }
         .header { background-color: #C04020; color: white; padding: 20px; text-align: center; }
-        .logo { font-size: 24px; font-weight: bold; }
+        .logo { max-width: 200px; height: auto; margin-bottom: 10px; }
         .content { padding: 30px; }
         .order-details { background-color: #f9f9f9; padding: 20px; margin: 20px 0; border-radius: 8px; }
         .footer { background-color: #1A1A1A; color: white; padding: 20px; text-align: center; }
@@ -45,7 +45,7 @@ const DEFAULT_TEMPLATES: Omit<EmailTemplate, 'id' | 'created_at' | 'updated_at'>
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">🔥 Brennholzkönig</div>
+            <img src="/images/Brennholzkönig%20transparent.webp?v=4&t=1695730300" alt="Brennholzkönig Logo" class="logo">
             <p>Premium Brennholz direkt vom Produzenten</p>
         </div>
         
@@ -113,17 +113,17 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`,
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }
         .container { max-width: 600px; margin: 0 auto; background-color: white; }
         .header { background-color: #C04020; color: white; padding: 20px; text-align: center; }
-        .logo { font-size: 24px; font-weight: bold; }
+        .logo { max-width: 200px; height: auto; margin-bottom: 10px; }
         .content { padding: 30px; }
-        .shipping-info { background-color: #e8f5e8; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #4CAF50; }
+        .shipping-info { background-color: #fef2f2; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #C04020; }
         .footer { background-color: #1A1A1A; color: white; padding: 20px; text-align: center; }
-        .button { background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0; }
+        .button { background-color: #C04020; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">🔥 Brennholzkönig</div>
+            <img src="/images/Brennholzkönig%20transparent.webp?v=4&t=1695730300" alt="Brennholzkönig Logo" class="logo">
             <p>Premium Brennholz direkt vom Produzenten</p>
         </div>
         
@@ -190,7 +190,7 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`,
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }
         .container { max-width: 600px; margin: 0 auto; background-color: white; }
         .header { background-color: #C04020; color: white; padding: 20px; text-align: center; }
-        .logo { font-size: 24px; font-weight: bold; }
+        .logo { max-width: 200px; height: auto; margin-bottom: 10px; }
         .content { padding: 30px; }
         .cancellation-info { background-color: #fff3cd; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #ffc107; }
         .footer { background-color: #1A1A1A; color: white; padding: 20px; text-align: center; }
@@ -200,7 +200,7 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`,
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">🔥 Brennholzkönig</div>
+            <img src="/images/Brennholzkönig%20transparent.webp?v=4&t=1695730300" alt="Brennholzkönig Logo" class="logo">
             <p>Premium Brennholz direkt vom Produzenten</p>
         </div>
         

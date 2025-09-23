@@ -46,6 +46,70 @@ export async function getEmailTemplate(templateKey: string): Promise<EmailTempla
 }
 
 /**
+ * Prüft, ob eine ähnliche E-Mail kürzlich versendet wurde (Duplicate-Check)
+ */
+async function checkForDuplicateEmail(
+  templateKey: string,
+  recipient: string,
+  orderId?: string,
+  timeWindowMinutes: number = 5
+): Promise<boolean> {
+  try {
+    const timeThreshold = Date.now() - (timeWindowMinutes * 60 * 1000);
+    
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('setting_value, created_at')
+      .eq('setting_type', 'email_log')
+      .gte('created_at', new Date(timeThreshold).toISOString())
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      console.error('Fehler beim Duplicate-Check:', error);
+      return false; // Bei Fehlern erlauben wir das Senden
+    }
+
+    if (!data || data.length === 0) {
+      return false; // Keine kürzlichen E-Mails gefunden
+    }
+
+    // Prüfe auf Duplikate
+    for (const log of data) {
+      try {
+        const logEntry = JSON.parse(log.setting_value);
+        
+        // Prüfe auf exakte Übereinstimmung
+        if (logEntry.template_key === templateKey && 
+            logEntry.recipient === recipient &&
+            logEntry.status === 'sent') {
+          
+          // Wenn order_id verfügbar ist, prüfe auch diese
+          if (orderId && logEntry.order_id) {
+            if (logEntry.order_id === orderId) {
+              console.warn(`🚫 Duplicate E-Mail verhindert: ${templateKey} an ${recipient} für Bestellung ${orderId}`);
+              return true; // Duplikat gefunden
+            }
+          } else if (!orderId && !logEntry.order_id) {
+            // Wenn keine order_id verfügbar ist, prüfe nur Template und Empfänger
+            console.warn(`🚫 Duplicate E-Mail verhindert: ${templateKey} an ${recipient}`);
+            return true; // Duplikat gefunden
+          }
+        }
+      } catch (parseError) {
+        console.error('Fehler beim Parsen des E-Mail-Logs:', parseError);
+        continue;
+      }
+    }
+
+    return false; // Kein Duplikat gefunden
+  } catch (error) {
+    console.error('Fehler beim Duplicate-Check:', error);
+    return false; // Bei Fehlern erlauben wir das Senden
+  }
+}
+
+/**
  * Ersetzt Variablen in einem Text mit den gegebenen Werten
  */
 function replaceVariables(text: string, variables: EmailVariables): string {
@@ -73,9 +137,32 @@ export async function sendTemplateEmail(
     cc?: string;
     bcc?: string;
     replyTo?: string;
+    skipDuplicateCheck?: boolean; // Option zum Überspringen des Duplicate-Checks
   }
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
+    // Extrahiere order_id für Duplicate-Check
+    const orderId = variables.order_id || 
+                   variables.order_number ||
+                   variables.orderNumber ||
+                   null;
+
+    // Duplicate-Check (außer wenn explizit übersprungen)
+    if (!options?.skipDuplicateCheck) {
+      const isDuplicate = await checkForDuplicateEmail(
+        templateKey, 
+        to, 
+        orderId as string | undefined
+      );
+      
+      if (isDuplicate) {
+        return {
+          success: false,
+          error: `Duplicate E-Mail verhindert: ${templateKey} an ${to}${orderId ? ` für Bestellung ${orderId}` : ''} wurde bereits kürzlich versendet`
+        };
+      }
+    }
+
     // Template laden
     const template = await getEmailTemplate(templateKey);
     
@@ -106,7 +193,7 @@ export async function sendTemplateEmail(
       text: textContent
     });
     
-    // Log erstellen
+    // Log erstellen mit order_id
     await logEmailSent({
       template_key: templateKey,
       to,
@@ -114,7 +201,8 @@ export async function sendTemplateEmail(
       status: result.success ? 'sent' : 'failed',
       message_id: result.messageId,
       error: result.error,
-      variables
+      variables,
+      order_id: orderId as string | undefined
     });
     
     return result;
@@ -138,8 +226,16 @@ async function logEmailSent(logData: {
   message_id?: string;
   error?: string;
   variables: EmailVariables;
+  order_id?: string;
 }) {
   try {
+    // Extrahiere order_id aus variables falls nicht direkt übergeben
+    const orderId = logData.order_id || 
+                   logData.variables.order_id || 
+                   logData.variables.order_number ||
+                   logData.variables.orderNumber ||
+                   null;
+
     const logEntry = {
       template_key: logData.template_key,
       recipient: logData.to,
@@ -147,8 +243,10 @@ async function logEmailSent(logData: {
       status: logData.status,
       message_id: logData.message_id,
       error_message: logData.error,
+      order_id: orderId, // Separate order_id für bessere Nachverfolgung
       variables: logData.variables,
-      sent_at: new Date().toISOString()
+      sent_at: new Date().toISOString(),
+      timestamp: Date.now() // Für Duplicate-Check
     };
     
     await supabase
@@ -156,7 +254,7 @@ async function logEmailSent(logData: {
         p_setting_type: 'email_log',
         p_setting_key: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         p_setting_value: JSON.stringify(logEntry),
-        p_description: `Email log: ${logData.template_key} to ${logData.to}`
+        p_description: `Email log: ${logData.template_key} to ${logData.to}${orderId ? ` (Order: ${orderId})` : ''}`
       });
   } catch (error) {
     console.error('Error logging email:', error);

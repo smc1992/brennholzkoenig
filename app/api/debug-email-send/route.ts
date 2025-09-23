@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import nodemailer from 'nodemailer'
+import { sendEmail, testSMTPConnection } from '@/lib/emailService'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -11,30 +10,6 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { testEmail = 'info@brennholz-koenig.de' } = body
-
-    // Supabase Client erstellen
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error(`Missing Supabase credentials: URL=${!!supabaseUrl}, Key=${!!supabaseKey}`)
-    }
-    
-    const supabase = createClient(supabaseUrl, supabaseKey)
-
-    // SMTP-Konfiguration laden
-    const { data: smtpConfig, error: smtpError } = await supabase
-      .from('smtp_settings')
-      .select('*')
-      .single()
-
-    if (smtpError || !smtpConfig) {
-      return NextResponse.json({
-        success: false,
-        error: 'SMTP-Konfiguration nicht gefunden',
-        details: smtpError?.message
-      }, { status: 500 })
-    }
 
     // Environment-Check
     const isDevelopment = process.env.NODE_ENV === 'development'
@@ -49,23 +24,12 @@ export async function POST(request: NextRequest) {
       willSendRealEmails: !shouldSimulate
     })
 
+    // Debug-Informationen sammeln
     const debugInfo = {
-      environment: {
-        NODE_ENV: process.env.NODE_ENV,
-        isDevelopment,
-        forceRealEmail,
-        shouldSimulate,
-        willSendRealEmails: !shouldSimulate
-      },
-      smtp: {
-        host: smtpConfig.smtp_host,
-        port: smtpConfig.smtp_port,
-        secure: smtpConfig.smtp_secure === 'true',
-        username: smtpConfig.smtp_username,
-        from_email: smtpConfig.smtp_from_email,
-        from_name: smtpConfig.smtp_from_name,
-        password_length: smtpConfig.smtp_password?.length || 0
-      }
+      environment: process.env.NODE_ENV,
+      timestamp: new Date().toISOString(),
+      testEmail,
+      shouldSimulate
     }
 
     if (shouldSimulate) {
@@ -79,7 +43,7 @@ export async function POST(request: NextRequest) {
         emailDetails: {
           to: testEmail,
           subject: 'Debug Test E-Mail (Simuliert)',
-          from: `"${smtpConfig.smtp_from_name}" <${smtpConfig.smtp_from_email}>`
+          from: 'Brennholzkönig Debug System'
         }
       })
     }
@@ -87,21 +51,19 @@ export async function POST(request: NextRequest) {
     // Produktionsmodus: Echten Versand testen
     console.log('🚀 PRODUKTIONSMODUS: Teste echten E-Mail-Versand')
 
-    // Nodemailer Transporter erstellen
-    const transporter = nodemailer.createTransport({
-      host: smtpConfig.smtp_host,
-      port: parseInt(smtpConfig.smtp_port),
-      secure: smtpConfig.smtp_secure === 'true',
-      auth: {
-        user: smtpConfig.smtp_username,
-        pass: smtpConfig.smtp_password,
-      },
-    })
-
-    // Verbindung testen
+    // SMTP-Verbindung testen
     console.log('🔍 Teste SMTP-Verbindung...')
     try {
-      await transporter.verify()
+      const connectionTest = await testSMTPConnection()
+      if (!connectionTest.success) {
+        console.error('❌ SMTP-Verbindung fehlgeschlagen:', connectionTest.error)
+        return NextResponse.json({
+          success: false,
+          error: 'SMTP-Verbindung fehlgeschlagen',
+          details: connectionTest.error,
+          debugInfo
+        }, { status: 500 })
+      }
       console.log('✅ SMTP-Verbindung erfolgreich')
     } catch (verifyError) {
       console.error('❌ SMTP-Verbindung fehlgeschlagen:', verifyError)
@@ -113,47 +75,75 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    // Test-E-Mail senden
-    const mailOptions = {
-      from: `"${smtpConfig.smtp_from_name}" <${smtpConfig.smtp_from_email}>`,
+    // Test-E-Mail über einheitliches System senden
+    const emailContent = {
       to: testEmail,
       subject: 'Debug Test E-Mail - Brennholzkönig',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <img src="https://brennholz-koenig.de/images/Brennholzkönig%20transparent.webp?v=4&t=1695730300" 
+                 alt="Brennholzkönig Logo" 
+                 style="max-width: 200px; height: auto;">
+          </div>
+          
           <h2 style="color: #C04020;">🔍 Debug Test E-Mail</h2>
           <p>Dies ist eine Debug-Test-E-Mail von <strong>Brennholzkönig</strong>.</p>
-          <div style="background-color: #f9f9f9; padding: 15px; margin: 20px 0; border-radius: 8px;">
-            <h3>Debug-Informationen:</h3>
+          
+          <div style="background-color: #fef2f2; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #C04020;">
+            <h3 style="color: #C04020; margin-top: 0;">Debug-Informationen:</h3>
             <p><strong>Modus:</strong> Produktionsmodus (echte E-Mail)</p>
             <p><strong>NODE_ENV:</strong> ${process.env.NODE_ENV}</p>
             <p><strong>Zeitstempel:</strong> ${new Date().toLocaleString('de-DE')}</p>
-            <p><strong>SMTP-Host:</strong> ${smtpConfig.smtp_host}</p>
-            <p><strong>SMTP-Port:</strong> ${smtpConfig.smtp_port}</p>
+            <p><strong>E-Mail-System:</strong> Einheitliches Admin-System</p>
           </div>
+          
           <p>Wenn Sie diese E-Mail erhalten, funktioniert der E-Mail-Versand korrekt!</p>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 12px;">
+            <p>Diese E-Mail wurde automatisch vom Brennholzkönig Debug-System generiert.</p>
+          </div>
         </div>
       `,
-      text: `Debug Test E-Mail - Brennholzkönig\n\nDies ist eine Debug-Test-E-Mail.\nModus: Produktionsmodus\nNODE_ENV: ${process.env.NODE_ENV}\nZeitstempel: ${new Date().toLocaleString('de-DE')}`
+      text: `Debug Test E-Mail - Brennholzkönig
+
+Dies ist eine Debug-Test-E-Mail.
+
+Debug-Informationen:
+- Modus: Produktionsmodus
+- NODE_ENV: ${process.env.NODE_ENV}
+- Zeitstempel: ${new Date().toLocaleString('de-DE')}
+- E-Mail-System: Einheitliches Admin-System
+
+Wenn Sie diese E-Mail erhalten, funktioniert der E-Mail-Versand korrekt!
+
+---
+Diese E-Mail wurde automatisch vom Brennholzkönig Debug-System generiert.`
     }
 
     console.log('📧 Sende Debug-Test-E-Mail an:', testEmail)
     
     try {
-      const result = await transporter.sendMail(mailOptions)
-      console.log('✅ Debug-Test-E-Mail erfolgreich gesendet:', result.messageId)
+      const result = await sendEmail(emailContent)
+      
+      if (result.success) {
+        console.log('✅ Debug-Test-E-Mail erfolgreich gesendet:', result.messageId)
 
-      return NextResponse.json({
-        success: true,
-        mode: 'production',
-        message: 'Debug-Test-E-Mail erfolgreich gesendet',
-        messageId: result.messageId,
-        debugInfo,
-        emailDetails: {
-          to: testEmail,
-          subject: mailOptions.subject,
-          from: mailOptions.from
-        }
-      })
+        return NextResponse.json({
+          success: true,
+          mode: 'production',
+          message: 'Debug-Test-E-Mail erfolgreich gesendet',
+          messageId: result.messageId,
+          debugInfo,
+          emailDetails: {
+            to: testEmail,
+            subject: emailContent.subject,
+            from: 'Brennholzkönig Admin-System'
+          }
+        })
+      } else {
+        throw new Error(result.error || 'Unbekannter E-Mail-Versand-Fehler')
+      }
 
     } catch (sendError) {
       console.error('❌ Debug-Test-E-Mail-Versand fehlgeschlagen:', sendError)

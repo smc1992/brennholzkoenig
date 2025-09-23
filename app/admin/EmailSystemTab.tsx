@@ -425,7 +425,7 @@ export default function EmailSystemTab() {
         html: `
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
   <div style="background-color: #C04020; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; margin: -20px -20px 20px -20px;">
-    <h1 style="margin: 0; font-size: 24px;">🔥 {{company_name}}</h1>
+    <img src="/images/Brennholzkönig%20transparent.webp?v=4&t=1695730300" alt="Brennholzkönig Logo" style="max-width: 200px; height: auto; margin-bottom: 10px;">
     <p style="margin: 5px 0 0; opacity: 0.9;">Premium Brennholz direkt vom Produzenten</p>
   </div>
   
@@ -478,23 +478,55 @@ Bei Fragen erreichen Sie uns unter: {{support_email}}
       'shipping_notification': {
         subject: 'Ihre Bestellung {{order_number}} wurde versendet',
         html: `
-<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; padding: 20px;">
-  <h2 style="color: #C04020;">📦 Ihre Bestellung ist unterwegs!</h2>
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+  <div style="background-color: #C04020; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; margin: -20px -20px 20px -20px;">
+    <img src="/images/Brennholzkönig%20transparent.webp?v=4&t=1695730300" alt="Brennholzkönig Logo" style="max-width: 200px; height: auto; margin-bottom: 10px;">
+    <p style="margin: 5px 0 0; opacity: 0.9;">Premium Brennholz direkt vom Produzenten</p>
+  </div>
+  
+  <h2 style="color: #C04020; margin-top: 0;">📦 Ihre Bestellung ist unterwegs!</h2>
+  
   <p>Liebe/r {{customer_name}},</p>
-  <p>Ihre Bestellung {{order_number}} wurde heute versendet.</p>
-  <p><strong>Sendungsverfolgung:</strong> {{tracking_number}}</p>
-  <p>Vielen Dank für Ihr Vertrauen!</p>
-  <p>Ihr {{company_name}} Team</p>
+  
+  <p>Ihre Bestellung <strong>{{order_number}}</strong> wurde heute versendet und ist nun auf dem Weg zu Ihnen!</p>
+  
+  <div style="background-color: #fef2f2; padding: 15px; border-radius: 5px; border-left: 4px solid #C04020; margin: 20px 0;">
+    <h3 style="margin-top: 0; color: #C04020;">Versandinformationen:</h3>
+    <p><strong>Sendungsverfolgung:</strong> {{tracking_number}}</p>
+    <p><strong>Versanddatum:</strong> {{shipping_date}}</p>
+    <p><strong>Voraussichtliche Lieferung:</strong> {{estimated_delivery}}</p>
+  </div>
+  
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="{{tracking_url}}" style="background-color: #C04020; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Sendung verfolgen</a>
+  </div>
+  
+  <p>Vielen Dank für Ihr Vertrauen in unsere Premium-Brennholzprodukte!</p>
+  
+  <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+  
+  <div style="background-color: #1A1A1A; color: white; padding: 15px; text-align: center; border-radius: 5px; margin: 20px -20px -20px -20px;">
+    <p style="margin: 0; font-size: 12px; opacity: 0.8;">Bei Fragen erreichen Sie uns unter: {{support_email}}</p>
+    <p style="margin: 5px 0 0; font-size: 12px; opacity: 0.8;">{{company_name}} - Ihr Partner für Premium Brennholz</p>
+  </div>
 </div>`,
         text: `Ihre Bestellung ist unterwegs!
 
 Liebe/r {{customer_name}},
 
-Ihre Bestellung {{order_number}} wurde heute versendet.
-Sendungsverfolgung: {{tracking_number}}
+Ihre Bestellung {{order_number}} wurde heute versendet und ist nun auf dem Weg zu Ihnen!
 
-Vielen Dank für Ihr Vertrauen!
-Ihr {{company_name}} Team`
+Versandinformationen:
+- Sendungsverfolgung: {{tracking_number}}
+- Versanddatum: {{shipping_date}}
+- Voraussichtliche Lieferung: {{estimated_delivery}}
+
+Sendung verfolgen: {{tracking_url}}
+
+Vielen Dank für Ihr Vertrauen in unsere Premium-Brennholzprodukte!
+
+Bei Fragen erreichen Sie uns unter: {{support_email}}
+{{company_name}} - Ihr Partner für Premium Brennholz`
       }
     };
     

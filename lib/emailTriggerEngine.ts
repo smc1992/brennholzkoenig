@@ -10,6 +10,7 @@ interface TriggerConfig {
   shipping_notification: boolean;
   newsletter: boolean;
   low_stock: boolean;
+  out_of_stock: boolean;
 }
 
 interface OrderData {
@@ -44,6 +45,19 @@ interface StockData {
   current_stock: number;
   minimum_stock: number;
   admin_email: string;
+}
+
+interface OutOfStockData {
+  product_name: string;
+  minimum_stock: number;
+  out_of_stock_date: string;
+  last_sale_date: string;
+  sales_last_30_days: number;
+  avg_daily_sales: number;
+  recommended_reorder: number;
+  admin_email: string;
+  admin_inventory_url: string;
+  reorder_url: string;
 }
 
 /**
@@ -224,6 +238,60 @@ export async function triggerLowStockAlert(stockData: StockData): Promise<boolea
     return result.success;
   } catch (error) {
     console.error('Fehler beim Senden der Lagerwarnung:', error);
+    return false;
+  }
+}
+
+/**
+ * Trigger für ausverkaufte Produkte
+ */
+export async function triggerOutOfStockAlert(stockData: OutOfStockData): Promise<boolean> {
+  try {
+    const templates = await getActiveTemplatesWithTriggers();
+    
+    // Finde Template mit aktiviertem Ausverkauft-Trigger
+    const outOfStockTemplate = templates.find(t => 
+      t.template.type === 'out_of_stock' && 
+      t.template.triggers?.out_of_stock === true
+    );
+
+    if (!outOfStockTemplate) {
+      console.log('Kein aktives Ausverkauft-Template gefunden');
+      return false;
+    }
+
+    // Template-Daten für E-Mail vorbereiten
+    const templateData = {
+      product_name: stockData.product_name,
+      minimum_stock: stockData.minimum_stock.toString(),
+      out_of_stock_date: stockData.out_of_stock_date,
+      last_sale_date: stockData.last_sale_date,
+      sales_last_30_days: stockData.sales_last_30_days.toString(),
+      avg_daily_sales: stockData.avg_daily_sales.toString(),
+      recommended_reorder: stockData.recommended_reorder.toString(),
+      admin_inventory_url: stockData.admin_inventory_url,
+      reorder_url: stockData.reorder_url,
+      company_name: 'Brennholzkönig',
+      support_email: 'support@brennholz-koenig.de'
+    };
+
+    // E-Mail an Admin senden
+    const result = await sendTemplateEmail(
+      'out_of_stock',
+      stockData.admin_email,
+      templateData
+    );
+
+    if (result.success) {
+      console.log(`Ausverkauft-Warnung für ${stockData.product_name} gesendet`);
+      
+      // Log-Eintrag erstellen
+      await logEmailTrigger('out_of_stock', stockData.admin_email, stockData.product_name);
+    }
+
+    return result.success;
+  } catch (error) {
+    console.error('Fehler beim Senden der Ausverkauft-Warnung:', error);
     return false;
   }
 }

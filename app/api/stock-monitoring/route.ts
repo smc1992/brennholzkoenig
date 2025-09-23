@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkAllProductsLowStock, checkProductLowStockById, checkMultipleProductsLowStock } from '@/lib/stockMonitoring';
+import { checkAllProductsLowStock, checkProductLowStockById, checkMultipleProductsLowStock, checkProductOutOfStock } from '@/lib/stockMonitoring';
 
 export async function GET(request: NextRequest) {
   try {
@@ -108,9 +108,11 @@ export async function POST(request: NextRequest) {
         break;
     }
     
+    const outOfStockInfo = result.outOfStockAlerts ? `, ${result.outOfStockAlerts} Ausverkauft-Warnungen` : '';
+    
     return NextResponse.json({
       success: true,
-      message: `Lagerbestand-Prüfung (${action}) abgeschlossen: ${result.checked} Produkte geprüft, ${result.alerts} Warnungen gesendet`,
+      message: `Lagerbestand-Prüfung (${action}) abgeschlossen: ${result.checked} Produkte geprüft, ${result.alerts} Lagerbestand-Warnungen${outOfStockInfo} gesendet`,
       data: result,
       timestamp: new Date().toISOString()
     });
