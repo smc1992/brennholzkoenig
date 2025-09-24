@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { sendTemplateEmail } from '@/lib/emailTemplateEngine';
-
-// Supabase-Client wird in der Funktion initialisiert, um Build-Probleme zu vermeiden
-function getSupabaseClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { supabase } from '@/lib/supabase';
+import { triggerCustomerOrderCancellation, triggerAdminOrderCancellation } from '@/lib/emailTriggerEngine';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,17 +13,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = getSupabaseClient();
+    // Supabase client is already imported
 
     // Bestellung laden
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select(`
         *,
-        order_items (
-          *,
-          products (*)
-        )
+        order_items (*)
       `)
       .eq('id', orderId)
       .single();
@@ -75,16 +64,8 @@ export async function POST(request: NextRequest) {
       console.error('Fehler beim Laden der Kundendaten:', customerError);
     }
 
-    // E-Mail-Daten vorbereiten
+    // Datum-Formatierung für Trigger-Engine
     const currentDate = new Date();
-    const orderDate = new Date(order.created_at);
-    
-    const formatCurrency = (amount: number) => {
-      return new Intl.NumberFormat('de-DE', {
-        style: 'currency',
-        currency: 'EUR'
-      }).format(amount);
-    };
 
     const formatDate = (date: Date) => {
       return date.toLocaleDateString('de-DE', {
@@ -94,76 +75,48 @@ export async function POST(request: NextRequest) {
       });
     };
 
-    // Artikel für E-Mail formatieren
-    const orderItemsText = order.order_items
-      .map((item: any) => `- ${item.products?.name || 'Unbekanntes Produkt'} (${item.quantity}x ${formatCurrency(item.price)})`)
-      .join('\n');
+    // E-Mails über Trigger-Engine senden
+    const emailResults = [];
 
-    const orderItemsHtml = order.order_items
-      .map((item: any) => `<p>- ${item.products?.name || 'Unbekanntes Produkt'} (${item.quantity}x ${formatCurrency(item.price)})</p>`)
-      .join('');
-
-    // Template-Daten für Kunden-E-Mail
-    const customerTemplateData = {
-      customer_name: customer?.first_name ? `${customer.first_name} ${customer.last_name}` : 'Kunde',
+    // Cancellation-Daten für Trigger-Engine vorbereiten
+    const cancellationData = {
       order_number: order.order_number,
-      order_date: formatDate(orderDate),
+      order_id: order.id,
       cancellation_date: formatDate(currentDate),
-      order_total: formatCurrency(order.total_amount),
-      shop_url: process.env.NEXT_PUBLIC_SITE_URL || 'https://brennholzkoenig.de',
-      support_email: process.env.SUPPORT_EMAIL || 'support@brennholzkoenig.de'
+      total_amount: order.total_amount,
+      customer: {
+        name: customer?.first_name ? `${customer.first_name} ${customer.last_name}` : 'Kunde',
+        email: customer?.email || ''
+      },
+      products: order.order_items.map((item: any) => ({
+        name: item.product_name || 'Unbekanntes Produkt',
+        quantity: item.quantity,
+        price: item.unit_price
+      }))
     };
-
-    // Template-Daten für Admin-E-Mail
-    const adminTemplateData = {
-      order_number: order.order_number,
-      order_date: formatDate(orderDate),
-      cancellation_date: formatDate(currentDate),
-      order_total: formatCurrency(order.total_amount),
-      customer_name: customer?.first_name ? `${customer.first_name} ${customer.last_name}` : 'Unbekannt',
-      customer_email: customer?.email || 'Unbekannt',
-      customer_phone: customer?.phone || 'Nicht angegeben',
-      order_items: orderItemsText,
-      admin_order_url: `${process.env.NEXT_PUBLIC_SITE_URL}/admin?tab=orders&order=${order.id}`
-    };
-
-    // E-Mails senden
-    const emailPromises = [];
 
     // Kunden-E-Mail senden
     if (customer?.email) {
-      emailPromises.push(
-        sendTemplateEmail(
-          'customer_order_cancellation',
-          customer.email,
-          customerTemplateData,
-          {}
-        ).catch((error: any) => {
-          console.error('Fehler beim Senden der Kunden-E-Mail:', error);
-          return { success: false, error: 'Kunden-E-Mail konnte nicht gesendet werden' };
-        })
-      );
+      try {
+        const customerResult = await triggerCustomerOrderCancellation(cancellationData);
+        emailResults.push({ success: customerResult, type: 'customer' });
+      } catch (error) {
+        console.error('Fehler beim Senden der Kunden-E-Mail:', error);
+        emailResults.push({ success: false, type: 'customer', error: 'Kunden-E-Mail konnte nicht gesendet werden' });
+      }
     }
 
     // Admin-E-Mail senden
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@brennholzkoenig.de';
-    emailPromises.push(
-      sendTemplateEmail(
-        'admin_order_cancellation',
-        adminEmail,
-        adminTemplateData,
-        {}
-      ).catch((error: any) => {
-        console.error('Fehler beim Senden der Admin-E-Mail:', error);
-        return { success: false, error: 'Admin-E-Mail konnte nicht gesendet werden' };
-      })
-    );
+    try {
+      const adminResult = await triggerAdminOrderCancellation(cancellationData);
+      emailResults.push({ success: adminResult, type: 'admin' });
+    } catch (error) {
+      console.error('Fehler beim Senden der Admin-E-Mail:', error);
+      emailResults.push({ success: false, type: 'admin', error: 'Admin-E-Mail konnte nicht gesendet werden' });
+    }
 
-    // Warten auf alle E-Mail-Sendungen
-    const emailResults = await Promise.all(emailPromises);
-    
     // Prüfen ob E-Mails erfolgreich gesendet wurden
-    const failedEmails = emailResults.filter((result: any) => result && !result.success);
+    const failedEmails = emailResults.filter((result: any) => !result.success);
     
     if (failedEmails.length > 0) {
       console.warn('Einige E-Mails konnten nicht gesendet werden:', failedEmails);

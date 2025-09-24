@@ -36,6 +36,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Update order status to cancelled
+    const { error: updateError } = await supabase
+      .from('orders')
+      .update({ 
+        status: 'cancelled',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', orderData.id);
+
+    if (updateError) {
+      console.error('Fehler beim Aktualisieren des Bestellstatus:', updateError);
+      return NextResponse.json(
+        { error: 'Fehler beim Aktualisieren des Bestellstatus' },
+        { status: 500 }
+      );
+    }
+
     // Prepare cancellation data
     const cancellationData = {
       order_number: orderData.order_number,
