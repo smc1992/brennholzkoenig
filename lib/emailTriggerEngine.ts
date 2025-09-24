@@ -223,7 +223,7 @@ export async function triggerCustomerOrderCancellation(cancellationData: Cancell
     // Finde Template mit aktiviertem Kunden-Stornierungstrigger
     const customerTemplate = templates.find(t => 
       t.template.triggers?.customer_order_cancellation === true && 
-      t.setting_key === 'email_template_order_cancellation'
+      t.setting_key === 'customer_order_cancellation'
     );
 
     if (!customerTemplate) {
@@ -246,7 +246,7 @@ export async function triggerCustomerOrderCancellation(cancellationData: Cancell
     };
 
     const result = await sendTemplateEmail(
-      'order_cancellation',
+      'customer_order_cancellation',
       cancellationData.customer.email,
       customerTemplateData
     );
@@ -273,7 +273,7 @@ export async function triggerAdminOrderCancellation(cancellationData: Cancellati
     // Finde Template mit aktiviertem Admin-Stornierungstrigger
     const adminTemplate = templates.find(t => 
       t.template.triggers?.admin_order_cancellation === true && 
-      t.setting_key === 'email_template_admin_order_cancellation'
+      t.setting_key === 'admin_order_cancellation'
     );
 
     if (!adminTemplate || !cancellationData.admin_email) {
