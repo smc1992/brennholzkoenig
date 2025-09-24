@@ -161,7 +161,7 @@ export default function ContactForm() {
           phone: formData.phone.trim() || null,
           subject: formData.subject.trim() || null,
           message: formData.message.trim(),
-          product: formData.product,
+          product_category: formData.product,
           status: 'new',
           created_at: new Date().toISOString()
         }])

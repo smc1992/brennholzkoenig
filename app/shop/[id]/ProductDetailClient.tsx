@@ -130,6 +130,17 @@ export default function ProductDetailClient({ product: initialProduct, pricingTi
   const handleAddToCart = async () => {
     if (!pricing.canOrder) return;
     
+    // Lagerbestandsprüfung
+    if (product.stock_quantity === 0) {
+      alert('Dieses Produkt ist ausverkauft und kann nicht in den Warenkorb gelegt werden.');
+      return;
+    }
+    
+    if (quantity > product.stock_quantity) {
+      alert(`Nur noch ${product.stock_quantity} ${product.unit} verfügbar. Bitte reduzieren Sie die Menge.`);
+      return;
+    }
+    
     setIsAddingToCart(true);
     
     try {
@@ -325,9 +336,9 @@ export default function ProductDetailClient({ product: initialProduct, pricingTi
               <div className="space-y-4">
                 <button
                   onClick={handleAddToCart}
-                  disabled={!pricing.canOrder || isAddingToCart}
+                  disabled={!pricing.canOrder || isAddingToCart || product.stock_quantity === 0}
                   className={`w-full py-4 px-6 rounded-lg font-bold text-lg transition-all ${
-                    pricing.canOrder && !isAddingToCart
+                    pricing.canOrder && !isAddingToCart && product.stock_quantity > 0
                       ? 'bg-[#C04020] hover:bg-[#A03318] text-white'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
@@ -336,6 +347,11 @@ export default function ProductDetailClient({ product: initialProduct, pricingTi
                     <>
                       <i className="ri-loader-4-line animate-spin mr-2"></i>
                       Wird hinzugefügt...
+                    </>
+                  ) : product.stock_quantity === 0 ? (
+                    <>
+                      <i className="ri-close-circle-line mr-2"></i>
+                      Ausverkauft
                     </>
                   ) : pricing.canOrder ? (
                     <>
