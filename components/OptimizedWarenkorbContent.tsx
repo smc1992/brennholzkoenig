@@ -50,7 +50,7 @@ export default function OptimizedWarenkorbContent({
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [pricingTiers, setPricingTiers] = useState<Tier[]>([]);
   const [minOrderQuantity, setMinOrderQuantity] = useState(3);
-  const [isLoading, setIsLoading] = useState(initialProducts.length === 0);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedDelivery, setSelectedDelivery] = useState('standard');
   const [shippingCosts, setShippingCosts] = useState({ 
     standard: initialDeliveryOptions.find(d => d.type === 'standard')?.price || 43.5, 
@@ -438,9 +438,9 @@ export default function OptimizedWarenkorbContent({
     }
   };
 
-  if (isLoading && initialProducts.length === 0) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-pergament py-16" style={{paddingTop: '120px'}}>
+      <div className="min-h-screen bg-pergament flex items-center justify-center">
         <div className="container mx-auto px-6 sm:px-8 lg:px-12 max-w-7xl">
           <div className="text-center">
             <div className="w-16 h-16 flex items-center justify-center bg-[#C04020] rounded-full mx-auto mb-4 animate-pulse">
@@ -456,7 +456,7 @@ export default function OptimizedWarenkorbContent({
 
   if (combinedError) {
     return (
-      <div className="min-h-screen bg-pergament py-16" style={{paddingTop: '120px'}}>
+      <div className="min-h-screen bg-pergament py-16" style={{paddingTop: '80px'}}>
         <div className="container mx-auto px-6 sm:px-8 lg:px-12 max-w-7xl">
           <div className="text-center">
             <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
@@ -476,7 +476,7 @@ export default function OptimizedWarenkorbContent({
   }
 
   return (
-    <div className="min-h-screen bg-pergament py-16" style={{paddingTop: '120px'}}>
+    <div className="min-h-screen bg-pergament py-16" style={{paddingTop: '80px'}}>
       <div className="container mx-auto px-6 sm:px-8 lg:px-12 max-w-7xl">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-4">Ihr Warenkorb</h1>
@@ -484,7 +484,7 @@ export default function OptimizedWarenkorbContent({
 
         </div>
 
-        {cartItems.length === 0 ? (
+        {cartItems.length === 0 && !isLoading ? (
           <div className="text-center py-16">
             <div className="w-24 h-24 flex items-center justify-center bg-gray-100 rounded-full mx-auto mb-6">
               <i className="ri-shopping-cart-line text-4xl text-gray-400"></i>
@@ -518,19 +518,20 @@ export default function OptimizedWarenkorbContent({
                       
                       return (
                         <div key={item.id} className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 p-3 sm:p-4 border border-gray-200 rounded-lg">
-                          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 mx-auto sm:mx-0">
+                          <div className="w-32 sm:w-40 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 mx-auto sm:mx-0" style={{height: '128px'}}>
                             {item.image ? (
                               <img 
                                 src={getCDNUrl(item.image)} 
                                 alt={item.name}
-                                className="w-full h-full object-cover"
+                                className="w-full object-cover object-center transition-transform duration-300 hover:scale-105"
+                                style={{height: '128px'}}
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
-                                  target.src = '/api/placeholder?width=80&height=80';
+                                  target.src = '/api/placeholder?width=160&height=128';
                                 }}
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center">
+                              <div className="w-full flex items-center justify-center" style={{height: '128px'}}>
                                 <i className="ri-image-line text-xl sm:text-2xl text-gray-400"></i>
                               </div>
                             )}

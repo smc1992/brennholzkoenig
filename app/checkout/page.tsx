@@ -145,6 +145,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { products, subscribeToChanges, unsubscribeFromChanges } = useRealtimeSync();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Hilfsfunktion für CDN-URLs
   const getImageUrl = (url: string) => {
@@ -281,6 +282,8 @@ export default function CheckoutPage() {
           console.error('Error parsing saved discount:', error);
         }
       }
+      
+      setIsLoading(false);
     };
 
     loadData();
@@ -1122,8 +1125,25 @@ export default function CheckoutPage() {
 
   // Prüfe, ob der Warenkorb leer ist oder die Mindestbestellmenge nicht erreicht wird
   const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const isCartEmpty = cartItems.length === 0;
-  const isBelowMinimumQuantity = totalQuantity < minOrderQuantity;
+  const isCartEmpty = cartItems.length === 0 && !isLoading;
+  const isBelowMinimumQuantity = totalQuantity < minOrderQuantity && !isLoading;
+  
+  // Zeige Loading-Spinner während des Ladens
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white py-12">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="text-center">
+            <div className="w-16 h-16 flex items-center justify-center bg-gray-100 rounded-full mx-auto mb-6">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C04020]"></div>
+            </div>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-4">Warenkorb wird geladen...</h1>
+            <p className="text-gray-600">Bitte warten Sie einen Moment.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   if (isCartEmpty || isBelowMinimumQuantity) {
     return (
@@ -1877,15 +1897,18 @@ export default function CheckoutPage() {
                   <div className="mt-3 space-y-3">
                     {cartItems.map((item) => (
                       <div key={`mobile-${item.id}`} className="flex items-center space-x-3 text-sm">
-                        <img
-                          src={getImageUrl(item.image_url)}
-                          alt={item.name}
-                          className="w-10 h-10 object-cover rounded"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = '/api/placeholder?width=40&height=40';
-                          }}
-                        />
+                        <div className="w-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0" style={{height: '80px'}}>
+                          <img
+                            src={getImageUrl(item.image_url)}
+                            alt={item.name}
+                            className="w-full object-cover object-center"
+                            style={{height: '80px'}}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/api/placeholder?width=80&height=80';
+                            }}
+                          />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-gray-900 truncate">{item.name}</p>
                           <p className="text-gray-600">{item.quantity} × {item.price.toFixed(2)} €</p>
@@ -1905,15 +1928,18 @@ export default function CheckoutPage() {
               <div className="hidden md:block space-y-4 mb-6">
                 {cartItems.map((item) => (
                   <div key={`desktop-${item.id}`} className="flex items-center space-x-4">
-                    <img
-                      src={getImageUrl(item.image_url)}
-                      alt={item.name}
-                      className="w-16 h-16 object-cover rounded-lg"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/api/placeholder?width=64&height=64';
-                      }}
-                    />
+                    <div className="w-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0" style={{height: '96px'}}>
+                      <img
+                        src={getImageUrl(item.image_url)}
+                        alt={item.name}
+                        className="w-full object-cover object-center hover:scale-105 transition-transform duration-300"
+                        style={{height: '96px'}}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/api/placeholder?width=96&height=96';
+                        }}
+                      />
+                    </div>
                     <div className="flex-1">
                       <h4 className="font-medium text-gray-900 text-sm">{item.name}</h4>
                       <p className="text-gray-600 text-sm">Menge: {item.quantity}</p>
