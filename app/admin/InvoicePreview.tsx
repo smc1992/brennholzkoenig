@@ -67,16 +67,17 @@ export default function InvoicePreview({ orderId, invoiceId, customSettings, onC
       
       console.log('🔄 Generating preview with:', { orderId, invoiceId, hasCustomSettings: !!customSettings, settingsCount: Object.keys(finalSettings).length });
       
-      const response = await fetch('/api/invoice-preview', {
-        method: 'POST',
+      // Use the same invoice-builder API as the working download function
+      const url = new URL('/api/invoice-builder', window.location.origin);
+      if (orderId) url.searchParams.set('orderId', orderId);
+      if (invoiceId) url.searchParams.set('invoiceId', invoiceId);
+      url.searchParams.set('templateId', 'invoice');
+
+      const response = await fetch(url.toString(), {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          orderId,
-          invoiceId,
-          customSettings: finalSettings
-        }),
       });
 
       if (!response.ok) {
@@ -184,24 +185,47 @@ export default function InvoicePreview({ orderId, invoiceId, customSettings, onC
         body: JSON.stringify({
           orderId,
           invoiceId,
-          saveToFile: true
+          templateId: 'invoice',
+          saveToFile: false
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate PDF');
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText };
+        }
+        throw new Error(`PDF generation failed: ${errorData.details || errorData.error || response.statusText}`);
       }
 
-      const result = await response.json();
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
       
-      if (result.success) {
-        alert(`PDF erfolgreich erstellt: ${result.fileName}`);
-      } else {
-        throw new Error(result.error || 'Unknown error');
+      // Generate filename based on available data
+      let filename = 'rechnung.pdf';
+      if (invoiceId) {
+        filename = `rechnung-${invoiceId}.pdf`;
+      } else if (orderId) {
+        filename = `rechnung-bestellung-${orderId}.pdf`;
       }
+      
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      alert('PDF erfolgreich generiert und heruntergeladen!');
     } catch (err) {
       console.error('PDF generation error:', err);
-      alert('Fehler beim Erstellen der PDF');
+      alert(`Fehler beim Erstellen der PDF: ${err instanceof Error ? err.message : err}`);
     } finally {
       setLoading(false);
     }
