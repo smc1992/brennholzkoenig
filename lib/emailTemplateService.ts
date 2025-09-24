@@ -297,14 +297,14 @@ export async function sendOrderConfirmation(
     order_items?: string;
   }
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  return sendTemplateEmail('order_confirmation', customerEmail, {
+  return sendTemplateEmail('Bestellbestätigung Premium', customerEmail, {
     customer_name: orderData.customer_name,
-    order_id: orderData.order_id,
+    order_number: orderData.order_id,
     order_date: orderData.order_date,
-    total_amount: parseFloat(String(orderData.total_amount)).toFixed(2),
+    order_total: parseFloat(String(orderData.total_amount)).toFixed(2) + '€',
     delivery_address: orderData.delivery_address,
     order_tracking_url: orderData.order_tracking_url || `https://brennholzkoenig.de/konto/bestellungen/${orderData.order_id}`,
-    order_items: orderData.order_items || 'Keine Artikel angegeben'
+    product_list: orderData.order_items || 'Keine Artikel angegeben'
   });
 }
 
