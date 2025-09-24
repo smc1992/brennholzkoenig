@@ -31,13 +31,13 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
   }, [orderNumber]);
 
   return (
-    <div className="min-h-screen bg-[#F5F0E0] py-8 md:py-16">
-      <div className="container mx-auto px-4 md:px-6">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 pt-20 md:pt-24 pb-8 md:pb-16">
+      <div className="container mx-auto px-4 max-w-4xl">
         <div className="max-w-4xl mx-auto">
           
           {/* Success Animation */}
           <div className={`text-center mb-8 md:mb-12 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <div className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-4 md:mb-6 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
+            <div className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-6 md:mb-8 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
               <i className="ri-check-line text-3xl md:text-4xl text-white"></i>
             </div>
             <h1 className="text-2xl md:text-4xl lg:text-5xl font-black text-[#1A1A1A] mb-3 md:mb-4 px-4" style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -127,7 +127,7 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div className="flex items-start p-3 md:p-0">
-                <div className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center bg-white text-[#C04020] rounded-full mr-3 md:mr-4 font-bold text-xs md:text-sm flex-shrink-0">
+                <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-white text-[#C04020] rounded-full mr-3 md:mr-4 font-bold text-sm md:text-base flex-shrink-0 shadow-sm">
                   1
                 </div>
                 <div>
@@ -139,7 +139,7 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
               </div>
               
               <div className="flex items-start p-3 md:p-0">
-                <div className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center bg-white text-[#C04020] rounded-full mr-3 md:mr-4 font-bold text-xs md:text-sm flex-shrink-0">
+                <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-white text-[#C04020] rounded-full mr-3 md:mr-4 font-bold text-sm md:text-base flex-shrink-0 shadow-sm">
                   2
                 </div>
                 <div>

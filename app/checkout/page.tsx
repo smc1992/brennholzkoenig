@@ -690,79 +690,80 @@ export default function CheckoutPage() {
     try {
       let customerId = null;
 
-      // Check if user is logged in
-      if (user) {
-        // Get customer by user email
-        const { data: existingCustomer } = await supabase
-          .from('customers')
-          .select('id')
-          .eq('email', user.email)
-          .single();
+      // Optimierte Kundenerstellung/Validierung
+      const handleCustomerCreation = async () => {
+        if (user) {
+          // Get customer by user email
+          const { data: existingCustomer } = await supabase
+            .from('customers')
+            .select('id')
+            .eq('email', user.email)
+            .single();
 
-        if (existingCustomer && existingCustomer.id) {
-          customerId = String(existingCustomer.id);
-          await saveCustomerData(customerId);
-        } else {
-          const { data: newCustomer, error: customerError } = await saveCustomerData();
-          if (customerError) {
-            console.error('Fehler beim Erstellen des Kunden:', {
-              code: customerError.code,
-              message: customerError.message,
-              hint: customerError.hint,
-              details: customerError.details
-            });
-            
-            // Fallback: Versuche Bestellung ohne Kundenerstellung
-            if (customerError.code === '42501' || customerError.code === '401') {
-              console.warn('RLS-Policy-Problem erkannt, verwende Fallback-Mechanismus');
-              // Setze customer_id auf null für anonyme Bestellungen
-              customerId = null;
-              console.log('Anonyme Bestellung ohne Customer-ID');
-            } else {
-              throw new Error(`Fehler beim Speichern der Kundendaten: ${customerError.message}`);
-            }
+          if (existingCustomer && existingCustomer.id) {
+            customerId = String(existingCustomer.id);
+            await saveCustomerData(customerId);
           } else {
-            customerId = newCustomer?.id;
+            const { data: newCustomer, error: customerError } = await saveCustomerData();
+            if (customerError) {
+              console.error('Fehler beim Erstellen des Kunden:', {
+                code: customerError.code,
+                message: customerError.message,
+                hint: customerError.hint,
+                details: customerError.details
+              });
+              
+              // Fallback: Versuche Bestellung ohne Kundenerstellung
+              if (customerError.code === '42501' || customerError.code === '401') {
+                console.warn('RLS-Policy-Problem erkannt, verwende Fallback-Mechanismus');
+                customerId = null;
+                console.log('Anonyme Bestellung ohne Customer-ID');
+              } else {
+                throw new Error(`Fehler beim Speichern der Kundendaten: ${customerError.message}`);
+              }
+            } else {
+              customerId = newCustomer?.id;
+            }
+          }
+        } else {
+          // Check if customer exists by email
+          const { data: existingCustomer } = await supabase
+            .from('customers')
+            .select('id')
+            .eq('email', deliveryData.email)
+            .single();
+
+          if (existingCustomer && existingCustomer.id) {
+            customerId = String(existingCustomer.id);
+            await saveCustomerData(customerId);
+          } else {
+            const { data: newCustomer, error: customerError } = await saveCustomerData();
+            if (customerError) {
+              console.error('Fehler beim Erstellen des Kunden:', {
+                code: customerError.code,
+                message: customerError.message,
+                hint: customerError.hint,
+                details: customerError.details
+              });
+              
+              // Fallback: Versuche Bestellung ohne Kundenerstellung
+              if (customerError.code === '42501' || customerError.code === '401') {
+                console.warn('RLS-Policy-Problem erkannt, verwende Fallback-Mechanismus');
+                customerId = null;
+                console.log('Anonyme Bestellung ohne Customer-ID');
+              } else {
+                throw new Error(`Fehler beim Speichern der Kundendaten: ${customerError.message}`);
+              }
+            } else {
+              customerId = newCustomer?.id;
+            }
           }
         }
-      } else {
-        // Check if customer exists by email
-        const { data: existingCustomer } = await supabase
-          .from('customers')
-          .select('id')
-          .eq('email', deliveryData.email)
-          .single();
+        return customerId;
+      };
 
-        if (existingCustomer && existingCustomer.id) {
-          customerId = String(existingCustomer.id);
-          await saveCustomerData(customerId);
-        } else {
-          const { data: newCustomer, error: customerError } = await saveCustomerData();
-          if (customerError) {
-            console.error('Fehler beim Erstellen des Kunden:', {
-              code: customerError.code,
-              message: customerError.message,
-              hint: customerError.hint,
-              details: customerError.details
-            });
-            
-            // Fallback: Versuche Bestellung ohne Kundenerstellung
-            if (customerError.code === '42501' || customerError.code === '401') {
-              console.warn('RLS-Policy-Problem erkannt, verwende Fallback-Mechanismus');
-              // Setze customer_id auf null für anonyme Bestellungen
-              customerId = null;
-              console.log('Anonyme Bestellung ohne Customer-ID');
-            } else {
-              throw new Error(`Fehler beim Speichern der Kundendaten: ${customerError.message}`);
-            }
-          } else {
-            customerId = newCustomer?.id;
-          }
-        }
-      }
-
-      // customerId kann null sein für anonyme Bestellungen
-      // Konvertiere undefined zu null für UUID-Kompatibilität
+      // Kundenerstellung
+      customerId = await handleCustomerCreation();
       const finalCustomerId = customerId === undefined ? null : customerId;
       
       console.log('Final Customer ID:', finalCustomerId, 'Type:', typeof finalCustomerId);
@@ -782,9 +783,9 @@ export default function CheckoutPage() {
       // Validiere und bereinige alle Datenfelder für UUID-Kompatibilität
       const orderData = {
         order_number: orderNumber || `BK-${Date.now()}`,
-        customer_id: finalCustomerId, // Bereits validiert: undefined → null
+        customer_id: finalCustomerId,
         status: 'pending',
-        payment_method: paymentMethod || 'bar', // Fallback für undefined
+        payment_method: paymentMethod || 'bar',
         delivery_first_name: deliveryData.firstName || '',
         delivery_last_name: deliveryData.lastName || '',
         delivery_email: deliveryData.email || '',
@@ -810,12 +811,10 @@ export default function CheckoutPage() {
         discount_code_id: (appliedDiscount && appliedDiscount.id !== undefined && appliedDiscount.id !== null) ? appliedDiscount.id : null,
         delivery_price: isNaN(shipping) ? 0 : parseFloat(shipping.toFixed(2)),
         total_amount: isNaN(total) ? 0 : parseFloat(total.toFixed(2)),
-        delivery_method: selectedDelivery || 'standard', // Fallback für undefined
-        delivery_type: selectedDelivery || 'standard', // Fallback für undefined
-        // created_at wird von der Datenbank automatisch gesetzt - nicht manuell überschreiben
+        delivery_method: selectedDelivery || 'standard',
+        delivery_type: selectedDelivery || 'standard',
       };
       
-      // Debug-Logging für alle kritischen Felder
       console.log('🔍 Order Data Validation:');
       console.log('customer_id:', finalCustomerId, 'Type:', typeof finalCustomerId);
       console.log('discount_code_id:', orderData.discount_code_id, 'Type:', typeof orderData.discount_code_id);
@@ -826,6 +825,7 @@ export default function CheckoutPage() {
 
       console.log('Bestelldaten:', orderData);
 
+      // Erstelle Bestellung
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert(orderData)
@@ -870,7 +870,7 @@ export default function CheckoutPage() {
       const orderItems = cartItems.map((item) => ({
         order_id: order.id,
         product_name: item.name,
-        product_category: 'Brennholz', // Default category, could be enhanced to get from product data
+        product_category: 'Brennholz',
         quantity: item.quantity,
         unit_price: parseFloat(item.price.toFixed(2)),
         total_price: parseFloat((item.price * item.quantity).toFixed(2)),
@@ -889,229 +889,190 @@ export default function CheckoutPage() {
         throw new Error(`Fehler beim Speichern der Bestellpositionen: ${itemsError.message}`);
       }
 
-      // Update inventory for each ordered item
-      for (const item of cartItems) {
-        try {
-          // Get current product data
-          const { data: productData, error: productError } = await supabase
-            .from('products')
-            .select('stock_quantity')
-            .eq('id', item.id)
-            .single();
+      // Clear cart and discount BEFORE redirect for immediate UI feedback
+      localStorage.removeItem('cart');
+      localStorage.removeItem('appliedDiscount');
 
-          if (productError) {
-            console.error('Fehler beim Laden der Produktdaten:', productError);
-            continue; // Continue with other items even if one fails
-          }
+      // FRÜHE WEITERLEITUNG - Benutzer sieht sofort die Bestätigungsseite
+      router.push(`/bestellbestaetigung?order=${orderNumber}`);
 
-          const currentStock = productData?.stock_quantity || 0;
-          const newStock = Math.max(0, currentStock - item.quantity);
-
-          // Update product stock
-          const { error: stockError } = await supabase
-            .from('products')
-            .update({ 
-              stock_quantity: newStock,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', item.id);
-
-          if (stockError) {
-            console.error('Fehler beim Aktualisieren des Lagerbestands:', stockError);
-            continue;
-          }
-
-          // Create inventory movement record
-          const { error: movementError } = await supabase
-            .from('inventory_movements')
-            .insert({
-              product_id: item.id,
-              movement_type: 'out',
-              quantity: item.quantity,
-              reference_id: order.id,
-              notes: `Verkauf - Bestellung ${orderNumber}`,
-              created_by: 'system',
-              created_at: new Date().toISOString()
-            });
-
-          if (movementError) {
-            console.error('Fehler beim Erstellen der Lagerbewegung:', movementError);
-          }
-
-          console.log(`Lagerbestand aktualisiert für ${item.name}: ${currentStock} → ${newStock}`);
-          
-          // Check for low stock and send alert if necessary
+      // Alle weiteren Operationen im Hintergrund (non-blocking)
+      Promise.allSettled([
+        // Lagerbestand-Updates parallel verarbeiten
+        Promise.all(cartItems.map(async (item) => {
           try {
-            const response = await fetch('/api/stock-monitoring/check', {
+            // Get current product data
+            const { data: productData, error: productError } = await supabase
+              .from('products')
+              .select('stock_quantity')
+              .eq('id', item.id)
+              .single();
+
+            if (productError) {
+              console.error('Fehler beim Laden der Produktdaten:', productError);
+              return;
+            }
+
+            const currentStock = productData?.stock_quantity || 0;
+            const newStock = Math.max(0, currentStock - item.quantity);
+
+            // Update product stock
+            const { error: stockError } = await supabase
+              .from('products')
+              .update({ 
+                stock_quantity: newStock,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', item.id);
+
+            if (stockError) {
+              console.error('Fehler beim Aktualisieren des Lagerbestands:', stockError);
+              return;
+            }
+
+            // Create inventory movement record
+            const { error: movementError } = await supabase
+              .from('inventory_movements')
+              .insert({
+                product_id: item.id,
+                movement_type: 'out',
+                quantity: item.quantity,
+                reference_id: order.id,
+                notes: `Verkauf - Bestellung ${orderNumber}`,
+                created_by: 'system',
+                created_at: new Date().toISOString()
+              });
+
+            if (movementError) {
+              console.error('Fehler beim Erstellen der Lagerbewegung:', movementError);
+            }
+
+            console.log(`Lagerbestand aktualisiert für ${item.name}: ${currentStock} → ${newStock}`);
+            
+            // Check for low stock and send alert if necessary
+            try {
+              const response = await fetch('/api/stock-monitoring/check', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ productId: item.id }),
+              });
+              
+              if (!response.ok) {
+                console.warn(`Stock-Monitoring-API-Aufruf fehlgeschlagen für ${item.name}`);
+              }
+            } catch (stockCheckError) {
+              console.error(`Fehler bei der Lagerbestand-Prüfung für ${item.name}:`, stockCheckError);
+            }
+          } catch (error) {
+            console.error(`Fehler beim Aktualisieren des Lagers für ${item.name}:`, error);
+          }
+        })),
+
+        // E-Mail-Versand im Hintergrund
+        (async () => {
+          try {
+            const emailData = {
+              orderData: {
+                orderNumber: orderNumber,
+                id: order.id,
+                total: total,
+                items: cartItems.map((item) => ({
+                  name: item.name,
+                  quantity: item.quantity,
+                  price: item.price,
+                  unit: item.unit || 'SRM',
+                })),
+                totalAmount: total.toString(),
+                deliveryAddress: `${deliveryData.firstName} ${deliveryData.lastName}\n${deliveryData.street} ${deliveryData.houseNumber}\n${deliveryData.postalCode} ${deliveryData.city}`,
+              },
+              customerData: {
+                name: `${deliveryData.firstName} ${deliveryData.lastName}`,
+                email: deliveryData.email,
+                phone: deliveryData.phone,
+                address: `${deliveryData.street} ${deliveryData.houseNumber}`,
+                postalCode: deliveryData.postalCode,
+                city: deliveryData.city
+              },
+              customerEmail: deliveryData.email,
+              customerName: `${deliveryData.firstName} ${deliveryData.lastName}`,
+              templateType: 'order_confirmation'
+            };
+
+            console.log('Sende Bestellbestätigung an:', deliveryData.email);
+            
+            const emailResponse = await fetch('/api/send-order-email', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({ productId: item.id }),
+              body: JSON.stringify(emailData),
             });
+
+            const emailResult = await emailResponse.json();
             
-            if (!response.ok) {
-              console.warn(`Stock-Monitoring-API-Aufruf fehlgeschlagen für ${item.name}`);
+            if (emailResult.success) {
+              console.log('✅ Bestellbestätigung erfolgreich gesendet');
+            } else {
+              console.error('❌ E-Mail-Versand fehlgeschlagen:', emailResult.error);
             }
-          } catch (stockCheckError) {
-            console.error(`Fehler bei der Lagerbestand-Prüfung für ${item.name}:`, stockCheckError);
-            // Non-critical error, don't fail the order
+          } catch (emailError) {
+            console.error('❌ Fehler beim E-Mail-Versand:', emailError);
           }
-        } catch (error) {
-          console.error(`Fehler beim Aktualisieren des Lagers für ${item.name}:`, error);
-          // Continue with other items even if one fails
-        }
-      }
+        })(),
 
-      // Send order confirmation email with configurable template
-      try {
-        const emailData = {
-          orderData: {
-            orderNumber: orderNumber,
-            id: order.id,
-            total: total,
-            items: cartItems.map((item) => ({
-              name: item.name,
-              quantity: item.quantity,
-              price: item.price
-            }))
-          },
-          customerData: {
-            name: `${deliveryData.firstName} ${deliveryData.lastName}`,
-            email: deliveryData.email,
-            phone: deliveryData.phone,
-            address: `${deliveryData.street} ${deliveryData.houseNumber}`,
-            postalCode: deliveryData.postalCode,
-            city: deliveryData.city
+        // Discount-Update im Hintergrund
+        (async () => {
+          if (appliedDiscount && appliedDiscount.id) {
+            try {
+              await supabase
+                .from('discount_codes')
+                .update({ 
+                  usage_count: (appliedDiscount.usage_count || 0) + 1,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', appliedDiscount.id);
+            } catch (error) {
+              console.error('Error updating discount usage:', error);
+            }
           }
-        };
+        })(),
 
-        console.log('Sende Bestellbestätigung an:', deliveryData.email);
-        
-        // Send confirmation email using Nodemailer service
-        const emailResponse = await fetch('/api/send-order-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(emailData),
-        });
-
-        const emailResult = await emailResponse.json();
-        
-        if (emailResult.success) {
-          console.log('✅ Bestellbestätigung erfolgreich gesendet');
-        } else {
-          console.error('❌ E-Mail-Versand fehlgeschlagen:', emailResult.error);
-        }
-      } catch (emailError) {
-        console.error('E-Mail Fehler (nicht kritisch):', emailError);
-        // E-Mail Fehler ist nicht kritisch, Bestellung wird trotzdem fortgesetzt
-      }
-
-      // Update discount usage count if discount was applied
-      if (appliedDiscount && appliedDiscount.id) {
-        try {
-          await supabase
-            .from('discount_codes')
-            .update({ 
-              usage_count: (appliedDiscount.usage_count || 0) + 1,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', appliedDiscount.id);
-        } catch (error) {
-          console.error('Error updating discount usage:', error);
-          // Non-critical error, don't fail the order
-        }
-      }
-
-      // Track purchase event for Google Analytics
-      try {
-        const purchaseItems = cartItems.map(item => ({
-          id: item.id,
-          name: item.name,
-          category: 'Brennholz',
-          quantity: item.quantity,
-          price: parseFloat(item.price.toString())
-        }));
-
-        trackPurchase(
-          orderNumber,
-          total,
-          purchaseItems,
-          taxAmount,
-          shipping
-        );
-      } catch (error) {
-        console.error('Error tracking purchase event:', error);
-        // Non-critical error, don't fail the order
-      }
-
-      // Track purchase event for Google Analytics
-      trackPurchase(
-        orderNumber,
-        total,
-        cartItems.map(item => ({
-          id: item.id,
-          name: item.name,
-          category: 'Brennholz',
-          quantity: item.quantity,
-          price: item.price
-        })),
-        taxAmount,
-        shipping
-      );
-
-      // Send order confirmation emails
-      try {
-        console.log('Sende Bestellbestätigungs-E-Mails...');
-        
-        const emailData = {
-          orderData: {
-            orderNumber: orderNumber,
-            items: cartItems.map((item) => ({
+        // Analytics-Tracking im Hintergrund
+        (async () => {
+          try {
+            const purchaseItems = cartItems.map(item => ({
+              id: item.id,
               name: item.name,
+              category: 'Brennholz',
               quantity: item.quantity,
-              price: item.price.toString(),
-              unit: item.unit || 'SRM',
-            })),
-            totalAmount: total.toString(),
-            deliveryAddress: `${deliveryData.firstName} ${deliveryData.lastName}\n${deliveryData.street} ${deliveryData.houseNumber}\n${deliveryData.postalCode} ${deliveryData.city}`,
-          },
-          customerEmail: deliveryData.email,
-          customerName: `${deliveryData.firstName} ${deliveryData.lastName}`,
-          templateType: 'order_confirmation'
-        };
+              price: parseFloat(item.price.toString())
+            }));
 
-        console.log('Sende E-Mail-Daten:', emailData);
-        
-        const emailResponse = await fetch('/api/send-order-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(emailData),
+            trackPurchase(
+              orderNumber,
+              total,
+              purchaseItems,
+              taxAmount,
+              shipping
+            );
+          } catch (error) {
+            console.error('Error tracking purchase event:', error);
+          }
+        })()
+      ]).then((results) => {
+        console.log('🔄 Hintergrund-Operationen abgeschlossen:');
+        results.forEach((result, index) => {
+          const operations = ['Lagerbestand-Updates', 'E-Mail-Versand', 'Discount-Update', 'Analytics-Tracking'];
+          if (result.status === 'fulfilled') {
+            console.log(`✅ ${operations[index]} erfolgreich`);
+          } else {
+            console.error(`❌ ${operations[index]} fehlgeschlagen:`, result.reason);
+          }
         });
+      });
 
-        const emailResult = await emailResponse.json();
-        
-        if (emailResult.success) {
-          console.log('✅ Bestellbestätigungs-E-Mails erfolgreich gesendet');
-        } else {
-          console.error('❌ E-Mail-Versand fehlgeschlagen:', emailResult.error);
-          // E-Mail-Fehler soll die Bestellung nicht blockieren
-        }
-      } catch (emailError) {
-        console.error('❌ Fehler beim E-Mail-Versand:', emailError);
-        // E-Mail-Fehler soll die Bestellung nicht blockieren
-      }
-
-      // Clear cart and discount
-      localStorage.removeItem('cart');
-      localStorage.removeItem('appliedDiscount');
-
-      // Redirect to confirmation page with order number
-      router.push(`/bestellbestaetigung?order=${orderNumber}`);
     } catch (error: any) {
       console.error('Fehler beim Verarbeiten der Bestellung:', error);
       setErrors({ submit: error.message || 'Fehler beim Verarbeiten der Bestellung. Bitte versuchen Sie es erneut.' });
@@ -1914,7 +1875,7 @@ export default function CheckoutPage() {
                           <p className="text-gray-600">{item.quantity} × {item.price.toFixed(2)} €</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-gray-900 whitespace-nowrap">
                             {(item.price * item.quantity).toFixed(2)} €
                           </p>
                         </div>
@@ -1945,7 +1906,7 @@ export default function CheckoutPage() {
                       <p className="text-gray-600 text-sm">Menge: {item.quantity}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-gray-900 whitespace-nowrap">
                         {(item.price * item.quantity).toFixed(2)} €
                       </p>
                     </div>
@@ -1957,7 +1918,7 @@ export default function CheckoutPage() {
                 {/* Zwischensumme */}
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-gray-600">Zwischensumme</span>
-                  <span className="text-gray-900">
+                  <span className="text-gray-900 whitespace-nowrap">
                     {calculateTotal().subtotal.toFixed(2)} €
                   </span>
                 </div>
@@ -1966,14 +1927,14 @@ export default function CheckoutPage() {
                 {appliedDiscount && (
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-green-600">Rabatt ({appliedDiscount.code})</span>
-                    <span className="text-green-600">–{calculateTotal().discountAmount.toFixed(2)} €</span>
+                    <span className="text-green-600 whitespace-nowrap">–{calculateTotal().discountAmount.toFixed(2)} €</span>
                   </div>
                 )}
                 
                 {/* Versandkosten */}
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-gray-600">Versandkosten</span>
-                  <span className="text-gray-900">
+                  <span className="text-gray-900 whitespace-nowrap">
                     {calculateTotal().shipping.toFixed(2)} €
                   </span>
                 </div>
@@ -1981,13 +1942,13 @@ export default function CheckoutPage() {
                 {/* MwSt. Hinweis */}
                 <div className="flex justify-between text-xs text-gray-500 mb-4">
                   <span>inkl. {calculateTotal().taxRate}% MwSt.</span>
-                  <span>{calculateTotal().taxAmount.toFixed(2)} €</span>
+                  <span className="whitespace-nowrap">{calculateTotal().taxAmount.toFixed(2)} €</span>
                 </div>
                 {/* Gesamtsumme */}
                 <div className="flex justify-between text-lg font-bold border-t pt-4">
                   <span>Gesamtsumme</span>
                   <div className="text-right">
-                    <div className="text-lg font-bold">{calculateTotal().total.toFixed(2)} €</div>
+                    <div className="text-lg font-bold whitespace-nowrap">{calculateTotal().total.toFixed(2)} €</div>
                   </div>
                 </div>
               </div>

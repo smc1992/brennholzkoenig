@@ -12,7 +12,7 @@ interface ContactFormData {
   phone: string;
   subject: string;
   message: string;
-  product: string;
+  product_category: string;
 }
 
 export default function ContactForm() {
@@ -23,7 +23,7 @@ export default function ContactForm() {
     phone: '',
     subject: '',
     message: '',
-    product: 'Allgemeine Anfrage'
+    product_category: 'Allgemeine Anfrage'
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -107,7 +107,7 @@ export default function ContactForm() {
             </div>
             <div class="field">
                 <div class="label">Produktkategorie:</div>
-                <div class="value">${data.product}</div>
+                <div class="value">${data.product_category}</div>
             </div>
             <div class="field">
                 <div class="label">Betreff Details:</div>
@@ -161,7 +161,7 @@ export default function ContactForm() {
           phone: formData.phone.trim() || null,
           subject: formData.subject.trim() || null,
           message: formData.message.trim(),
-          product_category: formData.product,
+          product_category: formData.product_category,
           status: 'new',
           created_at: new Date().toISOString()
         }])
@@ -173,17 +173,21 @@ export default function ContactForm() {
         throw new Error('Fehler beim Speichern der Kontaktanfrage');
       }
 
-      // 2. E-Mail senden und Analytics parallel ausführen
+      // Sofort zur Bestätigungsseite navigieren für bessere UX
+      router.push('/kontakt/bestaetigung');
+
+      // 2. E-Mail und Analytics im Hintergrund ausführen (non-blocking)
       const emailHtml = createEmailTemplate(formData);
       
-      const [emailResult, analyticsResult] = await Promise.allSettled([
+      // Fire-and-forget für bessere Performance
+      Promise.allSettled([
         // E-Mail senden
         fetch('/api/send-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             to: 'info@brennholz-koenig.de',
-            subject: `Neue Kontaktanfrage: ${formData.product} - ${formData.name}`,
+            subject: `Neue Kontaktanfrage: ${formData.product_category} - ${formData.name}`,
             html: emailHtml,
             replyTo: formData.email,
             type: 'contact_form'
@@ -194,42 +198,44 @@ export default function ContactForm() {
         supabase.from('analytics_events').insert([{
           event_type: 'contact_form_submission',
           event_data: {
-            product: formData.product,
+            product: formData.product_category,
             has_phone: !!formData.phone,
             has_subject: !!formData.subject,
             message_length: formData.message.length
           },
           created_at: new Date().toISOString()
         }])
-      ]);
-
-      // E-Mail-Ergebnis prüfen
-      if (emailResult.status === 'fulfilled') {
-        const emailResponse = await emailResult.value.json();
-        if (!emailResponse.success) {
-          throw new Error(emailResponse.message || 'E-Mail konnte nicht gesendet werden');
+      ]).then(([emailResult, analyticsResult]) => {
+        // E-Mail-Ergebnis loggen
+        if (emailResult.status === 'fulfilled') {
+          emailResult.value.json().then(emailResponse => {
+            if (emailResponse.success) {
+              console.log('E-Mail erfolgreich versendet:', emailResponse);
+            } else {
+              console.error('E-Mail-Fehler:', emailResponse.message);
+            }
+          });
+        } else {
+          console.error('E-Mail-Fehler:', emailResult.reason);
         }
-        console.log('E-Mail erfolgreich versendet:', emailResponse);
-      } else {
-        console.error('E-Mail-Fehler:', emailResult.reason);
-        throw new Error('E-Mail konnte nicht gesendet werden');
+
+        // Analytics-Fehler nur loggen
+        if (analyticsResult.status === 'rejected') {
+          console.warn('Analytics-Event konnte nicht gespeichert werden:', analyticsResult.reason);
+        }
+      });
+
+      // Google Analytics Events (non-blocking)
+      try {
+        trackContact('contact_form', 'website');
+        
+        // Track quote request if it's a product or price inquiry
+        if (['Preise', 'Kaminholz', 'Brennholz', 'Anzündholz', 'Holzbriketts', 'Lieferung'].includes(formData.product_category)) {
+          trackQuoteRequest(formData.product_category, 1, 'contact_form');
+        }
+      } catch (analyticsError) {
+        console.warn('Google Analytics Fehler:', analyticsError);
       }
-
-      // Analytics-Fehler nur loggen, nicht blockieren
-      if (analyticsResult.status === 'rejected') {
-        console.warn('Analytics-Event konnte nicht gespeichert werden:', analyticsResult.reason);
-      }
-
-      // Google Analytics Event tracken
-      trackContact('contact_form', 'website');
-
-      // Track quote request if it's a product or price inquiry
-      if (['Preise', 'Kaminholz', 'Brennholz', 'Anzündholz', 'Holzbriketts', 'Lieferung'].includes(formData.product)) {
-        trackQuoteRequest(formData.product, 1, 'contact_form');
-      }
-
-      // Erfolg - zur Bestätigungsseite navigieren
-      router.push('/kontakt/bestaetigung');
       
     } catch (error: any) {
       console.error('Fehler beim Absenden:', error);
@@ -313,13 +319,13 @@ export default function ContactForm() {
 
               {/* Produktkategorie */}
               <div>
-                <label htmlFor="product" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="product_category" className="block text-sm font-medium text-gray-700 mb-2">
                   Produktkategorie
                 </label>
                 <select
-                  id="product"
-                  value={formData.product}
-                  onChange={(e) => setFormData(prev => ({ ...prev, product: e.target.value }))}
+                  id="product_category"
+                  value={formData.product_category}
+                  onChange={(e) => setFormData(prev => ({ ...prev, product_category: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent transition-colors"
                 >
                   <option value="Allgemeine Anfrage">Allgemeine Anfrage</option>

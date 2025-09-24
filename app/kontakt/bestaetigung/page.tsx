@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function KontaktBestaetigung() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F5F0E0] via-white to-[#F5F0E0] py-12">
+    <div className="min-h-screen bg-gradient-to-br from-[#F5F0E0] via-white to-[#F5F0E0] pt-20 pb-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Success Icon */}
         <div className="text-center mb-8">
@@ -64,8 +64,8 @@ export default function KontaktBestaetigung() {
                 </h3>
                 <p className="text-gray-600">
                   Bei dringenden Fragen erreichen Sie uns auch telefonisch unter{' '}
-                  <a href="tel:+4912345678901" className="text-[#C04020] font-medium hover:underline">
-                    +49 123 456 78901
+                  <a href="tel:+4917671085234" className="text-[#C04020] font-medium hover:underline">
+                    +49 176 71085234
                   </a>
                 </p>
               </div>

@@ -280,7 +280,7 @@ export async function createEmailTransporter() {
     throw new Error('Nodemailer createTransport Funktion nicht verfügbar');
   }
 
-  // Multi-Port-Fallback für Hetzner
+  // Multi-Port-Fallback für Hetzner - optimiert für schnelleres Scheitern
   const portConfigs = [
     {
       port: parseInt(settings.smtp_port),
@@ -291,11 +291,6 @@ export async function createEmailTransporter() {
       port: 587,
       secure: false,
       name: 'Port 587 (STARTTLS)'
-    },
-    {
-      port: 25,
-      secure: false,
-      name: 'Port 25 (Standard)'
     }
   ];
 
@@ -311,9 +306,9 @@ export async function createEmailTransporter() {
           user: settings.smtp_username,
           pass: settings.smtp_password,
         },
-        connectionTimeout: 10000,
-        greetingTimeout: 5000,
-        socketTimeout: 10000
+        connectionTimeout: 5000,
+        greetingTimeout: 3000,
+        socketTimeout: 5000
       };
 
       const transporter = nodemailer.createTransport(transportConfig);
