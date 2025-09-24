@@ -9,6 +9,7 @@ import { SEOMetadata } from '@/components/SEOMetadata';
 import WishlistButton from '@/components/WishlistButton';
 import CartNotification from '@/components/CartNotification';
 import ProductImageGalleryDisplay from '@/components/ProductImageGalleryDisplay';
+import { calculatePriceWithTiers, getPriceInfoForQuantity } from '@/lib/pricing';
 
 interface Product {
   id: string;
@@ -72,79 +73,7 @@ const urlToProductId: { [key: string]: string } = {
   'scheitholz-fichte-33cm': '6'
 };
 
-function calculatePriceWithTiers(basePrice: number, quantity: number, tiers: PricingTier[], minOrderQuantity: number = 3, hasQuantityDiscount: boolean = false) {
-  if (quantity < minOrderQuantity) {
-    return {
-      price: basePrice,
-      adjustmentText: `Mindestbestellung ${minOrderQuantity} SRM`,
-      canOrder: false
-    };
-  }
-  
-  // Preise und Zuschläge/Rabatte basierend auf der Menge
-  let finalPrice = basePrice;
-  let adjustmentText = '';
-  
-  if (quantity >= 3 && quantity <= 5) {
-    // 30% Zuschlag für 3-5 SRM
-    const surcharge = basePrice * 0.3;
-    finalPrice = basePrice + surcharge;
-    adjustmentText = '30% Zuschlag je SRM';
-  } else if (quantity >= 6 && quantity < 25) {
-    // Normalpreis für 6-24 SRM
-    adjustmentText = 'Normalpreis';
-  } else if (quantity >= 25 && hasQuantityDiscount) {
-    // 2,50€ Rabatt für 25+ SRM (nur wenn Produkt Mengenrabatt aktiviert hat)
-    finalPrice = basePrice - 2.5;
-    adjustmentText = '€2,50 Rabatt je SRM';
-  } else if (quantity >= 25 && !hasQuantityDiscount) {
-    // Normalpreis für 25+ SRM (wenn kein Mengenrabatt aktiviert)
-    adjustmentText = 'Normalpreis';
-  }
 
-  return {
-    price: Math.max(0, finalPrice),
-    adjustmentText,
-    canOrder: true
-  };
-}
-
-function getPriceInfoForQuantity(quantity: number, tiers: PricingTier[], minOrderQuantity: number, hasQuantityDiscount: boolean = false) {
-  if (quantity < minOrderQuantity) {
-    return {
-      info: `Mindestbestellung ${minOrderQuantity} SRM`,
-      color: 'text-red-600',
-      canOrder: false
-    };
-  }
-  
-  let info = '';
-  let color = 'text-gray-600';
-  
-  if (quantity >= 3 && quantity <= 5) {
-    // 30% Zuschlag für 3-5 SRM
-    info = '30% Zuschlag je SRM';
-    color = 'text-red-600';
-  } else if (quantity >= 6 && quantity < 25) {
-    // Normalpreis für 6-24 SRM
-    info = 'Normalpreis';
-    color = 'text-gray-600';
-  } else if (quantity >= 25 && hasQuantityDiscount) {
-    // 2,50€ Rabatt für 25+ SRM (nur wenn Produkt Mengenrabatt aktiviert hat)
-    info = '€2,50 Rabatt je SRM';
-    color = 'text-green-600';
-  } else if (quantity >= 25 && !hasQuantityDiscount) {
-    // Normalpreis für 25+ SRM (wenn kein Mengenrabatt aktiviert)
-    info = 'Normalpreis';
-    color = 'text-gray-600';
-  }
-
-  return {
-    info,
-    color,
-    canOrder: true
-  };
-}
 
 export default function ProductDetail({ productId }: ProductDetailProps) {
   const router = useRouter();

@@ -28,9 +28,9 @@ export default function CostCalculatorSection() {
   const calculatePriceWithDiscount = (basePrice: number, quantity: number) => {
     let finalPrice = basePrice;
     
-    if (quantity >= 3 && quantity <= 5) {
+    if (quantity >= 3 && quantity <= 6) {
       finalPrice = basePrice * 1.3; // +30% Zuschlag
-    } else if (quantity >= 6 && quantity <= 24) {
+    } else if (quantity >= 7 && quantity <= 24) {
       finalPrice = basePrice; // Normalpreis
     } else if (quantity >= 25) {
       finalPrice = basePrice - 2.5; // -2,50€ Rabatt
@@ -40,9 +40,9 @@ export default function CostCalculatorSection() {
   };
 
   const getPriceInfo = (quantity: number) => {
-    if (quantity < 3) return { info: 'Mindestmenge: 3 SRM', color: 'text-red-600' };
-    if (quantity >= 3 && quantity <= 5) return { info: '+30% Zuschlag (kleine Menge)', color: 'text-orange-600' };
-    if (quantity >= 6 && quantity <= 24) return { info: 'Normalpreis', color: 'text-green-600' };
+    if (quantity < 7) return { info: 'Mindestmenge: 7 SRM', color: 'text-red-600' };
+    if (quantity >= 3 && quantity <= 6) return { info: '+30% Zuschlag (kleine Menge)', color: 'text-orange-600' };
+    if (quantity >= 7 && quantity <= 24) return { info: 'Normalpreis', color: 'text-green-600' };
     if (quantity >= 25) return { info: '-2,50€ Mengenrabatt', color: 'text-blue-600' };
     return { info: '', color: '' };
   };
