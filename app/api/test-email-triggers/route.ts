@@ -3,6 +3,8 @@ import {
   triggerOrderConfirmation, 
   triggerShippingNotification, 
   triggerLowStockAlert,
+  triggerCustomerOrderCancellation,
+  triggerAdminOrderCancellation,
   getActiveTemplatesWithTriggers 
 } from '@/lib/emailTriggerEngine';
 
@@ -117,11 +119,53 @@ export async function POST(request: NextRequest) {
         result = await triggerLowStockAlert(stockData);
         break;
         
+      case 'customer_order_cancellation':
+        const customerCancelData = testData || {
+          id: 'test_cancel_123',
+          order_number: 'BK-CANCEL-001',
+          customer_email: 'test@example.com',
+          customer_name: 'Max Mustermann',
+          total_amount: 89.99,
+          items: [
+            {
+              product_name: 'Brennholz Buche 25cm',
+              quantity: 1,
+              price: 79.99
+            }
+          ],
+          delivery_address: 'Musterstraße 123, 12345 Musterstadt',
+          created_at: new Date().toISOString()
+        };
+        
+        result = await triggerCustomerOrderCancellation(customerCancelData);
+        break;
+        
+      case 'admin_order_cancellation':
+        const adminCancelData = testData || {
+          id: 'test_cancel_123',
+          order_number: 'BK-CANCEL-001',
+          customer_email: 'test@example.com',
+          customer_name: 'Max Mustermann',
+          total_amount: 89.99,
+          items: [
+            {
+              product_name: 'Brennholz Buche 25cm',
+              quantity: 1,
+              price: 79.99
+            }
+          ],
+          delivery_address: 'Musterstraße 123, 12345 Musterstadt',
+          created_at: new Date().toISOString()
+        };
+        
+        result = await triggerAdminOrderCancellation(adminCancelData);
+        break;
+        
       default:
         return NextResponse.json({
           success: false,
           error: 'Unbekannter Trigger-Typ',
-          availableTypes: ['order_confirmation', 'shipping_notification', 'low_stock']
+          availableTypes: ['order_confirmation', 'shipping_notification', 'low_stock', 'customer_order_cancellation', 'admin_order_cancellation']
         }, { status: 400 });
     }
     
