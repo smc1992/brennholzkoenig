@@ -199,12 +199,13 @@ export default function RealtimeProductGrid({
             return (
               <div key={product.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
                 {/* Product Image */}
-                <div className="relative aspect-square bg-gradient-to-br from-gray-50 to-gray-100 max-h-80 overflow-hidden">
+                <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden rounded-xl" style={{height: '256px'}}>
                   <Link href={`/shop/${productUrl}`}>
                     <img
                       src={imageUrl}
                       alt={product.name}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                      className="w-full object-cover object-center hover:scale-105 transition-transform duration-300 cursor-pointer block"
+                      style={{height: '256px'}}
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         console.log('Image load error for product:', product.name, 'URL:', imageUrl);
