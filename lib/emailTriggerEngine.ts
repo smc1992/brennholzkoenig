@@ -65,6 +65,7 @@ interface OutOfStockData {
 interface CancellationData {
   order_number: string;
   order_id: string;
+  order_date: string;
   cancellation_date: string;
   cancellation_reason?: string;
   total_amount: number;
@@ -131,10 +132,12 @@ export async function triggerOrderConfirmation(orderData: OrderData): Promise<bo
     // Template-Daten für E-Mail vorbereiten
     const templateData = {
       customer_name: orderData.customer.name,
+      order_id: orderData.number,
       order_number: orderData.number,
-      order_total: orderData.total.toFixed(2) + ' €',
+      total_amount: orderData.total.toFixed(2),
       order_date: new Date(orderData.date).toLocaleDateString('de-DE'),
       delivery_address: orderData.delivery_address || 'Nicht angegeben',
+      order_tracking_url: `https://brennholz-koenig.de/bestellverlauf?order=${orderData.number}`,
       product_list: orderData.products.map(p => 
         `${p.quantity}x ${p.name} - ${p.price.toFixed(2)} €`
       ).join('\n'),
@@ -184,9 +187,12 @@ export async function triggerShippingNotification(shippingData: ShippingData): P
     // Template-Daten für E-Mail vorbereiten
     const templateData = {
       customer_name: shippingData.customer.name,
+      order_id: shippingData.order_number,
       order_number: shippingData.order_number,
       tracking_number: shippingData.tracking_number,
-      carrier: shippingData.carrier,
+      shipping_date: new Date().toLocaleDateString('de-DE'),
+      estimated_delivery: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString('de-DE'),
+      shipping_company: shippingData.carrier,
       tracking_url: `https://www.dhl.de/de/privatkunden/pakete-empfangen/verfolgen.html?lang=de&idc=${shippingData.tracking_number}`,
       company_name: 'Brennholzkönig',
       support_email: 'support@brennholz-koenig.de'
@@ -234,15 +240,14 @@ export async function triggerCustomerOrderCancellation(cancellationData: Cancell
     const customerTemplateData = {
       customer_name: cancellationData.customer.name,
       order_number: cancellationData.order_number,
+      order_date: cancellationData.order_date,
       cancellation_date: cancellationData.cancellation_date,
-      cancellation_reason: cancellationData.cancellation_reason || 'Auf Kundenwunsch',
-      total_amount: cancellationData.total_amount.toFixed(2),
-      product_list: cancellationData.products.map(p => 
+      order_total: cancellationData.total_amount.toFixed(2),
+      order_items: cancellationData.products.map(p => 
         `${p.quantity}x ${p.name} (${p.price.toFixed(2)}€)`
       ).join(', '),
-      company_name: 'Brennholzkönig',
-      support_email: 'support@brennholz-koenig.de',
-      refund_info: 'Die Rückerstattung erfolgt innerhalb von 3-5 Werktagen auf das ursprüngliche Zahlungsmittel.'
+      shop_url: 'https://brennholz-koenig.de',
+      support_email: 'info@brennholz-koenig.de'
     };
 
     const result = await sendTemplateEmail(
@@ -283,17 +288,16 @@ export async function triggerAdminOrderCancellation(cancellationData: Cancellati
 
     const adminTemplateData = {
       order_number: cancellationData.order_number,
-      order_id: cancellationData.order_id,
+      order_date: cancellationData.order_date,
       customer_name: cancellationData.customer.name,
       customer_email: cancellationData.customer.email,
+      customer_phone: 'Nicht verfügbar', // Telefonnummer ist nicht in cancellationData verfügbar
       cancellation_date: cancellationData.cancellation_date,
-      cancellation_reason: cancellationData.cancellation_reason || 'Auf Kundenwunsch',
-      total_amount: cancellationData.total_amount.toFixed(2),
-      product_list: cancellationData.products.map(p => 
+      order_total: cancellationData.total_amount.toFixed(2),
+      order_items: cancellationData.products.map(p => 
         `${p.quantity}x ${p.name} (${p.price.toFixed(2)}€)`
       ).join(', '),
-      admin_dashboard_url: `${process.env.NEXT_PUBLIC_BASE_URL}/admin`,
-      order_details_url: `${process.env.NEXT_PUBLIC_BASE_URL}/admin/orders/${cancellationData.order_id}`
+      admin_order_url: `${process.env.NEXT_PUBLIC_BASE_URL}/admin/orders/${cancellationData.order_id}`
     };
 
     const result = await sendTemplateEmail(
