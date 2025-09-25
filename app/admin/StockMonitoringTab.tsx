@@ -65,7 +65,7 @@ export default function StockMonitoringTab() {
       if (type === 'single' && productId) {
         body = { action: 'check-single', productId };
       } else if (type === 'low-stock-only') {
-        const lowStockProducts = products.filter(p => !p.in_stock || p.stock_quantity <= p.min_stock_level);
+        const lowStockProducts = products.filter(p => p.stock_quantity <= p.min_stock_level);
         body = { action: 'check-multiple', productIds: lowStockProducts.map(p => p.id) };
       } else {
         body = { action: 'check-all' };
@@ -97,7 +97,7 @@ export default function StockMonitoringTab() {
   };
 
   const getStockStatusBadge = (inStock: boolean, stockQuantity: number, minStockLevel: number) => {
-    if (!inStock || stockQuantity === 0) {
+    if (stockQuantity === 0) {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
           <i className="ri-alert-line"></i>
@@ -121,8 +121,8 @@ export default function StockMonitoringTab() {
     }
   };
 
-  const lowStockProducts = products.filter(p => !p.in_stock || p.stock_quantity <= p.min_stock_level);
-  const outOfStockProducts = products.filter(p => !p.in_stock || p.stock_quantity === 0);
+  const lowStockProducts = products.filter(p => p.stock_quantity <= p.min_stock_level && p.stock_quantity > 0);
+  const outOfStockProducts = products.filter(p => p.stock_quantity === 0);
 
   if (loading) {
     return (
