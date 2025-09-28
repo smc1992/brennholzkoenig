@@ -849,12 +849,7 @@
     <section class="payment-terms">
       <h3>Zahlungsbedingungen</h3>
       <p>{{payment_terms}}</p>
-      {{#if issuer.bank.iban}}
-      <p><strong>Bankverbindung:</strong><br>
-      {{issuer.bank.name}}<br>
-      IBAN: {{issuer.bank.iban}}<br>
-      {{#if issuer.bank.bic}}BIC: {{issuer.bank.bic}}{{/if}}</p>
-      {{/if}}
+
     </section>
     {{/if}}
     

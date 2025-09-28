@@ -88,8 +88,30 @@ export async function GET() {
     }
   }
 
+  // Städte-Landingpages laden
+  let cityUrls: any[] = [];
+  if (supabase) {
+    try {
+      const { data: cityPages } = await supabase
+        .from('city_pages')
+        .select('slug, updated_at')
+        .eq('is_active', true);
+
+      if (cityPages) {
+        cityUrls = cityPages.map(city => ({
+          url: `/${String(city.slug || '')}`,
+          priority: '0.8',
+          changefreq: 'monthly',
+          lastmod: new Date(String(city.updated_at || new Date())).toISOString().split('T')[0]
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading city pages for sitemap:', error);
+    }
+  }
+
   // Alle URLs kombinieren
-  const allUrls = [...staticUrls, ...blogUrls, ...productUrls];
+  const allUrls = [...staticUrls, ...blogUrls, ...productUrls, ...cityUrls];
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

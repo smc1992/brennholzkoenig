@@ -373,6 +373,12 @@ export default function ProductManagementTab() {
   };
 
   const updateProductStock = async (productId: string, newStock: number, reason = 'Manual adjustment') => {
+    // 🛡️ BESTANDSPRÜFUNG - Verhindert negative Bestände
+    if (newStock < 0) {
+      alert(`❌ Fehler: Negative Bestände sind nicht erlaubt!\n\nEingegeben: ${newStock}\nMinimum: 0\n\nBitte geben Sie einen Wert ≥ 0 ein.`);
+      return;
+    }
+
     try {
       const { error: productError } = await supabase
         .from('products')

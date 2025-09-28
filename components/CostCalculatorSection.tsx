@@ -3,8 +3,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { CityButton } from '@/components/ui/CityButton';
 
-export default function CostCalculatorSection() {
+interface CostCalculatorSectionProps {
+  cityData?: any;
+}
+
+export default function CostCalculatorSection({ cityData }: CostCalculatorSectionProps) {
   const [houseSize, setHouseSize] = useState(150);
   const [quantity, setQuantity] = useState(6); // Standard Menge für Normalpreis
   const [currentHeating, setCurrentHeating] = useState('oel');
@@ -327,14 +332,16 @@ export default function CostCalculatorSection() {
 
               {/* CTA */}
               <div className="text-center mt-8">
-                <Link 
-                  href="/shop"
+                <CityButton
+                  type="calculator"
+                  customText={cityData?.calculator_cta_text || 'Jetzt Premium-Qualität bestellen'}
+                  cityData={cityData}
                   className="bg-white text-[#C04020] px-4 sm:px-8 py-4 rounded-xl font-bold text-sm sm:text-lg hover:bg-gray-100 transition-colors whitespace-nowrap cursor-pointer shadow-xl transform hover:scale-105 w-full sm:w-auto inline-block"
                 >
                   <i className="ri-shopping-cart-line mr-2 sm:mr-3"></i>
-                  <span className="hidden sm:inline">Jetzt Premium-Qualität bestellen</span>
+                  <span className="hidden sm:inline">{cityData?.calculator_cta_text || 'Jetzt Premium-Qualität bestellen'}</span>
                   <span className="sm:hidden">Jetzt bestellen!</span>
-                </Link>
+                </CityButton>
                 <p className="text-sm opacity-80 mt-3">
                   Mindestbestellmenge: 3 SRM • Lieferung ab €43,50 • Express €139
                 </p>

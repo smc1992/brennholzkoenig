@@ -57,7 +57,8 @@ export async function POST(request: NextRequest) {
     const cancellationData = {
       order_number: orderData.order_number,
       order_id: orderData.id,
-      cancellation_date: new Date().toISOString(),
+      order_date: new Date(orderData.created_at).toLocaleDateString('de-DE'),
+      cancellation_date: new Date().toLocaleDateString('de-DE'),
       cancellation_reason: 'Stornierung durch Administrator',
       total_amount: parseFloat(orderData.total_amount),
       customer: {

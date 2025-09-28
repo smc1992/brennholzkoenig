@@ -3,8 +3,13 @@
 
 import { useEffect, useState, useRef } from 'react';
 import DynamicContent from './DynamicContent';
+import { CityButton } from '@/components/ui/CityButton';
 
-export default function ProcessSection() {
+interface ProcessSectionProps {
+  cityData?: any;
+}
+
+export default function ProcessSection({ cityData }: ProcessSectionProps) {
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -347,14 +352,21 @@ export default function ProcessSection() {
                 />
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="/shop" className="bg-[#C04020] text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#A03318] transition-colors duration-300 whitespace-nowrap cursor-pointer shadow-xl text-center">
+                <CityButton
+                  type="shop"
+                  customText={cityData?.process_cta_text || "Jetzt bestellen & sparen"}
+                  cityData={cityData}
+                  className="bg-[#C04020] text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#A03318] transition-colors duration-300 whitespace-nowrap cursor-pointer shadow-xl text-center"
+                >
                   <i className="ri-shopping-cart-line mr-3"></i>
-                  Jetzt bestellen & sparen
-                </a>
-                <a href="tel:+4917671085234" className="border-2 border-[#C04020] text-[#C04020] px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#C04020] hover:text-white transition-colors duration-300 whitespace-nowrap cursor-pointer text-center">
+                </CityButton>
+                <CityButton
+                  type="phone"
+                  cityData={cityData}
+                  className="border-2 border-[#C04020] text-[#C04020] px-8 py-4 rounded-xl font-bold text-lg hover:bg-[#C04020] hover:text-white transition-colors duration-300 whitespace-nowrap cursor-pointer text-center"
+                >
                   <i className="ri-phone-line mr-3"></i>
-                  +49 176 71085234
-                </a>
+                </CityButton>
               </div>
               <div className="flex flex-wrap justify-center gap-4 mt-4 text-xs md:text-sm opacity-80">
                 <span className="flex items-center transform transition-all duration-300 hover:scale-110">

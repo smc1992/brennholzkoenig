@@ -30,7 +30,6 @@ export default function QualifierSection() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         <div className="text-center mb-8 sm:mb-12 lg:mb-16">
           <div className="inline-flex items-center bg-[#C04020] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-sm sm:text-base mb-4 sm:mb-6">
-            <i className="ri-question-line mr-2 flex-shrink-0"></i>
             <span className="whitespace-nowrap">EHRLICHE BERATUNG</span>
           </div>
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-[#1A1A1A] mb-4 sm:mb-6 leading-tight" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>

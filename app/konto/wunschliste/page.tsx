@@ -19,6 +19,7 @@ interface WishlistItem {
     category: string;
     unit?: string;
     stock_quantity?: number;
+    min_stock_level?: number;
     description?: string;
   };
   created_at: string;
@@ -120,11 +121,43 @@ export default function WishlistPage() {
       const product = wishlistItem.product;
       const quantity = 1; // Standard-Menge
 
-      // Warenkorb aus localStorage laden
+      // Bestandsprüfung: Aktuellen Lagerbestand aus der Datenbank abrufen
+      const { data: currentProduct, error } = await supabase
+        .from('products')
+        .select('stock_quantity, name')
+        .eq('id', productId)
+        .single();
+
+      if (error) {
+        console.error('Fehler beim Abrufen des Lagerbestands:', error);
+        alert('Fehler beim Überprüfen des Lagerbestands. Bitte versuchen Sie es erneut.');
+        return;
+      }
+
+      if (!currentProduct) {
+        alert('Produkt nicht gefunden.');
+        return;
+      }
+
+      // Prüfe ob Produkt ausverkauft ist
+      if (currentProduct.stock_quantity === 0) {
+        alert(`"${currentProduct.name}" ist ausverkauft und kann nicht in den Warenkorb gelegt werden.`);
+        return;
+      }
+
+      // Warenkorb aus localStorage laden und Bestandsprüfung
       const existingCart = JSON.parse(localStorage.getItem('cart') || '[]');
-      
-      // Prüfen ob Produkt bereits im Warenkorb
       const existingItemIndex = existingCart.findIndex((item: any) => item.id === productId);
+      
+      let totalQuantityNeeded = quantity;
+      if (existingItemIndex > -1) {
+        totalQuantityNeeded = existingCart[existingItemIndex].quantity + quantity;
+      }
+
+      if (totalQuantityNeeded > currentProduct.stock_quantity) {
+        alert(`Nur noch ${currentProduct.stock_quantity} ${product.unit || 'Stück'} von "${currentProduct.name}" verfügbar.`);
+        return;
+      }
       
       if (existingItemIndex > -1) {
         // Menge erhöhen
@@ -254,17 +287,16 @@ export default function WishlistPage() {
                       </div>
                       
                       {item.product.stock_quantity !== undefined && (
-                        <div className={`text-xs px-2 py-1 rounded-full ${
-                          item.product.stock_quantity > 0 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {item.product.stock_quantity > 0 
-                            ? `${item.product.stock_quantity} ${item.product.unit} verfügbar`
-                            : 'Ausverkauft'
-                          }
-                        </div>
-                      )}
+                         item.product.stock_quantity === 0 ? (
+                           <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                             Ausverkauft
+                           </div>
+                         ) : item.product.stock_quantity <= (item.product.min_stock_level || 0) ? (
+                           <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                             Limitiert verfügbar
+                           </div>
+                         ) : null
+                       )}
                     </div>
                     
                     <div className="mb-3 sm:mb-4 lg:mb-5">

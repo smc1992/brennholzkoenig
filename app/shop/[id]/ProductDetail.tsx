@@ -20,6 +20,7 @@ interface Product {
   category: string;
   stock_quantity: number;
   unit: string;
+  min_stock_level?: number;
   specifications?: any;
   features?: string[];
   delivery_info?: string;
@@ -433,6 +434,51 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
       return;
     }
 
+    // Bestandsprüfung: Aktuellen Lagerbestand aus der Datenbank abrufen
+    try {
+      const { data: currentProduct, error } = await supabase
+        .from('products')
+        .select('stock_quantity, name')
+        .eq('id', productData.id)
+        .single();
+
+      if (error) {
+        console.error('Fehler beim Abrufen des Lagerbestands:', error);
+        alert('Fehler beim Überprüfen des Lagerbestands. Bitte versuchen Sie es erneut.');
+        return;
+      }
+
+      if (!currentProduct) {
+        alert('Produkt nicht gefunden.');
+        return;
+      }
+
+      // Prüfe ob Produkt ausverkauft ist
+      if (currentProduct.stock_quantity === 0) {
+        alert(`"${currentProduct.name}" ist ausverkauft und kann nicht in den Warenkorb gelegt werden.`);
+        return;
+      }
+
+      // Prüfe ob genügend Bestand für die gewünschte Menge vorhanden ist
+      const currentCart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const existingItemIndex = currentCart.findIndex((item: CartItem) => item.id === productData.id);
+      
+      let totalQuantityNeeded = quantity;
+      if (existingItemIndex >= 0) {
+        totalQuantityNeeded = currentCart[existingItemIndex].quantity + quantity;
+      }
+
+      if (totalQuantityNeeded > currentProduct.stock_quantity) {
+        alert(`Nur noch ${currentProduct.stock_quantity} ${productData.unit} von "${currentProduct.name}" verfügbar. Bitte reduzieren Sie die Menge.`);
+        return;
+      }
+
+    } catch (error) {
+      console.error('Fehler bei der Bestandsprüfung:', error);
+      alert('Fehler bei der Bestandsprüfung. Bitte versuchen Sie es erneut.');
+      return;
+    }
+
     setIsAddingToCart(true);
 
     try {
@@ -600,9 +646,12 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
                 ANGEBOT
               </div>
             )}
-            <div className="absolute top-6 right-6 bg-green-500 text-white px-4 py-2 rounded-full text-sm font-bold z-10">
-              {productData.stock_quantity} SRM verfügbar
-            </div>
+            {productData.stock_quantity <= (productData.min_stock_level || 0) && productData.stock_quantity > 0 && (
+              <div className="absolute top-6 right-6 bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold z-10">
+                <i className="ri-alert-line mr-1"></i>
+                Limitiert verfügbar
+              </div>
+            )}
 
             {(() => {
               console.log('🔍 ProductDetail: Render check - productData:', !!productData, 'name:', productData?.name, 'actualProductId:', actualProductId);

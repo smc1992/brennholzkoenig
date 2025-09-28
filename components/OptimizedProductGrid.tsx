@@ -13,6 +13,7 @@ interface Product {
   image_url: string;
   category: string;
   stock_quantity: number;
+  min_stock_level?: number;
   unit: string;
   features?: string[];
   specifications?: { [key: string]: string };
@@ -250,15 +251,19 @@ export default function OptimizedProductGrid({
                   />
                   
                   {/* Verfügbarkeits-Badge */}
-                  <div className="absolute top-3 right-3">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      product.stock_quantity > 0
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {product.stock_quantity > 0 ? 'Verfügbar' : 'Ausverkauft'}
-                    </span>
-                  </div>
+                  {product.stock_quantity === 0 ? (
+                    <div className="absolute top-3 right-3">
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                        Ausverkauft
+                      </span>
+                    </div>
+                  ) : product.stock_quantity <= (product.min_stock_level || 0) ? (
+                    <div className="absolute top-3 right-3">
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">
+                        Limitiert verfügbar
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
                 
                 {/* Produktinfo */}

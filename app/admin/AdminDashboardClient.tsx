@@ -45,6 +45,8 @@ import InvoiceSettingsTab from './InvoiceSettingsTab';
 import AdminConfigTab from './AdminConfigTab';
 import EmailSignatureTab from './EmailSignatureTab';
 import StockMonitoringTab from './StockMonitoringTab';
+import CityPagesTab from './CityPagesTab';
+import LocalBusinessTab from './LocalBusinessTab';
 
 interface AdminDashboardProps {
   adminUser: any;
@@ -349,6 +351,8 @@ export default function AdminDashboardClient({
       title: 'Website & Inhalte',
       items: [
         { id: 'content', label: 'Inhalte', icon: 'ri-file-text-line' },
+        { id: 'city-pages', label: 'Städte-Landingpages', icon: 'ri-map-pin-line' },
+        { id: 'local-business', label: 'Local Business SEO', icon: 'ri-building-line' },
         { id: 'blog-management', label: 'Blog-Editor', icon: 'ri-article-line' },
         { id: 'blog-comments', label: 'Kommentare', icon: 'ri-chat-1-line' },
         { id: 'media', label: 'Medien', icon: 'ri-image-line' },
@@ -439,12 +443,18 @@ export default function AdminDashboardClient({
       case 'content': 
         console.log('AdminDashboard: Rendering ContentManagementTab');
         return <ContentManagementTab />;
+      case 'city-pages': 
+        console.log('AdminDashboard: Rendering CityPagesTab');
+        return <CityPagesTab />;
       case 'media': 
         console.log('AdminDashboard: Rendering MediaTab');
         return <MediaTab />;
       case 'seo': 
         console.log('AdminDashboard: Rendering SEOTab');
         return <SEOTab />;
+      case 'local-business': 
+        console.log('AdminDashboard: Rendering LocalBusinessTab');
+        return <LocalBusinessTab />;
       case 'invoice-settings': 
         console.log('AdminDashboard: Rendering InvoiceSettingsTab');
         return <InvoiceSettingsTab onStatsUpdate={loadStats} />;

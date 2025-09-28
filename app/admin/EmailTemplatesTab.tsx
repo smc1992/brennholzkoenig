@@ -51,21 +51,21 @@ const DEFAULT_TEMPLATES: Omit<EmailTemplate, 'id' | 'created_at' | 'updated_at'>
         
         <div class="content">
             <h2>Vielen Dank für Ihre Bestellung!</h2>
-            <p>Hallo {customer_name},</p>
+            <p>Hallo {{customer_name}},</p>
             <p>wir haben Ihre Bestellung erfolgreich erhalten und bestätigen hiermit den Eingang.</p>
             
             <div class="order-details">
                 <h3>Bestelldetails</h3>
-                <p><strong>Bestellnummer:</strong> #{order_id}</p>
-                <p><strong>Bestelldatum:</strong> {order_date}</p>
-                <p><strong>Gesamtbetrag:</strong> {total_amount}€</p>
+                <p><strong>Bestellnummer:</strong> #{{order_id}}</p>
+                <p><strong>Bestelldatum:</strong> {{order_date}}</p>
+                <p><strong>Gesamtbetrag:</strong> {{total_amount}}€</p>
                 <p><strong>Lieferadresse:</strong><br>
-                {delivery_address}</p>
+                {{delivery_address}}</p>
             </div>
             
             <p>Ihre Bestellung wird schnellstmöglich bearbeitet. Sie erhalten eine weitere E-Mail, sobald Ihre Bestellung versendet wurde.</p>
             
-            <a href="{order_tracking_url}" class="button">Bestellung verfolgen</a>
+            <a href="{{order_tracking_url}}" class="button">Bestellung verfolgen</a>
         </div>
         
         <div class="footer">
@@ -77,19 +77,19 @@ const DEFAULT_TEMPLATES: Omit<EmailTemplate, 'id' | 'created_at' | 'updated_at'>
 </html>`,
     text_content: `Vielen Dank für Ihre Bestellung!
 
-Hallo {customer_name},
+Hallo {{customer_name}},
 
 wir haben Ihre Bestellung erfolgreich erhalten und bestätigen hiermit den Eingang.
 
 Bestelldetails:
-- Bestellnummer: #{order_id}
-- Bestelldatum: {order_date}
-- Gesamtbetrag: {total_amount}€
-- Lieferadresse: {delivery_address}
+- Bestellnummer: #{{order_id}}
+- Bestelldatum: {{order_date}}
+- Gesamtbetrag: {{total_amount}}€
+- Lieferadresse: {{delivery_address}}
 
 Ihre Bestellung wird schnellstmöglich bearbeitet. Sie erhalten eine weitere E-Mail, sobald Ihre Bestellung versendet wurde.
 
-Bestellung verfolgen: {order_tracking_url}
+Bestellung verfolgen: {{order_tracking_url}}
 
 Brennholzkönig - Ihr Partner für Premium Brennholz
 Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`,
@@ -129,20 +129,20 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`,
         
         <div class="content">
             <h2>🚚 Ihre Bestellung ist unterwegs!</h2>
-            <p>Hallo {customer_name},</p>
-            <p>gute Nachrichten! Ihre Bestellung #{order_id} wurde versendet und ist nun auf dem Weg zu Ihnen.</p>
+            <p>Hallo {{customer_name}},</p>
+            <p>gute Nachrichten! Ihre Bestellung #{{order_id}} wurde versendet und ist nun auf dem Weg zu Ihnen.</p>
             
             <div class="shipping-info">
                 <h3>Versandinformationen</h3>
-                <p><strong>Tracking-Nummer:</strong> {tracking_number}</p>
-                <p><strong>Versanddatum:</strong> {shipping_date}</p>
-                <p><strong>Voraussichtliche Lieferung:</strong> {estimated_delivery}</p>
-                <p><strong>Versandunternehmen:</strong> {shipping_company}</p>
+                <p><strong>Tracking-Nummer:</strong> {{tracking_number}}</p>
+                <p><strong>Versanddatum:</strong> {{shipping_date}}</p>
+                <p><strong>Voraussichtliche Lieferung:</strong> {{estimated_delivery}}</p>
+                <p><strong>Versandunternehmen:</strong> {{shipping_company}}</p>
             </div>
             
             <p>Sie können den Status Ihrer Sendung jederzeit über die Tracking-Nummer verfolgen.</p>
             
-            <a href="{tracking_url}" class="button">Sendung verfolgen</a>
+            <a href="{{tracking_url}}" class="button">Sendung verfolgen</a>
         </div>
         
         <div class="footer">
@@ -152,21 +152,21 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`,
     </div>
 </body>
 </html>`,
-    text_content: `Ihre Bestellung ist unterwegs!
+    text_content: `🚚 Ihre Bestellung ist unterwegs!
 
-Hallo {customer_name},
+Hallo {{customer_name}},
 
-gute Nachrichten! Ihre Bestellung #{order_id} wurde versendet und ist nun auf dem Weg zu Ihnen.
+gute Nachrichten! Ihre Bestellung #{{order_id}} wurde versendet und ist nun auf dem Weg zu Ihnen.
 
 Versandinformationen:
-- Tracking-Nummer: {tracking_number}
-- Versanddatum: {shipping_date}
-- Voraussichtliche Lieferung: {estimated_delivery}
-- Versandunternehmen: {shipping_company}
+- Tracking-Nummer: {{tracking_number}}
+- Versanddatum: {{shipping_date}}
+- Voraussichtliche Lieferung: {{estimated_delivery}}
+- Versandunternehmen: {{shipping_company}}
 
 Sie können den Status Ihrer Sendung jederzeit über die Tracking-Nummer verfolgen.
 
-Sendung verfolgen: {tracking_url}
+Sendung verfolgen: {{tracking_url}}
 
 Brennholzkönig - Ihr Partner für Premium Brennholz
 Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`,
@@ -367,24 +367,24 @@ Bestellung im Admin anzeigen: {{admin_order_url}}`,
             <h3>Bestelldetails</h3>
             
             <div class="order-summary">
-                <p><strong>Bestellnummer:</strong> #{order_id}</p>
-                <p><strong>Bestelldatum:</strong> {order_date}</p>
-                <p><strong>Gesamtbetrag:</strong> {total_amount}€</p>
-                <p><strong>Zahlungsstatus:</strong> {payment_status}</p>
+                <p><strong>Bestellnummer:</strong> #{{order_id}}</p>
+                <p><strong>Bestelldatum:</strong> {{order_date}}</p>
+                <p><strong>Gesamtbetrag:</strong> {{total_amount}}€</p>
+                <p><strong>Zahlungsstatus:</strong> {{payment_status}}</p>
             </div>
             
             <div class="customer-info">
                 <h4>Kundeninformationen</h4>
-                <p><strong>Name:</strong> {customer_name}</p>
-                <p><strong>E-Mail:</strong> {customer_email}</p>
-                <p><strong>Telefon:</strong> {customer_phone}</p>
-                <p><strong>Lieferadresse:</strong><br>{delivery_address}</p>
+                <p><strong>Name:</strong> {{customer_name}}</p>
+                <p><strong>E-Mail:</strong> {{customer_email}}</p>
+                <p><strong>Telefon:</strong> {{customer_phone}}</p>
+                <p><strong>Lieferadresse:</strong><br>{{delivery_address}}</p>
             </div>
             
             <h4>Bestellte Artikel</h4>
-            <div>{order_items}</div>
+            <div>{{order_items}}</div>
             
-            <a href="{admin_order_url}" class="button">Bestellung im Admin bearbeiten</a>
+            <a href="{{admin_order_url}}" class="button">Bestellung im Admin bearbeiten</a>
         </div>
     </div>
 </body>
@@ -392,21 +392,21 @@ Bestellung im Admin anzeigen: {{admin_order_url}}`,
     text_content: `Neue Bestellung eingegangen
 
 Bestelldetails:
-- Bestellnummer: #{order_id}
-- Bestelldatum: {order_date}
-- Gesamtbetrag: {total_amount}€
-- Zahlungsstatus: {payment_status}
+- Bestellnummer: #{{order_id}}
+- Bestelldatum: {{order_date}}
+- Gesamtbetrag: {{total_amount}}€
+- Zahlungsstatus: {{payment_status}}
 
 Kundeninformationen:
-- Name: {customer_name}
-- E-Mail: {customer_email}
-- Telefon: {customer_phone}
-- Lieferadresse: {delivery_address}
+- Name: {{customer_name}}
+- E-Mail: {{customer_email}}
+- Telefon: {{customer_phone}}
+- Lieferadresse: {{delivery_address}}
 
 Bestellte Artikel:
-{order_items}
+{{order_items}}
 
-Bestellung im Admin bearbeiten: {admin_order_url}`,
+Bestellung im Admin bearbeiten: {{admin_order_url}}`,
     variables: ['order_id', 'order_date', 'total_amount', 'payment_status', 'customer_name', 'customer_email', 'customer_phone', 'delivery_address', 'order_items', 'admin_order_url'],
     is_active: true,
     description: 'Admin-Benachrichtigung bei neuen Bestellungen'

@@ -1,0 +1,295 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rechnung INV-TEST-1758702636798</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 11pt;
+      line-height: 1.4;
+      color: #1a1a1a;
+      background: white;
+    }
+    
+    .invoice-container {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      padding: 20mm;
+      background: white;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .company-info {
+      flex: 1;
+    }
+    
+    .company-logo {
+      max-width: 150px;
+      max-height: 80px;
+      margin-bottom: 15px;
+    }
+    
+    .company-name {
+      font-size: 18pt;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 8px;
+    }
+    
+    .company-address {
+      font-size: 10pt;
+      color: #6b7280;
+      line-height: 1.3;
+    }
+    
+    .invoice-title {
+      text-align: right;
+      flex: 1;
+    }
+    
+    .invoice-title h1 {
+      font-size: 24pt;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 10px;
+    }
+    
+    .invoice-meta {
+      font-size: 10pt;
+      color: #6b7280;
+    }
+    
+    .invoice-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+    
+    .customer-info, .invoice-info {
+      background: #f9fafb;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    
+    .section-title {
+      font-size: 12pt;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .items-table th {
+      background: #1f2937;
+      color: white;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 10pt;
+    }
+    
+    .items-table td {
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 10pt;
+    }
+    
+    .items-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .items-table tr:nth-child(even) {
+      background: #f9fafb;
+    }
+    
+    .text-right {
+      text-align: right;
+    }
+    
+    .totals {
+      margin-left: auto;
+      width: 300px;
+      background: #f9fafb;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    
+    .totals-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .totals-row:last-child {
+      border-bottom: none;
+      font-weight: 600;
+      font-size: 12pt;
+      color: #1f2937;
+      border-top: 2px solid #1f2937;
+      padding-top: 12px;
+      margin-top: 8px;
+    }
+    
+    .payment-info {
+      margin-top: 40px;
+      padding: 20px;
+      background: #f0f9ff;
+      border-radius: 8px;
+      border-left: 4px solid #0ea5e9;
+    }
+    
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 9pt;
+      color: #6b7280;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="invoice-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="company-info">
+        <img src="https://public.readdy.ai/ai/img_res/86db7336-c7fd-4211-8615-9dceb4ceb922.jpg" alt="Thorsten Vey - Brennholzkönig" class="company-logo">
+        <div class="company-name">Thorsten Vey - Brennholzkönig</div>
+        <div class="company-address">
+          Frankfurter Straße 3<br>
+          
+          36419 Buttlar<br>
+          Tel: 0176 - 710 85 234<br>
+          E-Mail: info@brennholz-koenig.de
+          <br>Web: www.brennholz-koenig.de
+        </div>
+      </div>
+      
+      <div class="invoice-title">
+        <h1>RECHNUNG</h1>
+        <div class="invoice-meta">
+          <strong>Nr:</strong> INV-TEST-1758702636798<br>
+          <strong>Datum:</strong> 24.09.2025<br>
+          <strong>Fällig:</strong> 08.10.2025<br>
+          <strong>Kunden-Nr:</strong> KD-11766
+          <br><strong>Bestellung:</strong> TEST-1758702636798
+        </div>
+      </div>
+    </div>
+    
+    <!-- Invoice Details -->
+    <div class="invoice-details">
+      <div class="customer-info">
+        <div class="section-title">Rechnungsadresse</div>
+        <strong>Test Kunde</strong><br>
+        Teststraße 123<br>
+        12345 Teststadt<br>
+        E-Mail: test@example.com<br>
+        Tel: +49 123 456789
+      </div>
+      
+      <div class="invoice-info">
+        <div class="section-title">Lieferadresse</div>
+        Teststraße 123<br>
+        12345 Teststadt
+      </div>
+    </div>
+    
+    <!-- Items Table -->
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th>Beschreibung</th>
+          <th class="text-right">Menge</th>
+          <th class="text-right">Einzelpreis</th>
+          <th class="text-right">Gesamtpreis</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <strong></strong>
+            <br><small>Art.-Nr.: TEST-BUCHE-001</small>
+          </td>
+          <td class="text-right">2</td>
+          <td class="text-right">50,00 €</td>
+          <td class="text-right">100,00 €</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <!-- Totals -->
+    <div class="totals">
+      <div class="totals-row">
+        <span>Zwischensumme:</span>
+        <span>93,46 €</span>
+      </div>
+      <div class="totals-row">
+        <span>MwSt. (7%):</span>
+        <span>6,54 €</span>
+      </div>
+      <div class="totals-row">
+        <span>Gesamtbetrag:</span>
+        <span>100,00 €</span>
+      </div>
+    </div>
+    
+    <!-- Payment Info -->
+    <div class="payment-info">
+      <div class="section-title">Zahlungsinformationen</div>
+      Vielen Dank für Ihr Vertrauen! Bei Fragen stehen wir Ihnen gerne zur Verfügung.<br><br>
+      <strong>Bankverbindung:</strong><br>
+      Sparkasse Fulda<br>
+      IBAN: DE89 5325 0000 0000 1234 56<br>
+      BIC: HELADEF1HER
+    </div>
+    
+    
+    <!-- Footer -->
+    <div class="footer">
+      Geschäftsführer: Thorsten Vey | 
+      Einzelunternehmen | 
+      Steuernummer: DE200789994
+      <br><br>Vielen Dank für Ihr Vertrauen! Bei Fragen stehen wir Ihnen gerne zur Verfügung.
+    </div>
+  </div>
+</body>
+</html>

@@ -687,6 +687,89 @@ export default function CheckoutPage() {
 
     setIsProcessing(true);
 
+    // 🛡️ KRITISCHE BESTANDSPRÜFUNG - Verhindert Überverkäufe
+    try {
+      console.log('🔍 Führe Bestandsprüfung durch...');
+      
+      // Hole aktuelle Bestände für alle Warenkorb-Artikel
+      const productIds = cartItems.map(item => item.id);
+      const { data: currentProducts, error: stockError } = await supabase
+        .from('products')
+        .select('id, name, sku, stock_quantity')
+        .in('id', productIds);
+
+      if (stockError) {
+        throw new Error(`Fehler beim Prüfen der Lagerbestände: ${stockError.message}`);
+      }
+
+      // Prüfe jeden Artikel auf verfügbaren Bestand
+      const stockIssues: string[] = [];
+      
+      for (const cartItem of cartItems) {
+        const product = currentProducts?.find(p => p.id === cartItem.id);
+        
+        if (!product) {
+          stockIssues.push(`Produkt "${cartItem.name}" wurde nicht gefunden.`);
+          continue;
+        }
+
+        // Berechne aktuellen Bestand basierend auf Lagerbewegungen
+        const { data: movements, error: movementError } = await supabase
+          .from('inventory_movements')
+          .select('movement_type, quantity')
+          .eq('product_id', product.id);
+
+        if (movementError) {
+          console.error('Fehler beim Laden der Lagerbewegungen:', movementError);
+          // Fallback auf stock_quantity aus products-Tabelle
+        }
+
+        let actualStock = product.stock_quantity;
+        
+        // Berechne aktuellen Bestand aus Bewegungen (genauer)
+        if (movements && movements.length > 0) {
+          actualStock = movements.reduce((stock, movement) => {
+            if (movement.movement_type === 'in' || movement.movement_type === 'adjustment') {
+              return stock + movement.quantity;
+            } else if (movement.movement_type === 'out') {
+              return stock - movement.quantity;
+            }
+            return stock;
+          }, 0);
+        }
+
+        // Prüfe ob genügend Bestand vorhanden ist
+        if (actualStock < cartItem.quantity) {
+          if (actualStock <= 0) {
+            stockIssues.push(`"${product.name}" ist ausverkauft (0 verfügbar, ${cartItem.quantity} angefordert).`);
+          } else {
+            stockIssues.push(`"${product.name}": Nur noch ${actualStock} ${cartItem.unit || 'Stück'} verfügbar, aber ${cartItem.quantity} angefordert.`);
+          }
+        }
+      }
+
+      // Wenn Bestandsprobleme gefunden wurden, Bestellung abbrechen
+      if (stockIssues.length > 0) {
+        setIsProcessing(false);
+        
+        const errorMessage = `❌ Bestellung kann nicht abgeschlossen werden:\n\n${stockIssues.join('\n')}\n\nBitte passen Sie Ihren Warenkorb an und versuchen Sie es erneut.`;
+        
+        alert(errorMessage);
+        
+        // Zurück zum Warenkorb-Schritt
+        setCurrentStep(1);
+        return;
+      }
+
+      console.log('✅ Bestandsprüfung erfolgreich - alle Artikel verfügbar');
+      
+    } catch (error) {
+      console.error('❌ Kritischer Fehler bei der Bestandsprüfung:', error);
+      setIsProcessing(false);
+      alert('Fehler bei der Bestandsprüfung. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support.');
+      return;
+    }
+
     try {
       let customerId = null;
 

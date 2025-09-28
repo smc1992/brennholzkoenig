@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Product, PricingTier } from '@/data/products/products-query';
 import { SEOMetadata } from '@/components/SEOMetadata';
@@ -9,7 +9,7 @@ import CartNotification from '@/components/CartNotification';
 import ProductImageGalleryDisplay from '@/components/ProductImageGalleryDisplay';
 import { getCDNUrl } from '@/utils/cdn';
 import { trackAddToCart, trackViewProduct } from '@/components/GoogleAnalytics';
-import { calculatePriceWithTiers } from '@/lib/pricing';
+import { calculatePriceWithTiers, getTotalSRMQuantityInCart } from '@/lib/pricing';
 
 interface ProductDetailClientProps {
   product: Product;
@@ -45,6 +45,7 @@ export default function ProductDetailClient({ product: initialProduct, pricingTi
     productName: '',
     quantity: 0
   });
+  const [totalCartQuantity, setTotalCartQuantity] = useState<number>(0);
 
   const minOrderQuantity = 3;
   
@@ -80,6 +81,30 @@ export default function ProductDetailClient({ product: initialProduct, pricingTi
       product.price
     );
   }, [product.id, product.name, product.category, product.price]);
+
+  // Überwache Änderungen im Warenkorb für SRM-Gesamtmenge
+  useEffect(() => {
+    const updateCartQuantity = () => {
+      const total = getTotalSRMQuantityInCart();
+      setTotalCartQuantity(total);
+    };
+
+    // Initial laden
+    updateCartQuantity();
+
+    // Event Listener für Warenkorb-Änderungen
+    const handleCartChange = () => {
+      updateCartQuantity();
+    };
+
+    window.addEventListener('cartUpdated', handleCartChange);
+    window.addEventListener('storage', handleCartChange);
+
+    return () => {
+      window.removeEventListener('cartUpdated', handleCartChange);
+      window.removeEventListener('storage', handleCartChange);
+    };
+  }, []);
   const isLoading = false;
   const error = null;
 
@@ -111,13 +136,30 @@ export default function ProductDetailClient({ product: initialProduct, pricingTi
     );
   }
 
-  const pricing = calculatePriceWithTiers(
-    product.price, 
-    quantity, 
-    pricingTiers, 
-    minOrderQuantity, 
-    product.has_quantity_discount || false
-  );
+  const pricing = useMemo(() => {
+     // Für SRM-Artikel: Berücksichtige die Gesamtmenge im Warenkorb + neue Menge
+     if (product.unit === 'SRM') {
+       // Berechne die Gesamtmenge: bereits im Warenkorb + neue Menge
+       const totalQuantityAfterAdd = totalCartQuantity + quantity;
+       
+       return calculatePriceWithTiers(
+         product.price, 
+         totalQuantityAfterAdd, 
+         [], // pricingTiers - verwende leeres Array da wir die feste Logik nutzen
+         minOrderQuantity, 
+         product.has_quantity_discount || false,
+         null // Verwende null da wir bereits die Gesamtmenge berechnet haben
+       );
+     }
+     // Für andere Artikel: Normale Berechnung
+     return calculatePriceWithTiers(
+       product.price, 
+       quantity, 
+       [], // pricingTiers - verwende leeres Array da wir die feste Logik nutzen
+       minOrderQuantity, 
+       product.has_quantity_discount || false
+     );
+   }, [product.price, product.unit, quantity, minOrderQuantity, product.has_quantity_discount, totalCartQuantity]);
 
   const totalPrice = pricing.price * quantity;
 
@@ -181,6 +223,13 @@ export default function ProductDetailClient({ product: initialProduct, pricingTi
         quantity,
         pricing.price
       );
+      
+      // Event für andere Komponenten auslösen
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+      
+      // Gesamtmenge im Warenkorb aktualisieren
+      const newTotal = getTotalSRMQuantityInCart();
+      setTotalCartQuantity(newTotal);
       
       // Notification anzeigen
       setNotificationData({
@@ -257,22 +306,22 @@ export default function ProductDetailClient({ product: initialProduct, pricingTi
               
               {/* Lagerbestand */}
               <div className="mb-6">
-                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                  product.stock_quantity <= 5 
-                    ? 'bg-red-100 text-red-800' 
-                    : product.stock_quantity <= 20 
-                    ? 'bg-yellow-100 text-yellow-800' 
-                    : 'bg-green-100 text-green-800'
-                }`}>
-                  <i className="ri-database-2-line mr-2"></i>
-                  {product.stock_quantity} {product.unit} verfügbar
-                </div>
-                {product.stock_quantity <= 10 && (
-                  <p className="text-orange-600 text-sm mt-2">
+                {product.stock_quantity === 0 ? (
+                  <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                    <i className="ri-close-circle-line mr-2"></i>
+                    Ausverkauft
+                  </div>
+                ) : product.stock_quantity <= (product.min_stock_level || 0) ? (
+                  <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                    <i className="ri-alert-line mr-2"></i>
+                    Limitiert verfügbar
+                  </div>
+                ) : product.stock_quantity <= 10 ? (
+                  <div className="text-orange-600 text-sm">
                     <i className="ri-alert-line mr-1"></i>
                     Nur noch wenige Einheiten verfügbar!
-                  </p>
-                )}
+                  </div>
+                ) : null}
               </div>
               
               {/* Preisberechnung */}

@@ -82,6 +82,7 @@ export async function POST(request: NextRequest) {
     const cancellationData = {
       order_number: order.order_number,
       order_id: order.id,
+      order_date: formatDate(new Date(order.created_at)),
       cancellation_date: formatDate(currentDate),
       total_amount: order.total_amount,
       customer: {
@@ -92,7 +93,8 @@ export async function POST(request: NextRequest) {
         name: item.product_name || 'Unbekanntes Produkt',
         quantity: item.quantity,
         price: item.unit_price
-      }))
+      })),
+      admin_email: 'admin@brennholz-koenig.de'
     };
 
     // Kunden-E-Mail senden

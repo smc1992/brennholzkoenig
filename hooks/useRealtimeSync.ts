@@ -10,6 +10,7 @@ interface Product {
   image_url: string;
   category: string;
   stock_quantity: number;
+  min_stock_level?: number;
   features?: string[];
   specifications?: { [key: string]: string };
   unit: string;

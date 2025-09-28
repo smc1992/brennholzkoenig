@@ -15,6 +15,7 @@ interface Product {
   image_url: string;
   category: string;
   stock_quantity: number;
+  min_stock_level?: number;
   features?: string[];
   specifications?: { [key: string]: string };
   unit: string;
@@ -223,15 +224,15 @@ export default function RealtimeProductGrid({
                   </div>
 
                   {/* Stock Status */}
-                  {product.stock_quantity > 0 ? (
-                    <div className="absolute top-4 left-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      {product.stock_quantity} SRM verfügbar
-                    </div>
-                  ) : (
+                  {product.stock_quantity === 0 ? (
                     <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
                       Ausverkauft
                     </div>
-                  )}
+                  ) : product.stock_quantity <= (product.min_stock_level || 0) ? (
+                    <div className="absolute top-4 left-4 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                      Limitiert verfügbar
+                    </div>
+                  ) : null}
                 </div>
 
                 {/* Product Info */}

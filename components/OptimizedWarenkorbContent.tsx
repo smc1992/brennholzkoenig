@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
-import { calculatePriceWithTiers, getPriceInfoForQuantity } from '../lib/pricing';
+import { calculatePriceWithTiers, getPriceInfoForQuantity, getTotalSRMQuantityInCart } from '../lib/pricing';
 import { getCDNUrl } from '../utils/cdn';
 import Link from 'next/link';
 
@@ -124,11 +124,40 @@ export default function OptimizedWarenkorbContent({
   // Neuberechnung der Preise wenn pricingTiers geladen sind
   useEffect(() => {
     if (pricingTiers.length > 0 && cartItems.length > 0) {
-      const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0);
+      // Berechne nur die Gesamtmenge der SRM-Artikel
+      const totalSRMQuantity = cartItems
+        .filter(item => item.unit === 'SRM')
+        .reduce((total, item) => total + item.quantity, 0);
       
       const updatedItems = cartItems.map(item => {
         const basePrice = parseFloat(item.basePrice || item.price);
-        const pricing = calculatePriceWithTiers(basePrice, totalQuantity, pricingTiers, minOrderQuantity, item.has_quantity_discount || false);
+        
+        // Für SRM-Artikel: Verwende Gesamtmenge aller SRM-Artikel
+        // Für andere Artikel: Verwende nur die eigene Menge
+        const quantityForCalculation = item.unit === 'SRM' ? totalSRMQuantity : item.quantity;
+        const totalCartQuantity = item.unit === 'SRM' ? totalSRMQuantity : null;
+        
+        let pricing;
+        if (item.unit === 'SRM') {
+          pricing = calculatePriceWithTiers(
+            basePrice, 
+            quantityForCalculation, 
+            [], // Verwende feste Logik
+            minOrderQuantity, 
+            item.has_quantity_discount || false,
+            null // Verwende null für SRM-Artikel, da wir totalSRMQuantity bereits in quantityForCalculation haben
+          );
+        } else {
+          pricing = calculatePriceWithTiers(
+            basePrice, 
+            quantityForCalculation, 
+            [], // Verwende feste Logik
+            minOrderQuantity, 
+            item.has_quantity_discount || false,
+            null
+          );
+        }
+        
         return {
           ...item,
           price: pricing.price.toString()
@@ -141,7 +170,7 @@ export default function OptimizedWarenkorbContent({
       );
       
       if (hasChanges) {
-        console.log('🔄 Warenkorb: Preise mit Gesamtmenge neu berechnet:', totalQuantity, 'SRM');
+        console.log('🔄 Warenkorb: Preise mit SRM-Gesamtmenge neu berechnet:', totalSRMQuantity, 'SRM');
         setCartItems(updatedItems);
         saveCartToStorage(updatedItems);
       }
@@ -171,15 +200,27 @@ export default function OptimizedWarenkorbContent({
             console.log('📊 Product data from DB:', productData);
           }
           
-          // Berechne Gesamtmenge für korrekte Preisberechnung
-          const totalQuantity = parsedCart.reduce((total: number, item: any) => total + item.quantity, 0);
+          // Berechne Gesamtmenge nur für SRM-Artikel
+          const totalSRMQuantity = parsedCart
+            .filter((item: any) => item.unit === 'SRM')
+            .reduce((total: number, item: any) => total + item.quantity, 0);
           
           const formattedCart = parsedCart.map((item: any) => {
             const product = productData.find(p => p.id === parseInt(item.id));
             const basePrice = parseFloat(item.basePrice || item.price);
             
-            // Verwende Gesamtmenge für Preisberechnung
-            const pricing = calculatePriceWithTiers(basePrice, totalQuantity, pricingTiers, minOrderQuantity, product?.has_quantity_discount || false);
+            // Für SRM-Artikel: Verwende Gesamtmenge aller SRM-Artikel
+            // Für andere Artikel: Verwende nur die eigene Menge
+            const quantityForCalculation = item.unit === 'SRM' ? totalSRMQuantity : item.quantity;
+            
+            const pricing = calculatePriceWithTiers(
+              basePrice, 
+              quantityForCalculation, 
+              [], 
+              minOrderQuantity, 
+              product?.has_quantity_discount || false,
+              null
+            );
             
             const formattedItem = {
               id: parseInt(item.id),
@@ -258,34 +299,94 @@ export default function OptimizedWarenkorbContent({
     }
   };
 
-  const updateQuantity = (id: number, newQuantity: number) => {
+  const updateQuantity = async (id: number, newQuantity: number) => {
     if (newQuantity < 1) {
       removeFromCart(id);
       return;
     }
 
-    // Berechne Gesamtmenge aller Artikel im Warenkorb
-    const totalQuantityInCart = cartItems.reduce((total, item) => {
-      if (item.id === id) {
-        return total + newQuantity; // Verwende neue Menge für das geänderte Item
+    // Bestandsprüfung: Aktuellen Lagerbestand aus der Datenbank abrufen
+    try {
+      const { data: product, error } = await supabase
+        .from('products')
+        .select('stock_quantity, name')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('Fehler beim Abrufen des Lagerbestands:', error);
+        alert('Fehler beim Überprüfen des Lagerbestands. Bitte versuchen Sie es erneut.');
+        return;
       }
-      return total + item.quantity;
+
+      if (!product) {
+        alert('Produkt nicht gefunden.');
+        return;
+      }
+
+      // Prüfe ob genügend Bestand vorhanden ist
+      if (newQuantity > product.stock_quantity) {
+        alert(`Nur noch ${product.stock_quantity} ${cartItems.find(item => item.id === id)?.unit || 'Stück'} von "${product.name}" verfügbar. Bitte reduzieren Sie die Menge.`);
+        return;
+      }
+
+      // Prüfe ob Produkt ausverkauft ist
+      if (product.stock_quantity === 0) {
+        alert(`"${product.name}" ist ausverkauft und wurde aus Ihrem Warenkorb entfernt.`);
+        removeFromCart(id);
+        return;
+      }
+
+    } catch (error) {
+      console.error('Fehler bei der Bestandsprüfung:', error);
+      alert('Fehler bei der Bestandsprüfung. Bitte versuchen Sie es erneut.');
+      return;
+    }
+
+    // Berechne Gesamtmenge nur für SRM-Artikel im Warenkorb
+    const totalSRMQuantityInCart = cartItems.reduce((total, item) => {
+      if (item.unit === 'SRM') {
+        if (item.id === id) {
+          return total + newQuantity; // Verwende neue Menge für das geänderte Item
+        }
+        return total + item.quantity;
+      }
+      return total;
     }, 0);
 
     const updatedItems = cartItems.map(item => {
       const basePrice = parseFloat(item.basePrice || item.price);
       
       if (item.id === id) {
-        // Verwende Gesamtmenge für Preisberechnung
-        const pricing = calculatePriceWithTiers(basePrice, totalQuantityInCart, pricingTiers, minOrderQuantity, item.has_quantity_discount || false);
+        // Für SRM-Artikel: Verwende Gesamtmenge aller SRM-Artikel
+        // Für andere Artikel: Verwende nur die eigene Menge
+        const quantityForCalculation = item.unit === 'SRM' ? totalSRMQuantityInCart : newQuantity;
+        
+        const pricing = calculatePriceWithTiers(
+          basePrice, 
+          quantityForCalculation, 
+          [], 
+          minOrderQuantity, 
+          item.has_quantity_discount || false,
+          null
+        );
         return {
           ...item,
           quantity: newQuantity,
           price: pricing.price.toString()
         };
       } else {
-        // Aktualisiere auch andere Items mit der neuen Gesamtmenge
-        const pricing = calculatePriceWithTiers(basePrice, totalQuantityInCart, pricingTiers, minOrderQuantity, item.has_quantity_discount || false);
+        // Aktualisiere auch andere Items mit der neuen SRM-Gesamtmenge
+        const quantityForCalculation = item.unit === 'SRM' ? totalSRMQuantityInCart : item.quantity;
+        
+        const pricing = calculatePriceWithTiers(
+          basePrice, 
+          quantityForCalculation, 
+          [], 
+          minOrderQuantity, 
+          item.has_quantity_discount || false,
+          null
+        );
         return {
           ...item,
           price: pricing.price.toString()
@@ -300,13 +401,27 @@ export default function OptimizedWarenkorbContent({
   const removeFromCart = (id: number) => {
     const filteredItems = cartItems.filter(item => item.id !== id);
     
-    // Berechne neue Gesamtmenge nach Entfernung
-    const newTotalQuantity = filteredItems.reduce((total, item) => total + item.quantity, 0);
+    // Berechne neue SRM-Gesamtmenge nach Entfernung
+    const newTotalSRMQuantity = filteredItems
+      .filter(item => item.unit === 'SRM')
+      .reduce((total, item) => total + item.quantity, 0);
     
-    // Aktualisiere Preise für verbleibende Items basierend auf neuer Gesamtmenge
+    // Aktualisiere Preise für verbleibende Items basierend auf neuer SRM-Gesamtmenge
     const updatedItems = filteredItems.map(item => {
       const basePrice = parseFloat(item.basePrice || item.price);
-      const pricing = calculatePriceWithTiers(basePrice, newTotalQuantity, pricingTiers, minOrderQuantity, item.has_quantity_discount || false);
+      
+      // Für SRM-Artikel: Verwende neue SRM-Gesamtmenge
+      // Für andere Artikel: Verwende nur die eigene Menge
+      const quantityForCalculation = item.unit === 'SRM' ? newTotalSRMQuantity : item.quantity;
+      
+      const pricing = calculatePriceWithTiers(
+        basePrice, 
+        quantityForCalculation, 
+        [], 
+        minOrderQuantity, 
+        item.has_quantity_discount || false,
+        null
+      );
       return {
         ...item,
         price: pricing.price.toString()
@@ -509,12 +624,17 @@ export default function OptimizedWarenkorbContent({
                   
                   <div className="space-y-6">
                     {cartItems.map((item) => {
-                      // Berechne Gesamtmenge für Zuschlag-Hinweis
-                      const totalQuantity = cartItems.reduce((total, cartItem) => total + cartItem.quantity, 0);
-                      const priceInfo = getPriceInfoForQuantity(item.quantity, pricingTiers, minOrderQuantity);
+                      // Berechne Gesamtmenge nur für SRM-Artikel für Zuschlag-Hinweis
+                      const totalSRMQuantity = cartItems
+                        .filter(cartItem => cartItem.unit === 'SRM')
+                        .reduce((total, cartItem) => total + cartItem.quantity, 0);
                       
-                      // Zeige Zuschlag-Hinweis nur wenn Gesamtmenge unter 6 SRM
-                      const showSurchargeInfo = totalQuantity < 6 && priceInfo.info && priceInfo.info.includes('30% Zuschlag');
+                      // Für SRM-Artikel: Verwende SRM-Gesamtmenge, für andere: eigene Menge
+                      const quantityForPriceInfo = item.unit === 'SRM' ? totalSRMQuantity : item.quantity;
+                      const priceInfo = getPriceInfoForQuantity(quantityForPriceInfo, pricingTiers, minOrderQuantity);
+                      
+                      // Zeige Zuschlag-Hinweis nur für SRM-Artikel wenn SRM-Gesamtmenge unter 7 ist
+                      const showSurchargeInfo = item.unit === 'SRM' && totalSRMQuantity < 7 && priceInfo.info && priceInfo.info.includes('30% Zuschlag');
                       
                       return (
                         <div key={item.id} className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 p-3 sm:p-4 border border-gray-200 rounded-lg">

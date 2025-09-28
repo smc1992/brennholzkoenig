@@ -1,7 +1,13 @@
 
 'use client';
 
-export default function TestimonialSection() {
+import { CityButton } from '@/components/ui/CityButton';
+
+interface TestimonialSectionProps {
+  cityData?: any;
+}
+
+export default function TestimonialSection({ cityData }: TestimonialSectionProps) {
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-b from-white to-[#F5F0E0]">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
@@ -19,7 +25,7 @@ export default function TestimonialSection() {
           {/* Kunden Ambiente Bild */}
           <div className="max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-2xl mb-8 sm:mb-12">
             <img 
-              src="https://static.readdy.ai/image/5cb98375ce345c7331a1619afba21cba/255afa48d4769354fa7fedfea18b5f4b.webp"
+              src={cityData?.testimonial_section_image_url || "https://static.readdy.ai/image/5cb98375ce345c7331a1619afba21cba/255afa48d4769354fa7fedfea18b5f4b.webp"}
               alt="Zufriedene Kunden um den warmen Kamin"
               className="w-full h-32 sm:h-48 lg:h-64 object-cover object-center"
             />
@@ -203,11 +209,15 @@ export default function TestimonialSection() {
                 Schließen Sie sich über 6.000 zufriedenen Familien an
               </p>
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center max-w-3xl mx-auto">
-                <a href="/shop" className="bg-white text-[#C04020] px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base lg:text-lg hover:bg-gray-100 transition-all duration-300 whitespace-nowrap cursor-pointer shadow-2xl transform hover:scale-105 w-full sm:w-auto border-2 border-white inline-block text-center">
+                <CityButton
+                  type="testimonial"
+                  cityData={cityData}
+                  className="bg-white text-[#C04020] px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base lg:text-lg hover:bg-gray-100 transition-all duration-300 whitespace-nowrap cursor-pointer shadow-2xl transform hover:scale-105 w-full sm:w-auto border-2 border-white inline-block text-center"
+                >
                   <i className="ri-award-line mr-2 sm:mr-3"></i>
-                  <span className="hidden sm:inline">Jetzt Premium-Qualität bestellen</span>
+                  <span className="hidden sm:inline">{cityData?.testimonial_cta_text || 'Jetzt Premium-Qualität bestellen'}</span>
                   <span className="sm:hidden">Premium bestellen</span>
-                </a>
+                </CityButton>
               </div>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 lg:gap-12 mt-4 sm:mt-6">
                 <div className="flex items-center text-white/90 text-xs sm:text-sm lg:text-base">

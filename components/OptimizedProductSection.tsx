@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { getCDNUrl } from '@/utils/cdn';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
+import { calculatePriceWithTiers, getTotalSRMQuantityInCart } from '@/lib/pricing';
 
 interface Product {
   id: number;
@@ -14,11 +15,13 @@ interface Product {
   image_url: string;
   category: string;
   stock_quantity: number;
+  min_stock_level?: number;
   features: string[];
   unit: string;
   original_price?: number;
   is_active: boolean;
   in_stock: boolean;
+  has_quantity_discount?: boolean;
 }
 
 interface CartItem {
@@ -58,12 +61,37 @@ export default function OptimizedProductSection({
   const [loading, setLoading] = useState<boolean>(initialProducts.length === 0);
   const [mounted, setMounted] = useState<boolean>(false);
   const [realtimeError, setRealtimeError] = useState<string | null>(null);
+  const [totalCartQuantity, setTotalCartQuantity] = useState<number>(0);
 
   // Kombiniere Server- und Real-time Fehler
   const combinedError = serverError || realtimeError;
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Überwache Änderungen im Warenkorb für SRM-Gesamtmenge
+  useEffect(() => {
+    const updateCartQuantity = () => {
+      const total = getTotalSRMQuantityInCart();
+      setTotalCartQuantity(total);
+    };
+
+    // Initial laden
+    updateCartQuantity();
+
+    // Event Listener für Warenkorb-Änderungen
+    const handleCartChange = () => {
+      updateCartQuantity();
+    };
+
+    window.addEventListener('cartUpdated', handleCartChange);
+    window.addEventListener('storage', handleCartChange);
+
+    return () => {
+      window.removeEventListener('cartUpdated', handleCartChange);
+      window.removeEventListener('storage', handleCartChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -180,6 +208,13 @@ export default function OptimizedProductSection({
         window.dispatchEvent(new CustomEvent('stockUpdated', {
           detail: { productId: product.id.toString(), quantityChange: quantity }
         }));
+        
+        // Event für andere Komponenten auslösen
+        window.dispatchEvent(new CustomEvent('cartUpdated'));
+        
+        // Gesamtmenge im Warenkorb aktualisieren
+        const newTotal = getTotalSRMQuantityInCart();
+        setTotalCartQuantity(newTotal);
       }
     }
   };
@@ -268,9 +303,15 @@ export default function OptimizedProductSection({
                     </div>
                   )}
                   
-                  <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                    {product.stock_quantity > 0 ? 'Verfügbar' : 'Ausverkauft'}
-                  </div>
+                  {product.stock_quantity === 0 ? (
+                    <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                      Ausverkauft
+                    </div>
+                  ) : product.stock_quantity <= (product.min_stock_level || 0) ? (
+                    <div className="absolute top-4 right-4 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                      Limitiert verfügbar
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="p-6">
@@ -310,7 +351,22 @@ export default function OptimizedProductSection({
                         </span>
                       )}
                       <span className="text-2xl font-bold text-[#C04020]">
-                        €{product.price.toFixed(2)}
+                        €{(() => {
+                          // Für SRM-Artikel: Berücksichtige die Gesamtmenge im Warenkorb
+                          if (product.unit === 'SRM') {
+                            const pricing = calculatePriceWithTiers(
+                              product.price, 
+                              1, // Einzelpreis anzeigen
+                              [], 
+                              3, // minOrderQuantity
+                              product.has_quantity_discount || false,
+                              totalCartQuantity
+                            );
+                            return pricing.price.toFixed(2);
+                          }
+                          // Für andere Artikel: Normalpreis
+                          return product.price.toFixed(2);
+                        })()}
                       </span>
                     </div>
                     <span className="text-sm text-gray-500">

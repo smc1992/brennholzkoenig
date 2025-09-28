@@ -55,17 +55,8 @@ export default function InventoryTab() {
 
   // Using the centralized Supabase client from lib/supabase.ts
 
-  // Funktion zur Berechnung des aktuellen Bestands aus Bewegungen
-  const getCurrentStock = (productId: string): number => {
-    const productMovements = movements.filter(m => m.product_id === productId);
-    return productMovements.reduce((total, movement) => {
-      if (movement.movement_type === 'in') {
-        return total + movement.quantity;
-      } else {
-        return total - movement.quantity;
-      }
-    }, 0);
-  };
+  // Hinweis: stock_quantity in der Datenbank ist bereits das korrekte Ergebnis aller Lagerbewegungen
+  // Eine separate Berechnung würde zu Doppelzählung führen
 
   useEffect(() => {
     loadInventoryData();
@@ -104,7 +95,7 @@ export default function InventoryTab() {
 
       // Bestandswarnungen berechnen
       const alerts: StockAlert[] = [];
-      productsData?.forEach(product => {
+      productsData?.forEach((product: Product) => {
         const currentStock = product.stock_quantity || 0;
         const minStock = product.min_stock_level || 0;
 
@@ -154,11 +145,18 @@ export default function InventoryTab() {
         newStockQuantity = adjustmentData.quantity;
       }
 
+      // 🛡️ BESTANDSPRÜFUNG - Verhindert negative Bestände
+      if (newStockQuantity < 0) {
+        setLoading(false);
+        setMessage(`❌ Fehler: Diese Anpassung würde zu einem negativen Bestand führen!\n\nAktueller Bestand: ${selectedProduct.stock_quantity}\nAnpassung: ${adjustmentData.type === 'out' ? '-' : '+'}${adjustmentData.quantity}\nResultierender Bestand: ${newStockQuantity}\n\nNegative Bestände sind nicht erlaubt!`);
+        return;
+      }
+
       // Bestand in products Tabelle aktualisieren
       const { error: updateError } = await supabase
         .from('products')
         .update({ 
-          stock_quantity: Math.max(0, newStockQuantity),
+          stock_quantity: newStockQuantity, // Verwende den berechneten Wert direkt (bereits validiert)
           updated_at: new Date().toISOString()
         })
         .eq('id', selectedProduct.id);
@@ -234,7 +232,7 @@ export default function InventoryTab() {
     const csvContent = [
       'Produkt,SKU,Aktueller Bestand,Mindestbestand,Maximalbestand,Wert (€)',
       ...products.map(product => {
-        const currentStock = getCurrentStock(product.id);
+        const currentStock = product.stock_quantity || 0;
         return `"${product.name}","${product.sku || ''}",${currentStock},${product.min_stock_level || 0},${product.max_stock_level || 0},${((product.price || 0) * currentStock).toFixed(2)}`;
       })
     ].join('\n');
@@ -248,7 +246,7 @@ export default function InventoryTab() {
 
   const getTotalInventoryValue = () => {
     return products.reduce((total, product) => 
-      total + ((product.price || 0) * getCurrentStock(product.id)), 0
+      total + ((product.price || 0) * (product.stock_quantity || 0)), 0
     );
   };
 
@@ -419,39 +417,45 @@ export default function InventoryTab() {
                         {product.sku || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-bold text-gray-900">{getCurrentStock(product.id)}</div>
+                        <div className="text-sm font-bold text-gray-900">{product.stock_quantity || 0}</div>
                         <div className="text-xs text-gray-500">SRM</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <input
-                          type="number"
-                          defaultValue={product.min_stock_level || 0}
-                          onBlur={(e) => {
-                            const minLevel = parseInt(e.target.value) || 0;
-                            updateStockLevels(product.id, minLevel, product.max_stock_level || 100);
-                          }}
-                          className="w-16 px-2 py-1 text-xs border border-gray-300 rounded mr-1"
-                        />
-                        /
-                        <input
-                          type="number"
-                          defaultValue={product.max_stock_level || 100}
-                          onBlur={(e) => {
-                            const maxLevel = parseInt(e.target.value) || 100;
-                            updateStockLevels(product.id, product.min_stock_level || 0, maxLevel);
-                          }}
-                          className="w-16 px-2 py-1 text-xs border border-gray-300 rounded ml-1"
-                        />
+                        <div className="flex items-center space-x-1">
+                          <input
+                            type="number"
+                            defaultValue={product.min_stock_level || 0}
+                            onBlur={(e) => {
+                              const minLevel = parseInt(e.target.value) || 0;
+                              updateStockLevels(product.id, minLevel, product.max_stock_level || 100);
+                            }}
+                            title="Mindestbestand - Klicken zum Bearbeiten"
+                            className="w-16 px-2 py-1 text-xs border border-gray-300 rounded hover:border-[#C04020] focus:border-[#C04020] focus:ring-1 focus:ring-[#C04020] transition-colors"
+                            placeholder="Min"
+                          />
+                          <span className="text-gray-400">/</span>
+                          <input
+                            type="number"
+                            defaultValue={product.max_stock_level || 100}
+                            onBlur={(e) => {
+                              const maxLevel = parseInt(e.target.value) || 100;
+                              updateStockLevels(product.id, product.min_stock_level || 0, maxLevel);
+                            }}
+                            title="Maximalbestand - Klicken zum Bearbeiten"
+                            className="w-16 px-2 py-1 text-xs border border-gray-300 rounded hover:border-[#C04020] focus:border-[#C04020] focus:ring-1 focus:ring-[#C04020] transition-colors"
+                            placeholder="Max"
+                          />
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        €{((product.price || 0) * getCurrentStock(product.id)).toFixed(2)}
+                        €{((product.price || 0) * (product.stock_quantity || 0)).toFixed(2)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {getCurrentStock(product.id) <= 0 ? (
+                        {(product.stock_quantity || 0) <= 0 ? (
                           <span className="px-2 py-1 text-xs font-bold rounded-full bg-red-100 text-red-800">
                             Ausverkauft
                           </span>
-                        ) : getCurrentStock(product.id) <= (product.min_stock_level || 0) ? (
+                        ) : (product.stock_quantity || 0) <= (product.min_stock_level || 0) ? (
                           <span className="px-2 py-1 text-xs font-bold rounded-full bg-orange-100 text-orange-800">
                             Niedriger Bestand
                           </span>
