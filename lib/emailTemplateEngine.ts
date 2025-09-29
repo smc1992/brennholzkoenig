@@ -50,6 +50,7 @@ interface EmailTemplate {
 export async function loadEmailTemplate(type: string): Promise<EmailTemplate | null> {
   try {
     console.log(`[loadEmailTemplate] Suche Template für Typ: ${type}`);
+    const normalizedType = normalizeType(type);
     
     console.log('[loadEmailTemplate] Verwende normalen Client mit angepasster RLS-Policy');
     
@@ -68,11 +69,13 @@ export async function loadEmailTemplate(type: string): Promise<EmailTemplate | n
     console.log(`[loadEmailTemplate] Templates:`, data?.map((t: any) => ({ key: t.setting_key, value: t.setting_value?.substring(0, 100) })));
     
     // Finde das passende Template
-    const template = data.find((t: any) => {
+    let template = data.find((t: any) => {
       try {
         const parsed = JSON.parse(t.setting_value);
-        console.log(`[loadEmailTemplate] Prüfe Template '${t.setting_key}': type=${parsed.type}, active=${parsed.active}`);
-        return parsed.type === type && parsed.active;
+        const parsedType = normalizeType(parsed.type || parsed.template_type || t.setting_key);
+        const isActive = parsed.active === true || parsed.is_active === true;
+        console.log(`[loadEmailTemplate] Prüfe Template '${t.setting_key}': type=${parsedType}, active=${isActive}`);
+        return isActive && (parsedType === normalizedType);
       } catch (e) {
         console.error('Fehler beim Parsen des Templates:', e);
         return false;
@@ -80,18 +83,38 @@ export async function loadEmailTemplate(type: string): Promise<EmailTemplate | n
     });
 
     if (!template) {
-      console.warn(`Kein aktives Template für Typ '${type}' gefunden`);
-      // Debug: Zeige alle verfügbaren Template-Typen
-      const availableTypes = data.map((t: any) => {
+      console.warn(`Kein aktives Template für Typ '${type}' gefunden – versuche Fallback über Trigger-Key`);
+      // Fallback: Suche nach aktivem Template, das den Trigger-Key gesetzt hat
+      const fallback = data.find((t: any) => {
         try {
           const parsed = JSON.parse(t.setting_value);
-          return `${t.setting_key} (type: ${parsed.type}, active: ${parsed.active})`;
+          const isActive = parsed.active === true || parsed.is_active === true;
+          const triggers = parsed.triggers || {};
+          return isActive && (triggers[type] === true || triggers[normalizedType] === true);
         } catch (e) {
-          return `${t.setting_key} (parse error)`;
+          return false;
         }
       });
-      console.log(`[loadEmailTemplate] Verfügbare Templates:`, availableTypes);
-      return null;
+
+      if (!fallback) {
+        // Debug: Zeige alle verfügbaren Template-Typen
+        const availableTypes = data.map((t: any) => {
+          try {
+            const parsed = JSON.parse(t.setting_value);
+            const parsedType = normalizeType(parsed.type || parsed.template_type || t.setting_key);
+            const isActive = parsed.active === true || parsed.is_active === true;
+            const hasTrigger = !!parsed.triggers && (parsed.triggers[type] === true || parsed.triggers[normalizedType] === true);
+            return `${t.setting_key} (type: ${parsedType}, active: ${isActive}, trigger[${normalizedType}]=${hasTrigger})`;
+          } catch (e) {
+            return `${t.setting_key} (parse error)`;
+          }
+        });
+        console.log(`[loadEmailTemplate] Verfügbare Templates:`, availableTypes);
+        return null;
+      }
+
+      console.log(`[loadEmailTemplate] Fallback-Template gefunden über Trigger-Key: ${fallback.setting_key}`);
+      template = fallback;
     }
 
     console.log(`[loadEmailTemplate] Template gefunden: ${template.setting_key}`);
@@ -103,6 +126,19 @@ export async function loadEmailTemplate(type: string): Promise<EmailTemplate | n
     console.error('Fehler beim Laden des E-Mail-Templates:', error);
     return null;
   }
+}
+
+// Mappe deutschsprachige Typnamen auf interne Schlüssel
+function normalizeType(type: string): string {
+  if (!type) return type;
+  const map: Record<string, string> = {
+    'Versandbenachrichtigung': 'shipping_notification',
+    'Bestellbestätigung': 'order_confirmation',
+    'Kundenstornierung': 'customer_order_cancellation',
+    'Admin-Stornierung': 'admin_order_cancellation',
+    'Adminstornierung': 'admin_order_cancellation'
+  };
+  return map[type] || type;
 }
 
 // Firmen-Informationen für E-Mail-Templates
@@ -229,7 +265,8 @@ async function appendGlobalSignature(content: string): Promise<string> {
 
 // Ersetze Platzhalter in Template-Inhalt
 export async function replacePlaceholders(content: string, data: TemplateData): Promise<string> {
-  let result = content;
+  const initial = typeof content === 'string' ? content : '';
+  let result = initial;
   
   // Entferne HTML-Platzhalter-Spans falls vorhanden (aus Visual Editor)
   result = result.replace(/<span[^>]*class="[^"]*bg-blue-100[^"]*"[^>]*>([^<]+)<\/span>/g, '$1');
@@ -254,18 +291,33 @@ export async function replacePlaceholders(content: string, data: TemplateData): 
   });
   
   // Spezielle Formatierungen
-  result = result.replace(/{{order_total}}/g, data.order_total ? `${data.order_total}` : '0,00 €');
+  // Betrag immer als Euro im DE-Format ausgeben und sowohl order_total als auch total_amount unterstützen
+  const formatEuro = (val: any): string => {
+    const num = typeof val === 'string' ? Number(val.replace(',', '.')) : Number(val);
+    if (!isFinite(num)) return '0,00 €';
+    try {
+      return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(num);
+    } catch {
+      return `${num.toFixed(2)} €`;
+    }
+  };
+
+  const formattedTotal = data.order_total !== undefined ? formatEuro(data.order_total) : (
+    data.total_amount !== undefined ? formatEuro(data.total_amount) : '0,00 €'
+  );
+
+  result = result.replace(/{{order_total}}/g, formattedTotal);
+  result = result.replace(/{{total_amount}}/g, formattedTotal);
   result = result.replace(/{{order_date}}/g, data.order_date || new Date().toLocaleDateString('de-DE'));
   
   // Templates enthalten bereits vollständige HTML-Struktur mit Header und Footer
   // Keine automatische Generierung mehr erforderlich
   
-  // Globale E-Mail-Signatur hinzufügen
-  result = await appendGlobalSignature(result);
-  
+  // WICHTIG: Keine globale Signatur hier anhängen, dies geschieht zentral beim Versand.
+
   // Fallback für nicht ersetzte Platzhalter (leere Strings)
   result = result.replace(/{{[^}]+}}/g, '');
-  
+
   return result;
 }
 
@@ -291,7 +343,7 @@ export async function sendTemplateEmail(
       };
     }
 
-    console.log(`[EmailTemplate] Template gefunden: ${template.setting_name}`);
+    console.log(`[EmailTemplate] Template gefunden: ${template.setting_key}`);
 
     // Standard-Daten hinzufügen
     const completeData: TemplateData = {
@@ -300,10 +352,14 @@ export async function sendTemplateEmail(
       ...templateData
     };
 
-    // Platzhalter ersetzen
-    const subject = await replacePlaceholders(template.template.subject, completeData);
-    const htmlContent = await replacePlaceholders(template.template.html_content, completeData);
-    const textContent = await replacePlaceholders(template.template.text_content, completeData);
+    // Platzhalter ersetzen (robuste Feld-Fallbacks aus Admin-Editor: html/text)
+    const subjectSource = (template.template as any).subject || '';
+    const htmlSource = (template.template as any).html_content || (template.template as any).html || '';
+    const textSource = (template.template as any).text_content || (template.template as any).text || '';
+
+    const subject = await replacePlaceholders(subjectSource, completeData);
+    const htmlContent = await replacePlaceholders(htmlSource, completeData);
+    const textContent = await replacePlaceholders(textSource, completeData);
 
     console.log(`[EmailTemplate] Sende E-Mail an: ${recipientEmail}`);
     console.log(`[EmailTemplate] Betreff: ${subject}`);
@@ -374,7 +430,7 @@ export async function logEmailSent(logData: {
       .from('app_settings')
       .insert({
         setting_type: 'email_log',
-        setting_name: `${logData.type}_${Date.now()}`,
+        setting_key: `${logData.type}_${Date.now()}`,
         setting_value: JSON.stringify({
           ...logData,
           sent_at: new Date().toISOString()

@@ -965,7 +965,7 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
                       <span>€{parseFloat(selectedInvoice.subtotal_amount).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>MwSt. (19%):</span>
+                      <span>zzgl. MwSt.:</span>
                       <span>€{parseFloat(selectedInvoice.tax_amount).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between font-medium border-t pt-2">

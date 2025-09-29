@@ -874,7 +874,7 @@ export class ModernInvoiceBuilder {
         <span>{{formatCurrency totals.subtotal}}</span>
       </div>
       <div class="totals-row">
-        <span>MwSt. ({{totals.tax_rate}}%):</span>
+        <span>zzgl. {{totals.tax_rate}}% MwSt.:</span>
         <span>{{formatCurrency totals.tax}}</span>
       </div>
       <div class="totals-row">

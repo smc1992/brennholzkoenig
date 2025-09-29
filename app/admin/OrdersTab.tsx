@@ -574,35 +574,56 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
         `${item.quantity}x ${item.product_name} (${parseFloat(item.unit_price).toFixed(2)}€)`
       ).join('<br>') || 'Keine Produkte';
 
-      // Prepare template data for the email template engine
-      const templateData = {
-        customer_name: customerName,
-        customer_email: customerEmail,
-        order_number: orderData.order_number,
-        order_total: parseFloat(orderData.total_amount).toFixed(2) + '€',
-        order_date: new Date(orderData.created_at).toLocaleDateString('de-DE'),
-        delivery_address: deliveryAddress,
-        tracking_number: `BK-${orderData.order_number}`,
-        product_list: productList,
-        delivery_method: orderData.delivery_type || 'Standard',
-        estimated_delivery: orderData.preferred_delivery_month && orderData.preferred_delivery_year 
-          ? `${orderData.preferred_delivery_month} ${orderData.preferred_delivery_year}`
-          : 'Nach Vereinbarung',
-        tracking_url: `https://brennholzkoenig.de/konto/bestellungen/${orderData.order_number}`
+      // Baue Payload für dedizierte Versandbenachrichtigungs-API
+      const shippingPayload = {
+        customer: {
+          name: customerName,
+          email: customerEmail,
+          firstName: orderData.delivery_first_name || '',
+          lastName: orderData.delivery_last_name || ''
+        },
+        order: {
+          id: orderId,
+          number: orderData.order_number,
+          total: orderData.total_amount ? parseFloat(orderData.total_amount) : undefined,
+          date: new Date(orderData.created_at).toLocaleDateString('de-DE')
+        },
+        shipping: {
+          trackingNumber: `BK-${orderData.order_number}`,
+          carrier: orderData.delivery_method || orderData.delivery_type || 'Standard',
+          method: orderData.delivery_type || 'Standard',
+          estimatedDelivery: orderData.preferred_delivery_month && orderData.preferred_delivery_year
+            ? `${orderData.preferred_delivery_month} ${orderData.preferred_delivery_year}`
+            : undefined,
+          trackingUrl: `https://brennholzkoenig.de/konto/bestellungen/${orderData.order_number}`
+        },
+        products: (orderData.order_items || []).map((item: any) => ({
+          name: item.product_name,
+          quantity: item.quantity,
+          price: item.unit_price ? parseFloat(item.unit_price) : undefined
+        })),
+        delivery: {
+          address: {
+            firstName: orderData.delivery_first_name || '',
+            lastName: orderData.delivery_last_name || '',
+            street: orderData.delivery_street || '',
+            address: deliveryAddress,
+            zipCode: orderData.delivery_postal_code || '',
+            city: orderData.delivery_city || ''
+          }
+        },
+        adminNotification: {
+          enabled: false
+        }
       };
 
-      // Use template engine to send email with Versandbenachrichtigung template
-      const emailResponse = await fetch('/api/send-template-email', {
+      // Sende Versandbenachrichtigung über dedizierte API
+      const emailResponse = await fetch('/api/send-shipping-notification', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          type: 'template',
-          templateKey: 'Versandbenachrichtigung',
-          to: customerEmail,
-          variables: templateData
-        }),
+        body: JSON.stringify(shippingPayload),
       });
 
       const emailResult = await emailResponse.json();

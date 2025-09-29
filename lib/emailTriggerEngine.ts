@@ -97,12 +97,25 @@ export async function getActiveTemplatesWithTriggers(): Promise<any[]> {
     }
 
     return data?.map((template: any) => {
-      const parsedTemplate = JSON.parse(template.setting_value);
+      let parsedTemplate: any = {};
+      try {
+        parsedTemplate = JSON.parse(template.setting_value);
+      } catch (e) {
+        console.error('Fehler beim Parsen des Templates:', template.setting_key, e);
+      }
+
+      // Unterstütze beide Schemen: active/is_active und type/template_type
+      const isActive = parsedTemplate?.active === true || parsedTemplate?.is_active === true;
+      const normalizedType = parsedTemplate?.type || parsedTemplate?.template_type || template.setting_key;
+
       return {
         ...template,
-        template: parsedTemplate,
-        // Template ist aktiv wenn sowohl das Template als auch die Trigger aktiv sind
-        isActive: parsedTemplate.active === true
+        template: {
+          ...parsedTemplate,
+          type: normalizedType,
+          active: isActive,
+        },
+        isActive
       };
     }).filter((t: any) => t.isActive) || [];
   } catch (error) {
@@ -228,8 +241,7 @@ export async function triggerCustomerOrderCancellation(cancellationData: Cancell
     
     // Finde Template mit aktiviertem Kunden-Stornierungstrigger
     const customerTemplate = templates.find(t => 
-      t.template.triggers?.customer_order_cancellation === true && 
-      t.setting_key === 'customer_order_cancellation'
+      t.template.triggers?.customer_order_cancellation === true
     );
 
     if (!customerTemplate) {
@@ -239,6 +251,7 @@ export async function triggerCustomerOrderCancellation(cancellationData: Cancell
 
     const customerTemplateData = {
       customer_name: cancellationData.customer.name,
+      order_id: cancellationData.order_number,
       order_number: cancellationData.order_number,
       order_date: cancellationData.order_date,
       cancellation_date: cancellationData.cancellation_date,
@@ -277,8 +290,7 @@ export async function triggerAdminOrderCancellation(cancellationData: Cancellati
     
     // Finde Template mit aktiviertem Admin-Stornierungstrigger
     const adminTemplate = templates.find(t => 
-      t.template.triggers?.admin_order_cancellation === true && 
-      t.setting_key === 'admin_order_cancellation'
+      t.template.triggers?.admin_order_cancellation === true
     );
 
     if (!adminTemplate || !cancellationData.admin_email) {
@@ -287,6 +299,7 @@ export async function triggerAdminOrderCancellation(cancellationData: Cancellati
     }
 
     const adminTemplateData = {
+      order_id: cancellationData.order_number,
       order_number: cancellationData.order_number,
       order_date: cancellationData.order_date,
       customer_name: cancellationData.customer.name,
@@ -528,7 +541,7 @@ export async function logEmailTrigger(
     await supabase
       .from('app_settings')
       .insert({
-        setting_name: `email_log_${Date.now()}`,
+        setting_key: `email_log_${Date.now()}`,
         setting_type: 'email_log',
         setting_value: JSON.stringify(logData)
       });

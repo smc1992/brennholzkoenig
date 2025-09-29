@@ -229,8 +229,8 @@ export default function ContactForm() {
       try {
         trackContact('contact_form', 'website');
         
-        // Track quote request if it's a product or price inquiry
-        if (['Preise', 'Kaminholz', 'Brennholz', 'Anzündholz', 'Holzbriketts', 'Lieferung'].includes(formData.product_category)) {
+        // Angebotsanfrage tracken für alle konkreten Produkt-/Preis-/Lieferanfragen
+        if (!['Allgemeine Anfrage', 'Sonstiges'].includes(formData.product_category)) {
           trackQuoteRequest(formData.product_category, 1, 'contact_form');
         }
       } catch (analyticsError) {
@@ -329,10 +329,14 @@ export default function ContactForm() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent transition-colors"
                 >
                   <option value="Allgemeine Anfrage">Allgemeine Anfrage</option>
-                  <option value="Kaminholz">Kaminholz</option>
-                  <option value="Brennholz">Brennholz</option>
-                  <option value="Anzündholz">Anzündholz</option>
-                  <option value="Holzbriketts">Holzbriketts</option>
+                  {/* Konkrete Produkte */}
+                  <option value="Industrieholz Buche Klasse 1">Industrieholz Buche Klasse 1</option>
+                  <option value="Industrieholz Buche Klasse 2">Industrieholz Buche Klasse 2</option>
+                  <option value="Scheitholz Buche 33cm">Scheitholz Buche 33cm</option>
+                  <option value="Scheitholz Buche 25 cm">Scheitholz Buche 25 cm</option>
+                  <option value="Scheitholz - Industrieholz Mix 33 cm">Scheitholz - Industrieholz Mix 33 cm</option>
+                  <option value="Scheitholz Fichte 33 cm">Scheitholz Fichte 33 cm</option>
+                  {/* Service-/Preis-Themen */}
                   <option value="Lieferung">Lieferung</option>
                   <option value="Preise">Preise</option>
                   <option value="Sonstiges">Sonstiges</option>

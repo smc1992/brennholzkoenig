@@ -67,17 +67,18 @@ export default function InvoicePreview({ orderId, invoiceId, customSettings, onC
       
       console.log('🔄 Generating preview with:', { orderId, invoiceId, hasCustomSettings: !!customSettings, settingsCount: Object.keys(finalSettings).length });
       
-      // Use the same invoice-builder API as the working download function
-      const url = new URL('/api/invoice-builder', window.location.origin);
+      // Verwende die spezialisierte Preview-API, die HTML + success zurückgibt
+      const url = new URL('/api/invoice-preview', window.location.origin);
       if (orderId) url.searchParams.set('orderId', orderId);
       if (invoiceId) url.searchParams.set('invoiceId', invoiceId);
       url.searchParams.set('templateId', 'invoice');
 
       const response = await fetch(url.toString(), {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ orderId, invoiceId, templateId: 'invoice' })
       });
 
       if (!response.ok) {

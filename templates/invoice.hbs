@@ -832,7 +832,7 @@
             <td style="padding: 4pt; text-align: right; font-weight: 600;">{{formatCurrency totals.subtotal}}</td>
           </tr>
           <tr>
-            <td style="padding: 4pt; text-align: left;">{{#if company.default_tax_included}}inkl.{{else}}zzgl.{{/if}} {{totals.tax_rate}}% MwSt.:</td>
+            <td style="padding: 4pt; text-align: left;">zzgl. {{totals.tax_rate}}% MwSt.:</td>
             <td style="padding: 4pt; text-align: right;">{{formatCurrency totals.tax}}</td>
           </tr>
           <tr style="border-top: 2pt solid #333; font-weight: 600; font-size: 10pt;">
@@ -881,8 +881,8 @@
           Ich erteile / Wir erteilen den Auftrag für die Brennholzlieferung 
           gemäß obigem Angebot. Die AGBs und Lieferbedingung frei 
           Bordsteinkante habe ich gelesen und akzeptiert. Für ausdrücklich 
-          gewünschte Lieferungen auf das Grundstück übernehmen wir keine 
-          Haftung.
+          gewünschte Lieferungen auf das Grundstück übernimmt der Fahrer und 
+          die Firma keine Haftung.
         </div>
         <div class="signature-fields">
           <div class="signature-field">Ort, Datum</div>
@@ -892,7 +892,7 @@
       
       <!-- Delivery Address -->
       <section class="delivery-address">
-        <h3>Lieferadresse (Zone 2):</h3>
+        <h3>Lieferadresse:</h3>
         <div class="delivery-zone">
           {{#if delivery_address}}
             {{#if delivery_address.company}}{{delivery_address.company}}<br>{{/if}}

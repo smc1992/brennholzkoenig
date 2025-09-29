@@ -78,6 +78,24 @@ export async function POST(request: NextRequest) {
     // E-Mails über Trigger-Engine senden
     const emailResults = [];
 
+    // Admin-E-Mail aus Admin-Konfiguration laden (Fallback auf ENV)
+    let adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'info@brennholz-koenig.de';
+    try {
+      const { data: adminSettingsData } = await supabase
+        .from('app_settings')
+        .select('*')
+        .eq('setting_type', 'admin_config')
+        .single();
+      if (adminSettingsData?.setting_value) {
+        const adminSettings = JSON.parse(adminSettingsData.setting_value);
+        if (adminSettings?.notification_email) {
+          adminEmail = adminSettings.notification_email;
+        }
+      }
+    } catch (e) {
+      console.warn('[Cancel Order] Konnte Admin-Konfiguration nicht laden, nutze Fallback');
+    }
+
     // Cancellation-Daten für Trigger-Engine vorbereiten
     const cancellationData = {
       order_number: order.order_number,
@@ -94,7 +112,7 @@ export async function POST(request: NextRequest) {
         quantity: item.quantity,
         price: item.unit_price
       })),
-      admin_email: 'admin@brennholz-koenig.de'
+      admin_email: adminEmail
     };
 
     // Kunden-E-Mail senden
