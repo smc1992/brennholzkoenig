@@ -476,12 +476,7 @@ export class ModernInvoiceBuilder {
       // PDF-Optionen - CSS @page-Regeln haben Priorität
       const pdfOptions: PDFOptions = {
         format: options.format || 'A4',
-        margin: {
-          top: '0',
-          right: '0',
-          bottom: '0',
-          left: '0'
-        },
+        // Entferne Margin-Überschreibung damit CSS @page-Regel respektiert wird
         printBackground: true,
         displayHeaderFooter: false,
         preferCSSPageSize: true
@@ -936,6 +931,13 @@ export class ModernInvoiceBuilder {
       currency: symbol === '€' ? 'EUR' : 'EUR',
       minimumFractionDigits: 2
     }).format(amount);
+  }
+
+  /**
+   * Leert den Template-Cache
+   */
+  public clearTemplateCache(): void {
+    this.templateCache.clear();
   }
 
   /**

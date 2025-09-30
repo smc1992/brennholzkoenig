@@ -149,12 +149,7 @@ export async function POST(request: NextRequest) {
       actualTemplateId,
       {
         format: options.format || 'A4',
-        margin: options.margin || {
-          top: '20mm',
-          right: '15mm',
-          bottom: '20mm',
-          left: '15mm'
-        },
+        // Margins werden jetzt von CSS @page-Regel übernommen
         displayHeaderFooter: options.displayHeaderFooter || false,
         headerTemplate: options.headerTemplate || '',
         footerTemplate: options.footerTemplate || ''
