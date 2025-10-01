@@ -97,20 +97,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Cancellation-Daten für Trigger-Engine vorbereiten
+    // Stelle sicher, dass Beträge als number übergeben werden (wie im Admin-Flow)
     const cancellationData = {
       order_number: order.order_number,
       order_id: order.id,
       order_date: formatDate(new Date(order.created_at)),
       cancellation_date: formatDate(currentDate),
-      total_amount: order.total_amount,
+      // total_amount aus DB kann string/decimal sein → explizit in number konvertieren
+      total_amount: typeof order.total_amount === 'number' 
+        ? order.total_amount 
+        : parseFloat(order.total_amount),
       customer: {
         name: customer?.first_name ? `${customer.first_name} ${customer.last_name}` : 'Kunde',
         email: customer?.email || ''
       },
+      // Einzelpreise ebenfalls als number sicherstellen
       products: order.order_items.map((item: any) => ({
         name: item.product_name || 'Unbekanntes Produkt',
         quantity: item.quantity,
-        price: item.unit_price
+        price: typeof item.unit_price === 'number' 
+          ? item.unit_price 
+          : parseFloat(item.unit_price)
       })),
       admin_email: adminEmail
     };
