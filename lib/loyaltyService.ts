@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import { LoyaltyNotificationService } from './loyaltyNotificationService';
+// Wichtig: Keine serverseitigen E-Mail-Module in Client-Bundles importieren
+// Benachrichtigungen werden über die API-Route '/api/send-loyalty-notification' ausgelöst
 
 interface OrderItem {
   product_name: string;
@@ -7,6 +8,21 @@ interface OrderItem {
   quantity: number;
   unit_price: number;
   total_price: number;
+}
+
+async function sendLoyaltyTrigger(event: 'loyalty_points_earned' | 'loyalty_points_redeemed' | 'loyalty_tier_upgrade' | 'loyalty_points_expiring', data: any) {
+  try {
+    const res = await fetch('/api/send-loyalty-notification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event, data })
+    });
+    if (!res.ok) {
+      console.error('Fehler beim Auslösen des Loyalty-Events:', await res.text());
+    }
+  } catch (e) {
+    console.error('Exception beim Auslösen des Loyalty-Events:', e);
+  }
 }
 
 interface LoyaltySettings {
@@ -238,19 +254,34 @@ export async function addPointsToMember(
     }
 
     // Sende Benachrichtigung wenn gewünscht und Daten verfügbar
-    if (sendNotification && memberData && customerData) {
+  if (sendNotification && memberData && customerData) {
       try {
         const newBalance = memberData.points_balance + points;
-        
-        await LoyaltyNotificationService.sendPointsNotification({
-          customerEmail: customerData.email,
-          customerName: `${customerData.first_name} ${customerData.last_name}`,
-          pointsChange: points,
-          newBalance: newBalance,
-          transactionType: points > 0 ? 'earned' : 'redeemed',
-          reason: reason,
-          tier: memberData.tier
-        });
+        const isEarned = points > 0;
+        if (isEarned) {
+          await sendLoyaltyTrigger('loyalty_points_earned', {
+            customer: {
+              name: `${customerData.first_name} ${customerData.last_name}`,
+              email: customerData.email,
+              customer_number: memberData.customer_id || 'UNKNOWN'
+            },
+            points_earned: points,
+            current_points_balance: newBalance,
+            tier_name: memberData.tier
+          });
+        } else {
+          await sendLoyaltyTrigger('loyalty_points_redeemed', {
+            customer: {
+              name: `${customerData.first_name} ${customerData.last_name}`,
+              email: customerData.email,
+              customer_number: memberData.customer_id || 'UNKNOWN'
+            },
+            points_redeemed: Math.abs(points),
+            discount_amount: 0,
+            remaining_points_balance: newBalance,
+            tier_name: memberData.tier
+          });
+        }
       } catch (notificationError) {
         console.error('Fehler beim Senden der Benachrichtigung:', notificationError);
         // Benachrichtigungsfehler sollen die Punktevergabe nicht blockieren
@@ -353,12 +384,17 @@ export async function checkAndNotifyTierUpgrade(memberId: string): Promise<void>
       // Sende Tier-Upgrade-Benachrichtigung
        try {
          const tierBenefits = getTierBenefits(newTier);
-         await LoyaltyNotificationService.sendTierUpgradeNotification(
-           member.customers.email,
-           `${member.customers.first_name} ${member.customers.last_name}`,
-           newTier,
-           tierBenefits
-         );
+         await sendLoyaltyTrigger('loyalty_tier_upgrade', {
+           customer: {
+             name: `${member.customers.first_name} ${member.customers.last_name}`,
+             email: member.customers.email,
+             customer_number: member.customer_id || 'UNKNOWN'
+           },
+           old_tier_name: member.tier,
+           new_tier_name: newTier,
+           new_tier_benefits: tierBenefits,
+           current_points_balance: member.points_balance
+         });
 
         console.log(`✅ Tier-Upgrade-Benachrichtigung gesendet: ${member.tier} → ${newTier}`);
       } catch (notificationError) {

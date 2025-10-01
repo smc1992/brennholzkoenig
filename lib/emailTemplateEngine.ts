@@ -1,3 +1,4 @@
+import 'server-only';
 import { supabase } from './supabase';
 import { sendEmail, sendEmailTest } from './emailService';
 import { createClient } from '@supabase/supabase-js';

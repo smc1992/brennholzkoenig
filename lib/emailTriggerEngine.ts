@@ -1,3 +1,4 @@
+import 'server-only';
 import { supabase } from './supabase';
 import { sendTemplateEmail, sendTemplateEmailTest } from './emailTemplateEngine';
 
