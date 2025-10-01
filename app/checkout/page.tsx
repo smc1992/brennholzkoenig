@@ -708,7 +708,10 @@ export default function CheckoutPage() {
       console.log('🔍 Führe Bestandsprüfung durch...');
       
       // Hole aktuelle Bestände für alle Warenkorb-Artikel
-      const productIds = cartItems.map(item => item.id);
+      // IDs aus dem Warenkorb robust in Zahlen konvertieren, um Typ-Mismatches zu vermeiden
+      const productIds = cartItems
+        .map(item => Number(item.id))
+        .filter(id => !Number.isNaN(id));
       const { data: currentProductsRaw, error: stockError } = await supabase
         .from('products')
         .select('id, name, sku, stock_quantity')
@@ -724,7 +727,8 @@ export default function CheckoutPage() {
       const stockIssues: string[] = [];
       
       for (const cartItem of cartItems) {
-        const product = currentProducts?.find((p: ProductStock) => p.id === cartItem.id);
+        // Vergleiche IDs robust als String, da DB-IDs numerisch sein können
+        const product = currentProducts?.find((p: ProductStock) => p.id?.toString() === cartItem.id?.toString());
         
         if (!product) {
           stockIssues.push(`Produkt "${cartItem.name}" wurde nicht gefunden.`);
