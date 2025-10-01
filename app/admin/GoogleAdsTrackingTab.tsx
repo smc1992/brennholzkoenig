@@ -16,7 +16,10 @@ export default function GoogleAdsTrackingTab() {
     google_ads_id: '',
     conversion_tracking: true,
     remarketing: true,
-    enhanced_conversions: false
+    enhanced_conversions: false,
+    purchase_label: '',
+    lead_label: '',
+    signup_label: ''
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -31,21 +34,17 @@ export default function GoogleAdsTrackingTab() {
 
   const loadSettings = async () => {
     try {
-      const { data } = await supabase
-        .from('app_settings')
-        .select('*')
-        .eq('setting_type', 'google_ads_tracking');
-
-      const settingsMap: Record<string, string> = {};
-      data?.forEach(item => {
-        settingsMap[item.setting_key] = item.setting_value;
-      });
+      const res = await fetch('/api/google-ads-config');
+      const cfg = await res.json();
 
       setSettings({
-        google_ads_id: settingsMap.google_ads_id || '',
-        conversion_tracking: settingsMap.conversion_tracking === 'true',
-        remarketing: settingsMap.remarketing === 'true',
-        enhanced_conversions: settingsMap.enhanced_conversions === 'true'
+        google_ads_id: cfg.google_ads_id || '',
+        conversion_tracking: Boolean(cfg.conversion_tracking),
+        remarketing: Boolean(cfg.remarketing),
+        enhanced_conversions: Boolean(cfg.enhanced_conversions),
+        purchase_label: cfg.purchase_label || '',
+        lead_label: cfg.lead_label || '',
+        signup_label: cfg.signup_label || ''
       });
     } catch (error) {
       console.error('Error loading Google Ads settings:', error);
@@ -76,26 +75,13 @@ export default function GoogleAdsTrackingTab() {
   const saveSettings = async () => {
     setIsSaving(true);
     try {
-      // Lösche alte Einstellungen
-      await supabase
-        .from('app_settings')
-        .delete()
-        .eq('setting_type', 'google_ads_tracking');
-
-      // Speichere neue Einstellungen
-      const settingsToSave = Object.entries(settings).map(([key, value]) => ({
-        setting_type: 'google_ads_tracking',
-        setting_key: key,
-        setting_value: value.toString(),
-        updated_at: new Date().toISOString()
-      }));
-
-      const { error } = await supabase
-        .from('app_settings')
-        .insert(settingsToSave);
-
-      if (error) throw error;
-
+      const res = await fetch('/api/google-ads-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
+      });
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error || 'Unknown error');
       alert('Google Ads Tracking Einstellungen gespeichert!');
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -128,11 +114,18 @@ export default function GoogleAdsTrackingTab() {
       if (error) throw error;
 
       // Trigger Google Ads Conversion (wenn aktiviert)
-      if (settings.conversion_tracking && window.gtag) {
-        const conversionLabel = settings.google_ads_id;
-        if (conversionLabel) {
+      if (settings.conversion_tracking && typeof window !== 'undefined' && window.gtag) {
+        const conversionId = settings.google_ads_id;
+        const labelMap: Record<string, string> = {
+          purchase: settings.purchase_label,
+          lead: settings.lead_label,
+          signup: settings.signup_label,
+          contact: settings.lead_label
+        };
+        const label = labelMap[eventType] || '';
+        if (conversionId && label) {
           window.gtag('event', 'conversion', {
-            'send_to': `${settings.google_ads_id}/${eventType}`,
+            'send_to': `${conversionId}/${label}`,
             'value': eventData.value,
             'currency': 'EUR',
             'transaction_id': `test_${Date.now()}`
@@ -229,6 +222,43 @@ export default function GoogleAdsTrackingTab() {
             <p className="text-sm text-gray-500 mt-1">
               Ihre Google Ads Conversion ID (beginnt mit AW-)
             </p>
+          </div>
+
+          {/* Conversion Labels */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Purchase Label</label>
+              <input
+                type="text"
+                value={settings.purchase_label}
+                onChange={(e) => setSettings(prev => ({ ...prev, purchase_label: e.target.value }))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="z.B. AbCdEfGhIjkLmNoP"
+              />
+              <p className="text-sm text-gray-500 mt-1">Label-ID für Käufe aus Google Ads</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Lead Label</label>
+              <input
+                type="text"
+                value={settings.lead_label}
+                onChange={(e) => setSettings(prev => ({ ...prev, lead_label: e.target.value }))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="z.B. XyZ123LeadLabel"
+              />
+              <p className="text-sm text-gray-500 mt-1">Label-ID für Leads (Kontakt/Angebot)</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Signup Label</label>
+              <input
+                type="text"
+                value={settings.signup_label}
+                onChange={(e) => setSettings(prev => ({ ...prev, signup_label: e.target.value }))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="z.B. AbcSignupLabel42"
+              />
+              <p className="text-sm text-gray-500 mt-1">Label-ID für Registrierungen</p>
+            </div>
           </div>
 
           {/* Save Button */}

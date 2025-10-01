@@ -142,6 +142,21 @@ interface BillingData {
   company: string;
 }
 
+// Typen für Lagerbestandsprüfungen (verhindert implizites any in Callbacks)
+interface ProductStock {
+  id: string;
+  name: string;
+  sku: string;
+  stock_quantity: number;
+}
+
+type MovementType = 'in' | 'out' | 'adjustment';
+
+interface InventoryMovement {
+  movement_type: MovementType;
+  quantity: number;
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { products, subscribeToChanges, unsubscribeFromChanges } = useRealtimeSync();
@@ -694,10 +709,12 @@ export default function CheckoutPage() {
       
       // Hole aktuelle Bestände für alle Warenkorb-Artikel
       const productIds = cartItems.map(item => item.id);
-      const { data: currentProducts, error: stockError } = await supabase
+      const { data: currentProductsRaw, error: stockError } = await supabase
         .from('products')
         .select('id, name, sku, stock_quantity')
         .in('id', productIds);
+
+      const currentProducts: ProductStock[] | null = (currentProductsRaw as ProductStock[] | null);
 
       if (stockError) {
         throw new Error(`Fehler beim Prüfen der Lagerbestände: ${stockError.message}`);
@@ -707,7 +724,7 @@ export default function CheckoutPage() {
       const stockIssues: string[] = [];
       
       for (const cartItem of cartItems) {
-        const product = currentProducts?.find(p => p.id === cartItem.id);
+        const product = currentProducts?.find((p: ProductStock) => p.id === cartItem.id);
         
         if (!product) {
           stockIssues.push(`Produkt "${cartItem.name}" wurde nicht gefunden.`);
@@ -715,10 +732,12 @@ export default function CheckoutPage() {
         }
 
         // Berechne aktuellen Bestand basierend auf Lagerbewegungen
-        const { data: movements, error: movementError } = await supabase
+        const { data: movementsRaw, error: movementError } = await supabase
           .from('inventory_movements')
           .select('movement_type, quantity')
           .eq('product_id', product.id);
+
+        const movements: InventoryMovement[] | null = (movementsRaw as InventoryMovement[] | null);
 
         if (movementError) {
           console.error('Fehler beim Laden der Lagerbewegungen:', movementError);
@@ -729,7 +748,7 @@ export default function CheckoutPage() {
         
         // Berechne aktuellen Bestand aus Bewegungen (genauer)
         if (movements && movements.length > 0) {
-          actualStock = movements.reduce((stock, movement) => {
+          actualStock = movements.reduce((stock: number, movement: InventoryMovement) => {
             if (movement.movement_type === 'in' || movement.movement_type === 'adjustment') {
               return stock + movement.quantity;
             } else if (movement.movement_type === 'out') {
@@ -976,6 +995,25 @@ export default function CheckoutPage() {
       // Clear cart and discount BEFORE redirect for immediate UI feedback
       localStorage.removeItem('cart');
       localStorage.removeItem('appliedDiscount');
+
+      // Enhanced Conversions: speichere Kundendaten kurzzeitig für die Bestätigungsseite
+      try {
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          const ecUserData = {
+            email: deliveryData.email || '',
+            phone: deliveryData.phone || '',
+            first_name: deliveryData.firstName || '',
+            last_name: deliveryData.lastName || '',
+            street: `${deliveryData.street || ''} ${deliveryData.houseNumber || ''}`.trim(),
+            city: deliveryData.city || '',
+            postal_code: deliveryData.postalCode || '',
+            country: 'DE'
+          };
+          window.sessionStorage.setItem('ec_user_data', JSON.stringify(ecUserData));
+        }
+      } catch (e) {
+        console.warn('Enhanced Conversions: SessionStorage nicht verfügbar oder fehlgeschlagen:', e);
+      }
 
       // FRÜHE WEITERLEITUNG - Benutzer sieht sofort die Bestätigungsseite
       router.push(`/bestellbestaetigung?order=${orderNumber}`);

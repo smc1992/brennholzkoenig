@@ -17,41 +17,45 @@ export default function GoogleAdsTracking() {
     if (!consent) return;
 
     const preferences = JSON.parse(consent);
-    if (!preferences.marketing) return;
+    if (!preferences.preferences || !preferences.preferences.marketing) return;
 
-    // Deaktiviert bis gültige Conversion-ID konfiguriert ist
-    // loadGoogleAds();
+    loadGoogleAds();
   }, []);
 
   const loadGoogleAds = async () => {
     try {
-      // Nur laden wenn gültige Conversion-ID vorhanden ist
-      const config = {
-        google_ads_enabled: false,
-        google_ads_conversion_id: '',
-        google_ads_conversion_labels: {
-          purchase: '',
-          lead: '',
-          signup: ''
-        }
-      };
+      // Lade Konfiguration aus API
+      const res = await fetch('/api/google-ads-config');
+      const cfg = await res.json();
 
-      if (!config.google_ads_enabled || !config.google_ads_conversion_id || config.google_ads_conversion_id === 'AW-XXXXXXXXX') return;
+      const conversionId = cfg.google_ads_id as string;
+      const enabled = Boolean(cfg.conversion_tracking);
+
+      if (!enabled || !conversionId || conversionId === 'AW-XXXXXXXXX') return;
 
       // Lade Google Ads Script wenn nicht bereits geladen
-      if (!document.querySelector(`[src*="googleadservices.com/pagead/conversion"]`)) {
-        const adsScript = document.createElement('script');
-        adsScript.async = true;
-        adsScript.src = `https://www.googleadservices.com/pagead/conversion_async.js`;
-        document.head.appendChild(adsScript);
+      // Wenn gtag nicht vorhanden (z.B. Analytics nicht erlaubt), lade gtag mit Ads-ID
+      if (typeof window === 'undefined') return;
+      const hasGtagScript = document.querySelector(`[src*="googletagmanager.com/gtag/js?id=${conversionId}"]`);
+      if (!window.gtag && !hasGtagScript) {
+        const gtagScript = document.createElement('script');
+        gtagScript.async = true;
+        gtagScript.src = `https://www.googletagmanager.com/gtag/js?id=${conversionId}`;
+        document.head.appendChild(gtagScript);
 
-        // Initialisiere Google Ads Tracking
-        window.gtag = window.gtag || function() {
+        window.gtag = function() {
           if (!window.dataLayer) window.dataLayer = [];
           window.dataLayer.push(arguments);
         };
 
-        window.gtag('config', config.google_ads_conversion_id);
+        window.gtag('js', new Date());
+      }
+
+      // Konfiguriere Ads-ID (auch wenn gtag bereits durch GA4 vorhanden ist)
+      if (window.gtag) {
+        window.gtag('config', conversionId, {
+          allow_ad_personalization_signals: false
+        });
       }
     } catch (error) {
       console.error('Fehler beim Laden von Google Ads Tracking:', error);
@@ -73,34 +77,45 @@ export const trackGoogleAdsConversion = (conversionId: string, conversionLabel: 
   }
 };
 
-export const trackGoogleAdsPurchase = (orderId: string, value: number, items: any[]) => {
-  if (typeof window !== 'undefined' && window.gtag) {
-    // Standard Enhanced Ecommerce
-    window.gtag('event', 'purchase', {
-      'send_to': 'AW-XXXXXXXXX/PURCHASE_LABEL', // Wird über Admin konfiguriert
-      'transaction_id': orderId,
-      'value': value,
-      'currency': 'EUR',
-      'items': items.map(item => ({
-        'item_id': item.id,
-        'item_name': item.name,
-        'category': 'Brennholz',
-        'quantity': item.quantity,
-        'price': item.price
-      }))
-    });
+export const trackGoogleAdsPurchase = async (orderId: string, value: number) => {
+  if (typeof window === 'undefined' || !window.gtag) return;
 
-    // Zusätzliche Brennholz-spezifische Conversion
-    window.gtag('event', 'conversion', {
-      'send_to': 'AW-XXXXXXXXX/BRENNHOLZ_ORDER',
-      'value': value,
-      'currency': 'EUR',
-      'custom_parameters': {
-        'wood_type': items[0]?.wood_type || 'mixed',
-        'delivery_region': items[0]?.delivery_region || 'standard',
-        'order_season': new Date().getMonth() < 3 || new Date().getMonth() > 8 ? 'winter' : 'summer'
-      }
-    });
+  // Consent-Gating
+  try {
+    const consentRaw = localStorage.getItem('cookie-consent');
+    const consent = consentRaw ? JSON.parse(consentRaw) : null;
+    if (!consent?.preferences?.marketing) return;
+  } catch {}
+
+  try {
+    const res = await fetch('/api/google-ads-config');
+    const cfg = await res.json();
+    const conversionId: string | undefined = cfg.google_ads_id;
+    const purchaseLabel: string | undefined = cfg.purchase_label;
+    const remarketingEnabled: boolean = Boolean(cfg.remarketing);
+    if (!cfg.conversion_tracking || !conversionId || !purchaseLabel) return;
+
+    // Idempotenz-Guard pro Bestellung
+    const guardKey = `ads-conv-${orderId}`;
+    const alreadySent = window.sessionStorage?.getItem(guardKey) === '1';
+    if (!alreadySent) {
+      window.gtag('event', 'conversion', {
+        send_to: `${conversionId}/${purchaseLabel}`,
+        transaction_id: orderId,
+        value: value || 0,
+        currency: 'EUR'
+      });
+      try { window.sessionStorage?.setItem(guardKey, '1'); } catch {}
+    }
+
+    if (remarketingEnabled) {
+      window.gtag('event', 'page_view', {
+        send_to: `${conversionId}/${purchaseLabel}`,
+        currency: 'EUR'
+      });
+    }
+  } catch (error) {
+    console.warn('Google Ads Purchase Tracking Fehler:', error);
   }
 };
 

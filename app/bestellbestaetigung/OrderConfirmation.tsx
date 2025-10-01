@@ -14,20 +14,153 @@ interface OrderConfirmationProps {
 
 export default function OrderConfirmation({ orderNumber, appliedDiscount }: OrderConfirmationProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const [orderTotals, setOrderTotals] = useState<{ total: number; tax: number; subtotal: number } | null>(null);
+  const [orderItems, setOrderItems] = useState<any[]>([]);
 
   useEffect(() => {
     setIsVisible(true);
     
-    // Track purchase event for Google Analytics
-    if (orderNumber) {
-      trackPurchase(
-        orderNumber, // transactionId
-        0, // value - will be updated with actual order value when available
-        [], // items - will be populated with actual items when order data is available
-        0, // tax
-        0  // shipping
-      );
-    }
+    const fetchAndTrack = async () => {
+      if (!orderNumber) return;
+
+      try {
+        // Lade Bestelldaten (Totals und Items) über vorhandene API
+        const res = await fetch(`/api/invoice-builder?orderId=${encodeURIComponent(orderNumber)}`);
+        const data = await res.json();
+
+        // Mappe Items für Tracking
+        const items = Array.isArray(data.items)
+          ? data.items.map((it: any, idx: number) => ({
+              id: `item-${idx + 1}`,
+              name: it.description || it.product_name || 'Artikel',
+              quantity: Number(it.quantity || 1),
+              price: Number(it.unit_price || it.total_price || 0),
+              category: 'Brennholz'
+            }))
+          : [];
+
+        const total = Number(data.total_amount || 0);
+        const tax = Number(data.tax_amount || 0);
+        const subtotal = Number(data.subtotal_amount || 0);
+
+        setOrderItems(items);
+        setOrderTotals({ total, tax, subtotal });
+
+        // GA4 Purchase mit echten Werten
+        trackPurchase(orderNumber, total, items, tax, 0);
+
+        // Falls Marketing-Cookies erlaubt: Google Ads Conversion mit transaction_id senden
+        const consentRaw = typeof window !== 'undefined' ? localStorage.getItem('cookie-consent') : null;
+        const consent = consentRaw ? JSON.parse(consentRaw) : null;
+        const marketingAllowed = consent?.preferences?.marketing;
+
+        // Lade Google Ads Config aus Supabase (über API)
+        let conversionId: string | undefined;
+        let purchaseLabel: string | undefined;
+        let remarketingEnabled: boolean = false;
+        if (marketingAllowed) {
+          try {
+            const adsRes = await fetch('/api/google-ads-config');
+            const adsCfg = await adsRes.json();
+            if (adsCfg.conversion_tracking && adsCfg.google_ads_id && adsCfg.purchase_label) {
+              conversionId = adsCfg.google_ads_id;
+              purchaseLabel = adsCfg.purchase_label;
+            }
+            remarketingEnabled = Boolean(adsCfg?.remarketing);
+          } catch (err) {
+            console.warn('Google Ads Config konnte nicht geladen werden:', err);
+          }
+        }
+
+        if (typeof window !== 'undefined' && window.gtag && marketingAllowed && conversionId && purchaseLabel) {
+          // Enhanced Conversions: setze gehashte Nutzerdaten aus SessionStorage
+          try {
+            // adsCfg ist weiter oben geladen; Enhanced Conversions nur setzen, wenn aktiviert
+            const rawCfgRes = await fetch('/api/google-ads-config');
+            const cfg = await rawCfgRes.json();
+            if (cfg?.enhanced_conversions) {
+              const raw = typeof window !== 'undefined' ? window.sessionStorage?.getItem('ec_user_data') : null;
+              if (raw) {
+                const user = JSON.parse(raw);
+                const toHex = async (value: string) => {
+                  const norm = (value || '').toLowerCase().trim();
+                  if (!norm) return '';
+                  const bytes = new TextEncoder().encode(norm);
+                  const digest = await crypto.subtle.digest('SHA-256', bytes);
+                  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+                };
+                const [emailH, phoneH, firstH, lastH, streetH, cityH, postalH, countryH] = await Promise.all([
+                  toHex(user.email || ''),
+                  toHex(user.phone || ''),
+                  toHex(user.first_name || ''),
+                  toHex(user.last_name || ''),
+                  toHex(user.street || ''),
+                  toHex(user.city || ''),
+                  toHex(user.postal_code || ''),
+                  toHex(user.country || 'DE')
+                ]);
+                window.gtag('set', 'user_data', {
+                  email: emailH,
+                  phone_number: phoneH,
+                  address: {
+                    first_name: firstH,
+                    last_name: lastH,
+                    street: streetH,
+                    city: cityH,
+                    region: '',
+                    postal_code: postalH,
+                    country: countryH
+                  }
+                });
+                try { window.sessionStorage?.removeItem('ec_user_data'); } catch {}
+              }
+            }
+          } catch (ecErr) {
+            console.warn('Enhanced Conversions konnten nicht gesetzt werden:', ecErr);
+          }
+          const guardKey = `ads-conv-${orderNumber}`;
+          const alreadySent = typeof window.sessionStorage !== 'undefined' && window.sessionStorage.getItem(guardKey) === '1';
+
+          // Conversion-Event für den tatsächlichen Kauf senden (robuste Messung/ROAS)
+          if (!alreadySent) {
+            window.gtag('event', 'conversion', {
+              send_to: `${conversionId}/${purchaseLabel}`,
+              transaction_id: orderNumber,
+              value: total || 0,
+              currency: 'EUR'
+            });
+            try {
+              window.sessionStorage?.setItem(guardKey, '1');
+            } catch {}
+          }
+
+          // Optional: Remarketing Page View, wenn in der Konfiguration aktiviert
+          if (remarketingEnabled) {
+            window.gtag('event', 'page_view', {
+              send_to: `${conversionId}/${purchaseLabel}`,
+              currency: 'EUR'
+            });
+          }
+
+          // Stelle zusätzlich Daten für GTM bereit (optional)
+          if (window.dataLayer) {
+            window.dataLayer.push({
+              event: 'purchase',
+              transaction_id: orderNumber,
+              value: total || 0,
+              tax: tax || 0,
+              currency: 'EUR',
+              items
+            });
+          }
+        }
+      } catch (e) {
+        // Fallback: Keine Ads-Events ohne gültige Konfiguration senden
+        console.warn('OrderConfirmation Tracking Fehler – Ads-Event übersprungen:', e);
+      }
+    };
+
+    fetchAndTrack();
   }, [orderNumber]);
 
   return (
