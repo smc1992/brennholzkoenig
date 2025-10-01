@@ -175,15 +175,15 @@ export default function HeroSection() {
                 className="min-w-0 truncate"
               />
             </button>
-            <Link href="/kontakt" className="bg-white text-[#C04020] px-6 sm:px-10 py-5 sm:py-6 text-base sm:text-xl font-black rounded-2xl hover:bg-gray-50 transition-all duration-300 cursor-pointer shadow-2xl border-2 border-[#C04020] transform hover:scale-105 w-full sm:w-auto inline-flex items-center justify-center min-w-0">
+            <Link href="/shop" className="bg-white text-[#C04020] px-6 sm:px-10 py-5 sm:py-6 text-base sm:text-xl font-black rounded-2xl hover:bg-gray-50 transition-all duration-300 cursor-pointer shadow-2xl border-2 border-[#C04020] transform hover:scale-105 w-full sm:w-auto inline-flex items-center justify-center min-w-0">
               <div className="w-7 h-7 sm:w-6 sm:h-6 inline-flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
-                <i className="ri-phone-fill text-lg sm:text-xl"></i>
+                <i className="ri-shopping-cart-line text-lg sm:text-xl"></i>
               </div>
               <DynamicContent 
                 page="home" 
                 section="hero" 
                 contentType="button_secondary"
-                fallback="KOSTENLOSE BERATUNG"
+                fallback="ZUM SHOP"
                 tag="span"
                 className="min-w-0 truncate"
               />
