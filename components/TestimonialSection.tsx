@@ -3,24 +3,52 @@
 
 import { CityButton } from '@/components/ui/CityButton';
 
-interface TestimonialSectionProps {
-  cityData?: any;
+interface TestimonialReview {
+  id: string;
+  name: string;
+  initials: string;
+  role: string;
+  order_info: string;
+  rating: number;
+  review: string;
+  date: string;
+  verified: boolean;
 }
 
-export default function TestimonialSection({ cityData }: TestimonialSectionProps) {
+interface TestimonialSectionProps {
+  cityData?: any;
+  badgeText?: string;
+  title?: string;
+  description?: string;
+  reviews?: TestimonialReview[];
+}
+
+export default function TestimonialSection({ 
+  cityData,
+  badgeText = "ECHTE KUNDENSTIMMEN",
+  title = "DAS SAGEN UNSERE KUNDEN",
+  description = "Über 6.847 zufriedene Familien heizen bereits mit unserem Premium-Brennholz. Lesen Sie echte Bewertungen von verified Kunden.",
+  reviews = []
+}: TestimonialSectionProps) {
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-b from-white to-[#F5F0E0]">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         <div className="text-center mb-12 sm:mb-16 lg:mb-20">
           <div className="inline-flex items-center bg-[#D4A520] text-[#1A1A1A] px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-sm sm:text-base mb-6 sm:mb-8">
             <i className="ri-star-line mr-2"></i>
-            ECHTE KUNDENSTIMMEN
+            {badgeText}
           </div>
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-[#1A1A1A] mb-4 sm:mb-6" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-            DAS SAGEN UNSERE <span className="text-[#C04020]">KUNDEN</span>
+            {title.includes('KUNDEN') ? (
+              <>
+                {title.split('KUNDEN')[0]}<span className="text-[#C04020]">KUNDEN</span>
+              </>
+            ) : (
+              title
+            )}
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-gray-700 max-w-4xl mx-auto leading-relaxed mb-8 sm:mb-12" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-            Über <strong className="text-[#C04020]">6.847 zufriedene Familien</strong> heizen bereits mit unserem Premium-Brennholz. Lesen Sie echte Bewertungen von verified Kunden.
+            {description}
           </p>
           {/* Kunden Ambiente Bild */}
           <div className="max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-2xl mb-8 sm:mb-12">
@@ -33,84 +61,120 @@ export default function TestimonialSection({ cityData }: TestimonialSectionProps
         </div>
         {/* Testimonials Grid - Mobile optimiert */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 max-w-7xl mx-auto mb-8 sm:mb-12 lg:mb-16">
-          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100">
-            <div className="flex items-start mb-4 sm:mb-6">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#C04020] rounded-full flex items-center justify-center text-white font-bold mr-4 flex-shrink-0">
-                MH
-              </div>
-              <div className="min-w-0">
-                <h4 className="font-black text-[#1A1A1A] text-base sm:text-lg">Markus Hoffmann</h4>
-                <p className="text-xs sm:text-sm text-gray-600">Hausbesitzer • 8 SRM bestellt</p>
-                <div className="flex mt-1">
-                  {[...Array(5)].map((_, i) => (
-                    <i key={i} className="ri-star-fill text-[#D4A520] text-sm sm:text-base"></i>
-                  ))}
+          {reviews.length > 0 ? (
+            reviews.slice(0, 3).map((review, index) => (
+              <div key={review.id} className="bg-white rounded-2xl p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100">
+                <div className="flex items-start mb-4 sm:mb-6">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#C04020] rounded-full flex items-center justify-center text-white font-bold mr-4 flex-shrink-0">
+                    {review.initials}
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-black text-[#1A1A1A] text-base sm:text-lg">{review.name}</h4>
+                    <p className="text-xs sm:text-sm text-gray-600">{review.role} • {review.order_info}</p>
+                    <div className="flex mt-1">
+                      {[...Array(review.rating)].map((_, i) => (
+                        <i key={i} className="ri-star-fill text-[#D4A520] text-sm sm:text-base"></i>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <blockquote className="text-sm sm:text-base text-gray-700 italic mb-4 sm:mb-6 leading-relaxed">
+                  "{review.review}"
+                </blockquote>
+                <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500">
+                  <span>{review.date}</span>
+                  {review.verified && (
+                    <span className="flex items-center text-green-600 font-medium">
+                      <i className="ri-check-line mr-1"></i>
+                      Verifiziert
+                    </span>
+                  )}
                 </div>
               </div>
-            </div>
-            <blockquote className="text-sm sm:text-base text-gray-700 italic mb-4 sm:mb-6 leading-relaxed">
-              "Endlich kein Dreck mehr in der Wohnung! Das Industrieholz ist so sauber und gleichmäßig. Meine Frau ist begeistert - keine Rinde, kein Schmutz, aber trotzdem 1.200€ weniger als vorher."
-            </blockquote>
-            <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500">
-              <span>Vor 3 Wochen</span>
-              <span className="flex items-center text-green-600 font-medium">
-                <i className="ri-check-line mr-1"></i>
-                Verifiziert
-              </span>
-            </div>
-          </div>
-          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100">
-            <div className="flex items-start mb-4 sm:mb-6">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#C04020] rounded-full flex items-center justify-center text-white font-bold mr-4 flex-shrink-0">
-                SK
-              </div>
-              <div className="min-w-0">
-                <h4 className="font-black text-[#1A1A1A] text-base sm:text-lg">Sarah Klein</h4>
-                <p className="text-xs sm:text-sm text-gray-600">Pensionärin • 5 SRM bestellt</p>
-                <div className="flex mt-1">
-                  {[...Array(5)].map((_, i) => (
-                    <i key={i} className="ri-star-fill text-[#D4A520] text-sm sm:text-base"></i>
-                  ))}
+            ))
+          ) : (
+            // Fallback zu statischen Testimonials wenn keine dynamischen Daten vorhanden
+            <>
+              <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100">
+                <div className="flex items-start mb-4 sm:mb-6">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#C04020] rounded-full flex items-center justify-center text-white font-bold mr-4 flex-shrink-0">
+                    MH
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-black text-[#1A1A1A] text-base sm:text-lg">Markus Hoffmann</h4>
+                    <p className="text-xs sm:text-sm text-gray-600">Hausbesitzer • 8 SRM bestellt</p>
+                    <div className="flex mt-1">
+                      {[...Array(5)].map((_, i) => (
+                        <i key={i} className="ri-star-fill text-[#D4A520] text-sm sm:text-base"></i>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <blockquote className="text-sm sm:text-base text-gray-700 italic mb-4 sm:mb-6 leading-relaxed">
+                  "Endlich kein Dreck mehr in der Wohnung! Das Industrieholz ist so sauber und gleichmäßig. Meine Frau ist begeistert - keine Rinde, kein Schmutz, aber trotzdem 1.200€ weniger als vorher."
+                </blockquote>
+                <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500">
+                  <span>Vor 3 Wochen</span>
+                  <span className="flex items-center text-green-600 font-medium">
+                    <i className="ri-check-line mr-1"></i>
+                    Verifiziert
+                  </span>
                 </div>
               </div>
-            </div>
-            <blockquote className="text-sm sm:text-base text-gray-700 italic mb-4 sm:mb-6 leading-relaxed">
-              "Mit 73 Jahren ist mir das Holz schleppen schwer geworden. Diese rechteckigen Stücke lassen sich so viel einfacher stapeln und tragen. Und ich spare 900€ pro Winter!"
-            </blockquote>
-            <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500">
-              <span>Vor 5 Tagen</span>
-              <span className="flex items-center text-green-600 font-medium">
-                <i className="ri-check-line mr-1"></i>
-                Verifiziert
-              </span>
-            </div>
-          </div>
-          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 md:col-span-2 lg:col-span-1">
-            <div className="flex items-start mb-4 sm:mb-6">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#C04020] rounded-full flex items-center justify-center text-white font-bold mr-4 flex-shrink-0">
-                TB
-              </div>
-              <div className="min-w-0">
-                <h4 className="font-black text-[#1A1A1A] text-base sm:text-lg">Thomas Bauer</h4>
-                <p className="text-xs sm:text-sm text-gray-600">Landwirt • 12 SRM bestellt</p>
-                <div className="flex mt-1">
-                  {[...Array(5)].map((_, i) => (
-                    <i key={i} className="ri-star-fill text-[#D4A520] text-sm sm:text-base"></i>
-                  ))}
+              <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100">
+                <div className="flex items-start mb-4 sm:mb-6">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#C04020] rounded-full flex items-center justify-center text-white font-bold mr-4 flex-shrink-0">
+                    SK
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-black text-[#1A1A1A] text-base sm:text-lg">Sarah Klein</h4>
+                    <p className="text-xs sm:text-sm text-gray-600">Pensionärin • 5 SRM bestellt</p>
+                    <div className="flex mt-1">
+                      {[...Array(5)].map((_, i) => (
+                        <i key={i} className="ri-star-fill text-[#D4A520] text-sm sm:text-base"></i>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <blockquote className="text-sm sm:text-base text-gray-700 italic mb-4 sm:mb-6 leading-relaxed">
+                  "Mit 73 Jahren ist mir das Holz schleppen schwer geworden. Diese rechteckigen Stücke lassen sich so viel einfacher stapeln und tragen. Und ich spare 900€ pro Winter!"
+                </blockquote>
+                <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500">
+                  <span>Vor 5 Tagen</span>
+                  <span className="flex items-center text-green-600 font-medium">
+                    <i className="ri-check-line mr-1"></i>
+                    Verifiziert
+                  </span>
                 </div>
               </div>
-            </div>
-            <blockquote className="text-sm sm:text-base text-gray-700 italic mb-4 sm:mb-6 leading-relaxed">
-              "Ich heize 3 Gebäude und brauche viel Holz. Dieses Industrieholz brennt genauso gut wie teures Buchenholz, kostet aber die Hälfte. Wirtschaftlich unschlagbar!"
-            </blockquote>
-            <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500">
-              <span>Vor 1 Woche</span>
-              <span className="flex items-center text-green-600 font-medium">
-                <i className="ri-check-line mr-1"></i>
-                Verifiziert
-              </span>
-            </div>
-          </div>
+              <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 md:col-span-2 lg:col-span-1">
+                <div className="flex items-start mb-4 sm:mb-6">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#C04020] rounded-full flex items-center justify-center text-white font-bold mr-4 flex-shrink-0">
+                    TB
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-black text-[#1A1A1A] text-base sm:text-lg">Thomas Bauer</h4>
+                    <p className="text-xs sm:text-sm text-gray-600">Landwirt • 12 SRM bestellt</p>
+                    <div className="flex mt-1">
+                      {[...Array(5)].map((_, i) => (
+                        <i key={i} className="ri-star-fill text-[#D4A520] text-sm sm:text-base"></i>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <blockquote className="text-sm sm:text-base text-gray-700 italic mb-4 sm:mb-6 leading-relaxed">
+                  "Ich heize 3 Gebäude und brauche viel Holz. Dieses Industrieholz brennt genauso gut wie teures Buchenholz, kostet aber die Hälfte. Wirtschaftlich unschlagbar!"
+                </blockquote>
+                <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500">
+                  <span>Vor 1 Woche</span>
+                  <span className="flex items-center text-green-600 font-medium">
+                    <i className="ri-check-line mr-1"></i>
+                    Verifiziert
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
         {/* Weitere Testimonials für Mobile */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-4xl mx-auto mb-8 sm:mb-12">
@@ -212,7 +276,7 @@ export default function TestimonialSection({ cityData }: TestimonialSectionProps
                 <CityButton
                   type="testimonial"
                   cityData={cityData}
-                  className="bg-white text-[#C04020] px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base lg:text-lg hover:bg-gray-100 transition-all duration-300 whitespace-nowrap cursor-pointer shadow-2xl transform hover:scale-105 w-full sm:w-auto border-2 border-white inline-block text-center"
+                  className="testimonial-button-override px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base lg:text-lg transition-all duration-300 whitespace-nowrap cursor-pointer shadow-2xl transform hover:scale-105 w-full sm:w-auto inline-block text-center"
                 >
                   <i className="ri-award-line mr-2 sm:mr-3"></i>
                   <span className="hidden sm:inline">{cityData?.testimonial_cta_text || 'Jetzt Premium-Qualität bestellen'}</span>

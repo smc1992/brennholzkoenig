@@ -301,7 +301,7 @@ export default function SMTPSettingsTab() {
       message += `🛡️ DMARC: ${dmarcResult.valid ? '✅ Gültig' : '❌ Nicht gefunden'}\n\n`;
       message += `📊 Zustellbarkeits-Score: ${scoreData.score}% (${scoreData.rating})`;
 
-      if (scoreData.recommendations.length > 0) {
+      if (scoreData.recommendations && Array.isArray(scoreData.recommendations) && scoreData.recommendations.length > 0) {
         message += `\n\n💡 Empfehlungen:\n${scoreData.recommendations.join('\n')}`;
       }
 

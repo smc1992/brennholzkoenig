@@ -4,7 +4,79 @@
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 
-export default function QualifierSection() {
+interface QualifierItem {
+  id: string;
+  title: string;
+  description: string;
+}
+
+interface QualifierSectionProps {
+  badgeText?: string;
+  title?: string;
+  description?: string;
+  suitableFor?: QualifierItem[];
+  notSuitableFor?: QualifierItem[];
+}
+
+export default function QualifierSection({
+  badgeText = "EHRLICHE BERATUNG",
+  title = "IST UNSER INDUSTRIEHOLZ DAS RICHTIGE FÜR SIE?",
+  description = "Wir sind ehrlich zu unseren Kunden. Unser Premium-Industrieholz ist nicht für jeden geeignet. Prüfen Sie hier, ob es zu Ihren Bedürfnissen passt.",
+  suitableFor = [
+    {
+      id: "1",
+      title: "Sauberkeitsfanatiker",
+      description: "Sie wollen KEIN DRECK IN DER WOHNUNG und schätzen sauberes Holz ohne Rinde und Schmutz"
+    },
+    {
+      id: "2", 
+      title: "Praktische & nachhaltige Menschen",
+      description: "Sie verstehen, dass Möbelholz mit kleinen Fehlern genauso gut brennt wie perfektes Holz"
+    },
+    {
+      id: "3",
+      title: "Sparfüchse", 
+      description: "Sie wollen bis zu 1.900€ pro Winter sparen ohne Qualitätsverlust beim Heizen"
+    },
+    {
+      id: "4",
+      title: "Handlichkeitsliebhaber",
+      description: "Sie wollen rechteckige Stücke, die viel handlicher und einfacher zu stapeln sind"
+    },
+    {
+      id: "5",
+      title: "Platzsparliebhaber",
+      description: "Ca. 50% weniger Platzbedarf beim Stapeln von Industrieholz"
+    }
+  ],
+  notSuitableFor = [
+    {
+      id: "1",
+      title: "Optik-Perfektionisten",
+      description: "Sie brauchen schön aussehende Scheite für repräsentative Kamine (→ nehmen Sie unser Scheitholz)"
+    },
+    {
+      id: "2",
+      title: "Zentrale Holzvergaserheizungen", 
+      description: "Bei modernen Holzvergasern kann es durch das Industrieholz zu einer zu hohen Hitzeentwicklung kommen."
+    },
+    {
+      id: "3",
+      title: "Spezielle Größenanforderungen",
+      description: "Ihr Ofen braucht sehr spezifische Holzmaße (→ unser Scheitholz in 25cm/33cm ist besser)"
+    },
+    {
+      id: "4",
+      title: "Traditionalisten",
+      description: "Sie setzen auf Althergebrachtes und möchten nichts Neues wagen (→ bleiben Sie bei bewährtem Scheitholz)"
+    },
+    {
+      id: "5",
+      title: "Anfänger ohne Erfahrung",
+      description: "Sie haben noch nie mit Industrieholz geheizt (→ starten Sie zum Testen mit 3,5 SRM Industrieholz + 3,5 SRM Buche)"
+    }
+  ]
+}: QualifierSectionProps) {
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -30,14 +102,19 @@ export default function QualifierSection() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         <div className="text-center mb-8 sm:mb-12 lg:mb-16">
           <div className="inline-flex items-center bg-[#C04020] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-sm sm:text-base mb-4 sm:mb-6">
-            <span className="whitespace-nowrap">EHRLICHE BERATUNG</span>
+            <span className="whitespace-nowrap">{badgeText}</span>
           </div>
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-[#1A1A1A] mb-4 sm:mb-6 leading-tight" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-            IST UNSER <span className="text-[#C04020]">INDUSTRIEHOLZ</span> DAS RICHTIGE FÜR SIE?
+            {title.includes('INDUSTRIEHOLZ') ? (
+              <>
+                {title.split('INDUSTRIEHOLZ')[0]}<span className="text-[#C04020]">INDUSTRIEHOLZ</span>{title.split('INDUSTRIEHOLZ')[1]}
+              </>
+            ) : (
+              title
+            )}
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-gray-700 max-w-4xl mx-auto leading-relaxed px-4" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-            Wir sind ehrlich zu unseren Kunden. Unser Premium-Industrieholz ist nicht für jeden geeignet. 
-            Prüfen Sie hier, ob es zu Ihren Bedürfnissen passt.
+            {description}
           </p>
         </div>
 
@@ -58,46 +135,21 @@ export default function QualifierSection() {
               </div>
 
               <div className="space-y-3 sm:space-y-4 lg:space-y-6">
-                {[{
-                  icon: 'ri-home-line',
-                  title: 'Sauberkeitsfanatiker',
-                  desc: 'Sie wollen KEIN DRECK IN DER WOHNUNG und schätzen sauberes Holz ohne Rinde und Schmutz',
-                  delay: 400
-                },
-                {
-                  icon: 'ri-hammer-line',
-                  title: 'Praktische & nachhaltige Menschen',
-                  desc: 'Sie verstehen, dass Möbelholz mit kleinen Fehlern genauso gut brennt wie perfektes Holz',
-                  delay: 600
-                },
-                {
-                  icon: 'ri-money-euro-circle-line',
-                  title: 'Sparfüchse',
-                  desc: 'Sie wollen bis zu 1.900€ pro Winter sparen ohne Qualitätsverlust beim Heizen',
-                  delay: 800
-                },
-                {
-                  icon: 'ri-hand-coin-line',
-                  title: 'Handlichkeitsliebhaber',
-                    desc: 'Sie wollen rechteckige Stücke, die viel handlicher und einfacher zu stapeln sind',
-                  delay: 1200
-                },
-                {
-                  icon: 'ri-stack-line',
-                  title: 'Platzsparliebhaber',
-                    desc: 'Ca. 50% weniger Platzbedarf beim Stapeln von Industrieholz',
-                  delay: 1200
-                }].map((item, index) => (
-                  <div key={index} className="flex items-start bg-white rounded-lg p-3 sm:p-4 shadow-sm">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center bg-[#D4A520] rounded-full mr-3 sm:mr-4 flex-shrink-0 mt-0.5">
-                      <i className={`${item.icon} text-white text-xs sm:text-sm`}></i>
+                {suitableFor.map((item, index) => {
+                  const icons = ['ri-home-line', 'ri-hammer-line', 'ri-money-euro-circle-line', 'ri-hand-coin-line', 'ri-stack-line'];
+                  const icon = icons[index % icons.length];
+                  return (
+                    <div key={item.id} className="flex items-start bg-white rounded-lg p-3 sm:p-4 shadow-sm">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center bg-[#D4A520] rounded-full mr-3 sm:mr-4 flex-shrink-0 mt-0.5">
+                        <i className={`${icon} text-white text-xs sm:text-sm`}></i>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-bold text-[#1A1A1A] mb-1 text-sm sm:text-base leading-tight">{item.title}</h4>
+                        <p className="text-xs sm:text-sm text-[#666] leading-relaxed">{item.description}</p>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-bold text-[#1A1A1A] mb-1 text-sm sm:text-base leading-tight">{item.title}</h4>
-                      <p className="text-xs sm:text-sm text-[#666] leading-relaxed">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -116,46 +168,21 @@ export default function QualifierSection() {
               </div>
 
               <div className="space-y-3 sm:space-y-4 lg:space-y-6">
-                 {[{
-                   icon: 'ri-eye-line',
-                   title: 'Optik-Perfektionisten',
-                   desc: 'Sie brauchen schön aussehende Scheite für repräsentative Kamine (→ nehmen Sie unser Scheitholz)',
-                   delay: 600
-                 },
-                 {
-                   icon: 'ri-fire-fill',
-                   title: 'Zentrale Holzvergaserheizungen',
-                     desc: 'Bei modernen Holzvergasern kann es durch das Industrieholz zu einer zu hohen Hitzeentwicklung kommen.',
-                   delay: 800
-                 },
-                 {
-                   icon: 'ri-ruler-line',
-                   title: 'Spezielle Größenanforderungen',
-                   desc: 'Ihr Ofen braucht sehr spezifische Holzmaße (→ unser Scheitholz in 25cm/33cm ist besser)',
-                   delay: 900
-                 },
-                 {
-                   icon: 'ri-time-line',
-                   title: 'Traditionalisten',
-                   desc: 'Sie setzen auf Althergebrachtes und möchten nichts Neues wagen (→ bleiben Sie bei bewährtem Scheitholz)',
-                   delay: 1000
-                 },
-                {
-                  icon: 'ri-seedling-line',
-                  title: 'Anfänger ohne Erfahrung',
-                  desc: 'Sie haben noch nie mit Industrieholz geheizt (→ starten Sie zum Testen mit 3,5 SRM Industrieholz + 3,5 SRM Buche)',
-                  delay: 1400
-                }].map((item, index) => (
-                  <div key={index} className="flex items-start bg-white rounded-lg p-3 sm:p-4 shadow-sm">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center bg-red-500 rounded-full mr-3 sm:mr-4 flex-shrink-0 mt-0.5">
-                      <i className={`${item.icon} text-white text-xs sm:text-sm`}></i>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-bold text-red-800 mb-1 text-sm sm:text-base leading-tight">{item.title}</h4>
-                      <p className="text-xs sm:text-sm text-red-700 leading-relaxed">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
+                {notSuitableFor.map((item, index) => {
+                   const icons = ['ri-eye-line', 'ri-fire-fill', 'ri-ruler-line', 'ri-time-line', 'ri-seedling-line'];
+                   const icon = icons[index % icons.length];
+                   return (
+                     <div key={item.id} className="flex items-start bg-white rounded-lg p-3 sm:p-4 shadow-sm">
+                       <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center bg-red-500 rounded-full mr-3 sm:mr-4 flex-shrink-0 mt-0.5">
+                         <i className={`${icon} text-white text-xs sm:text-sm`}></i>
+                       </div>
+                       <div className="min-w-0 flex-1">
+                         <h4 className="font-bold text-red-800 mb-1 text-sm sm:text-base leading-tight">{item.title}</h4>
+                         <p className="text-xs sm:text-sm text-red-700 leading-relaxed">{item.description}</p>
+                       </div>
+                     </div>
+                   );
+                 })}
               </div>
             </div>
           </div>

@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import CityHeroSection from '@/components/CityHeroSection';
 import USPSection from '@/components/USPSection';
-import QualifierSection from '@/components/QualifierSection';
+import LocalServiceSection from '@/components/LocalServiceSection';
 import TrustSection from '@/components/TrustSection';
 import TestimonialSection from '@/components/TestimonialSection';
 import CostCalculatorSection from '@/components/CostCalculatorSection';
@@ -37,12 +37,17 @@ interface CityPage {
   hero_subtitle: string;
   hero_image_url?: string;
   city_image_url?: string;
+  content_section_1_main_title?: string;
+  content_section_1_subtitle?: string;
   content_section_1_title?: string;
-  content_section_1_text?: string;
+  content_section_1_content?: string;
+  content_section_1_image_url?: string;
   content_section_2_title?: string;
-  content_section_2_text?: string;
+  content_section_2_content?: string;
+  content_section_2_image_url?: string;
   content_section_3_title?: string;
-  content_section_3_text?: string;
+  content_section_3_content?: string;
+  content_section_3_image_url?: string;
   local_keywords: string[];
   postal_codes: string[];
   service_areas?: string[];
@@ -54,6 +59,26 @@ interface CityPage {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  // Lokale Service-Sektion Felder
+  local_service_title?: string;
+  local_service_subtitle?: string;
+  local_service_description?: string;
+  local_service_areas?: Array<{
+    name: string;
+    category: string;
+    title: string;
+    description: string;
+    badge: string;
+    cta_text: string;
+  }>;
+  local_service_expertise_title?: string;
+  local_service_expertise_description?: string;
+  local_service_expertise_benefits?: Array<{
+    title: string;
+    description: string;
+  }>;
+  local_service_rooted_title?: string;
+  local_service_rooted_description?: string;
   // Local SEO Fields - Editierbare Inhalte
   local_faqs?: {
     id: string;
@@ -123,17 +148,19 @@ export default function CityLandingPage() {
             hero_subtitle: 'Hochwertige Kaminholz-Lieferung direkt zu Ihnen nach Hause',
             hero_image_url: '/images/brennholz-hero.jpg',
             city_image_url: '/images/berlin-city.jpg',
+            content_section_1_main_title: 'Lokale Expertise für {city_name}',
+            content_section_1_subtitle: 'Entdecken Sie die Tradition und Qualität unseres regionalen Brennholzes in {city_name} und Umgebung',
             content_section_1_title: 'Brennholz Berlin - Ihre lokale Quelle für Premium Kaminholz',
-            content_section_1_text: '<p>Als führender Brennholz-Lieferant in Berlin bieten wir Ihnen hochwertiges, kammergetrocknetes Kaminholz direkt vor Ihre Haustür. Unsere langjährige Erfahrung und unser Engagement für Qualität machen uns zur ersten Wahl für Berliner Haushalte.</p><p>Ob für gemütliche Abende am Kamin oder als zuverlässige Heizquelle - unser Brennholz erfüllt höchste Qualitätsstandards und wird nachhaltig aus regionalen Wäldern gewonnen.</p>',
+            content_section_1_content: '<p>Als führender Brennholz-Lieferant in Berlin bieten wir Ihnen hochwertiges, kammergetrocknetes Kaminholz direkt vor Ihre Haustür. Unsere langjährige Erfahrung und unser Engagement für Qualität machen uns zur ersten Wahl für Berliner Haushalte.</p><p>Ob für gemütliche Abende am Kamin oder als zuverlässige Heizquelle - unser Brennholz erfüllt höchste Qualitätsstandards und wird nachhaltig aus regionalen Wäldern gewonnen.</p>',
             content_section_2_title: 'Warum Brennholzkönig in Berlin wählen?',
-            content_section_2_text: '<p>✓ Schnelle Lieferung in alle Berliner Bezirke<br>✓ Kammergetrocknetes Holz mit unter 20% Restfeuchte<br>✓ Nachhaltige Forstwirtschaft aus der Region<br>✓ Faire Preise ohne versteckte Kosten<br>✓ Professionelle Beratung und Service</p>',
+            content_section_2_content: '<p>✓ Schnelle Lieferung in alle Berliner Bezirke<br>✓ Kammergetrocknetes Holz mit unter 20% Restfeuchte<br>✓ Nachhaltige Forstwirtschaft aus der Region<br>✓ Faire Preise ohne versteckte Kosten<br>✓ Professionelle Beratung und Service</p>',
             local_keywords: ['Brennholz Berlin', 'Kaminholz Berlin', 'Holz Lieferung Berlin', 'Feuerholz Berlin', 'Brennholz kaufen Berlin'],
             postal_codes: ['10115', '10117', '10119', '10178', '10179', '10435', '10437', '10439', '10551', '10553', '10555', '10557', '10559', '10585', '10587', '10589', '10623', '10625', '10627', '10629', '10707', '10709', '10711', '10713', '10715', '10717', '10719', '10777', '10779', '10781', '10783', '10785', '10787', '10789', '10823', '10825', '10827', '10829', '10961', '10963', '10965', '10967', '10969', '10997', '10999'],
             service_areas: ['Mitte', 'Friedrichshain-Kreuzberg', 'Pankow', 'Charlottenburg-Wilmersdorf', 'Spandau', 'Steglitz-Zehlendorf', 'Tempelhof-Schöneberg', 'Neukölln', 'Treptow-Köpenick', 'Marzahn-Hellersdorf', 'Lichtenberg', 'Reinickendorf'],
             contact_phone: '+49 30 12345678',
             contact_email: 'berlin@brennholz-koenig.de',
             contact_address: 'Musterstraße 123, 10115 Berlin',
-            delivery_info: 'Kostenlose Lieferung ab 50€ Bestellwert in ganz Berlin. Lieferzeit: 2-3 Werktage.',
+            delivery_info: 'Zuverlässige Lieferung in ganz Berlin (42,50€ Liefergebühr). Lieferzeit: 2-3 Werktage.',
             special_offers: 'Neukunden erhalten 10% Rabatt auf die erste Bestellung!',
             is_active: true,
             created_at: new Date().toISOString(),
@@ -149,17 +176,19 @@ export default function CityLandingPage() {
             hero_subtitle: 'Hochwertige Kaminholz-Lieferung direkt zu Ihnen nach Hause',
             hero_image_url: '/images/brennholz-hero.jpg',
             city_image_url: '/images/muenchen-city.jpg',
+            content_section_1_main_title: 'Lokale Expertise für {city_name}',
+            content_section_1_subtitle: 'Entdecken Sie die Tradition und Qualität unseres regionalen Brennholzes in {city_name} und Umgebung',
             content_section_1_title: 'Brennholz München - Ihre lokale Quelle für Premium Kaminholz',
-            content_section_1_text: '<p>Als führender Brennholz-Lieferant in München bieten wir Ihnen hochwertiges, kammergetrocknetes Kaminholz direkt vor Ihre Haustür. Unsere langjährige Erfahrung und unser Engagement für Qualität machen uns zur ersten Wahl für Münchener Haushalte.</p><p>Ob für gemütliche Abende am Kamin oder als zuverlässige Heizquelle - unser Brennholz erfüllt höchste Qualitätsstandards und wird nachhaltig aus bayerischen Wäldern gewonnen.</p>',
+            content_section_1_content: '<p>Als führender Brennholz-Lieferant in München bieten wir Ihnen hochwertiges, kammergetrocknetes Kaminholz direkt vor Ihre Haustür. Unsere langjährige Erfahrung und unser Engagement für Qualität machen uns zur ersten Wahl für Münchener Haushalte.</p><p>Ob für gemütliche Abende am Kamin oder als zuverlässige Heizquelle - unser Brennholz erfüllt höchste Qualitätsstandards und wird nachhaltig aus bayerischen Wäldern gewonnen.</p>',
             content_section_2_title: 'Warum Brennholzkönig in München wählen?',
-            content_section_2_text: '<p>✓ Schnelle Lieferung in alle Münchener Stadtteile<br>✓ Kammergetrocknetes Holz mit unter 20% Restfeuchte<br>✓ Nachhaltige Forstwirtschaft aus Bayern<br>✓ Faire Preise ohne versteckte Kosten<br>✓ Professionelle Beratung und Service</p>',
+            content_section_2_content: '<p>✓ Schnelle Lieferung in alle Münchener Stadtteile<br>✓ Kammergetrocknetes Holz mit unter 20% Restfeuchte<br>✓ Nachhaltige Forstwirtschaft aus Bayern<br>✓ Faire Preise ohne versteckte Kosten<br>✓ Professionelle Beratung und Service</p>',
             local_keywords: ['Brennholz München', 'Kaminholz München', 'Holz Lieferung München', 'Feuerholz München', 'Brennholz kaufen München'],
             postal_codes: ['80331', '80333', '80335', '80336', '80337', '80339', '80469', '80538', '80539', '80634', '80636', '80637', '80638', '80639', '80687', '80689', '80796', '80797', '80798', '80799', '80801', '80802', '80803', '80804', '80805', '80807', '80809', '80933', '80935', '80937', '80939', '80992', '80993', '80995', '80997', '81241', '81243', '81245', '81247', '81249', '81369', '81371', '81373', '81375', '81377', '81379', '81475', '81476', '81477', '81479', '81539', '81541', '81543', '81545', '81547', '81549', '81667', '81669', '81671', '81673', '81675', '81677', '81679', '81735', '81737', '81739', '81825', '81827', '81829', '81925', '81927', '81929'],
             service_areas: ['Altstadt-Lehel', 'Ludwigsvorstadt-Isarvorstadt', 'Maxvorstadt', 'Schwabing-West', 'Au-Haidhausen', 'Sendling', 'Sendling-Westpark', 'Schwanthalerhöhe', 'Neuhausen-Nymphenburg', 'Moosach', 'Milbertshofen-Am Hart', 'Schwabing-Freimann', 'Bogenhausen', 'Berg am Laim', 'Trudering-Riem', 'Ramersdorf-Perlach', 'Obergiesing-Fasangarten', 'Untergiesing-Harlaching', 'Thalkirchen-Obersendling-Forstenried-Fürstenried-Solln', 'Hadern', 'Pasing-Obermenzing', 'Aubing-Lochhausen-Langwied', 'Allach-Untermenzing', 'Feldmoching-Hasenbergl', 'Laim'],
             contact_phone: '+49 89 12345678',
             contact_email: 'muenchen@brennholz-koenig.de',
             contact_address: 'Musterstraße 456, 80331 München',
-            delivery_info: 'Kostenlose Lieferung ab 50€ Bestellwert in ganz München. Lieferzeit: 2-3 Werktage.',
+            delivery_info: 'Zuverlässige Lieferung in ganz München (42,50€ Liefergebühr). Lieferzeit: 2-3 Werktage.',
             special_offers: 'Neukunden erhalten 10% Rabatt auf die erste Bestellung!',
             is_active: true,
             created_at: new Date().toISOString(),
@@ -233,7 +262,7 @@ export default function CityLandingPage() {
       <div className="min-h-screen bg-pergament flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-primary-700 text-lg">Seite wird geladen...</p>
+          <p className="text-gray-700 text-lg">Seite wird geladen...</p>
         </div>
       </div>
     );
@@ -333,15 +362,15 @@ export default function CityLandingPage() {
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold text-primary-700 mb-6">
-                  Lokale Expertise für {cityPage.city_name}
+                  {cityPage.content_section_1_main_title?.replace('{city_name}', cityPage.city_name) || `Lokale Expertise für ${cityPage.city_name}`}
                 </h2>
                 <p className="text-xl text-wood-800 max-w-3xl mx-auto">
-                  Entdecken Sie die Tradition und Qualität unseres regionalen Brennholzes in {cityPage.city_name} und Umgebung
+                  {cityPage.content_section_1_subtitle?.replace('{city_name}', cityPage.city_name) || `Entdecken Sie die Tradition und Qualität unseres regionalen Brennholzes in ${cityPage.city_name} und Umgebung`}
                 </p>
               </div>
             
             {/* Content Section 1 mit Stadtbild */}
-            {cityPage.content_section_1_text && (
+            {cityPage.content_section_1_content && (
               <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
                 {/* Text Links */}
                 <div className="bg-white rounded-2xl shadow-lg p-8 lg:p-12">
@@ -356,12 +385,12 @@ export default function CityLandingPage() {
                       />
                     </h3>
                   )}
-                  <div className="prose prose-lg max-w-none text-primary-700 leading-relaxed">
+                  <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
                     <LocalContentEnhancer
                       cityName={cityPage.city_name}
                       postalCodes={cityPage.postal_codes}
                       serviceAreas={cityPage.service_areas}
-                      originalContent={cityPage.content_section_1_text || ''}
+                      originalContent={cityPage.content_section_1_content || ''}
                       contentType="text"
                     />
                   </div>
@@ -404,8 +433,19 @@ export default function CityLandingPage() {
         {/* USP Section */}
         <USPSection />
 
-        {/* Qualifier Section */}
-        <QualifierSection />
+        {/* Local Service Section */}
+        <LocalServiceSection 
+          cityName={cityPage.city_name}
+          title={cityPage.local_service_title}
+          subtitle={cityPage.local_service_subtitle}
+          description={cityPage.local_service_description}
+          serviceAreas={cityPage.local_service_areas}
+          expertiseTitle={cityPage.local_service_expertise_title}
+          expertiseDescription={cityPage.local_service_expertise_description}
+          expertiseBenefits={cityPage.local_service_expertise_benefits}
+          localRootedTitle={cityPage.local_service_rooted_title}
+          localRootedDescription={cityPage.local_service_rooted_description}
+        />
 
         {/* Trust Section */}
         <TrustSection />
@@ -432,7 +472,7 @@ export default function CityLandingPage() {
             </div>
             
             {/* Content Section 2 */}
-            {cityPage.content_section_2_text && (
+            {cityPage.content_section_2_content && (
               <div className="grid lg:grid-cols-2 gap-12 items-start mb-16">
                 {/* Text Links */}
                 <div className="bg-white rounded-2xl shadow-lg p-8 lg:p-12">
@@ -441,8 +481,8 @@ export default function CityLandingPage() {
                       {cityPage.content_section_2_title}
                     </h3>
                   )}
-                  <div className="prose prose-lg max-w-none text-primary-700 leading-relaxed" 
-                       dangerouslySetInnerHTML={{ __html: cityPage.content_section_2_text }} />
+                  <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed" 
+                       dangerouslySetInnerHTML={{ __html: cityPage.content_section_2_content }} />
                 </div>
                 
                 {/* Bild oder Spezielle Angebote Rechts */}
@@ -517,7 +557,7 @@ export default function CityLandingPage() {
         />
         
         {/* Zusätzlicher Content-Bereich falls vorhanden */}
-        {cityPage.content_section_3_text && (
+        {cityPage.content_section_3_content && (
           <section className="py-16 px-4 bg-wood-50">
             <div className="max-w-6xl mx-auto">
               {cityPage.content_section_3_image_url ? (
@@ -528,8 +568,8 @@ export default function CityLandingPage() {
                         {cityPage.content_section_3_title}
                       </h3>
                     )}
-                    <div className="prose prose-lg max-w-none text-primary-700 leading-relaxed" 
-                         dangerouslySetInnerHTML={{ __html: cityPage.content_section_3_text }} />
+                    <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed" 
+                         dangerouslySetInnerHTML={{ __html: cityPage.content_section_3_content }} />
                   </div>
                   <div className="relative rounded-2xl shadow-lg overflow-hidden">
                     <img 
@@ -547,8 +587,8 @@ export default function CityLandingPage() {
                       {cityPage.content_section_3_title}
                     </h3>
                   )}
-                  <div className="prose prose-lg max-w-none text-primary-700 leading-relaxed" 
-                       dangerouslySetInnerHTML={{ __html: cityPage.content_section_3_text }} />
+                  <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed" 
+                       dangerouslySetInnerHTML={{ __html: cityPage.content_section_3_content }} />
                 </div>
               )}
             </div>

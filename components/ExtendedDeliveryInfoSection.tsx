@@ -67,7 +67,7 @@ export default function ExtendedDeliveryInfoSection({
       deliveryTime: 'Gleicher Tag möglich',
       fee: 0,
       minOrder: 0.5,
-      specialNotes: 'Kostenlose Lieferung ab 0,5 Raummeter',
+      specialNotes: 'Lieferung ab 0,5 Raummeter möglich (42,50€ Liefergebühr)',
       postalCodes: ['12345', '12346']
     },
     {
@@ -158,20 +158,20 @@ export default function ExtendedDeliveryInfoSection({
   const convertedZones: DeliveryZone[] = deliveryZones.map((zone, index) => ({
     id: (index + 1).toString(),
     name: zone.name,
-    areas: zone.areas,
+    areas: Array.isArray(zone.areas) ? zone.areas : [],
     deliveryTime: zone.delivery_time,
     fee: zone.fee,
     minOrder: zone.min_order,
     specialNotes: zone.special_notes,
-    postalCodes: zone.postal_codes
+    postalCodes: Array.isArray(zone.postal_codes) ? zone.postal_codes : []
   }));
 
   const convertedRoutes: DeliveryRoute[] = deliveryRoutes.map((route, index) => ({
     id: (index + 1).toString(),
     name: route.name,
-    days: route.days,
-    timeSlots: route.time_slots,
-    zones: route.zones
+    days: Array.isArray(route.days) ? route.days : [],
+    timeSlots: Array.isArray(route.time_slots) ? route.time_slots : [],
+    zones: Array.isArray(route.zones) ? route.zones : []
   }));
 
   // Verwende editierbare Daten falls vorhanden, sonst Fallback zu Standard-Daten
@@ -265,7 +265,7 @@ export default function ExtendedDeliveryInfoSection({
                 <div className="mb-4">
                   <h4 className="text-sm font-semibold text-primary-700 mb-2">Stadtteile:</h4>
                   <div className="flex flex-wrap gap-1">
-                    {zone.areas.slice(0, 3).map((area, index) => (
+                    {zone.areas && Array.isArray(zone.areas) && zone.areas.slice(0, 3).map((area, index) => (
                       <span 
                         key={index}
                         className="px-2 py-1 bg-wood-50 text-wood-800 text-xs rounded"
@@ -273,7 +273,7 @@ export default function ExtendedDeliveryInfoSection({
                         {area}
                       </span>
                     ))}
-                    {zone.areas.length > 3 && (
+                    {zone.areas && zone.areas.length > 3 && (
                       <span className="px-2 py-1 bg-wood-50 text-wood-800 text-xs rounded">
                         +{zone.areas.length - 3} weitere
                       </span>

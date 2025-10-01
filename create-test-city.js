@@ -34,7 +34,7 @@ async function createTestCity() {
       contact_phone: '+49 30 12345678',
       contact_email: 'berlin@brennholz-koenig.de',
       contact_address: 'Musterstraße 123, 10115 Berlin',
-      delivery_info: 'Kostenlose Lieferung ab 50€ Bestellwert in ganz Berlin. Lieferzeit: 2-3 Werktage.',
+      delivery_info: 'Zuverlässige Lieferung in ganz Berlin (42,50€ Liefergebühr). Lieferzeit: 2-3 Werktage.',
       special_offers: 'Neukunden erhalten 10% Rabatt auf die erste Bestellung!',
       is_active: true
     };

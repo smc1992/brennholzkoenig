@@ -78,7 +78,11 @@ export default function EmailSystemTab() {
       admin_order_cancellation: false,
       newsletter: false,
       low_stock: false,
-      out_of_stock: false
+      out_of_stock: false,
+      loyalty_points_earned: false,
+      loyalty_points_redeemed: false,
+      loyalty_tier_upgrade: false,
+      loyalty_points_expiring: false
     }
   });
   const [showPreview, setShowPreview] = useState(false);
@@ -250,7 +254,11 @@ export default function EmailSystemTab() {
           admin_order_cancellation: false,
           newsletter: false,
           low_stock: false,
-          out_of_stock: false
+          out_of_stock: false,
+          loyalty_points_earned: false,
+          loyalty_points_redeemed: false,
+          loyalty_tier_upgrade: false,
+          loyalty_points_expiring: false
         }
       });
     }
@@ -344,7 +352,11 @@ export default function EmailSystemTab() {
           admin_order_cancellation: false,
           newsletter: false,
           low_stock: false,
-          out_of_stock: false
+          out_of_stock: false,
+          loyalty_points_earned: false,
+          loyalty_points_redeemed: false,
+          loyalty_tier_upgrade: false,
+          loyalty_points_expiring: false
         }
       });
       
@@ -2497,6 +2509,113 @@ Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de`
                         <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded">
                           Ausverkauft
                         </span>
+                      </div>
+
+                      {/* Loyalty Trigger Sektion */}
+                      <div className="border-t border-gray-200 pt-3 mt-3">
+                        <h5 className="text-xs font-semibold text-gray-600 mb-3 uppercase tracking-wide">
+                          Loyalty-System Trigger
+                        </h5>
+
+                        {/* Punkte erhalten Trigger */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id="trigger-loyalty-points-earned"
+                              checked={templateForm.triggers?.loyalty_points_earned || false}
+                              onChange={(e) => setTemplateForm(prev => ({
+                                ...prev,
+                                triggers: {
+                                  ...prev.triggers,
+                                  loyalty_points_earned: e.target.checked
+                                }
+                              }))}
+                              className="mr-2"
+                            />
+                            <label htmlFor="trigger-loyalty-points-earned" className="text-sm text-gray-700">
+                              Bei erhaltenen Loyalty-Punkten senden
+                            </label>
+                          </div>
+                          <span className="text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded">
+                            Punkte erhalten
+                          </span>
+                        </div>
+
+                        {/* Punkte eingelöst Trigger */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id="trigger-loyalty-points-redeemed"
+                              checked={templateForm.triggers?.loyalty_points_redeemed || false}
+                              onChange={(e) => setTemplateForm(prev => ({
+                                ...prev,
+                                triggers: {
+                                  ...prev.triggers,
+                                  loyalty_points_redeemed: e.target.checked
+                                }
+                              }))}
+                              className="mr-2"
+                            />
+                            <label htmlFor="trigger-loyalty-points-redeemed" className="text-sm text-gray-700">
+                              Bei eingelösten Loyalty-Punkten senden
+                            </label>
+                          </div>
+                          <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                            Punkte eingelöst
+                          </span>
+                        </div>
+
+                        {/* Tier-Upgrade Trigger */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id="trigger-loyalty-tier-upgrade"
+                              checked={templateForm.triggers?.loyalty_tier_upgrade || false}
+                              onChange={(e) => setTemplateForm(prev => ({
+                                ...prev,
+                                triggers: {
+                                  ...prev.triggers,
+                                  loyalty_tier_upgrade: e.target.checked
+                                }
+                              }))}
+                              className="mr-2"
+                            />
+                            <label htmlFor="trigger-loyalty-tier-upgrade" className="text-sm text-gray-700">
+                              Bei Loyalty-Tier-Upgrade senden
+                            </label>
+                          </div>
+                          <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                            Tier-Upgrade
+                          </span>
+                        </div>
+
+                        {/* Punkte ablaufend Trigger */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id="trigger-loyalty-points-expiring"
+                              checked={templateForm.triggers?.loyalty_points_expiring || false}
+                              onChange={(e) => setTemplateForm(prev => ({
+                                ...prev,
+                                triggers: {
+                                  ...prev.triggers,
+                                  loyalty_points_expiring: e.target.checked
+                                }
+                              }))}
+                              className="mr-2"
+                            />
+                            <label htmlFor="trigger-loyalty-points-expiring" className="text-sm text-gray-700">
+                              Bei ablaufenden Loyalty-Punkten senden
+                            </label>
+                          </div>
+                          <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded">
+                            Punkte ablaufend
+                          </span>
+                        </div>
                       </div>
 
                     </div>

@@ -505,7 +505,7 @@ export default function LocalBusinessTab() {
                 </label>
                 <input
                   type="text"
-                  value={settings.currencies_accepted.join(', ')}
+                  value={(settings.currencies_accepted && Array.isArray(settings.currencies_accepted)) ? settings.currencies_accepted.join(', ') : ''}
                   onChange={(e) => setSettings(prev => ({ 
                     ...prev, 
                     currencies_accepted: e.target.value.split(',').map(c => c.trim()) 

@@ -332,16 +332,22 @@ export default function CostCalculatorSection({ cityData }: CostCalculatorSectio
 
               {/* CTA */}
               <div className="text-center mt-8">
-                <CityButton
-                  type="calculator"
-                  customText={cityData?.calculator_cta_text || 'Jetzt Premium-Qualität bestellen'}
-                  cityData={cityData}
-                  className="bg-white text-[#C04020] px-4 sm:px-8 py-4 rounded-xl font-bold text-sm sm:text-lg hover:bg-gray-100 transition-colors whitespace-nowrap cursor-pointer shadow-xl transform hover:scale-105 w-full sm:w-auto inline-block"
+                <div
+                  onClick={() => window.location.href = cityData?.shop_url || '/shop'}
+                  className="force-red-text inline-flex items-center justify-center gap-2 px-8 py-4 bg-white border-2 border-[#C04020] rounded-xl font-bold text-lg cursor-pointer shadow-xl hover:bg-[#C04020] transition-all duration-300 min-w-[280px]"
                 >
-                  <i className="ri-shopping-cart-line mr-2 sm:mr-3"></i>
-                  <span className="hidden sm:inline">{cityData?.calculator_cta_text || 'Jetzt Premium-Qualität bestellen'}</span>
-                  <span className="sm:hidden">Jetzt bestellen!</span>
-                </CityButton>
+                  <svg 
+                    width="20" 
+                    height="20" 
+                    viewBox="0 0 24 24" 
+                    fill="currentColor"
+                  >
+                    <path d="M7 4V2C7 1.45 7.45 1 8 1H16C16.55 1 17 1.45 17 2V4H20C20.55 4 21 4.45 21 5S20.55 6 20 6H19V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V6H4C3.45 6 3 5.55 3 5S3.45 4 4 4H7ZM9 3V4H15V3H9ZM7 6V19H17V6H7ZM9 8V17H11V8H9ZM13 8V17H15V8H13Z"/>
+                  </svg>
+                  <span>
+                    {cityData?.calculator_cta_text || 'Jetzt Premium-Qualität bestellen'}
+                  </span>
+                </div>
                 <p className="text-sm opacity-80 mt-3">
                   Mindestbestellmenge: 3 SRM • Lieferung ab €43,50 • Express €139
                 </p>

@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { sendTemplateEmail } from './emailTemplateEngine';
+import { sendTemplateEmail, sendTemplateEmailTest } from './emailTemplateEngine';
 
 interface TemplateData {
   [key: string]: any;
@@ -13,6 +13,10 @@ interface TriggerConfig {
   newsletter: boolean;
   low_stock: boolean;
   out_of_stock: boolean;
+  loyalty_points_earned: boolean;
+  loyalty_points_redeemed: boolean;
+  loyalty_tier_upgrade: boolean;
+  loyalty_points_expiring: boolean;
 }
 
 interface OrderData {
@@ -79,6 +83,61 @@ interface CancellationData {
     price: number;
   }>;
   admin_email?: string;
+}
+
+interface LoyaltyPointsEarnedData {
+  customer: {
+    name: string;
+    email: string;
+    customer_number: string;
+  };
+  points_earned: number;
+  order_number?: string;
+  order_total?: number;
+  current_points_balance: number;
+  tier_name: string;
+  points_to_next_tier?: number;
+  next_tier_name?: string;
+}
+
+interface LoyaltyPointsRedeemedData {
+  customer: {
+    name: string;
+    email: string;
+    customer_number: string;
+  };
+  points_redeemed: number;
+  discount_amount: number;
+  order_number?: string;
+  remaining_points_balance: number;
+  tier_name: string;
+}
+
+interface LoyaltyTierUpgradeData {
+  customer: {
+    name: string;
+    email: string;
+    customer_number: string;
+  };
+  old_tier_name: string;
+  new_tier_name: string;
+  new_tier_benefits: string[];
+  current_points_balance: number;
+  points_to_next_tier?: number;
+  next_tier_name?: string;
+}
+
+interface LoyaltyPointsExpiringData {
+  customer: {
+    name: string;
+    email: string;
+    customer_number: string;
+  };
+  expiring_points: number;
+  expiration_date: string;
+  current_points_balance: number;
+  tier_name: string;
+  days_until_expiration: number;
 }
 
 /**
@@ -552,6 +611,250 @@ export async function logEmailTrigger(
 }
 
 /**
+ * Trigger für Loyalty-Punkte erhalten
+ */
+export async function triggerLoyaltyPointsEarned(loyaltyData: LoyaltyPointsEarnedData): Promise<boolean> {
+  try {
+    console.log('🚀 triggerLoyaltyPointsEarned gestartet für:', loyaltyData.customer.email);
+    
+    const templates = await getActiveTemplatesWithTriggers();
+    console.log(`📊 Geladene Templates: ${templates.length}`);
+    
+    // Debug: Zeige alle Template-Typen
+    const templateTypes = templates.map(t => t.template.type);
+    console.log('📋 Template-Typen:', templateTypes);
+    
+    // Finde Template mit aktiviertem Loyalty-Punkte-erhalten-Trigger
+    const loyaltyTemplate = templates.find(t => 
+      t.template.type === 'loyalty_points_earned' && 
+      t.template.triggers?.loyalty_points_earned === true
+    );
+
+    console.log('🔍 Suche nach Template mit:');
+    console.log('   - type: loyalty_points_earned');
+    console.log('   - triggers.loyalty_points_earned: true');
+    console.log('🎯 Template gefunden:', !!loyaltyTemplate);
+
+    if (!loyaltyTemplate) {
+      console.log('❌ Kein aktives Loyalty-Punkte-erhalten-Template gefunden');
+      
+      // Debug: Zeige alle Loyalty-Templates
+      const loyaltyTemplates = templates.filter(t => t.template.type?.includes('loyalty'));
+      console.log('🔍 Verfügbare Loyalty-Templates:');
+      loyaltyTemplates.forEach(t => {
+        console.log(`   - ${t.template.type}: triggers =`, t.template.triggers);
+      });
+      
+      return false;
+    }
+
+    console.log('✅ Template gefunden:', loyaltyTemplate.setting_key);
+
+    // Template-Daten für E-Mail vorbereiten
+    const templateData = {
+      customer_name: loyaltyData.customer.name,
+      customer_number: loyaltyData.customer.customer_number,
+      points_earned: loyaltyData.points_earned.toString(),
+      order_number: loyaltyData.order_number || '',
+      order_total: loyaltyData.order_total?.toFixed(2) || '',
+      current_points_balance: loyaltyData.current_points_balance.toString(),
+      tier_name: loyaltyData.tier_name,
+      points_to_next_tier: loyaltyData.points_to_next_tier?.toString() || '',
+      next_tier_name: loyaltyData.next_tier_name || '',
+      loyalty_dashboard_url: 'https://brennholz-koenig.de/loyalty',
+      company_name: 'Brennholzkönig',
+      support_email: 'support@brennholz-koenig.de'
+    };
+
+    console.log('📧 Sende E-Mail mit Template-Daten (TEST-MODUS):', templateData);
+    
+    // E-Mail senden (Test-Modus)
+    const result = await sendTemplateEmailTest(
+      'loyalty_points_earned',
+      loyaltyData.customer.email,
+      templateData
+    );
+
+    console.log('📧 E-Mail-Versand-Ergebnis (TEST-MODUS):', result);
+
+    if (result.success) {
+      console.log(`✅ Loyalty-Punkte-erhalten E-Mail für ${loyaltyData.customer.email} gesendet`);
+      
+      // Log-Eintrag erstellen
+      await logEmailTrigger('loyalty_points_earned', loyaltyData.customer.email, loyaltyData.customer.customer_number);
+    } else {
+      console.log(`❌ E-Mail-Versand fehlgeschlagen:`, result.error);
+    }
+
+    return result.success;
+  } catch (error) {
+    console.error('Fehler beim Senden der Loyalty-Punkte-erhalten E-Mail:', error);
+    return false;
+  }
+}
+
+/**
+ * Trigger für Loyalty-Punkte eingelöst
+ */
+export async function triggerLoyaltyPointsRedeemed(loyaltyData: LoyaltyPointsRedeemedData): Promise<boolean> {
+  try {
+    const templates = await getActiveTemplatesWithTriggers();
+    
+    // Finde Template mit aktiviertem Loyalty-Punkte-eingelöst-Trigger
+    const loyaltyTemplate = templates.find(t => 
+      t.template.type === 'loyalty_points_redeemed' && 
+      t.template.triggers?.loyalty_points_redeemed === true
+    );
+
+    if (!loyaltyTemplate) {
+      console.log('Kein aktives Loyalty-Punkte-eingelöst-Template gefunden');
+      return false;
+    }
+
+    // Template-Daten für E-Mail vorbereiten
+    const templateData = {
+      customer_name: loyaltyData.customer.name,
+      customer_number: loyaltyData.customer.customer_number,
+      points_redeemed: loyaltyData.points_redeemed.toString(),
+      discount_amount: loyaltyData.discount_amount.toFixed(2),
+      order_number: loyaltyData.order_number || '',
+      remaining_points_balance: loyaltyData.remaining_points_balance.toString(),
+      tier_name: loyaltyData.tier_name,
+      loyalty_dashboard_url: 'https://brennholz-koenig.de/loyalty',
+      company_name: 'Brennholzkönig',
+      support_email: 'support@brennholz-koenig.de'
+    };
+
+    // E-Mail senden
+    const result = await sendTemplateEmail(
+      'loyalty_points_redeemed',
+      loyaltyData.customer.email,
+      templateData
+    );
+
+    if (result.success) {
+      console.log(`Loyalty-Punkte-eingelöst E-Mail für ${loyaltyData.customer.email} gesendet`);
+      
+      // Log-Eintrag erstellen
+      await logEmailTrigger('loyalty_points_redeemed', loyaltyData.customer.email, loyaltyData.customer.customer_number);
+    }
+
+    return result.success;
+  } catch (error) {
+    console.error('Fehler beim Senden der Loyalty-Punkte-eingelöst E-Mail:', error);
+    return false;
+  }
+}
+
+/**
+ * Trigger für Loyalty-Tier-Upgrade
+ */
+export async function triggerLoyaltyTierUpgrade(loyaltyData: LoyaltyTierUpgradeData): Promise<boolean> {
+  try {
+    const templates = await getActiveTemplatesWithTriggers();
+    
+    // Finde Template mit aktiviertem Loyalty-Tier-Upgrade-Trigger
+    const loyaltyTemplate = templates.find(t => 
+      t.template.type === 'loyalty_tier_upgrade' && 
+      t.template.triggers?.loyalty_tier_upgrade === true
+    );
+
+    if (!loyaltyTemplate) {
+      console.log('Kein aktives Loyalty-Tier-Upgrade-Template gefunden');
+      return false;
+    }
+
+    // Template-Daten für E-Mail vorbereiten
+    const templateData = {
+      customer_name: loyaltyData.customer.name,
+      customer_number: loyaltyData.customer.customer_number,
+      old_tier_name: loyaltyData.old_tier_name,
+      new_tier_name: loyaltyData.new_tier_name,
+      new_tier_benefits: loyaltyData.new_tier_benefits.join(', '),
+      current_points_balance: loyaltyData.current_points_balance.toString(),
+      points_to_next_tier: loyaltyData.points_to_next_tier?.toString() || '',
+      next_tier_name: loyaltyData.next_tier_name || '',
+      loyalty_dashboard_url: 'https://brennholz-koenig.de/loyalty',
+      company_name: 'Brennholzkönig',
+      support_email: 'support@brennholz-koenig.de'
+    };
+
+    // E-Mail senden
+    const result = await sendTemplateEmail(
+      'loyalty_tier_upgrade',
+      loyaltyData.customer.email,
+      templateData
+    );
+
+    if (result.success) {
+      console.log(`Loyalty-Tier-Upgrade E-Mail für ${loyaltyData.customer.email} gesendet`);
+      
+      // Log-Eintrag erstellen
+      await logEmailTrigger('loyalty_tier_upgrade', loyaltyData.customer.email, loyaltyData.customer.customer_number);
+    }
+
+    return result.success;
+  } catch (error) {
+    console.error('Fehler beim Senden der Loyalty-Tier-Upgrade E-Mail:', error);
+    return false;
+  }
+}
+
+/**
+ * Trigger für ablaufende Loyalty-Punkte
+ */
+export async function triggerLoyaltyPointsExpiring(loyaltyData: LoyaltyPointsExpiringData): Promise<boolean> {
+  try {
+    const templates = await getActiveTemplatesWithTriggers();
+    
+    // Finde Template mit aktiviertem Loyalty-Punkte-ablaufend-Trigger
+    const loyaltyTemplate = templates.find(t => 
+      t.template.type === 'loyalty_points_expiring' && 
+      t.template.triggers?.loyalty_points_expiring === true
+    );
+
+    if (!loyaltyTemplate) {
+      console.log('Kein aktives Loyalty-Punkte-ablaufend-Template gefunden');
+      return false;
+    }
+
+    // Template-Daten für E-Mail vorbereiten
+    const templateData = {
+      customer_name: loyaltyData.customer.name,
+      customer_number: loyaltyData.customer.customer_number,
+      expiring_points: loyaltyData.expiring_points.toString(),
+      expiration_date: new Date(loyaltyData.expiration_date).toLocaleDateString('de-DE'),
+      current_points_balance: loyaltyData.current_points_balance.toString(),
+      tier_name: loyaltyData.tier_name,
+      days_until_expiration: loyaltyData.days_until_expiration.toString(),
+      shop_url: 'https://brennholz-koenig.de',
+      loyalty_dashboard_url: 'https://brennholz-koenig.de/loyalty',
+      company_name: 'Brennholzkönig',
+      support_email: 'support@brennholz-koenig.de'
+    };
+
+    // E-Mail senden
+    const result = await sendTemplateEmail(
+      'loyalty_points_expiring',
+      loyaltyData.customer.email,
+      templateData
+    );
+
+    if (result.success) {
+      console.log(`Loyalty-Punkte-ablaufend E-Mail für ${loyaltyData.customer.email} gesendet`);
+      
+      // Log-Eintrag erstellen
+      await logEmailTrigger('loyalty_points_expiring', loyaltyData.customer.email, loyaltyData.customer.customer_number);
+    }
+
+    return result.success;
+  } catch (error) {
+    console.error('Fehler beim Senden der Loyalty-Punkte-ablaufend E-Mail:', error);
+    return false;
+  }
+}
+
+/**
  * Prüft und aktiviert alle verfügbaren Trigger
  */
 export async function initializeEmailTriggers(): Promise<void> {
@@ -561,4 +864,8 @@ export async function initializeEmailTriggers(): Promise<void> {
   console.log('- triggerShippingNotification(shippingData)');
   console.log('- triggerLowStockAlert(stockData)');
   console.log('- triggerNewsletterSend(templateId)');
+  console.log('- triggerLoyaltyPointsEarned(loyaltyData)');
+  console.log('- triggerLoyaltyPointsRedeemed(loyaltyData)');
+  console.log('- triggerLoyaltyTierUpgrade(loyaltyData)');
+  console.log('- triggerLoyaltyPointsExpiring(loyaltyData)');
 }

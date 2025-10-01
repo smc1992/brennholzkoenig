@@ -36,7 +36,7 @@ export default function ServiceAreaDetailsSection({
   const defaultServiceAreas: ServiceArea[] = [
     {
       name: `${cityName} Zentrum`,
-      postalCodes: postalCodes.length > 0 ? [postalCodes[0]] : ['12345'],
+      postalCodes: (postalCodes && Array.isArray(postalCodes) && postalCodes.length > 0) ? [postalCodes[0]] : ['12345'],
       deliveryTime: 'Gleicher Tag möglich',
       specialNotes: 'Bevorzugtes Liefergebiet mit flexiblen Zeiten',
       landmarks: ['Rathaus', 'Hauptbahnhof', 'Marktplatz'],
@@ -44,7 +44,7 @@ export default function ServiceAreaDetailsSection({
     },
     {
       name: `${cityName} Nord`,
-      postalCodes: postalCodes.length > 1 ? [postalCodes[1]] : ['12346'],
+      postalCodes: (postalCodes && Array.isArray(postalCodes) && postalCodes.length > 1) ? [postalCodes[1]] : ['12346'],
       deliveryTime: 'Innerhalb 24 Stunden',
       specialNotes: 'Ruhige Wohngebiete mit Einfamilienhäusern',
       landmarks: ['Nordpark', 'Sportzentrum'],
@@ -52,7 +52,7 @@ export default function ServiceAreaDetailsSection({
     },
     {
       name: `${cityName} Süd`,
-      postalCodes: postalCodes.length > 2 ? [postalCodes[2]] : ['12347'],
+      postalCodes: (postalCodes && Array.isArray(postalCodes) && postalCodes.length > 2) ? [postalCodes[2]] : ['12347'],
       deliveryTime: 'Innerhalb 24 Stunden',
       specialNotes: 'Gemischte Wohn- und Gewerbegebiete',
       landmarks: ['Industriegebiet', 'Einkaufszentrum'],
@@ -60,7 +60,7 @@ export default function ServiceAreaDetailsSection({
     },
     {
       name: `${cityName} Umland`,
-      postalCodes: postalCodes.length > 3 ? postalCodes.slice(3) : ['12348', '12349'],
+      postalCodes: (postalCodes && Array.isArray(postalCodes) && postalCodes.length > 3) ? postalCodes.slice(3) : ['12348', '12349'],
       deliveryTime: '1-2 Werktage',
       specialNotes: 'Ländliche Gebiete und Außenbezirke',
       landmarks: ['Waldgebiete', 'Landwirtschaft'],

@@ -277,6 +277,10 @@ export default function Header() {
                           <i className="ri-heart-line text-lg mr-3 text-orange-600"></i>
                           Wunschliste
                         </Link>
+                        <Link href="/konto/treueprogramm" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
+                          <i className="ri-gift-line text-lg mr-3 text-orange-600"></i>
+                          Treueprogramm
+                        </Link>
                         <Link href="/konto/benachrichtigungen" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setIsAccountDropdownOpen(false)}>
                           <i className="ri-notification-line text-lg mr-3 text-orange-600"></i>
                           Benachrichtigungen
@@ -466,6 +470,25 @@ export default function Header() {
                 className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
                 onMouseDown={(e) => {
                   e.preventDefault();
+                  console.log('Treueprogramm Navigation');
+                  setIsAccountDropdownOpen(false);
+                  window.location.href = '/konto/treueprogramm';
+                }}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  console.log('Treueprogramm Touch');
+                  setIsAccountDropdownOpen(false);
+                  window.location.href = '/konto/treueprogramm';
+                }}
+              >
+                <i className="ri-gift-line text-lg mr-3 text-orange-600"></i>
+                Treueprogramm
+              </div>
+              
+              <div 
+                className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                onMouseDown={(e) => {
+                  e.preventDefault();
                   console.log('Benachrichtigungen Navigation');
                   setIsAccountDropdownOpen(false);
                   window.location.href = '/konto/benachrichtigungen';
@@ -637,6 +660,13 @@ export default function Header() {
                             onClick={() => setIsMenuOpen(false)}
                           >
                             Wunschliste
+                          </Link>
+                          <Link
+                            href="/konto/treueprogramm"
+                            className="block py-2 text-gray-700 hover:text-orange-600 transition-colors"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            Treueprogramm
                           </Link>
                           <button
                             onClick={async () => {

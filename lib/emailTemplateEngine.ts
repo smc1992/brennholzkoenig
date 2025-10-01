@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { sendEmail } from './emailService';
+import { sendEmail, sendEmailTest } from './emailService';
 import { createClient } from '@supabase/supabase-js';
 
 // Admin Supabase-Client mit Service Role Key für Template-Operationen
@@ -322,6 +322,100 @@ export async function replacePlaceholders(content: string, data: TemplateData): 
 }
 
 // Sende E-Mail basierend auf Template
+// Test-Version der sendTemplateEmail Funktion
+export async function sendTemplateEmailTest(
+  templateType: string,
+  recipientEmail: string,
+  templateData: TemplateData,
+  options: {
+    ccAdmin?: boolean;
+    adminEmail?: string;
+  } = {}
+): Promise<{ success: boolean; error?: string; messageId?: string }> {
+  try {
+    console.log(`[EmailTemplate-TEST] Lade Template für Typ: ${templateType}`);
+    
+    // Template laden
+    const template = await loadEmailTemplate(templateType);
+    if (!template) {
+      return {
+        success: false,
+        error: `Kein aktives Template für Typ '${templateType}' gefunden`
+      };
+    }
+
+    console.log(`[EmailTemplate-TEST] Template gefunden: ${template.setting_name}`);
+
+    // Standard-Daten hinzufügen
+    const completeData: TemplateData = {
+      company_name: 'Brennholzkönig',
+      support_email: 'info@brennholz-koenig.de',
+      ...templateData
+    };
+
+    // Platzhalter ersetzen (robuste Feld-Fallbacks aus Admin-Editor: html/text)
+    const subjectSource = (template.template as any).subject || '';
+    const htmlSource = (template.template as any).html_content || (template.template as any).html || '';
+    const textSource = (template.template as any).text_content || (template.template as any).text || '';
+
+    const subject = await replacePlaceholders(subjectSource, completeData);
+    const htmlContent = await replacePlaceholders(htmlSource, completeData);
+    const textContent = await replacePlaceholders(textSource, completeData);
+
+    console.log(`[EmailTemplate-TEST] Simuliere E-Mail an: ${recipientEmail}`);
+    console.log(`[EmailTemplate-TEST] Betreff: ${subject}`);
+
+    // E-Mail an Kunden senden (TEST-MODUS)
+    const result = await sendEmailTest({
+      to: recipientEmail,
+      subject: subject,
+      html: htmlContent,
+      text: textContent
+    });
+
+    // Optional: E-Mail an Admin weiterleiten (auch im Test-Modus)
+    if (options.ccAdmin && options.adminEmail && result.success) {
+      console.log(`[EmailTemplate-TEST] Simuliere Kopie an Admin: ${options.adminEmail}`);
+      
+      const adminSubject = `[Admin-Kopie] ${subject}`;
+      const adminHtml = `
+        <div style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border-left: 4px solid #C04020;">
+          <strong>Admin-Benachrichtigung:</strong> Diese E-Mail wurde automatisch an den Kunden gesendet.<br>
+          <strong>Kunde:</strong> ${completeData.customer_name} (${recipientEmail})<br>
+          <strong>Template:</strong> ${template.setting_name}
+        </div>
+        ${htmlContent}
+      `;
+      
+      await sendEmailTest({
+        to: options.adminEmail,
+        subject: adminSubject,
+        html: adminHtml,
+        text: `[Admin-Kopie] ${textContent}`
+      });
+    }
+
+    // E-Mail-Log erstellen (auch im Test-Modus)
+    await logEmailSent({
+      type: templateType,
+      to: recipientEmail,
+      subject: subject,
+      status: result.success ? 'sent' : 'failed',
+      template_id: template.id,
+      message_id: result.messageId,
+      error: result.error
+    });
+
+    return result;
+  } catch (error) {
+    console.error('[EmailTemplate-TEST] Fehler beim Simulieren der Template-E-Mail:', error);
+    return {
+      success: false,
+      error: (error as Error).message
+    };
+  }
+}
+
 export async function sendTemplateEmail(
   templateType: string,
   recipientEmail: string,
@@ -343,7 +437,7 @@ export async function sendTemplateEmail(
       };
     }
 
-    console.log(`[EmailTemplate] Template gefunden: ${template.setting_key}`);
+    console.log(`[EmailTemplate] Template gefunden: ${template.setting_name}`);
 
     // Standard-Daten hinzufügen
     const completeData: TemplateData = {

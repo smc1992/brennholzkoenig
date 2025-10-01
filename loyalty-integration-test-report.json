@@ -1,0 +1,35 @@
+{
+  "timestamp": "2025-09-29T11:50:08.064Z",
+  "tests": {
+    "loyaltyService": {
+      "success": true,
+      "passed": 8,
+      "failed": 0,
+      "total": 8
+    },
+    "notificationService": {
+      "success": true,
+      "passed": 6,
+      "failed": 0,
+      "total": 6
+    },
+    "apiEndpoints": {
+      "success": true,
+      "passed": 2,
+      "failed": 0,
+      "total": 2
+    },
+    "frontendComponents": {
+      "success": true,
+      "passed": 3,
+      "failed": 0,
+      "total": 3
+    }
+  },
+  "summary": {
+    "total": 19,
+    "passed": 19,
+    "failed": 0,
+    "success": true
+  }
+}

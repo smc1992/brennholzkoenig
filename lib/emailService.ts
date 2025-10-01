@@ -329,6 +329,72 @@ export async function createEmailTransporter() {
 }
 
 // Sende E-Mail mit dynamischen SMTP-Einstellungen und globaler Signatur
+// Test-Modus für E-Mail-Versand (simuliert ohne tatsächlichen Versand)
+export async function sendEmailTest({
+  to,
+  subject,
+  text,
+  html
+}: {
+  to: string;
+  subject: string;
+  text?: string;
+  html?: string;
+}) {
+  try {
+    console.log(`[SMTP-TEST] Simuliere E-Mail-Versand an ${to}`);
+    
+    // Globale Signatur zu HTML und Text hinzufügen
+    let finalHtml = html;
+    let finalText = text;
+
+    if (html) {
+      finalHtml = await appendGlobalSignature(html, true);
+      console.log('[SMTP-TEST] Globale HTML-Signatur hinzugefügt');
+    }
+
+    if (text) {
+      finalText = await appendGlobalSignature(text, false);
+      console.log('[SMTP-TEST] Globale Text-Signatur hinzugefügt');
+    }
+
+    const mailOptions = {
+      from: `Brennholzkönig <test@brennholz-koenig.de>`,
+      to,
+      subject,
+      text: finalText,
+      html: finalHtml
+    };
+
+    console.log('[SMTP-TEST] E-Mail-Optionen (simuliert):', {
+      from: mailOptions.from,
+      to: mailOptions.to,
+      subject: mailOptions.subject,
+      htmlLength: finalHtml?.length || 0,
+      textLength: finalText?.length || 0
+    });
+
+    // Simuliere erfolgreichen Versand
+    const mockMessageId = `test-${Date.now()}@brennholz-koenig.de`;
+    
+    console.log('[SMTP-TEST] E-Mail erfolgreich simuliert. Mock Message ID:', mockMessageId);
+    return { 
+      success: true, 
+      messageId: mockMessageId,
+      testMode: true
+    };
+    
+  } catch (error) {
+    console.error('[SMTP-TEST] Fehler bei E-Mail-Simulation:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
+    return { 
+      success: false, 
+      error: errorMessage,
+      testMode: true
+    };
+  }
+}
+
 export async function sendEmail({
   to,
   subject,

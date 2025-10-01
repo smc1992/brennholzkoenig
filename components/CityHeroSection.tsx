@@ -113,7 +113,7 @@ export default function CityHeroSection({
             )}
 
             {/* Liefergebiete */}
-            {postalCodes && postalCodes.length > 0 && (
+            {postalCodes && Array.isArray(postalCodes) && postalCodes.length > 0 && (
               <div className="mb-6 sm:mb-8 md:mb-10">
                 <p className="text-sm sm:text-base md:text-lg text-white/80 mb-2" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
                   Lieferung in folgende Postleitzahlen:
@@ -164,7 +164,7 @@ export default function CityHeroSection({
             <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 md:gap-8 text-white/80">
               <div className="flex items-center gap-2">
                 <i className="ri-truck-line text-lg sm:text-xl text-[#D4A520]"></i>
-                <span className="text-sm sm:text-base font-medium" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>Kostenlose Lieferung</span>
+                <span className="text-sm sm:text-base font-medium" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>Zuverlässige Lieferung</span>
               </div>
               <div className="flex items-center gap-2">
                 <i className="ri-shield-check-line text-lg sm:text-xl text-[#D4A520]"></i>

@@ -57,43 +57,8 @@ const LocalContentEnhancer: React.FC<LocalContentEnhancerProps> = ({
 }) => {
   
   const enhanceContent = (content: string): string => {
-    let enhancedContent = content;
-    
-    // Lokale Phrasen basierend auf Content-Typ hinzufügen
-    const phrases = localPhrases[contentType] || localPhrases.text;
-    
-    // Zufällige lokale Phrase auswählen
-    const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-    const localPhrase = randomPhrase.replace('{city}', cityName);
-    
-    // Content je nach Typ erweitern
-    switch (contentType) {
-      case 'title':
-        // Titel mit lokaler Phrase erweitern
-        if (!content.toLowerCase().includes(cityName.toLowerCase())) {
-          enhancedContent = `${content} ${localPhrase}`;
-        }
-        break;
-        
-      case 'description':
-        // Beschreibung mit lokaler Relevanz erweitern
-        if (!content.toLowerCase().includes(cityName.toLowerCase())) {
-          enhancedContent = `${content} ${localPhrase}`;
-        }
-        break;
-        
-      case 'text':
-        // Text mit lokalen Begriffen anreichern
-        const sentences = content.split('. ');
-        if (sentences.length > 1 && !content.toLowerCase().includes(cityName.toLowerCase())) {
-          // Lokale Phrase in den zweiten Satz einfügen
-          sentences[1] = `${sentences[1]} ${localPhrase}`;
-          enhancedContent = sentences.join('. ');
-        }
-        break;
-    }
-    
-    return enhancedContent;
+    // Automatische Erweiterung deaktiviert - Originalinhalt wird unverändert zurückgegeben
+    return content;
   };
 
   const enhancedContent = enhanceContent(originalContent);

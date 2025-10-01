@@ -5,6 +5,69 @@
 /* React Image Crop Styles */
 @import 'react-image-crop/dist/ReactCrop.css';
 
+/* Force button text visibility - highest specificity */
+.force-red-text,
+.force-red-text *,
+.force-red-text span,
+.force-red-text svg,
+.force-red-text i {
+  color: #C04020 !important;
+  fill: #C04020 !important;
+  -webkit-text-fill-color: #C04020 !important;
+}
+
+.force-red-text:hover,
+.force-red-text:hover *,
+.force-red-text:hover span,
+.force-red-text:hover svg,
+.force-red-text:hover i {
+  color: white !important;
+  fill: white !important;
+  -webkit-text-fill-color: white !important;
+}
+
+/* Testimonial button specific override */
+.testimonial-button-override {
+  background-color: white !important;
+  color: #C04020 !important;
+  border: 2px solid white !important;
+  -webkit-text-fill-color: #C04020 !important;
+}
+
+.testimonial-button-override * {
+  color: #C04020 !important;
+  -webkit-text-fill-color: #C04020 !important;
+}
+
+.testimonial-button-override span {
+  color: #C04020 !important;
+  -webkit-text-fill-color: #C04020 !important;
+}
+
+.testimonial-button-override i {
+  color: #C04020 !important;
+}
+
+.testimonial-button-override:hover {
+  background-color: #f3f4f6 !important;
+  color: #C04020 !important;
+  -webkit-text-fill-color: #C04020 !important;
+}
+
+.testimonial-button-override:hover * {
+  color: #C04020 !important;
+  -webkit-text-fill-color: #C04020 !important;
+}
+
+.testimonial-button-override:hover span {
+  color: #C04020 !important;
+  -webkit-text-fill-color: #C04020 !important;
+}
+
+.testimonial-button-override:hover i {
+  color: #C04020 !important;
+}
+
 /* Dashboard pages header spacing fix */
 .dashboard-page {
   padding-top: 6rem; /* 96px to account for fixed header */

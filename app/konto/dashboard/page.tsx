@@ -432,6 +432,19 @@ export default function CustomerDashboard() {
               </Link>
 
               <Link
+                href="/konto/treueprogramm"
+                className="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
+                  <i className="ri-medal-line text-amber-600"></i>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">Treueprogramm</p>
+                  <p className="text-sm text-gray-600">Punkte sammeln & einlösen</p>
+                </div>
+              </Link>
+
+              <Link
                 href="/konto/adressen"
                 className="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors"
               >

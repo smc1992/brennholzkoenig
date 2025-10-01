@@ -1,0 +1,78 @@
+-- Loyalty E-Mail-Templates mit Brennholz-Logo und roter Farbe
+-- Diese Templates verwenden das gleiche Design wie die bestehenden Brennholzkönig-Templates
+
+-- Template 1: Punkte verdient
+INSERT INTO app_settings (setting_type, setting_key, setting_value, description, created_at, updated_at) VALUES
+('email_template', 'loyalty_points_earned', '{
+  "template_key": "loyalty_points_earned",
+  "template_name": "Loyalty - Punkte verdient",
+  "template_type": "loyalty_points_earned",
+  "subject": "🎉 Sie haben {{points}} Punkte verdient!",
+  "html_content": "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Punkte verdient</title>\n    <style>\n        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }\n        .container { max-width: 600px; margin: 0 auto; background-color: white; }\n        .header { background-color: #C04020; color: white; padding: 20px; text-align: center; }\n        .logo { max-width: 200px; height: auto; margin-bottom: 10px; }\n        .content { padding: 30px; }\n        .points-box { background-color: #fef2f2; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #C04020; text-align: center; }\n        .points-number { font-size: 36px; font-weight: bold; color: #C04020; margin: 10px 0; }\n        .footer { background-color: #1A1A1A; color: white; padding: 20px; text-align: center; }\n        .button { background-color: #C04020; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0; }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <img src=\"/images/Brennholzkönig%20transparent.webp?v=4&t=1695730300\" alt=\"Brennholzkönig Logo\" class=\"logo\">\n            <p>Premium Brennholz direkt vom Produzenten</p>\n        </div>\n        \n        <div class=\"content\">\n            <h2>🎉 Herzlichen Glückwunsch!</h2>\n            <p>Hallo {{customer_name}},</p>\n            <p>Sie haben soeben Punkte in unserem Treueprogramm verdient!</p>\n            \n            <div class=\"points-box\">\n                <h3>Neue Punkte erhalten</h3>\n                <div class=\"points-number\">+{{points}}</div>\n                <p><strong>Grund:</strong> {{reason}}</p>\n                <p><strong>Aktueller Punktestand:</strong> {{total_points}} Punkte</p>\n            </div>\n            \n            <p>Sammeln Sie weiter Punkte und profitieren Sie von exklusiven Vorteilen und Rabatten!</p>\n            \n            <a href=\"{{dashboard_url}}\" class=\"button\">Treueprogramm anzeigen</a>\n            <a href=\"{{shop_url}}\" class=\"button\">Weiter einkaufen</a>\n        </div>\n        \n        <div class=\"footer\">\n            <p>Brennholzkönig - Ihr Partner für Premium Brennholz</p>\n            <p>Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de</p>\n        </div>\n    </div>\n</body>\n</html>",
+  "text_content": "🎉 Herzlichen Glückwunsch!\n\nHallo {{customer_name}},\n\nSie haben soeben {{points}} Punkte in unserem Treueprogramm verdient!\n\nGrund: {{reason}}\nAktueller Punktestand: {{total_points}} Punkte\n\nSammeln Sie weiter Punkte und profitieren Sie von exklusiven Vorteilen und Rabatten!\n\nTreueprogramm anzeigen: {{dashboard_url}}\nWeiter einkaufen: {{shop_url}}\n\nBrennholzkönig - Ihr Partner für Premium Brennholz\nBei Fragen erreichen Sie uns unter: info@brennholz-koenig.de",
+  "variables": ["customer_name", "points", "reason", "total_points", "dashboard_url", "shop_url"],
+  "is_active": true,
+  "triggers": {
+    "loyalty_points_earned": true
+  }
+}', 'Loyalty E-Mail Template für verdiente Punkte', NOW(), NOW())
+ON CONFLICT (setting_type, setting_key) DO UPDATE SET
+  setting_value = EXCLUDED.setting_value,
+  updated_at = NOW();
+
+-- Template 2: Punkte eingelöst
+INSERT INTO app_settings (setting_type, setting_key, setting_value, description, created_at, updated_at) VALUES
+('email_template', 'loyalty_points_redeemed', '{
+  "template_key": "loyalty_points_redeemed",
+  "template_name": "Loyalty - Punkte eingelöst",
+  "template_type": "loyalty_points_redeemed",
+  "subject": "✅ {{points}} Punkte erfolgreich eingelöst!",
+  "html_content": "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Punkte eingelöst</title>\n    <style>\n        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }\n        .container { max-width: 600px; margin: 0 auto; background-color: white; }\n        .header { background-color: #C04020; color: white; padding: 20px; text-align: center; }\n        .logo { max-width: 200px; height: auto; margin-bottom: 10px; }\n        .content { padding: 30px; }\n        .redemption-box { background-color: #f0f8ff; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #C04020; }\n        .points-number { font-size: 24px; font-weight: bold; color: #C04020; }\n        .footer { background-color: #1A1A1A; color: white; padding: 20px; text-align: center; }\n        .button { background-color: #C04020; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0; }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <img src=\"/images/Brennholzkönig%20transparent.webp?v=4&t=1695730300\" alt=\"Brennholzkönig Logo\" class=\"logo\">\n            <p>Premium Brennholz direkt vom Produzenten</p>\n        </div>\n        \n        <div class=\"content\">\n            <h2>✅ Punkte erfolgreich eingelöst!</h2>\n            <p>Hallo {{customer_name}},</p>\n            <p>Ihre Punkte wurden erfolgreich eingelöst. Vielen Dank für Ihre Treue!</p>\n            \n            <div class=\"redemption-box\">\n                <h3>Einlösung bestätigt</h3>\n                <p><span class=\"points-number\">-{{points}} Punkte</span></p>\n                <p><strong>Belohnung:</strong> {{reward}}</p>\n                <p><strong>Verbleibendes Guthaben:</strong> {{remaining_points}} Punkte</p>\n            </div>\n            \n            <p>Ihre Belohnung wird in Kürze aktiviert. Sammeln Sie weiter Punkte für noch mehr exklusive Vorteile!</p>\n            \n            <a href=\"{{dashboard_url}}\" class=\"button\">Treueprogramm anzeigen</a>\n            <a href=\"{{shop_url}}\" class=\"button\">Weiter einkaufen</a>\n        </div>\n        \n        <div class=\"footer\">\n            <p>Brennholzkönig - Ihr Partner für Premium Brennholz</p>\n            <p>Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de</p>\n        </div>\n    </div>\n</body>\n</html>",
+  "text_content": "✅ Punkte erfolgreich eingelöst!\n\nHallo {{customer_name}},\n\nIhre {{points}} Punkte wurden erfolgreich eingelöst. Vielen Dank für Ihre Treue!\n\nBelohnung: {{reward}}\nVerbleibendes Guthaben: {{remaining_points}} Punkte\n\nIhre Belohnung wird in Kürze aktiviert. Sammeln Sie weiter Punkte für noch mehr exklusive Vorteile!\n\nTreueprogramm anzeigen: {{dashboard_url}}\nWeiter einkaufen: {{shop_url}}\n\nBrennholzkönig - Ihr Partner für Premium Brennholz\nBei Fragen erreichen Sie uns unter: info@brennholz-koenig.de",
+  "variables": ["customer_name", "points", "reward", "remaining_points", "dashboard_url", "shop_url"],
+  "is_active": true,
+  "triggers": {
+    "loyalty_points_redeemed": true
+  }
+}', 'Loyalty E-Mail Template für eingelöste Punkte', NOW(), NOW())
+ON CONFLICT (setting_type, setting_key) DO UPDATE SET
+  setting_value = EXCLUDED.setting_value,
+  updated_at = NOW();
+
+-- Template 3: Tier-Upgrade
+INSERT INTO app_settings (setting_type, setting_key, setting_value, description, created_at, updated_at) VALUES
+('email_template', 'loyalty_tier_upgrade', '{
+  "template_key": "loyalty_tier_upgrade",
+  "template_name": "Loyalty - Tier-Upgrade",
+  "template_type": "loyalty_tier_upgrade",
+  "subject": "🏆 Herzlichen Glückwunsch! Sie sind jetzt {{tier}}!",
+  "html_content": "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Tier-Upgrade</title>\n    <style>\n        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }\n        .container { max-width: 600px; margin: 0 auto; background-color: white; }\n        .header { background-color: #C04020; color: white; padding: 20px; text-align: center; }\n        .logo { max-width: 200px; height: auto; margin-bottom: 10px; }\n        .content { padding: 30px; }\n        .tier-box { background: linear-gradient(135deg, #ffd700, #ffed4e); padding: 25px; margin: 20px 0; border-radius: 12px; text-align: center; color: #333; }\n        .tier-name { font-size: 28px; font-weight: bold; margin: 10px 0; }\n        .benefits-list { background-color: #f9f9f9; padding: 20px; margin: 20px 0; border-radius: 8px; }\n        .footer { background-color: #1A1A1A; color: white; padding: 20px; text-align: center; }\n        .button { background-color: #C04020; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0; }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <img src=\"/images/Brennholzkönig%20transparent.webp?v=4&t=1695730300\" alt=\"Brennholzkönig Logo\" class=\"logo\">\n            <p>Premium Brennholz direkt vom Produzenten</p>\n        </div>\n        \n        <div class=\"content\">\n            <h2>🏆 Herzlichen Glückwunsch!</h2>\n            <p>Hallo {{customer_name}},</p>\n            <p>Aufgrund Ihrer Treue wurden Sie auf eine höhere Stufe befördert!</p>\n            \n            <div class=\"tier-box\">\n                <h3>🎉 Neuer Status</h3>\n                <div class=\"tier-name\">{{tier}}</div>\n                <p>Sie haben es geschafft!</p>\n            </div>\n            \n            <div class=\"benefits-list\">\n                <h3>Ihre neuen {{tier}}-Vorteile:</h3>\n                <ul>\n                {{#benefits}}\n                    <li>{{.}}</li>\n                {{/benefits}}\n                </ul>\n            </div>\n            \n            <p>Nutzen Sie Ihre neuen Vorteile und genießen Sie die exklusiven Benefits Ihres {{tier}}-Status!</p>\n            \n            <a href=\"{{dashboard_url}}\" class=\"button\">Treueprogramm anzeigen</a>\n            <a href=\"{{shop_url}}\" class=\"button\">Vorteile nutzen</a>\n        </div>\n        \n        <div class=\"footer\">\n            <p>Brennholzkönig - Ihr Partner für Premium Brennholz</p>\n            <p>Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de</p>\n        </div>\n    </div>\n</body>\n</html>",
+  "text_content": "🏆 Herzlichen Glückwunsch!\n\nHallo {{customer_name}},\n\nSie wurden auf {{tier}} hochgestuft!\n\nIhre neuen {{tier}}-Vorteile:\n{{#benefits}}\n- {{.}}\n{{/benefits}}\n\nNutzen Sie Ihre neuen Vorteile und genießen Sie die exklusiven Benefits!\n\nTreueprogramm anzeigen: {{dashboard_url}}\nVorteile nutzen: {{shop_url}}\n\nVielen Dank für Ihre Treue!\nIhr Brennholzkönig Team",
+  "variables": ["customer_name", "tier", "benefits", "dashboard_url", "shop_url"],
+  "is_active": true,
+  "triggers": {
+    "loyalty_tier_upgrade": true
+  }
+}', 'Loyalty E-Mail Template für Tier-Upgrades', NOW(), NOW())
+ON CONFLICT (setting_type, setting_key) DO UPDATE SET
+  setting_value = EXCLUDED.setting_value,
+  updated_at = NOW();
+
+-- Template 4: Ablaufende Punkte
+INSERT INTO app_settings (setting_type, setting_key, setting_value, description, created_at, updated_at) VALUES
+('email_template', 'loyalty_points_expiring', '{
+  "template_key": "loyalty_points_expiring",
+  "template_name": "Loyalty - Punkte laufen ab",
+  "template_type": "loyalty_points_expiring",
+  "subject": "⚠️ Ihre {{points}} Punkte laufen bald ab - Jetzt einlösen!",
+  "html_content": "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Punkte laufen ab</title>\n    <style>\n        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }\n        .container { max-width: 600px; margin: 0 auto; background-color: white; }\n        .header { background-color: #C04020; color: white; padding: 20px; text-align: center; }\n        .logo { max-width: 200px; height: auto; margin-bottom: 10px; }\n        .content { padding: 30px; }\n        .warning-box { background-color: #fff3cd; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #ffc107; }\n        .expiry-date { font-size: 18px; font-weight: bold; color: #C04020; }\n        .footer { background-color: #1A1A1A; color: white; padding: 20px; text-align: center; }\n        .button { background-color: #C04020; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0; }\n        .urgent-button { background-color: #ffc107; color: #333; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0; font-weight: bold; }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <img src=\"/images/Brennholzkönig%20transparent.webp?v=4&t=1695730300\" alt=\"Brennholzkönig Logo\" class=\"logo\">\n            <p>Premium Brennholz direkt vom Produzenten</p>\n        </div>\n        \n        <div class=\"content\">\n            <h2>⚠️ WICHTIG: Punkte laufen bald ab!</h2>\n            <p>Hallo {{customer_name}},</p>\n            <p>Wir möchten Sie daran erinnern, dass einige Ihrer Treuepunkte bald ablaufen werden.</p>\n            \n            <div class=\"warning-box\">\n                <h3>⏰ Ablaufende Punkte</h3>\n                <p><strong>{{points}} Punkte</strong> laufen ab am:</p>\n                <p class=\"expiry-date\">{{expiration_date}}</p>\n                <p>Verpassen Sie nicht Ihre wertvollen Punkte!</p>\n            </div>\n            \n            <p>Lösen Sie Ihre Punkte noch heute ein und sichern Sie sich tolle Belohnungen, bevor sie verfallen.</p>\n            \n            <a href=\"{{rewards_url}}\" class=\"urgent-button\">⚡ JETZT EINLÖSEN</a>\n            <br>\n            <a href=\"{{dashboard_url}}\" class=\"button\">Treueprogramm anzeigen</a>\n            <a href=\"{{shop_url}}\" class=\"button\">Zum Shop</a>\n        </div>\n        \n        <div class=\"footer\">\n            <p>Brennholzkönig - Ihr Partner für Premium Brennholz</p>\n            <p>Bei Fragen erreichen Sie uns unter: info@brennholz-koenig.de</p>\n        </div>\n    </div>\n</body>\n</html>",
+  "text_content": "⚠️ WICHTIG: Punkte laufen bald ab!\n\nHallo {{customer_name}},\n\n{{points}} Punkte laufen am {{expiration_date}} ab.\n\nVerpassen Sie nicht Ihre wertvollen Punkte!\n\nJetzt einlösen: {{rewards_url}}\nTreueprogramm anzeigen: {{dashboard_url}}\nZum Shop: {{shop_url}}\n\nIhr Brennholzkönig Team",
+  "variables": ["customer_name", "points", "expiration_date", "dashboard_url", "shop_url", "rewards_url"],
+  "is_active": true,
+  "triggers": {
+    "loyalty_points_expiring": true
+  }
+}', 'Loyalty E-Mail Template für ablaufende Punkte', NOW(), NOW())
+ON CONFLICT (setting_type, setting_key) DO UPDATE SET
+  setting_value = EXCLUDED.setting_value,
+  updated_at = NOW();

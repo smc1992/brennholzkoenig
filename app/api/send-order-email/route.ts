@@ -21,23 +21,36 @@ export async function POST(request: NextRequest) {
       customer_name: customerData.name,
       order_id: orderData.orderNumber || orderData.id,
       order_date: new Date().toLocaleDateString('de-DE'),
-      total_amount: orderData.total,
+      total_amount: typeof orderData.total === 'string' ? parseFloat(orderData.total) : orderData.total,
       delivery_address: `${customerData.address}\n${customerData.postalCode} ${customerData.city}`,
       order_tracking_url: `https://brennholzkoenig.de/konto/bestellungen/${orderData.id}`,
-      order_items: orderData.items?.map((item: any) => `${item.quantity}x ${item.name} - ${item.price}€`).join('\n') || 'Keine Artikel angegeben'
+      // Bevorzuge unit_price, fallback auf price; immer auf 2 Dezimalstellen formatiert
+      order_items: orderData.items?.map((item: any) => {
+        const unitPrice = item.unit_price !== undefined && item.unit_price !== null
+          ? (typeof item.unit_price === 'string' ? parseFloat(item.unit_price) : item.unit_price)
+          : (typeof item.price === 'string' ? parseFloat(item.price) : item.price);
+        const formattedPrice = unitPrice !== undefined && unitPrice !== null ? unitPrice.toFixed(2) : '';
+        return `${item.quantity}x ${item.name} - ${formattedPrice}€`;
+      }).join('\n') || 'Keine Artikel angegeben'
     }
 
     // Admin-Benachrichtigungsdaten vorbereiten
     const adminNotificationData = {
       order_id: orderData.orderNumber || orderData.id,
       order_date: new Date().toLocaleDateString('de-DE'),
-      total_amount: orderData.total,
+      total_amount: typeof orderData.total === 'string' ? parseFloat(orderData.total) : orderData.total,
       payment_status: 'Ausstehend',
       customer_name: customerData.name,
       customer_email: customerData.email,
       customer_phone: customerData.phone || 'Nicht angegeben',
       delivery_address: `${customerData.address}, ${customerData.postalCode} ${customerData.city}`,
-      order_items: orderData.items?.map((item: any) => `${item.name} (${item.quantity}x ${item.price}€)`).join(', ') || 'Keine Artikel angegeben',
+      order_items: orderData.items?.map((item: any) => {
+        const unitPrice = item.unit_price !== undefined && item.unit_price !== null
+          ? (typeof item.unit_price === 'string' ? parseFloat(item.unit_price) : item.unit_price)
+          : (typeof item.price === 'string' ? parseFloat(item.price) : item.price);
+        const formattedPrice = unitPrice !== undefined && unitPrice !== null ? unitPrice.toFixed(2) : '';
+        return `${item.name} (${item.quantity}x ${formattedPrice}€)`;
+      }).join(', ') || 'Keine Artikel angegeben',
       admin_order_url: `https://brennholzkoenig.de/admin?tab=orders&order=${orderData.id}`
     }
 

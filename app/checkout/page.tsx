@@ -8,6 +8,7 @@ import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { calculatePriceWithTiers } from '../../lib/pricing';
 import { trackPurchase } from '@/components/GoogleAnalytics';
 import { getCDNUrl } from '@/utils/cdn';
+import { processOrderLoyaltyPoints } from '@/lib/loyaltyService';
 // Stock monitoring wird über API-Route gehandhabt
 
 // Funktion zur Generierung einer Kundennummer basierend auf Email
@@ -1053,20 +1054,41 @@ export default function CheckoutPage() {
           }
         })),
 
-        // E-Mail-Versand im Hintergrund
+        // E-Mail-Versand im Hintergrund (nutzt persistierte DB-Order-Items)
         (async () => {
           try {
+            // Lade die gespeicherten Order-Items aus der DB, um konsistente Preise (unit_price) zu verwenden
+            const { data: dbOrderItems, error: loadItemsError } = await supabase
+              .from('order_items')
+              .select('product_name, quantity, unit_price')
+              .eq('order_id', order.id);
+
+            if (loadItemsError) {
+              console.warn('⚠️ Konnte Order-Items für E-Mail nicht laden, verwende Checkout-Daten:', loadItemsError);
+            }
+
+            const emailItems = (dbOrderItems && Array.isArray(dbOrderItems) && dbOrderItems.length > 0)
+              ? dbOrderItems.map((item: any) => ({
+                  name: item.product_name,
+                  quantity: item.quantity,
+                  // Unit-Preis aus DB bevorzugen
+                  unit_price: typeof item.unit_price === 'string' ? parseFloat(item.unit_price) : item.unit_price,
+                  unit: 'SRM',
+                }))
+              : cartItems.map((item) => ({
+                  name: item.name,
+                  quantity: item.quantity,
+                  unit_price: item.price,
+                  unit: item.unit || 'SRM',
+                }));
+
             const emailData = {
               orderData: {
                 orderNumber: orderNumber,
                 id: order.id,
                 total: total,
-                items: cartItems.map((item) => ({
-                  name: item.name,
-                  quantity: item.quantity,
-                  price: item.price,
-                  unit: item.unit || 'SRM',
-                })),
+                // Route akzeptiert sowohl unit_price als auch price; wir senden unit_price explizit
+                items: emailItems,
                 totalAmount: total.toString(),
                 deliveryAddress: `${deliveryData.firstName} ${deliveryData.lastName}\n${deliveryData.street} ${deliveryData.houseNumber}\n${deliveryData.postalCode} ${deliveryData.city}`,
               },
@@ -1084,7 +1106,7 @@ export default function CheckoutPage() {
             };
 
             console.log('Sende Bestellbestätigung an:', deliveryData.email);
-            
+
             const emailResponse = await fetch('/api/send-order-email', {
               method: 'POST',
               headers: {
@@ -1094,7 +1116,7 @@ export default function CheckoutPage() {
             });
 
             const emailResult = await emailResponse.json();
-            
+
             if (emailResult.success) {
               console.log('✅ Bestellbestätigung erfolgreich gesendet');
             } else {
@@ -1142,6 +1164,38 @@ export default function CheckoutPage() {
             );
           } catch (error) {
             console.error('Error tracking purchase event:', error);
+          }
+        })(),
+
+        // Loyalty-Punktevergabe im Hintergrund
+        (async () => {
+          try {
+            console.log('🎯 Starte Loyalty-Punktevergabe für Bestellung:', orderNumber);
+            
+            const orderItems = cartItems.map(item => ({
+              product_name: item.name,
+              product_category: 'Brennholz', // Kann später erweitert werden
+              quantity: item.quantity,
+              unit_price: item.price,
+              total_price: item.price * item.quantity
+            }));
+
+            const loyaltyResult = await processOrderLoyaltyPoints(
+              customerNumber,
+              orderNumber,
+              total,
+              orderItems
+            );
+
+            if (loyaltyResult.success && loyaltyResult.pointsAwarded > 0) {
+              console.log(`🎉 ${loyaltyResult.pointsAwarded} Treuepunkte erfolgreich vergeben!`);
+            } else if (loyaltyResult.error) {
+              console.error('❌ Fehler bei Loyalty-Punktevergabe:', loyaltyResult.error);
+            } else {
+              console.log('ℹ️ Keine Punkte vergeben (Programm deaktiviert oder 0 Punkte)');
+            }
+          } catch (error) {
+            console.error('❌ Fehler bei Loyalty-Punktevergabe:', error);
           }
         })()
       ]).then((results) => {
