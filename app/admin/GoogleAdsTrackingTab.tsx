@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 interface ConversionEvent {
   event_type: string;
   created_at: string;
-  event_data: string;
+  properties: any;
 }
 
 export default function GoogleAdsTrackingTab() {
@@ -60,7 +60,7 @@ export default function GoogleAdsTrackingTab() {
 
       const { data } = await supabase
         .from('analytics_events')
-        .select('event_type, created_at, event_data')
+        .select('event_type, created_at, properties')
         .in('event_type', ['purchase', 'lead', 'signup', 'contact'])
         .gte('created_at', sevenDaysAgo.toISOString())
         .order('created_at', { ascending: false })
@@ -99,11 +99,20 @@ export default function GoogleAdsTrackingTab() {
         timestamp: new Date().toISOString()
       };
       
+      // Ensure a non-null session_id to satisfy DB constraint
+      let sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('analytics-session-id') : null;
+      if (!sessionId && typeof window !== 'undefined') {
+        sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        sessionStorage.setItem('analytics-session-id', sessionId);
+      }
+
       const testEvent = {
         event_type: eventType,
-        event_data: JSON.stringify(eventData),
+        properties: eventData,
         user_agent: navigator.userAgent,
-        url: window.location.href,
+        page_url: window.location.href,
+        session_id: sessionId,
+        timestamp: new Date().toISOString(),
         created_at: new Date().toISOString()
       };
 
@@ -377,10 +386,10 @@ export default function GoogleAdsTrackingTab() {
                       {formatDate(event.created_at)}
                     </td>
                     <td className="py-3 px-4 text-gray-600">
-                      {event.event_data ? (JSON.parse(event.event_data as string) as any).value || '-' : '-'} €
+                      {event.properties && typeof event.properties === 'object' && 'value' in event.properties ? (event.properties.value as number) : '-'} €
                     </td>
                     <td className="py-3 px-4 text-gray-600">
-                      {event.event_data && (JSON.parse(event.event_data as string) as any).test ? (
+                      {event.properties && typeof event.properties === 'object' && (event.properties as any).test ? (
                         <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded">
                           Test
                         </span>

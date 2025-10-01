@@ -179,6 +179,13 @@ export default function ContactForm() {
       // 2. E-Mail und Analytics im Hintergrund ausführen (non-blocking)
       const emailHtml = createEmailTemplate(formData);
       
+      // Ensure a non-null session_id to satisfy DB constraint
+      let sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('analytics-session-id') : null;
+      if (!sessionId && typeof window !== 'undefined') {
+        sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        sessionStorage.setItem('analytics-session-id', sessionId);
+      }
+      
       // Fire-and-forget für bessere Performance
       Promise.allSettled([
         // E-Mail senden
@@ -197,12 +204,14 @@ export default function ContactForm() {
         // Analytics Event (optional)
         supabase.from('analytics_events').insert([{
           event_type: 'contact_form_submission',
-          event_data: {
+          properties: {
             product: formData.product_category,
             has_phone: !!formData.phone,
             has_subject: !!formData.subject,
             message_length: formData.message.length
           },
+          session_id: sessionId,
+          timestamp: new Date().toISOString(),
           created_at: new Date().toISOString()
         }])
       ]).then(([emailResult, analyticsResult]) => {

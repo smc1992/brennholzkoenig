@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts"
 import { createHash, createHmac } from "https://deno.land/std@0.168.0/node/crypto.ts"
@@ -246,11 +247,12 @@ serve(async (req) => {
     await client.close()
 
     // Analytics Event für E-Mail-Versand mit Authentifizierungsinfo
+    const functionSessionId = Deno.env.get('FUNCTION_SESSION_ID') || `server_email_auth_${Date.now()}`
     await supabase
       .from('analytics_events')
       .insert({
         event_type: 'email_sent',
-        event_data: {
+        properties: {
           type: type,
           to: to,
           subject: subject,
@@ -264,7 +266,7 @@ serve(async (req) => {
           timestamp: new Date().toISOString()
         },
         user_id: null,
-        session_id: null
+        session_id: functionSessionId
       })
 
     return new Response(
@@ -295,16 +297,17 @@ serve(async (req) => {
       const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
       const supabase = createClient(supabaseUrl, supabaseKey)
 
+      const functionSessionId = Deno.env.get('FUNCTION_SESSION_ID') || `server_email_auth_${Date.now()}`
       await supabase
         .from('analytics_events')
         .insert({
           event_type: 'email_failed',
-          event_data: {
+          properties: {
             error: error.message,
             timestamp: new Date().toISOString()
           },
           user_id: null,
-          session_id: null
+          session_id: functionSessionId
         })
     } catch {}
     

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
@@ -110,7 +111,7 @@ serve(async (req) => {
 
     let sentCount = 0
     let failedCount = 0
-    const results = []
+    const results: { subscription_id: string | number; status: string; error?: string }[] = []
 
     // Push-Benachrichtigungen an alle Subscriptions senden
     for (const subscription of subscriptions) {
@@ -150,11 +151,12 @@ serve(async (req) => {
     }
 
     // Analytics Event protokollieren
+    const functionSessionId = Deno.env.get('FUNCTION_SESSION_ID') || `server_push_${Date.now()}`
     await supabase
       .from('analytics_events')
       .insert({
         event_type: 'push_notification_sent',
-        event_data: {
+        properties: {
           type: type,
           title: title,
           sent_count: sentCount,
@@ -163,7 +165,7 @@ serve(async (req) => {
           timestamp: new Date().toISOString()
         },
         user_id: null,
-        session_id: null
+        session_id: functionSessionId
       })
 
     // Push-Benachrichtigung in Datenbank speichern für Verlauf
