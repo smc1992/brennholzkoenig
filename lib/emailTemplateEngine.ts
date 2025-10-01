@@ -1,5 +1,7 @@
 import 'server-only';
-import { supabase } from './supabase';
+import { createLegacyServerSupabase } from './supabase-server';
+// Server-side Supabase accessor to avoid build-time initialization
+const getSupabase = () => createLegacyServerSupabase();
 import { sendEmail, sendEmailTest } from './emailService';
 import { createClient } from '@supabase/supabase-js';
 
@@ -56,6 +58,7 @@ export async function loadEmailTemplate(type: string): Promise<EmailTemplate | n
     console.log('[loadEmailTemplate] Verwende normalen Client mit angepasster RLS-Policy');
     
     // Lade alle E-Mail-Templates mit normalem Client
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('app_settings')
       .select('*')
@@ -225,6 +228,7 @@ function generateEmailFooter(): string {
 // Lade globale E-Mail-Signatur
 async function loadGlobalSignature(): Promise<{ enabled: boolean; html_signature: string; text_signature: string } | null> {
   try {
+    const supabase = getSupabase();
     const { data: signatureData } = await supabase
       .from('app_settings')
       .select('setting_value')
@@ -521,6 +525,7 @@ export async function logEmailSent(logData: {
   error?: string;
 }) {
   try {
+    const supabase = getSupabase();
     await supabase
       .from('app_settings')
       .insert({

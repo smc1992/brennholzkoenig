@@ -2,10 +2,23 @@ import 'server-only';
 import nodemailer from 'nodemailer';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy Admin-Supabase-Client, um Build-Zeit-Fehler zu vermeiden
+function getAdminSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.warn('[NodemailerService] Supabase Admin-Umgebungsvariablen fehlen (URL oder SERVICE_ROLE_KEY)');
+    return null;
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
 
 export interface SMTPSettings {
   host: string;
@@ -45,6 +58,10 @@ class NodemailerService {
    */
   private async loadSMTPSettings(): Promise<SMTPSettings> {
     try {
+      const supabase = getAdminSupabaseClient();
+      if (!supabase) {
+        throw new Error('Supabase Admin-Client nicht konfiguriert (NEXT_PUBLIC_SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY)');
+      }
       // Versuche zuerst JSON-Konfiguration zu laden
       const { data: jsonConfig, error: jsonError } = await supabase
         .from('app_settings')
@@ -162,6 +179,11 @@ class NodemailerService {
    */
   async getEmailTemplate(templateName: string): Promise<EmailTemplate | null> {
     try {
+      const supabase = getAdminSupabaseClient();
+      if (!supabase) {
+        console.warn('[NodemailerService] Supabase nicht konfiguriert – Template-Lookup übersprungen');
+        return null;
+      }
       const { data, error } = await supabase
         .from('email_templates')
         .select('*')
@@ -327,6 +349,11 @@ class NodemailerService {
     variables?: Record<string, any>;
   }): Promise<void> {
     try {
+      const supabase = getAdminSupabaseClient();
+      if (!supabase) {
+        console.warn('[NodemailerService] Supabase nicht konfiguriert – E-Mail-Log übersprungen');
+        return;
+      }
       await supabase.from('email_logs').insert({
         recipient: logData.to,
         subject: logData.subject,

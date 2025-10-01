@@ -1,5 +1,7 @@
 import 'server-only';
-import { supabase } from './supabase';
+import { createLegacyServerSupabase } from './supabase-server';
+// Server-side Supabase accessor to avoid build-time initialization
+const getSupabase = () => createLegacyServerSupabase();
 import { sendTemplateEmail, sendTemplateEmailTest } from './emailTemplateEngine';
 
 interface TemplateData {
@@ -146,6 +148,7 @@ interface LoyaltyPointsExpiringData {
  */
 export async function getActiveTemplatesWithTriggers(): Promise<any[]> {
   try {
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('app_settings')
       .select('*')
@@ -529,6 +532,7 @@ export async function triggerNewsletterSend(templateId: string, subject?: string
     }
 
     // Hole alle Newsletter-Abonnenten (hier müsste eine entsprechende Tabelle existieren)
+    const supabase = getSupabase();
     const { data: subscribers, error } = await supabase
       .from('newsletter_subscribers')
       .select('email, name')
@@ -597,7 +601,7 @@ export async function logEmailTrigger(
       type: triggerType,
       reference: reference
     };
-
+    const supabase = getSupabase();
     await supabase
       .from('app_settings')
       .insert({

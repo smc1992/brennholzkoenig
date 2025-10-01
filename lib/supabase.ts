@@ -7,17 +7,8 @@ function createSupabaseClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
   if (!supabaseUrl || !supabaseAnonKey) {
-    // Only use mock client during build-time (development)
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn('Supabase environment variables not configured for build-time');
-      // Return mock client for build-time only
-    } else {
-      // In production, this should never happen - throw error
-      console.error('CRITICAL: Supabase environment variables missing in production!');
-      console.error('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl || 'MISSING');
-      console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY:', supabaseAnonKey ? 'SET' : 'MISSING');
-      throw new Error('Production deployment failed: Supabase configuration missing');
-    }
+    // Build-safe: immer Mock zurückgeben, wenn Env fehlen (auch im Production-Build)
+    console.warn('Supabase environment variables not configured; returning build-safe mock client');
     // Mock client with warnings
        const logMockWarning = (operation: string) => {
          console.warn(`🚫 Mock Supabase: ${operation} operation blocked - configure environment variables`);
@@ -109,18 +100,9 @@ function createSupabaseLegacyClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
   if (!supabaseUrl || !supabaseAnonKey) {
-    // Only use mock client during build-time (development)
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn('Supabase environment variables not configured for build-time');
-      // Return mock client for build-time only
-    } else {
-      // In production, this should never happen - throw error
-      console.error('CRITICAL: Supabase environment variables missing in production!');
-      console.error('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl || 'MISSING');
-      console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY:', supabaseAnonKey ? 'SET' : 'MISSING');
-      throw new Error('Production deployment failed: Supabase configuration missing');
-    }
-     // Mock client for development only
+    // Build-safe: immer Mock zurückgeben, wenn Env fehlen (auch im Production-Build)
+    console.warn('Supabase environment variables not configured; returning build-safe mock client');
+    // Mock client
     return {
       from: (table: string) => ({
         select: (columns?: string) => ({

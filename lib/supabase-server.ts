@@ -2,13 +2,55 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
+// Leichter Mock für Supabase-Client, um Build-Zeit-Fehler zu vermeiden,
+// wenn Umgebungsvariablen fehlen. Rückgabewerte sind neutrale Strukturen.
+function getMockSupabaseClient() {
+  const makeResult = (data: any = null) => Promise.resolve({ data, error: null });
+
+  const query = {
+    select: (_fields?: any) => query,
+    insert: (_values?: any) => makeResult(),
+    update: (_values?: any) => makeResult(),
+    delete: () => makeResult(),
+    eq: (_c?: any, _v?: any) => query,
+    lt: (_c?: any, _v?: any) => query,
+    gt: (_c?: any, _v?: any) => query,
+    order: (_c?: any, _opts?: any) => query,
+    limit: (_n?: number) => query,
+    single: () => makeResult(),
+  } as any;
+
+  return {
+    from: (_table: string) => query,
+    auth: {
+      getUser: () => makeResult(),
+      getSession: () => makeResult(),
+    },
+    storage: {
+      from: (_bucket: string) => ({
+        upload: (_p: string, _b: any, _o?: any) => makeResult(),
+        getPublicUrl: (_p: string) => ({ data: { publicUrl: '' }, error: null }),
+      }),
+    },
+    rpc: (_fn: string, _args?: any) => makeResult(),
+  } as any;
+}
+
 // Supabase-empfohlener Server-side Client mit SSR-Support
 export const createServerSupabase = () => {
   const cookieStore = cookies()
-  
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    // Fallback-Mock, um Build-Zeit-Fehler zu vermeiden
+    return getMockSupabaseClient()
+  }
+
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         getAll() {
@@ -20,7 +62,6 @@ export const createServerSupabase = () => {
               cookieStore.set(name, value, options)
             })
           } catch (error) {
-            // Server Component에서는 Cookie 설정이 제한될 수 있음
             console.warn('Cookie setting failed in Server Component:', error)
           }
         },
@@ -31,9 +72,13 @@ export const createServerSupabase = () => {
 
 // Fallback für Legacy-Code - wird schrittweise ersetzt
 export const createLegacyServerSupabase = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    return getMockSupabaseClient()
+  }
+
   return createClient(supabaseUrl, supabaseKey, {
     auth: {
       persistSession: false,

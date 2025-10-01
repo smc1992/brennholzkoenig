@@ -1,5 +1,7 @@
 import 'server-only';
-import { supabase } from './supabase';
+import { createLegacyServerSupabase } from './supabase-server';
+// Server-side Supabase accessor to avoid build-time initialization
+const getSupabase = () => createLegacyServerSupabase();
 
 interface EmailOptions {
   to: string;
@@ -13,6 +15,7 @@ interface EmailOptions {
 // Lade globale E-Mail-Signatur
 async function loadGlobalSignature(): Promise<{ enabled: boolean; html_signature: string; text_signature: string } | null> {
   try {
+    const supabase = getSupabase();
     const { data: signatureData } = await supabase
       .from('app_settings')
       .select('setting_value')
@@ -100,6 +103,7 @@ export async function loadSMTPSettings(): Promise<SMTPSettings | null> {
     console.log('[SMTP] Keine vollständigen Umgebungsvariablen gefunden, verwende Supabase-Fallback');
     
     // 2) Fallback: JSON-Konfiguration unter setting_type = 'smtp_config'
+    const supabase = getSupabase();
     const { data: jsonRows, error: jsonError } = await supabase
       .from('app_settings')
       .select('*')

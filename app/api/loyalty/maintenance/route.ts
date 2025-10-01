@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { LoyaltyExpirationService } from '@/lib/loyaltyExpirationService';
 
+// Sicherstellen, dass diese Route im Node.js Runtime läuft und nicht im Edge
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = false;
+
 /**
  * API-Route für die tägliche Wartung des Loyalty-Programms
  * Diese Route sollte täglich von einem Cron-Job aufgerufen werden

@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { createLegacyServerSupabase } from '@/lib/supabase-server';
 import { LoyaltyNotificationService } from './loyaltyNotificationService';
 
 interface LoyaltyTransaction {
@@ -24,6 +24,10 @@ interface LoyaltyTransaction {
  * Service für die Verwaltung ablaufender Loyalty-Punkte
  */
 export class LoyaltyExpirationService {
+  // Lazy Server-Supabase-Client, um Build-Zeit-Probleme zu vermeiden
+  private static getSupabase() {
+    return createLegacyServerSupabase();
+  }
   
   /**
    * Prüft auf ablaufende Punkte und sendet Benachrichtigungen
@@ -32,6 +36,8 @@ export class LoyaltyExpirationService {
   static async checkExpiringPoints(): Promise<void> {
     try {
       console.log('🔍 Prüfe auf ablaufende Punkte...');
+
+      const supabase = this.getSupabase();
 
       // Hole alle Punkte, die in den nächsten 7 Tagen ablaufen
       const sevenDaysFromNow = new Date();
@@ -125,6 +131,8 @@ export class LoyaltyExpirationService {
     try {
       console.log('🧹 Bereinige abgelaufene Punkte...');
 
+      const supabase = this.getSupabase();
+
       // Hole alle abgelaufenen Transaktionen
       const { data: expiredTransactions, error } = await supabase
         .from('loyalty_transactions')
@@ -206,6 +214,7 @@ export class LoyaltyExpirationService {
    * Berechnet den Punktestand eines Members neu
    */
   private static async recalculateMemberBalance(memberId: string): Promise<void> {
+    const supabase = this.getSupabase();
     const { data: transactions, error } = await supabase
       .from('loyalty_transactions')
       .select('points')

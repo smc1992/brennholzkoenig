@@ -6,10 +6,24 @@ import {
   triggerLoyaltyPointsExpiring
 } from './emailTriggerEngine';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy-Erstellung des Admin-Supabase-Clients, um Build-Zeit-Fehler zu vermeiden
+function getAdminSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    // Während Build/ohne Env: nur warnen und zur Laufzeit erstellen
+    console.warn('Supabase Admin-Umgebungsvariablen fehlen: URL oder SERVICE_ROLE_KEY');
+    return null;
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
 
 interface NotificationData {
   customerEmail: string;
@@ -27,12 +41,18 @@ export class LoyaltyNotificationService {
 
   static async sendPointsNotification(data: NotificationData): Promise<void> {
     try {
+      const supabase = getAdminSupabaseClient();
+      if (!supabase) {
+        console.warn('Überspringe Kunden-Nachschlagevorgang: Supabase nicht konfiguriert');
+      }
       // Hole Kundennummer für die E-Mail-Trigger
-      const { data: customerData, error } = await supabase
-        .from('customers')
-        .select('customer_number')
-        .eq('email', data.customerEmail)
-        .single();
+      const { data: customerData, error } = supabase
+        ? await supabase
+            .from('customers')
+            .select('customer_number')
+            .eq('email', data.customerEmail)
+            .single()
+        : { data: null, error: null } as any;
 
       const customerNumber = customerData?.customer_number || 'N/A';
 
@@ -102,12 +122,18 @@ export class LoyaltyNotificationService {
     oldTier?: string
   ): Promise<void> {
     try {
+      const supabase = getAdminSupabaseClient();
+      if (!supabase) {
+        console.warn('Überspringe Kunden-Nachschlagevorgang: Supabase nicht konfiguriert');
+      }
       // Hole Kundennummer für die E-Mail-Trigger
-      const { data: customerData, error } = await supabase
-        .from('customers')
-        .select('customer_number')
-        .eq('email', customerEmail)
-        .single();
+      const { data: customerData, error } = supabase
+        ? await supabase
+            .from('customers')
+            .select('customer_number')
+            .eq('email', customerEmail)
+            .single()
+        : { data: null, error: null } as any;
 
       const customerNumber = customerData?.customer_number || 'N/A';
 
@@ -140,12 +166,18 @@ export class LoyaltyNotificationService {
     expirationDate: Date
   ): Promise<void> {
     try {
+      const supabase = getAdminSupabaseClient();
+      if (!supabase) {
+        console.warn('Überspringe Kunden-Nachschlagevorgang: Supabase nicht konfiguriert');
+      }
       // Hole Kundennummer für die E-Mail-Trigger
-      const { data: customerData, error } = await supabase
-        .from('customers')
-        .select('customer_number')
-        .eq('email', customerEmail)
-        .single();
+      const { data: customerData, error } = supabase
+        ? await supabase
+            .from('customers')
+            .select('customer_number')
+            .eq('email', customerEmail)
+            .single()
+        : { data: null, error: null } as any;
 
       const customerNumber = customerData?.customer_number || 'N/A';
 
