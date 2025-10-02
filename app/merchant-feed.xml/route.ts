@@ -4,13 +4,19 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function getSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // Prefer server-side envs; fall back to public envs if not set
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseKey) {
     console.warn('Supabase environment variables not configured for merchant feed');
     return null;
   }
-  return createClient(supabaseUrl, supabaseKey);
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
 }
 
 function xmlEscape(value: string) {
@@ -30,21 +36,14 @@ export async function GET() {
   if (supabase) {
     try {
       const selectCols = 'id, slug, name, description, price, image_url, category, stock_quantity, in_stock, availability, brand, updated_at, is_active';
-
-      // Erst mit is_active=true versuchen
       const { data } = await supabase
         .from('products')
         .select(selectCols)
         .eq('is_active', true);
       products = data || [];
 
-      // Fallback: wenn leer, ohne Filter erneut laden
-      if (!products || products.length === 0) {
-        const { data: all } = await supabase
-          .from('products')
-          .select(selectCols);
-        products = all || [];
-      }
+      // Optional sanity filter: positive price
+      products = products.filter((p: any) => Number(p.price || 0) > 0);
     } catch (error) {
       console.error('Error loading products for merchant feed:', error);
     }
