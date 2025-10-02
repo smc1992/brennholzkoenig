@@ -256,6 +256,14 @@ export default function ProductDetailClient({ product: initialProduct, pricingTi
         pageSlug={`/shop/${productId}`}
         defaultTitle={product.meta_title || `${product.name} - Premium Brennholz`}
         defaultDescription={product.meta_description || product.description}
+        image={getImageUrl(product.image_url)}
+        product={{
+          name: product.name,
+          price: product.price,
+          currency: 'EUR',
+          availability: (product.stock_quantity && product.stock_quantity > 0) ? 'in_stock' : 'out_of_stock',
+          brand: 'Brennholzkönig'
+        }}
       />
       
       <div className="min-h-screen bg-pergament pt-20">

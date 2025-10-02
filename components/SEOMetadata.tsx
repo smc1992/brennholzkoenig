@@ -89,6 +89,43 @@ export function SEOMetadata({
       updateTwitterMeta('twitter:title', finalTitle);
       updateTwitterMeta('twitter:description', finalDescription);
       updateTwitterMeta('twitter:image', image);
+
+      // Inject JSON-LD Product schema if product data is provided
+      if (product && (product.name || finalTitle)) {
+        const priceValue = typeof product.price === 'number' ? product.price.toFixed(2) : (product.price || '');
+        const currency = product.currency || 'EUR';
+        const isAvailable = String(product.availability || '').toLowerCase();
+        const availabilityUrl = isAvailable === 'outofstock' || isAvailable === 'out_of_stock'
+          ? 'http://schema.org/OutOfStock'
+          : 'http://schema.org/InStock';
+
+        const productSchema = {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: product.name || finalTitle,
+          description: finalDescription,
+          image,
+          brand: product.brand || 'Brennholz König',
+          category: 'Brennholz',
+          offers: {
+            '@type': 'Offer',
+            url: window.location.href,
+            priceCurrency: currency,
+            price: priceValue,
+            availability: availabilityUrl,
+            itemCondition: 'http://schema.org/NewCondition'
+          }
+        };
+
+        let script = document.getElementById('jsonld-product') as HTMLScriptElement | null;
+        if (!script) {
+          script = document.createElement('script');
+          script.type = 'application/ld+json';
+          script.id = 'jsonld-product';
+          document.head.appendChild(script);
+        }
+        script.textContent = JSON.stringify(productSchema);
+      }
     }
   }, [finalTitle, finalDescription, image, product, keywords, url]);
 
