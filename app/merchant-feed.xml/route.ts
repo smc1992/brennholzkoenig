@@ -29,11 +29,22 @@ export async function GET() {
   let products: any[] = [];
   if (supabase) {
     try {
+      const selectCols = 'id, slug, name, description, price, image_url, category, stock_quantity, in_stock, availability, brand, updated_at, is_active';
+
+      // Erst mit is_active=true versuchen
       const { data } = await supabase
         .from('products')
-        .select('id, slug, name, description, price, image_url, category, stock_quantity, in_stock, availability, brand, updated_at, is_active')
+        .select(selectCols)
         .eq('is_active', true);
       products = data || [];
+
+      // Fallback: wenn leer, ohne Filter erneut laden
+      if (!products || products.length === 0) {
+        const { data: all } = await supabase
+          .from('products')
+          .select(selectCols);
+        products = all || [];
+      }
     } catch (error) {
       console.error('Error loading products for merchant feed:', error);
     }
