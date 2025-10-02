@@ -476,10 +476,10 @@ export class ModernInvoiceBuilder {
       // PDF-Optionen - CSS @page-Regeln haben Priorität
       const pdfOptions: PDFOptions = {
         format: options.format || 'A4',
-        // Entferne Margin-Überschreibung damit CSS @page-Regel respektiert wird
         printBackground: true,
         displayHeaderFooter: false,
-        preferCSSPageSize: true
+        preferCSSPageSize: true,
+        margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' }
       };
 
       console.log('📄 Generating PDF...');

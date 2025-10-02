@@ -9,7 +9,7 @@
     
     @page {
       size: A4;
-      margin: 25mm 15mm 15mm 15mm;
+      margin: 0;
       
       @top-center {
         content: "";
@@ -31,28 +31,30 @@
         margin: 0;
         padding: 0;
         width: 210mm;
+        height: 297mm;
       }
       
       .container {
         margin: 0;
         padding: 0;
         box-shadow: none;
-        width: 210mm !important;
-        max-width: 210mm !important;
+        width: 100% !important;
+        max-width: 100% !important;
         min-height: 297mm;
       }
       
       .footer {
         position: fixed !important;
-        bottom: 5mm !important;
+        bottom: 12mm !important;
         left: 15mm !important;
         right: 15mm !important;
-        width: calc(210mm - 30mm) !important;
         margin: 0 !important;
-        padding: 8pt 0 !important;
+        padding: 8pt 4mm !important; /* horizontal padding match items-section */
         border-top: 1pt solid #ddd !important;
         background: white !important;
         z-index: 1000 !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
       }
       
       .footer-content {
@@ -61,19 +63,33 @@
         align-items: flex-start !important;
         flex-wrap: wrap !important;
         gap: 15pt !important;
-        max-width: 100% !important;
+        max-width: 180mm !important;
+        margin: 0 auto !important;
+        padding: 0 4mm !important; /* match items-section padding */
       }
       
       .footer-section {
-        flex: 1 !important;
+        flex: 1 1 0 !important;
         min-width: 120pt !important;
-        max-width: 33% !important;
+        max-width: none !important;
         word-wrap: break-word !important;
         overflow-wrap: break-word !important;
       }
+
+      .footer-section.right {
+        padding-right: 3mm !important;
+        text-align: right !important;
+        margin-right: 0 !important;
+      }
+
+      .footer-section.right p {
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow: visible !important;
+      }
       
       .content-wrapper {
-        padding: 0mm 0 5mm 0 !important;
+        padding: 0 15mm 12mm 15mm !important;
         margin: 0 !important;
         position: relative;
         z-index: 1;
@@ -167,9 +183,9 @@
     .header {
       background-color: #C53030;
       color: white;
-      padding: 15pt calc(15mm + 15pt) 15pt calc(15mm + 15pt);
-      margin: 0 -15mm 20pt -15mm;
-      width: calc(100% + 30mm);
+      padding: 15pt 15mm;
+      margin: 0;
+      width: 100%;
       box-sizing: border-box;
       z-index: 10;
       display: flex;
@@ -330,6 +346,36 @@
       margin: 20pt 0;
       font-size: 9pt;
     }
+
+    /* Zentrierte Sektionen und leichter Innenabstand */
+    .items-section,
+    .metadata,
+    .payment-terms,
+    .notes,
+    .totals-section,
+    .delivery-address,
+    .order-confirmation,
+    .order-confirmation-page,
+    .recipient-section {
+      max-width: 180mm;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .items-section {
+      padding: 0 4mm;
+    }
+
+    /* Totals rechtsbündig zur Tabelle ausrichten */
+    .totals-section {
+      padding: 0 4mm;
+    }
+    .totals-section > div {
+      float: none !important;
+      margin-left: auto;
+      margin-right: 0;
+      display: block;
+    }
     
     .items-table th {
       background: #f5f5f5;
@@ -384,10 +430,13 @@
     
     /* Totals */
     .totals-section {
-      display: flex;
-      justify-content: flex-end;
+      display: block; /* block layout verhindert Verschiebung durch nachfolgendes clear-Element */
       margin-top: 25pt;
       margin-bottom: 30pt;
+      max-width: 180mm;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 0 4mm; /* identisches Innenpad wie Items-Tabelle */
     }
     
     .totals {
@@ -659,7 +708,7 @@
       color: #666 !important;
       text-align: center !important;
       max-width: 100% !important;
-      overflow: hidden !important;
+      overflow: visible !important;
       width: 100% !important;
       box-sizing: border-box !important;
     }
