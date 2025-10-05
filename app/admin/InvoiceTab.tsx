@@ -71,6 +71,14 @@ interface Order {
 }
 
 export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
+  // Nutze absolute Origin für API-Calls, um Port/Protocol-Mismatches zu vermeiden
+  const api = (path: string) => {
+    const origin = typeof window !== 'undefined'
+      ? window.location.origin
+      : (process.env.NEXT_PUBLIC_SITE_URL || '');
+    return `${origin}${path}`;
+  };
+
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -250,7 +258,7 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
     setIsCreating(true);
     try {
       // Verwende die invoice-builder API um korrekte Steuerberechnung zu erhalten
-      const response = await fetch('/api/invoice-builder', {
+      const response = await fetch(api('/api/invoice-builder'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -271,7 +279,7 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
       
       // Lade die korrekt berechneten Summen aus der invoice-builder Route
       // Dazu müssen wir die loadInvoiceData Funktion direkt aufrufen
-      const invoiceResponse = await fetch(`/api/invoice-builder?orderId=${order.id}`);
+      const invoiceResponse = await fetch(api(`/api/invoice-builder?orderId=${order.id}`));
       const invoiceData = await invoiceResponse.json();
       
       const subtotal = invoiceData.subtotal_amount || 0;
@@ -411,8 +419,8 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
     setIsGeneratingPDF(true);
     try {
       console.log('Generating PDF for invoice:', invoice.invoice_number, 'ID:', invoice.id);
-      
-      const response = await fetch('/api/invoice-builder', {
+      const apiUrl = api('/api/invoice-builder');
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -426,7 +434,7 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('API Error Response:', errorText);
+        console.error('API Error Response from', apiUrl, ':', errorText);
         let errorData;
         try {
           errorData = JSON.parse(errorText);
@@ -437,14 +445,14 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
       }
 
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      const fileUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.style.display = 'none';
-      a.href = url;
+      a.href = fileUrl;
       a.download = `rechnung-${invoice.invoice_number}.pdf`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(fileUrl);
       document.body.removeChild(a);
 
       alert('PDF erfolgreich generiert!');
@@ -458,7 +466,7 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
 
   const showPreview = async (invoice: Invoice) => {
     try {
-      const response = await fetch(`/api/invoice-builder?action=preview&invoiceId=${invoice.id}&templateId=default`);
+      const response = await fetch(api(`/api/invoice-builder?action=preview&invoiceId=${invoice.id}&templateId=default`));
       
       if (!response.ok) {
         throw new Error('Preview generation failed');
@@ -483,7 +491,7 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
       console.log('🔄 Creating invoice for order:', order.order_number);
       
       // Erstelle Rechnung direkt (umgeht RLS-Probleme)
-      const directResponse = await fetch('/api/create-invoice-direct', {
+      const directResponse = await fetch(api('/api/create-invoice-direct'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -507,7 +515,7 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
         
         // Versuche auch PDF zu generieren (optional)
         try {
-          const pdfResponse = await fetch('/api/invoice-builder', {
+          const pdfResponse = await fetch(api('/api/invoice-builder'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
