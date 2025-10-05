@@ -105,7 +105,7 @@ export function SEOMetadata({
           name: product.name || finalTitle,
           description: finalDescription,
           image,
-          brand: product.brand || 'Brennholz König',
+          brand: product.brand || 'Brennholzkönig',
           category: 'Brennholz',
           offers: {
             '@type': 'Offer',

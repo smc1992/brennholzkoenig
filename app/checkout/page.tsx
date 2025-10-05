@@ -346,43 +346,58 @@ export default function CheckoutPage() {
   // Synchronisiere Checkout-Artikel mit Real-time Produktdaten
   useEffect(() => {
     if (products.length > 0 && cartItems.length > 0) {
-      // Berechne Gesamtmenge aller Artikel für korrekte Preisberechnung
-      const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0);
-      
-      const updatedCartItems = cartItems.map(cartItem => {
-        const realtimeProduct = products.find(p => p.id && cartItem.id && p.id.toString() === cartItem.id.toString());
+      // Gesamtmenge NUR der SRM-Artikel für korrekte Tier-Logik
+      const totalSRMQuantity = cartItems
+        .filter((item) => item.unit === 'SRM')
+        .reduce((total, item) => total + item.quantity, 0);
+
+      const updatedCartItems = cartItems.map((cartItem) => {
+        const realtimeProduct =
+          products.find((p) => p.id && cartItem.id && p.id.toString() === cartItem.id.toString()) ||
+          // Fallback: versuche über Namen zuzuordnen, falls IDs inkonsistent sind
+          products.find((p) => p.name === cartItem.name);
         if (realtimeProduct) {
-          console.log(`Aktualisiere Checkout-Artikel: ${cartItem.name} -> ${realtimeProduct.name}, Preis: ${cartItem.price} -> ${realtimeProduct.price}`);
-          // Neuberechnung des Preises mit Gesamtmenge aller Artikel
-          const basePrice = typeof realtimeProduct.price === 'string' ? parseFloat(realtimeProduct.price) : realtimeProduct.price;
+          // Neuberechnung: SRM-Artikel nutzen Gesamt-SRM-Menge, sonst eigene Menge
+          const basePrice =
+            typeof realtimeProduct.price === 'string'
+              ? parseFloat(realtimeProduct.price)
+              : realtimeProduct.price;
           const hasQuantityDiscount = (realtimeProduct as any).has_quantity_discount || false;
-          const pricing = calculatePriceWithTiers(basePrice, totalQuantity, pricingTiers, minOrderQuantity, hasQuantityDiscount);
-          
+          const isSRM = (cartItem.unit || '').toUpperCase() === 'SRM';
+          const quantityForTier = isSRM ? totalSRMQuantity : cartItem.quantity;
+          const pricing = calculatePriceWithTiers(
+            basePrice,
+            quantityForTier,
+            pricingTiers,
+            minOrderQuantity,
+            hasQuantityDiscount
+          );
+
           return {
             ...cartItem,
             name: realtimeProduct.name,
             price: pricing.price,
-            image: realtimeProduct.image_url,
-            has_quantity_discount: hasQuantityDiscount
+            image_url: realtimeProduct.image_url,
+            has_quantity_discount: hasQuantityDiscount,
           };
         }
         return cartItem;
       });
-      
+
       // Nur aktualisieren wenn sich etwas geändert hat
-      const hasChanges = updatedCartItems.some((item, index) => 
-        item.name !== cartItems[index]?.name || 
+      const hasChanges = updatedCartItems.some((item, index) =>
+        item.name !== cartItems[index]?.name ||
         item.price !== cartItems[index]?.price ||
         item.image_url !== cartItems[index]?.image_url
       );
-      
+
       if (hasChanges) {
         setCartItems(updatedCartItems);
         // Auch localStorage aktualisieren für Konsistenz
         localStorage.setItem('cart', JSON.stringify(updatedCartItems));
       }
     }
-  }, [products]); // Entferne cartItems aus Dependencies um Loop zu vermeiden
+  }, [products, cartItems, pricingTiers, minOrderQuantity]);
 
   const calculateTotal = () => {
     const subtotalBrutto = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);

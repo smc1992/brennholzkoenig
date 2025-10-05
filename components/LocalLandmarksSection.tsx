@@ -18,48 +18,17 @@ export default function LocalLandmarksSection({
   landmarks = [] 
 }: LocalLandmarksSectionProps) {
   const [selectedLandmark, setSelectedLandmark] = useState<number | null>(null);
+  // Wenn keine echten Wahrzeichen übergeben werden, rendere diese Sektion nicht,
+  // um doppelte, nicht editierbare Inhalte zu vermeiden.
+  const displayLandmarks = landmarks.length > 0 ? landmarks : [];
 
-  // Fallback-Wahrzeichen für bessere Local SEO wenn keine spezifischen Daten vorhanden
-  const defaultLandmarks = [
-    {
-      name: `Stadtzentrum ${cityName}`,
-      description: `Das historische Zentrum von ${cityName} mit seinen charakteristischen Gebäuden und der lebendigen Atmosphäre. Hier liefern wir besonders gerne unser Premium-Brennholz für gemütliche Abende.`,
-      imageUrl: undefined,
-      distance: "Zentrale Lage",
-      relevance: "Hauptliefergebiet für Brennholz"
-    },
-    {
-      name: `Wohngebiete ${cityName}`,
-      description: `Die ruhigen Wohnviertel von ${cityName} mit ihren Einfamilienhäusern und Gärten. Perfekt für unsere Brennholz-Lieferungen direkt vor die Haustür.`,
-      imageUrl: undefined,
-      distance: "Stadtgebiet",
-      relevance: "Beliebtes Liefergebiet"
-    },
-    {
-      name: `Umgebung ${cityName}`,
-      description: `Die malerische Umgebung von ${cityName} mit Wäldern und Naturgebieten. Hier stammt unser nachhaltiges Brennholz aus regionaler Forstwirtschaft.`,
-      imageUrl: undefined,
-      distance: "Umland",
-      relevance: "Nachhaltige Holzgewinnung"
-    }
-  ];
-
-  const displayLandmarks = landmarks.length > 0 ? landmarks : defaultLandmarks;
+  if (displayLandmarks.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-16 px-4 bg-gradient-to-b from-pergament to-wood-100">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-primary-700 mb-4">
-            Brennholz-Service in {cityName}
-          </h2>
-          <p className="text-lg text-wood-800 max-w-3xl mx-auto">
-            Entdecken Sie, warum wir der bevorzugte Brennholz-Lieferant in {cityName} und Umgebung sind. 
-            Lokale Expertise trifft auf erstklassigen Service.
-          </p>
-        </div>
-
         {/* Landmarks Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           {displayLandmarks.map((landmark, index) => (
@@ -166,56 +135,7 @@ export default function LocalLandmarksSection({
           ))}
         </div>
 
-        {/* Local Service Highlights */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-primary-700 mb-4">
-              Ihr lokaler Brennholz-Experte in {cityName}
-            </h3>
-            <p className="text-wood-800">
-              Wir kennen {cityName} wie unsere Westentasche und wissen genau, 
-              was unsere Kunden vor Ort brauchen.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-wood-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <h4 className="font-semibold text-primary-700 mb-2">Lokale Präsenz</h4>
-              <p className="text-sm text-wood-800">
-                Wir sind fest in {cityName} verwurzelt und kennen jeden Winkel der Stadt.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-wood-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <h4 className="font-semibold text-primary-700 mb-2">Regionales Holz</h4>
-              <p className="text-sm text-wood-800">
-                Unser Brennholz stammt aus den Wäldern rund um {cityName}.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-wood-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <h4 className="font-semibold text-primary-700 mb-2">Schnelle Lieferung</h4>
-              <p className="text-sm text-wood-800">
-                Kurze Wege bedeuten schnelle Lieferung direkt zu Ihnen nach {cityName}.
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* Entfernt: Duplizierte Local Service Highlights (nicht editierbar) */}
       </div>
     </section>
   );
