@@ -93,7 +93,7 @@ interface CityPage {
     title: string;
     description: string;
     badge: string;
-    cta_text: string;
+    cta_text?: string;
   }>;
   local_service_expertise_title: string;
   local_service_expertise_description: string;
@@ -190,6 +190,12 @@ interface CityPage {
     minimum_order: number;
     areas: string[];
     delivery_time: string;
+  }>;
+  delivery_routes: Array<{
+    name: string;
+    days: string[];
+    time_slots: string[];
+    zones: string[];
   }>;
   is_active: boolean;
   created_at?: string;
@@ -369,6 +375,7 @@ export default function CityPagesTab() {
       local_partnerships_image_url: '',
       service_areas: [],
       delivery_zones: [],
+      delivery_routes: [],
       is_active: true
     });
     setIsEditing(true);
@@ -662,6 +669,7 @@ function CityPageForm({ page, onSave, onCancel }: {
     local_partnerships_image_url: '',
     service_areas: [],
     delivery_zones: [],
+    delivery_routes: [],
     is_active: true
   });
 
@@ -1017,17 +1025,6 @@ function CityPageForm({ page, onSave, onCancel }: {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent mb-2"
                     rows={3}
                   />
-                  <input
-                    type="text"
-                    placeholder="CTA Text"
-                    value={area.cta_text}
-                    onChange={(e) => {
-                      const newAreas = [...formData.local_service_areas];
-                      newAreas[index].cta_text = e.target.value;
-                      setFormData(prev => ({ ...prev, local_service_areas: newAreas }));
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent mb-2"
-                  />
                   <button
                     type="button"
                     onClick={() => {
@@ -1049,7 +1046,6 @@ function CityPageForm({ page, onSave, onCancel }: {
                     title: '',
                     description: '',
                     badge: '',
-                    cta_text: 'Mehr erfahren'
                   }];
                   setFormData(prev => ({ ...prev, local_service_areas: newAreas }));
                 }}
@@ -1167,157 +1163,219 @@ function CityPageForm({ page, onSave, onCancel }: {
           </div>
         </div>
 
-        {/* 7. Testimonial Section */}
+        {/* 7. Testimonial Section entfernt */}
+
+        {/* 6. Extended Delivery Info Section */}
         <div className="bg-white p-6 rounded-lg border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">6. Testimonial Section</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">6. Extended Delivery Info Section</h3>
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Badge Text</label>
-              <input
-                type="text"
-                value={formData.testimonial_badge_text}
-                onChange={(e) => setFormData(prev => ({ ...prev, testimonial_badge_text: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-              />
-            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Titel</label>
               <input
                 type="text"
-                value={formData.testimonial_title}
-                onChange={(e) => setFormData(prev => ({ ...prev, testimonial_title: e.target.value }))}
+                value={formData.extended_delivery_info_title}
+                onChange={(e) => setFormData(prev => ({ ...prev, extended_delivery_info_title: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Beschreibung</label>
               <textarea
-                value={formData.testimonial_description}
-                onChange={(e) => setFormData(prev => ({ ...prev, testimonial_description: e.target.value }))}
+                value={formData.extended_delivery_info_description}
+                onChange={(e) => setFormData(prev => ({ ...prev, extended_delivery_info_description: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
                 rows={3}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Testimonial Bild URL</label>
-              <input
-                type="url"
-                value={formData.testimonial_image_url}
-                onChange={(e) => setFormData(prev => ({ ...prev, testimonial_image_url: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">CTA Text</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Besondere Hinweise (kommagetrennt)</label>
               <input
                 type="text"
-                value={formData.testimonial_cta_text}
-                onChange={(e) => setFormData(prev => ({ ...prev, testimonial_cta_text: e.target.value }))}
+                value={(formData.extended_delivery_info_special_notes || []).join(', ')}
+                onChange={(e) => setFormData(prev => ({ ...prev, extended_delivery_info_special_notes: e.target.value.split(',').map(item => item.trim()).filter(item => item) }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
               />
             </div>
-            
-            {/* Testimonial Reviews */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Bewertungen</label>
-              {(formData.testimonial_reviews || []).map((review, index) => (
-                <div key={index} className="border p-4 rounded-lg mb-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+
+            {/* Lieferzonen (integriert aus Sektion 16) */}
+            <div className="pt-6 border-t">
+              <h4 className="text-md font-semibold text-gray-800 mb-3">Lieferzonen</h4>
+              <div className="space-y-4">
+                {formData.delivery_zones.map((zone, index) => (
+                  <div key={index} className="border p-4 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <input
+                        type="text"
+                        placeholder="Zonenname"
+                        value={zone.zone_name}
+                        onChange={(e) => {
+                          const newZones = [...formData.delivery_zones];
+                          newZones[index].zone_name = e.target.value;
+                          setFormData(prev => ({ ...prev, delivery_zones: newZones }));
+                        }}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Liefergebühr"
+                        value={zone.delivery_fee}
+                        onChange={(e) => {
+                          const newZones = [...formData.delivery_zones];
+                          newZones[index].delivery_fee = parseFloat(e.target.value) || 0;
+                          setFormData(prev => ({ ...prev, delivery_zones: newZones }));
+                        }}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Mindestbestellung"
+                        value={zone.minimum_order}
+                        onChange={(e) => {
+                          const newZones = [...formData.delivery_zones];
+                          newZones[index].minimum_order = parseFloat(e.target.value) || 0;
+                          setFormData(prev => ({ ...prev, delivery_zones: newZones }));
+                        }}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Lieferzeit"
+                        value={zone.delivery_time}
+                        onChange={(e) => {
+                          const newZones = [...formData.delivery_zones];
+                          newZones[index].delivery_time = e.target.value;
+                          setFormData(prev => ({ ...prev, delivery_zones: newZones }));
+                        }}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+                      />
+                    </div>
                     <input
                       type="text"
-                      placeholder="Name"
-                      value={review.name}
+                      placeholder="Gebiete (kommagetrennt)"
+                      value={(zone.areas || []).join(', ')}
                       onChange={(e) => {
-                        const newReviews = [...formData.testimonial_reviews];
-                        newReviews[index].name = e.target.value;
-                        setFormData(prev => ({ ...prev, testimonial_reviews: newReviews }));
+                        const newZones = [...formData.delivery_zones];
+                        newZones[index].areas = e.target.value.split(',').map(area => area.trim()).filter(area => area);
+                        setFormData(prev => ({ ...prev, delivery_zones: newZones }));
                       }}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent mb-2"
                     />
-                    <input
-                      type="text"
-                      placeholder="Initialen"
-                      value={review.initials}
-                      onChange={(e) => {
-                        const newReviews = [...formData.testimonial_reviews];
-                        newReviews[index].initials = e.target.value;
-                        setFormData(prev => ({ ...prev, testimonial_reviews: newReviews }));
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newZones = formData.delivery_zones.filter((_, i) => i !== index);
+                        setFormData(prev => ({ ...prev, delivery_zones: newZones }));
                       }}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Rolle"
-                      value={review.role}
-                      onChange={(e) => {
-                        const newReviews = [...formData.testimonial_reviews];
-                        newReviews[index].role = e.target.value;
-                        setFormData(prev => ({ ...prev, testimonial_reviews: newReviews }));
-                      }}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Bewertung (1-5)"
-                      min="1"
-                      max="5"
-                      value={review.rating}
-                      onChange={(e) => {
-                        const newReviews = [...formData.testimonial_reviews];
-                        newReviews[index].rating = parseInt(e.target.value);
-                        setFormData(prev => ({ ...prev, testimonial_reviews: newReviews }));
-                      }}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-                    />
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      Lieferzone entfernen
+                    </button>
                   </div>
-                  <textarea
-                    placeholder="Bewertungstext"
-                    value={review.text}
-                    onChange={(e) => {
-                      const newReviews = [...formData.testimonial_reviews];
-                      newReviews[index].text = e.target.value;
-                      setFormData(prev => ({ ...prev, testimonial_reviews: newReviews }));
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent mb-2"
-                    rows={3}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newReviews = formData.testimonial_reviews.filter((_, i) => i !== index);
-                      setFormData(prev => ({ ...prev, testimonial_reviews: newReviews }));
-                    }}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    Bewertung entfernen
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => {
-                  const newReview = {
-                    name: '',
-                    initials: '',
-                    role: '',
-                    order_info: '',
-                    rating: 5,
-                    text: '',
-                    date: new Date().toISOString().split('T')[0],
-                    verified: true
-                  };
-                  setFormData(prev => ({ ...prev, testimonial_reviews: [...prev.testimonial_reviews, newReview] }));
-                }}
-                className="px-4 py-2 bg-[#C04020] text-white rounded-lg hover:bg-[#A03318]"
-              >
-                Bewertung hinzufügen
-              </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newZone = {
+                      zone_name: '',
+                      delivery_fee: 0,
+                      minimum_order: 0,
+                      areas: [],
+                      delivery_time: ''
+                    };
+                    setFormData(prev => ({ ...prev, delivery_zones: [...prev.delivery_zones, newZone] }));
+                  }}
+                  className="px-4 py-2 bg-[#C04020] text-white rounded-lg hover:bg-[#A03318]"
+                >
+                  Lieferzone hinzufügen
+                </button>
+              </div>
+            </div>
+
+            {/* Lieferrouten Editor */}
+            <div className="pt-6 border-t">
+              <h4 className="text-md font-semibold text-gray-800 mb-3">Lieferrouten</h4>
+              <div className="space-y-4">
+                {formData.delivery_routes.map((route, index) => (
+                  <div key={index} className="border p-4 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <input
+                        type="text"
+                        placeholder="Routenname"
+                        value={route.name || ''}
+                        onChange={(e) => {
+                          const newRoutes = [...(formData.delivery_routes || [])];
+                          newRoutes[index] = { ...newRoutes[index], name: e.target.value };
+                          setFormData(prev => ({ ...prev, delivery_routes: newRoutes }));
+                        }}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Liefertage (kommagetrennt)"
+                        value={(route.days || []).join(', ')}
+                        onChange={(e) => {
+                          const newRoutes = [...(formData.delivery_routes || [])];
+                          newRoutes[index] = { ...newRoutes[index], days: e.target.value.split(',').map(d => d.trim()).filter(Boolean) };
+                          setFormData(prev => ({ ...prev, delivery_routes: newRoutes }));
+                        }}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Zeitfenster (kommagetrennt)"
+                        value={(route.time_slots || []).join(', ')}
+                        onChange={(e) => {
+                          const newRoutes = [...(formData.delivery_routes || [])];
+                          newRoutes[index] = { ...newRoutes[index], time_slots: e.target.value.split(',').map(t => t.trim()).filter(Boolean) };
+                          setFormData(prev => ({ ...prev, delivery_routes: newRoutes }));
+                        }}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+                      />
+                    </div>
+
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Zugehörige Zonen (kommagetrennt, Namen)</label>
+                    <input
+                      type="text"
+                      placeholder="Zonen-Namen (z. B. Nord, Ost)"
+                      value={(route.zones || []).join(', ')}
+                      onChange={(e) => {
+                        const newRoutes = [...(formData.delivery_routes || [])];
+                        newRoutes[index] = { ...newRoutes[index], zones: e.target.value.split(',').map(z => z.trim()).filter(Boolean) };
+                        setFormData(prev => ({ ...prev, delivery_routes: newRoutes }));
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent mb-2"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newRoutes = (formData.delivery_routes || []).filter((_, i) => i !== index);
+                        setFormData(prev => ({ ...prev, delivery_routes: newRoutes }));
+                      }}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      Route entfernen
+                    </button>
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newRoute = { name: '', days: [], time_slots: [], zones: [] };
+                    setFormData(prev => ({ ...prev, delivery_routes: [...(prev.delivery_routes || []), newRoute] }));
+                  }}
+                  className="px-4 py-2 bg-[#C04020] text-white rounded-lg hover:bg-[#A03318]"
+                >
+                  Route hinzufügen
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 8. Local Landmarks Section */}
-        <div className="bg-white p-6 rounded-lg border">
+        {/* 7. Local Landmarks Section (deaktiviert) */}
+        <div className="bg-white p-6 rounded-lg border hidden">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">7. Local Landmarks Section</h3>
           <div className="space-y-4">
             {(formData.local_landmarks || []).map((landmark, index) => (
@@ -1496,39 +1554,7 @@ function CityPageForm({ page, onSave, onCancel }: {
           </div>
         </div>
 
-        {/* 10. Extended Delivery Info Section */}
-        <div className="bg-white p-6 rounded-lg border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">10. Extended Delivery Info Section</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Titel</label>
-              <input
-                type="text"
-                value={formData.extended_delivery_info_title}
-                onChange={(e) => setFormData(prev => ({ ...prev, extended_delivery_info_title: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Beschreibung</label>
-              <textarea
-                value={formData.extended_delivery_info_description}
-                onChange={(e) => setFormData(prev => ({ ...prev, extended_delivery_info_description: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-                rows={3}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Besondere Hinweise (kommagetrennt)</label>
-              <input
-                type="text"
-                value={(formData.extended_delivery_info_special_notes || []).join(', ')}
-                onChange={(e) => setFormData(prev => ({ ...prev, extended_delivery_info_special_notes: e.target.value.split(',').map(item => item.trim()).filter(item => item) }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-              />
-            </div>
-          </div>
-        </div>
+        
 
         {/* 11. Kostenrechner Section */}
         <div className="bg-white p-6 rounded-lg border">
@@ -1765,99 +1791,7 @@ function CityPageForm({ page, onSave, onCancel }: {
           </div>
         </div>
 
-        {/* 16. Lieferzonen */}
-        <div className="bg-white p-6 rounded-lg border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">16. Lieferzonen</h3>
-          <div className="space-y-4">
-            {formData.delivery_zones.map((zone, index) => (
-              <div key={index} className="border p-4 rounded-lg">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <input
-                    type="text"
-                    placeholder="Zonenname"
-                    value={zone.zone_name}
-                    onChange={(e) => {
-                      const newZones = [...formData.delivery_zones];
-                      newZones[index].zone_name = e.target.value;
-                      setFormData(prev => ({ ...prev, delivery_zones: newZones }));
-                    }}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Liefergebühr"
-                    value={zone.delivery_fee}
-                    onChange={(e) => {
-                      const newZones = [...formData.delivery_zones];
-                      newZones[index].delivery_fee = parseFloat(e.target.value) || 0;
-                      setFormData(prev => ({ ...prev, delivery_zones: newZones }));
-                    }}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Mindestbestellung"
-                    value={zone.minimum_order}
-                    onChange={(e) => {
-                      const newZones = [...formData.delivery_zones];
-                      newZones[index].minimum_order = parseFloat(e.target.value) || 0;
-                      setFormData(prev => ({ ...prev, delivery_zones: newZones }));
-                    }}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Lieferzeit"
-                    value={zone.delivery_time}
-                    onChange={(e) => {
-                      const newZones = [...formData.delivery_zones];
-                      newZones[index].delivery_time = e.target.value;
-                      setFormData(prev => ({ ...prev, delivery_zones: newZones }));
-                    }}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-                  />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Gebiete (kommagetrennt)"
-                  value={(zone.areas || []).join(', ')}
-                  onChange={(e) => {
-                    const newZones = [...formData.delivery_zones];
-                    newZones[index].areas = e.target.value.split(',').map(area => area.trim()).filter(area => area);
-                    setFormData(prev => ({ ...prev, delivery_zones: newZones }));
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent mb-2"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    const newZones = formData.delivery_zones.filter((_, i) => i !== index);
-                    setFormData(prev => ({ ...prev, delivery_zones: newZones }));
-                  }}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  Lieferzone entfernen
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => {
-                const newZone = {
-                  zone_name: '',
-                  delivery_fee: 0,
-                  minimum_order: 0,
-                  areas: [],
-                  delivery_time: ''
-                };
-                setFormData(prev => ({ ...prev, delivery_zones: [...prev.delivery_zones, newZone] }));
-              }}
-              className="px-4 py-2 bg-[#C04020] text-white rounded-lg hover:bg-[#A03318]"
-            >
-              Lieferzone hinzufügen
-            </button>
-          </div>
-        </div>
+        {/* 16. Lieferzonen entfernt – in Sektion 6 integriert */}
 
         {/* 17. Saisonale Events */}
         <div className="bg-white p-6 rounded-lg border">

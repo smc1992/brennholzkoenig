@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import Link from 'next/link';
 
 interface LocalServiceArea {
   name: string;
@@ -9,7 +8,7 @@ interface LocalServiceArea {
   title: string;
   description: string;
   badge: string;
-  cta_text: string;
+  cta_text?: string;
 }
 
 interface LocalServiceBenefit {
@@ -154,19 +153,10 @@ export default function LocalServiceSection({
                 {area.title}
               </h3>
               
-              <p className="text-wood-700 leading-relaxed mb-6">
-                {area.description}
-              </p>
-              
-              <Link 
-                href="#kontakt"
-                className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium transition-colors group"
-              >
-                {area.cta_text}
-                <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
+  <p className="text-wood-700 leading-relaxed mb-6">
+    {area.description}
+  </p>
+  
             </div>
           ))}
         </div>

@@ -595,7 +595,12 @@ export default function OptimizedWarenkorbContent({
       <div className="container mx-auto px-6 sm:px-8 lg:px-12 max-w-7xl">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-4">Ihr Warenkorb</h1>
-          
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="inline-flex items-center bg-green-50 text-green-800 px-4 py-2 rounded-full border border-green-200 shadow-sm">
+              <i className="ri-shield-check-line text-green-600 mr-2"></i>
+              <span className="text-sm sm:text-base font-medium">Zahlung erst bei Lieferung – ohne Risiko</span>
+            </div>
+          </div>
 
         </div>
 

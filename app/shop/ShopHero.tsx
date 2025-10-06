@@ -17,6 +17,12 @@ export default function ShopHero() {
         <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium mb-6 sm:mb-8 max-w-4xl mx-auto" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
           Premium Brennholz direkt vom Produzenten. Hochwertige Qualität für Ihr Zuhause.
         </p>
+        <div className="flex justify-center">
+          <div className="inline-flex items-center bg-white/10 backdrop-blur-sm text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold shadow-lg border border-white/20">
+            <i className="ri-shield-check-line text-[#D4A520] mr-2 text-lg"></i>
+            <span className="text-sm sm:text-base">Zahlung erst bei Lieferung – ohne Risiko</span>
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -16,11 +16,19 @@ interface LocalTestimonial {
 interface LocalTestimonialsSectionProps {
   cityName: string;
   testimonials?: LocalTestimonial[];
+  title?: string;
+  description?: string;
+  ctaText?: string;
+  cityData?: any;
 }
 
 export default function LocalTestimonialsSection({ 
   cityName, 
-  testimonials = [] 
+  testimonials = [],
+  title,
+  description,
+  ctaText,
+  cityData
 }: LocalTestimonialsSectionProps) {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
 
@@ -68,7 +76,21 @@ export default function LocalTestimonialsSection({
     }
   ];
 
-  const displayTestimonials = testimonials.length > 0 ? testimonials : defaultTestimonials;
+  // Falls cityData vorhanden ist, mappe cityData.testimonial_reviews auf LocalTestimonial
+  const cityReviews: LocalTestimonial[] = Array.isArray(cityData?.testimonial_reviews)
+    ? cityData.testimonial_reviews.map((r: any, idx: number) => ({
+        id: r.id?.toString?.() || `${idx}-${r.name || 'review'}`,
+        customerName: r.name || 'Anonym',
+        location: r.role || `${cityName}`,
+        rating: Number(r.rating) || 5,
+        review: r.text || '',
+        date: r.date || '',
+        verified: Boolean(r.verified),
+        orderType: r.order_info || undefined
+      }))
+    : [];
+
+  const displayTestimonials = (testimonials.length > 0 ? testimonials : (cityReviews.length > 0 ? cityReviews : defaultTestimonials));
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -89,39 +111,47 @@ export default function LocalTestimonialsSection({
         {/* Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-primary-700 mb-4">
-            Was unsere Kunden in {cityName} sagen
+            {title || cityData?.testimonial_title || `Was unsere Kunden in ${cityName} sagen`}
           </h2>
-          <p className="text-lg text-wood-800 max-w-3xl mx-auto">
-            Echte Bewertungen von zufriedenen Kunden aus {cityName} und Umgebung. 
-            Ihre Zufriedenheit ist unser Antrieb.
-          </p>
+          {(description || cityData?.testimonial_description) && (
+            <p className="text-lg text-wood-800 max-w-3xl mx-auto">
+              {description || cityData?.testimonial_description}
+            </p>
+          )}
         </div>
 
-        {/* Statistics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-          <div className="text-center bg-white rounded-xl shadow-lg p-6">
-            <div className="text-3xl font-bold text-primary-700 mb-2">4.9</div>
-            <div className="flex justify-center mb-2">
-              {renderStars(5)}
-            </div>
-            <div className="text-sm text-gray-600">Durchschnittsbewertung</div>
+        {/* Optional Statistics: Nur rendern, wenn cityData entsprechende Felder bereitstellt */}
+        {cityData?.testimonial_stats && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+            {cityData?.testimonial_stats?.avg_rating && (
+              <div className="text-center bg-white rounded-xl shadow-lg p-6">
+                <div className="text-3xl font-bold text-primary-700 mb-2">{cityData.testimonial_stats.avg_rating}</div>
+                <div className="flex justify-center mb-2">
+                  {renderStars(Math.round(Number(cityData.testimonial_stats.avg_rating)) || 5)}
+                </div>
+                <div className="text-sm text-gray-600">Durchschnittsbewertung</div>
+              </div>
+            )}
+            {cityData?.testimonial_stats?.customers_label && (
+              <div className="text-center bg-white rounded-xl shadow-lg p-6">
+                <div className="text-3xl font-bold text-primary-700 mb-2">{cityData.testimonial_stats.customers_label}</div>
+                <div className="text-sm text-gray-600">Zufriedene Kunden in {cityName}</div>
+              </div>
+            )}
+            {cityData?.testimonial_stats?.recommendation_rate && (
+              <div className="text-center bg-white rounded-xl shadow-lg p-6">
+                <div className="text-3xl font-bold text-primary-700 mb-2">{cityData.testimonial_stats.recommendation_rate}</div>
+                <div className="text-sm text-gray-600">Weiterempfehlungsrate</div>
+              </div>
+            )}
+            {cityData?.testimonial_stats?.delivery_time && (
+              <div className="text-center bg-white rounded-xl shadow-lg p-6">
+                <div className="text-3xl font-bold text-primary-700 mb-2">{cityData.testimonial_stats.delivery_time}</div>
+                <div className="text-sm text-gray-600">Durchschnittliche Lieferzeit</div>
+              </div>
+            )}
           </div>
-          
-          <div className="text-center bg-white rounded-xl shadow-lg p-6">
-            <div className="text-3xl font-bold text-primary-700 mb-2">250+</div>
-            <div className="text-sm text-gray-600">Zufriedene Kunden in {cityName}</div>
-          </div>
-          
-          <div className="text-center bg-white rounded-xl shadow-lg p-6">
-            <div className="text-3xl font-bold text-primary-700 mb-2">98%</div>
-            <div className="text-sm text-gray-600">Weiterempfehlungsrate</div>
-          </div>
-          
-          <div className="text-center bg-white rounded-xl shadow-lg p-6">
-            <div className="text-3xl font-bold text-primary-700 mb-2">24h</div>
-            <div className="text-sm text-gray-600">Durchschnittliche Lieferzeit</div>
-          </div>
-        </div>
+        )}
 
         {/* Main Testimonial Display */}
         <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 mb-8">
@@ -223,20 +253,24 @@ export default function LocalTestimonialsSection({
           ))}
         </div>
 
-        {/* Call to Action */}
-        <div className="text-center mt-12">
-          <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-8 text-white">
-            <h3 className="text-2xl font-bold mb-4">
-              Werden Sie unser nächster zufriedener Kunde in {cityName}!
-            </h3>
-            <p className="text-wood-100 mb-6">
-              Erleben Sie selbst, warum so viele Kunden in {cityName} auf unseren Service vertrauen.
-            </p>
-            <button className="bg-white text-primary-700 px-8 py-3 rounded-lg font-semibold hover:bg-wood-50 transition-colors duration-300">
-              Jetzt Brennholz bestellen
-            </button>
+        {/* Call to Action: Nur rendern, wenn ctaText vorhanden */}
+        {(ctaText || cityData?.testimonial_cta_text) && (
+          <div className="text-center mt-12">
+            <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-8 text-white">
+              <h3 className="text-2xl font-bold mb-4">
+                {title || cityData?.testimonial_title || `Werden Sie unser nächster zufriedener Kunde in ${cityName}!`}
+              </h3>
+              {(description || cityData?.testimonial_description) && (
+                <p className="text-wood-100 mb-6">
+                  {description || cityData?.testimonial_description}
+                </p>
+              )}
+              <button className="bg-white text-primary-700 px-8 py-3 rounded-lg font-semibold hover:bg-wood-50 transition-colors duration-300">
+                {ctaText || cityData?.testimonial_cta_text}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </section>
   );

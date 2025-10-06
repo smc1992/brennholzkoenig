@@ -41,22 +41,24 @@ interface DatabaseDeliveryRoute {
 
 interface ExtendedDeliveryInfoSectionProps {
   cityName: string;
+  title?: string;
+  description?: string;
   customZones?: DeliveryZone[];
   customRoutes?: DeliveryRoute[];
-  deliveryZones?: DatabaseDeliveryZone[];
+  deliveryZones?: Array<DatabaseDeliveryZone | any>;
   deliveryRoutes?: DatabaseDeliveryRoute[];
 }
 
 export default function ExtendedDeliveryInfoSection({ 
-  cityName, 
+  cityName,
+  title,
+  description,
   customZones = [],
   customRoutes = [],
   deliveryZones = [],
   deliveryRoutes = []
 }: ExtendedDeliveryInfoSectionProps) {
-  const [activeTab, setActiveTab] = useState<'zones' | 'routes' | 'calculator'>('zones');
-  const [selectedZone, setSelectedZone] = useState<string>('');
-  const [orderAmount, setOrderAmount] = useState<number>(1);
+  const [activeTab, setActiveTab] = useState<'zones' | 'routes'>('zones');
 
   // Fallback-Lieferzonen für bessere lokale Relevanz
   const defaultZones: DeliveryZone[] = [
@@ -154,15 +156,15 @@ export default function ExtendedDeliveryInfoSection({
     }
   ];
 
-  // Konvertiere Datenbank-Daten zu Komponenten-Format
-  const convertedZones: DeliveryZone[] = deliveryZones.map((zone, index) => ({
+  // Konvertiere Datenbank-Daten zu Komponenten-Format (unterstützt mehrere Feldnamen)
+  const convertedZones: DeliveryZone[] = deliveryZones.map((zone: any, index: number) => ({
     id: (index + 1).toString(),
-    name: zone.name,
+    name: zone.name ?? zone.zone_name ?? `Zone ${(index + 1).toString()}`,
     areas: Array.isArray(zone.areas) ? zone.areas : [],
-    deliveryTime: zone.delivery_time,
-    fee: zone.fee,
-    minOrder: zone.min_order,
-    specialNotes: zone.special_notes,
+    deliveryTime: zone.delivery_time ?? zone.deliveryTime ?? '',
+    fee: zone.fee ?? zone.delivery_fee ?? 0,
+    minOrder: zone.min_order ?? zone.minimum_order ?? 0,
+    specialNotes: zone.special_notes ?? zone.specialNotes ?? undefined,
     postalCodes: Array.isArray(zone.postal_codes) ? zone.postal_codes : []
   }));
 
@@ -180,14 +182,6 @@ export default function ExtendedDeliveryInfoSection({
   const allRoutes = convertedRoutes.length > 0 ? convertedRoutes : 
                     customRoutes.length > 0 ? customRoutes : defaultRoutes;
 
-  const calculateDeliveryFee = (zoneId: string, amount: number) => {
-    const zone = allZones.find(z => z.id === zoneId);
-    if (!zone) return 0;
-    
-    if (amount >= (zone.minOrder || 0) && zone.fee === 0) return 0;
-    if (amount >= 3) return Math.max(0, zone.fee - 10); // Mengenrabatt
-    return zone.fee;
-  };
 
   const getRouteForZone = (zoneId: string) => {
     return allRoutes.find(route => route.zones.includes(zoneId));
@@ -199,20 +193,19 @@ export default function ExtendedDeliveryInfoSection({
         {/* Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-primary-700 mb-4">
-            Lieferservice in {cityName}
+            {title ? title : `Lieferservice in ${cityName}`}
           </h2>
           <p className="text-lg text-wood-800 max-w-3xl mx-auto">
-            Detaillierte Informationen zu unseren Lieferzonen, Routen und Konditionen 
-            in {cityName} und Umgebung.
+            {description ? description : `Detaillierte Informationen zu unseren Lieferzonen, Routen und Konditionen 
+            in ${cityName} und Umgebung.`}
           </p>
         </div>
 
-        {/* Tab Navigation */}
+        {/* Tab Navigation (Kostenrechner entfernt) */}
         <div className="flex flex-wrap justify-center mb-8 bg-white rounded-xl shadow-lg p-2">
           {[
             { id: 'zones', name: 'Lieferzonen', icon: '📍' },
-            { id: 'routes', name: 'Lieferrouten', icon: '🚚' },
-            { id: 'calculator', name: 'Kostenrechner', icon: '💰' }
+            { id: 'routes', name: 'Lieferrouten', icon: '🚚' }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -356,117 +349,6 @@ export default function ExtendedDeliveryInfoSection({
           </div>
         )}
 
-        {/* Calculator Tab */}
-        {activeTab === 'calculator' && (
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-white rounded-xl shadow-lg p-8">
-              <h3 className="text-2xl font-bold text-primary-700 mb-6 text-center">
-                Lieferkosten berechnen
-              </h3>
-
-              {/* Zone Selection */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-primary-700 mb-2">
-                  Lieferzone auswählen
-                </label>
-                <select
-                  value={selectedZone}
-                  onChange={(e) => setSelectedZone(e.target.value)}
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                >
-                  <option value="">Bitte wählen Sie Ihre Zone</option>
-                  {allZones.map((zone) => (
-                    <option key={zone.id} value={zone.id}>
-                      {zone.name} - {zone.areas[0]} und weitere
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Amount Selection */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-primary-700 mb-2">
-                  Bestellmenge (Raummeter)
-                </label>
-                <input
-                  type="number"
-                  min="0.5"
-                  step="0.5"
-                  value={orderAmount}
-                  onChange={(e) => setOrderAmount(parseFloat(e.target.value) || 0)}
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  placeholder="z.B. 2.5"
-                />
-              </div>
-
-              {/* Results */}
-              {selectedZone && orderAmount > 0 && (
-                <div className="bg-wood-50 rounded-lg p-6">
-                  {(() => {
-                    const zone = allZones.find(z => z.id === selectedZone);
-                    const deliveryFee = calculateDeliveryFee(selectedZone, orderAmount);
-                    const route = getRouteForZone(selectedZone);
-                    
-                    if (!zone) return null;
-
-                    return (
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <span className="font-semibold text-primary-700">Lieferzone:</span>
-                          <span className="text-wood-800">{zone.name}</span>
-                        </div>
-                        
-                        <div className="flex justify-between items-center">
-                          <span className="font-semibold text-primary-700">Lieferzeit:</span>
-                          <span className="text-wood-800">{zone.deliveryTime}</span>
-                        </div>
-                        
-                        <div className="flex justify-between items-center">
-                          <span className="font-semibold text-primary-700">Bestellmenge:</span>
-                          <span className="text-wood-800">{orderAmount} Raummeter</span>
-                        </div>
-                        
-                        <div className="flex justify-between items-center text-lg font-bold">
-                          <span className="text-primary-700">Lieferkosten:</span>
-                          <span className={deliveryFee === 0 ? 'text-green-600' : 'text-primary-700'}>
-                            {deliveryFee === 0 ? 'Kostenlos' : `${deliveryFee}€`}
-                          </span>
-                        </div>
-
-                        {route && (
-                          <div className="border-t border-gray-200 pt-4">
-                            <h4 className="font-semibold text-primary-700 mb-2">Lieferroute:</h4>
-                            <p className="text-wood-800 text-sm">
-                              {route.name} - {route.days.join(', ')}
-                            </p>
-                            <p className="text-wood-800 text-sm">
-                              Zeitfenster: {route.timeSlots.join(' oder ')}
-                            </p>
-                          </div>
-                        )}
-
-                        {zone.specialNotes && (
-                          <div className="border-t border-gray-200 pt-4">
-                            <p className="text-sm text-wood-800">
-                              💡 {zone.specialNotes}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()} 
-                </div>
-              )}
-
-              {/* CTA */}
-              <div className="mt-8 text-center">
-                <button className="bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors duration-300">
-                  Jetzt bestellen
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Service Features */}
         <div className="mt-12 grid md:grid-cols-4 gap-6">

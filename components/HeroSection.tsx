@@ -82,13 +82,19 @@ export default function HeroSection() {
     >
       <div className="container mx-auto px-6 sm:px-8 lg:px-12 w-full relative max-w-7xl" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: '2rem', paddingBottom: '4rem', pointerEvents: 'auto' }}>
         <div className="max-w-6xl mx-auto w-full">
-          {/* Trust Badge */}
-          <div className="flex justify-center sm:justify-start mb-6 sm:mb-8">
+          {/* Trust Badges */}
+          <div className="flex flex-col sm:flex-row items-center sm:items-start justify-center sm:justify-start gap-2 sm:gap-3 mb-6 sm:mb-8">
             <div className="inline-flex items-center bg-[#C04020] text-white px-3 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-xs sm:text-base shadow-2xl max-w-fit">
               <div className="w-4 h-4 sm:w-6 sm:h-6 flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
                 <i className="ri-award-fill text-sm sm:text-lg"></i>
               </div>
               <span className="font-black text-xs sm:text-base leading-none">6.847 ZUFRIEDENE KUNDEN</span>
+            </div>
+            <div className="inline-flex items-center bg-green-600 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-full font-bold text-xs sm:text-base shadow-2xl max-w-fit">
+              <div className="w-4 h-4 sm:w-6 sm:h-6 flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+                <i className="ri-shield-check-line text-sm sm:text-lg"></i>
+              </div>
+              <span className="font-black text-xs sm:text-base leading-none">Zahlung erst bei Lieferung – ohne Risiko</span>
             </div>
           </div>
 

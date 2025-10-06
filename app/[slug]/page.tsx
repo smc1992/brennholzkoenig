@@ -7,8 +7,6 @@ import CityHeroSection from '@/components/CityHeroSection';
 import USPSection from '@/components/USPSection';
 import LocalServiceSection from '@/components/LocalServiceSection';
 import TrustSection from '@/components/TrustSection';
-import TestimonialSection from '@/components/TestimonialSection';
-import CostCalculatorSection from '@/components/CostCalculatorSection';
 import ComparisonSection from '@/components/ComparisonSection';
 import ProcessSection from '@/components/ProcessSection';
 import SafetySection from '@/components/SafetySection';
@@ -16,8 +14,7 @@ import OptimizedProductSection from '@/components/OptimizedProductSection';
 import RegionSection from '@/components/RegionSection';
 import SEOMetadata from '@/components/SEOMetadata';
 import LocalLandmarksSection from '@/components/LocalLandmarksSection';
-import LocalTestimonialsSection from '@/components/LocalTestimonialsSection';
-import ServiceAreaDetailsSection from '@/components/ServiceAreaDetailsSection';
+// ServiceAreaDetailsSection entfernt
 import LocalFAQSection from '@/components/LocalFAQSection';
 import LocalPartnershipsSection from '@/components/LocalPartnershipsSection';
 import ExtendedDeliveryInfoSection from '@/components/ExtendedDeliveryInfoSection';
@@ -69,7 +66,7 @@ interface CityPage {
     title: string;
     description: string;
     badge: string;
-    cta_text: string;
+    cta_text?: string;
   }>;
   local_service_expertise_title?: string;
   local_service_expertise_description?: string;
@@ -79,6 +76,23 @@ interface CityPage {
   }>;
   local_service_rooted_title?: string;
   local_service_rooted_description?: string;
+
+  // Testimonial Section Felder
+  testimonial_badge_text?: string;
+  testimonial_title?: string;
+  testimonial_description?: string;
+  testimonial_image_url?: string;
+  testimonial_reviews?: Array<{
+    name: string;
+    initials?: string;
+    role?: string;
+    order_info?: string;
+    rating?: number;
+    text?: string;
+    date?: string;
+    verified?: boolean;
+  }>;
+  testimonial_cta_text?: string;
   // Local SEO Fields - Editierbare Inhalte
   local_faqs?: {
     id: string;
@@ -93,28 +107,39 @@ interface CityPage {
     postal_codes: string[];
     delivery_time: string;
   }[];
-  delivery_zones?: {
-    id: string;
-    name: string;
-    description: string;
-    delivery_fee: number;
-    min_order: number;
-  }[];
-  delivery_routes?: {
-    id: string;
+  // Erweiterte Lieferinformationen (Datenbank-Formate)
+  // Editierbare Texte für die Lieferservice-Sektion
+  extended_delivery_info_title?: string;
+  extended_delivery_info_description?: string;
+  delivery_zones?: Array<{
     name: string;
     areas: string[];
-    schedule: string;
-    contact: string;
-  }[];
-  seasonal_events?: {
-    id: string;
+    delivery_time: string;
+    fee: number;
+    min_order?: number;
+    special_notes?: string;
+    postal_codes: string[];
+  }>;
+  delivery_routes?: Array<{
+    name: string;
+    days: string[];
+    time_slots: string[];
+    zones: string[];
+  }>;
+  seasonal_events?: Array<{
     title: string;
     description: string;
-    start_date: string;
-    end_date: string;
-    discount?: number;
-  }[];
+    season: 'spring' | 'summer' | 'autumn' | 'winter';
+    month: number;
+    type: 'festival' | 'market' | 'tradition' | 'weather' | 'special_offer';
+    icon: string;
+    relevant_products?: string[];
+    special_offer?: {
+      discount: number;
+      description: string;
+      valid_until: string;
+    };
+  }>;
 }
 
 // Supabase Client
@@ -450,81 +475,25 @@ export default function CityLandingPage() {
         {/* Trust Section */}
         <TrustSection />
 
-        {/* Testimonial Section */}
-        <TestimonialSection cityData={cityPage} />
-
         {/* Lokale Wahrzeichen */}
         <LocalLandmarksSection cityName={cityPage.city_name} />
 
-        {/* Lokale Kundenbewertungen */}
-        <LocalTestimonialsSection cityName={cityPage.city_name} />
+        
 
-        {/* Zweiter Content-Bereich: Premium-Service */}
-        <section className="py-20 px-4 bg-gradient-to-b from-wood-50 to-pergament">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-primary-700 mb-6">
-                Premium-Service für {cityPage.city_name}
-              </h2>
-              <p className="text-xl text-wood-800 max-w-3xl mx-auto">
-                Höchste Qualität und erstklassiger Service direkt vor Ihrer Haustür
-              </p>
-            </div>
-            
-            {/* Content Section 2 */}
-            {cityPage.content_section_2_content && (
-              <div className="grid lg:grid-cols-2 gap-12 items-start mb-16">
-                {/* Text Links */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 lg:p-12">
-                  {cityPage.content_section_2_title && (
-                    <h3 className="text-2xl md:text-3xl font-bold text-primary-700 mb-6">
-                      {cityPage.content_section_2_title}
-                    </h3>
-                  )}
-                  <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed" 
-                       dangerouslySetInnerHTML={{ __html: cityPage.content_section_2_content }} />
-                </div>
-                
-                {/* Bild oder Spezielle Angebote Rechts */}
-                {cityPage.content_section_2_image_url ? (
-                  <div className="relative rounded-2xl shadow-lg overflow-hidden">
-                    <img 
-                      src={cityPage.content_section_2_image_url} 
-                      alt={`${cityPage.city_name} - ${cityPage.content_section_2_title || 'Content Bereich'}`}
-                      className="w-full h-full object-cover min-h-[300px]"
-                      loading="lazy"
-                    />
-                  </div>
-                ) : cityPage.special_offers ? (
-                  <div className="bg-gradient-to-br from-primary-600 to-primary-700 rounded-2xl shadow-lg p-8 lg:p-12 text-white">
-                    <h3 className="text-2xl md:text-3xl font-bold mb-6">
-                      Exklusive Angebote für {cityPage.city_name}
-                    </h3>
-                    <div className="prose prose-lg prose-invert max-w-none leading-relaxed" 
-                         dangerouslySetInnerHTML={{ __html: cityPage.special_offers }} />
-                  </div>
-                ) : null}
-              </div>
-            )}
-          </div>
-        </section>
+        {/* Zweiter Content-Bereich: Premium-Service entfernt */}
 
-        {/* Servicegebiete Details */}
-        <ServiceAreaDetailsSection 
-          cityName={cityPage.city_name}
-          postalCodes={cityPage.postal_codes}
-          serviceAreas={cityPage.service_areas_details}
-        />
+        {/* Servicegebiete Details entfernt */}
 
         {/* Erweiterte Lieferinformationen */}
         <ExtendedDeliveryInfoSection 
           cityName={cityPage.city_name}
+          title={cityPage.extended_delivery_info_title}
+          description={cityPage.extended_delivery_info_description}
           deliveryZones={cityPage.delivery_zones}
           deliveryRoutes={cityPage.delivery_routes}
         />
 
-        {/* Interaktive Komponenten */}
-        <CostCalculatorSection cityData={cityPage} />
+        {/* Interaktive Komponenten (Kostenrechner entfernt) */}
         <ComparisonSection />
         <ProcessSection cityData={cityPage} />
         <SafetySection />
