@@ -144,8 +144,8 @@ export default function TrustSection() {
           <div className={`bg-white rounded-2xl p-6 sm:p-8 shadow-xl transition-all duration-700 transform ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}`}>
             <div className="aspect-video rounded-xl overflow-hidden mb-6 shadow-lg">
               <img 
-                src="https://readdy.ai/api/search-image?query=Happy%20German%20family%20with%20children%20gathered%20around%20cozy%20fireplace%20using%20premium%20quality%20firewood%2C%20warm%20winter%20evening%20scene%2C%20satisfied%20customers%20enjoying%20clean%20burning%20wood%20fire%2C%20comfortable%20living%20room%20with%20stone%20fireplace%2C%20family%20bonding%20time%20around%20crackling%20fire&width=800&height=450&seq=family-fireplace-trust&orientation=landscape"
-                alt="Zufriedene Familie am warmen Kamin"
+                src="/images/Thorsten Vey Scheitholz.webp"
+                alt="Familie am Kamin – Thorsten Vey Scheitholz"
                 className="w-full h-full object-cover object-center"
               />
             </div>
@@ -163,8 +163,8 @@ export default function TrustSection() {
           <div className={`bg-white rounded-2xl p-6 sm:p-8 shadow-xl transition-all duration-700 transform delay-300 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}`}>
             <div className="aspect-video rounded-xl overflow-hidden mb-6 shadow-lg">
               <img 
-                src="/uploads/quality/industrieholz-brennt.webp"
-                alt="Professionelle Qualitätskontrolle"
+                src="/images/Maja Vey Brennholz.webp"
+                alt="Geprüfte Qualität – Maja Vey Brennholz"
                 className="w-full h-full object-cover object-center"
               />
             </div>

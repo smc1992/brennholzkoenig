@@ -3,6 +3,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import DynamicContent from './DynamicContent';
+import Image from 'next/image';
 
 export default function USPSection() {
   const [isVisible, setIsVisible] = useState(false);
@@ -32,12 +33,19 @@ export default function USPSection() {
         <div className="text-center mb-8 sm:mb-12 md:mb-16">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8 max-w-6xl mx-auto">
             {/* USP 1: Kein Dreck - Mobile optimiert */}
-            <div className={`bg-gradient-to-br from-[#1A1A1A] to-[#2A2A2A] text-white rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-2xl transition-all duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-              <div className="text-center">
-                <div className="w-12 sm:w-16 md:w-20 h-12 sm:h-16 md:h-20 flex items-center justify-center bg-[#D4A520] rounded-full mx-auto mb-3 sm:mb-4 md:mb-6 shadow-lg">
-                  <i className="ri-home-heart-line text-white text-lg sm:text-2xl md:text-3xl"></i>
-                </div>
-                <h3 className="text-lg sm:text-2xl md:text-3xl font-black mb-2 sm:mb-4 leading-tight" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+            <div className={`bg-[#F5F0E0] rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl transition-all duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[540px] mx-auto`}>
+              {/* Top Image */}
+              <div className="relative w-full h-40 sm:h-48 md:h-56">
+                  <Image
+                    src="/images/Kein Dreck in der Wohnung.jpeg"
+                    alt="Kein Dreck in der Wohnung"
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+              </div>
+              <div className="text-left px-6 py-6">
+                <h3 className="text-[#1A1A1A] text-lg sm:text-2xl md:text-3xl font-black mb-3 sm:mb-4 leading-tight" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
                   <DynamicContent
                     page="home"
                     section="usp"
@@ -46,7 +54,7 @@ export default function USPSection() {
                     tag="span"
                   />
                 </h3>
-                <p className="text-sm sm:text-base md:text-lg mb-3 sm:mb-4 opacity-90 leading-relaxed" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+                <p className="text-[#1A1A1A] text-sm sm:text-base md:text-lg mb-3 sm:mb-4 leading-relaxed" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
                   <DynamicContent
                     page="home"
                     section="usp"
@@ -55,7 +63,7 @@ export default function USPSection() {
                     tag="span"
                   />
                 </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 text-xs sm:text-sm opacity-90">
+                <div className="flex flex-col sm:flex-row items-center justify-start gap-2 sm:gap-6 text-xs sm:text-sm">
                   <span className="flex items-center">
                     <i className="ri-check-line text-[#D4A520] mr-2"></i>
                     Keine Rinde
@@ -73,12 +81,19 @@ export default function USPSection() {
             </div>
 
             {/* USP 2: Möbelholz - Mobile optimiert */}
-            <div className={`bg-gradient-to-br from-[#C04020] to-[#A03318] text-white rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 shadow-2xl transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-              <div className="text-center">
-                <div className="w-12 sm:w-16 md:w-20 h-12 sm:h-16 md:h-20 flex items-center justify-center bg-[#D4A520] rounded-full mx-auto mb-3 sm:mb-4 md:mb-6 shadow-lg">
-                  <i className="ri-hammer-line text-white text-lg sm:text-2xl md:text-3xl"></i>
-                </div>
-                <h3 className="text-lg sm:text-2xl md:text-3xl font-black mb-2 sm:mb-4 leading-tight" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+            <div className={`bg-[#F5F0E0] rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[540px] mx-auto`}>
+              {/* Top Image */}
+              <div className="relative w-full h-40 sm:h-48 md:h-56">
+                  <Image
+                    src="/images/Perfektes Möbelholz.jpeg"
+                    alt="Perfektes Möbelholz"
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+              </div>
+              <div className="text-left px-6 py-6">
+                <h3 className="text-[#1A1A1A] text-lg sm:text-2xl md:text-3xl font-black mb-3 sm:mb-4 leading-tight" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
                   <DynamicContent
                     page="home"
                     section="usp"
@@ -87,7 +102,7 @@ export default function USPSection() {
                     tag="span"
                   />
                 </h3>
-                <p className="text-sm sm:text-base md:text-lg mb-3 sm:mb-4 opacity-90 leading-relaxed" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+                <p className="text-[#1A1A1A] text-sm sm:text-base md:text-lg mb-3 sm:mb-4 leading-relaxed" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
                   <DynamicContent
                     page="home"
                     section="usp"
@@ -96,7 +111,7 @@ export default function USPSection() {
                     tag="span"
                   />
                 </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 text-xs sm:text-sm opacity-90">
+                <div className="flex flex-col sm:flex-row items-center justify-start gap-2 sm:gap-6 text-xs sm:text-sm">
                   <span className="flex items-center">
                     <i className="ri-check-line text-[#D4A520] mr-2"></i>
                     Perfekter Brennwert

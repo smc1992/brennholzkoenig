@@ -51,11 +51,12 @@ export default function TestimonialSection({
             {description}
           </p>
           {/* Kunden Ambiente Bild */}
-          <div className="max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-2xl mb-8 sm:mb-12">
+          <div className="max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-2xl mb-8 sm:mb-12 text-center">
             <img 
-              src={cityData?.testimonial_section_image_url || "https://static.readdy.ai/image/5cb98375ce345c7331a1619afba21cba/255afa48d4769354fa7fedfea18b5f4b.webp"}
-              alt="Zufriedene Kunden um den warmen Kamin"
-              className="w-full h-32 sm:h-48 lg:h-64 object-cover object-center"
+              src={cityData?.testimonial_section_image_url || "/images/Brennholzanlieferung.webp"}
+              alt="Brennholzanlieferung – Kundenbewertungen"
+              className="block mx-auto w-full h-48 sm:h-64 lg:h-96 object-cover"
+              style={{ objectPosition: 'center 25%' }}
             />
           </div>
         </div>
