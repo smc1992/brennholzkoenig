@@ -9,6 +9,7 @@ export default function TrustSection() {
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    setIsVisible(true);
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -141,10 +142,10 @@ export default function TrustSection() {
         {/* Vertrauen durch Bilder */}
         <div className="grid md:grid-cols-2 gap-8 sm:gap-12 max-w-6xl mx-auto mb-12 sm:mb-16">
           {/* Familie bei Kamin */}
-          <div className={`bg-white rounded-2xl p-6 sm:p-8 shadow-xl transition-all duration-700 transform ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}`}>
+          <div className={`bg-white rounded-2xl p-6 sm:p-8 shadow-xl transition-all duration-700 transform opacity-100 translate-x-0 ${isVisible ? 'sm:opacity-100 sm:translate-x-0' : 'sm:opacity-0 sm:-translate-x-8'}`}>
             <div className="aspect-video rounded-xl overflow-hidden mb-6 shadow-lg">
               <img 
-                src="/images/Thorsten Vey Scheitholz.webp"
+                src="/images/Thorsten%20Vey%20Scheitholz-2.webp"
                 alt="Familie am Kamin – Thorsten Vey Scheitholz"
                 className="w-full h-full object-cover object-center"
               />
@@ -160,10 +161,10 @@ export default function TrustSection() {
           </div>
 
           {/* Qualitätskontrolle */}
-          <div className={`bg-white rounded-2xl p-6 sm:p-8 shadow-xl transition-all duration-700 transform delay-300 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}`}>
+          <div className={`bg-white rounded-2xl p-6 sm:p-8 shadow-xl transition-all duration-700 transform delay-300 opacity-100 translate-x-0 ${isVisible ? 'sm:opacity-100 sm:translate-x-0' : 'sm:opacity-0 sm:translate-x-8'}`}>
             <div className="aspect-video rounded-xl overflow-hidden mb-6 shadow-lg">
               <img 
-                src="/images/Maja Vey Brennholz.webp"
+                src="/images/Maja%20Vey%20Brennholz-2.webp"
                 alt="Geprüfte Qualität – Maja Vey Brennholz"
                 className="w-full h-full object-cover object-center"
               />

@@ -9,47 +9,9 @@ import DynamicContent from './DynamicContent';
 export default function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
-  const [heroImageUrl, setHeroImageUrl] = useState('');
 
   useEffect(() => {
     setIsVisible(true);
-
-    // Bevorzugtes lokales Hintergrundbild
-    const fallbackUrl = '/images/Hero Brennholzkönig.webp';
-
-    // Dynamisches Bild laden mit verbessertem Error-Handling
-    const loadHeroImage = async () => {
-      try {
-        const response = await fetch('/api/content?page=home&section=hero&type=background_image');
-        
-        // Prüfe ob Response OK ist
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        // Prüfe Content-Type
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new Error(`Expected JSON, got ${contentType}`);
-        }
-        
-        const data = await response.json();
-        
-        // Validiere Response-Struktur
-        if (data && typeof data === 'object' && data.content) {
-          // Wir bevorzugen das lokale Bild unabhängig von der API-Antwort
-          setHeroImageUrl(fallbackUrl);
-        } else {
-          console.warn('Invalid API response structure:', data);
-          setHeroImageUrl(fallbackUrl);
-        }
-      } catch (error) {
-        console.error('Fehler beim Laden des Hero-Bildes:', error);
-        setHeroImageUrl(fallbackUrl);
-      }
-    };
-
-    loadHeroImage();
   }, []);
 
   const scrollToProducts = () => {
@@ -70,18 +32,19 @@ export default function HeroSection() {
 
   return (
     <section 
-      className="overflow-visible"
+      className="relative overflow-visible"
       style={{
         minHeight: '100vh',
         paddingTop: '60px',
         pointerEvents: 'none',
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3)), url('${heroImageUrl}')`,
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('/images/Hero Brennholzkönig.webp')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
       }}
     >
-      <div className="container mx-auto px-6 sm:px-8 lg:px-12 w-full relative max-w-7xl" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: '2rem', paddingBottom: '4rem', pointerEvents: 'auto' }}>
+
+      <div className="container mx-auto px-6 sm:px-8 lg:px-12 w-full relative max-w-7xl z-10" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: '2rem', paddingBottom: '4rem', pointerEvents: 'auto' }}>
         <div className="max-w-6xl mx-auto w-full">
           {/* Trust Badges */}
           <div className="flex flex-col sm:flex-row items-center sm:items-start justify-center sm:justify-start gap-2 sm:gap-3 mb-6 sm:mb-8">

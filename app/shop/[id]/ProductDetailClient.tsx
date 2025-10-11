@@ -52,20 +52,13 @@ export default function ProductDetailClient({ product: initialProduct, pricingTi
   // Hilfsfunktion für CDN-URLs mit stabiler Cache-Invalidierung
   const getImageUrl = (url: string) => {
     if (!url) return '';
-    // Wenn es bereits eine vollständige URL ist, verwende sie direkt
+    // Vollständige externe URLs direkt verwenden
     if (url.startsWith('http')) return url;
-    // Wenn es bereits mit /images/ beginnt, füge stabiles Cache-Busting hinzu
-    if (url.startsWith('/images/')) {
-      const timestamp = initialProduct.updated_at ? new Date(initialProduct.updated_at).getTime() : 0;
-      return `${url}?t=${timestamp}`;
-    }
-    // Wenn es eine CDN-URL ist, füge Cache-Busting hinzu
-    if (url.startsWith('/api/cdn/')) {
-      const timestamp = initialProduct.updated_at ? new Date(initialProduct.updated_at).getTime() : 0;
-      return `${url}?t=${timestamp}`;
-    }
-    // Für andere Fälle verwende getCDNUrl
-    return getCDNUrl(url);
+    // Alle übrigen Fälle über die zentrale CDN-Hilfsfunktion auflösen
+    const resolved = getCDNUrl(url);
+    // Stabiles Cache-Busting basierend auf Produkt-Updatezeit
+    const timestamp = initialProduct.updated_at ? new Date(initialProduct.updated_at).getTime() : 0;
+    return timestamp ? `${resolved}?t=${timestamp}` : resolved;
   };
   
   // Verwende Server-Daten direkt

@@ -11,42 +11,39 @@ export function cdnUrl(path: string) {
 }
 
 export const getCDNUrl = (filename: string, seoSlug?: string): string => {
-  // Prüfen, ob filename null oder undefined ist
-  if (!filename) {
+  // 1) Fallback, wenn gar keine Infos vorhanden sind
+  if (!filename && !seoSlug) {
     return '/api/placeholder?width=400&height=400&text=Bild+nicht+verfügbar';
   }
-  
-  // Prüfen, ob es sich bereits um eine vollständige URL handelt
-  if (filename.startsWith('http')) {
-    return filename;
+
+  const input = filename || '';
+
+  // 2) Bereits vollständige URLs oder bekannte absolute Pfade unangetastet lassen
+  if (input.startsWith('http')) return input;
+  if (input.startsWith('/api/cdn/')) return input;
+  // Behandle alte /images/ SEO-Referenzen als CDN-SEO-Slug
+  if (input.startsWith('/images/')) {
+    const slugFromImages = input.replace('/images/', '').replace(/^\//, '');
+    return `/api/cdn/products/${slugFromImages}`;
   }
-  
-  // Wenn der Pfad bereits mit /images/ beginnt, verwende ihn direkt
-  if (filename.startsWith('/images/')) {
-    return filename;
+  if (input.startsWith('/storage-images/')) return input; // evtl. alternative Route
+
+  // 3) SEO-Slug bevorzugen, wenn konfiguriert
+  const useSEOSlug = !!seoSlug && process.env.NEXT_PUBLIC_USE_SEO_URLS !== 'false';
+
+  // 4) Auf Basename reduzieren (entfernt etwa 'products/')
+  const basename = (input.split('/').pop() || input).replace(/^\//, '');
+
+  // 5) Ziel ermitteln – Extension NICHT erforderlich (SEO-Slugs erlaubt)
+  const target = useSEOSlug ? seoSlug! : basename;
+
+  // 6) Wenn gar kein Ziel ermittelbar ist, Fallback
+  if (!target) {
+    return '/api/placeholder?width=400&height=400&text=Bild+nicht+verfügbar';
   }
-  
-  // Wenn der Pfad bereits mit /api/cdn/ beginnt, verwende ihn direkt
-  if (filename.startsWith('/api/cdn/')) {
-    return filename;
-  }
-  
-  // Bereinige den Dateinamen von führenden Slashes
-  let cleanFilename = filename;
-  if (cleanFilename.startsWith('/')) {
-    cleanFilename = cleanFilename.substring(1);
-  }
-  
-  // Prüfen, ob es sich um einen SEO-Slug handelt (enthält Produktname)
-  const isSEOSlug = cleanFilename.includes('-') && !cleanFilename.match(/^\d+-[a-z0-9]+\./i);
-  
-  // SEO-freundliche URLs haben Priorität - verwende saubere /images/ Route
-  if (seoSlug && process.env.NEXT_PUBLIC_USE_SEO_URLS !== 'false') {
-    return `/images/${seoSlug}`;
-  }
-  
-  // Alle Produktbilder verwenden die /images/ Route
-  return `/images/${cleanFilename}`;
+
+  // 7) Einheitliche API-Route für Supabase-Storage nutzen (mit oder ohne Extension)
+  return `/api/cdn/products/${target}`;
 };
 
 /**
@@ -66,7 +63,7 @@ export const getProductImageUrl = (product: any): string => {
  * Prüft ob eine URL eine SEO-freundliche Bild-URL ist
  */
 export const isSEOImageUrl = (url: string): boolean => {
-  return url.startsWith('/images/') && /\.[a-z]{3,4}$/.test(url);
+  return (url.startsWith('/api/cdn/products/') || url.startsWith('/storage-images/') || url.startsWith('/images/')) && /\.[a-z]{3,4}$/.test(url);
 };
 
 /**

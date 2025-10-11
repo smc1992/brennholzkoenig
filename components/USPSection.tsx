@@ -10,6 +10,7 @@ export default function USPSection() {
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    setIsVisible(true);
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -36,12 +37,11 @@ export default function USPSection() {
             <div className={`bg-[#F5F0E0] rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl transition-all duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[540px] mx-auto`}>
               {/* Top Image */}
               <div className="relative w-full h-40 sm:h-48 md:h-56">
-                  <Image
-                    src="/images/Kein Dreck in der Wohnung.jpeg"
+                  <img
+                    src="/images/Kein%20Dreck%20in%20der%20Wohnung-2.jpeg"
                     alt="Kein Dreck in der Wohnung"
-                    fill
-                    className="object-cover"
-                    priority
+                    className="block w-full h-full object-cover"
+                    loading="eager"
                   />
               </div>
               <div className="text-left px-6 py-6">
@@ -84,12 +84,11 @@ export default function USPSection() {
             <div className={`bg-[#F5F0E0] rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[540px] mx-auto`}>
               {/* Top Image */}
               <div className="relative w-full h-40 sm:h-48 md:h-56">
-                  <Image
-                    src="/images/Perfektes Möbelholz.jpeg"
+                  <img
+                    src="/images/Perfektes%20M%C3%B6belholz-2.jpeg"
                     alt="Perfektes Möbelholz"
-                    fill
-                    className="object-cover"
-                    priority
+                    className="block w-full h-full object-cover"
+                    loading="eager"
                   />
               </div>
               <div className="text-left px-6 py-6">

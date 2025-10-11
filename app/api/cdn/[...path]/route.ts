@@ -69,8 +69,8 @@ export async function GET(
       return new Response('Image not found', { status: 404 });
     }
     
-    // MIME-Type basierend auf Dateiendung bestimmen
-    const extension = filename.split('.').pop()?.toLowerCase();
+    // MIME-Type basierend auf der aufgelösten Dateiendung bestimmen
+    const extension = actualFilename.split('.').pop()?.toLowerCase();
     let contentType = 'application/octet-stream';
     
     switch (extension) {
