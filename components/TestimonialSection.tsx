@@ -55,7 +55,7 @@ export default function TestimonialSection({
             <img 
               src={cityData?.testimonial_section_image_url || "/images/Brennholzanlieferung.webp"}
               alt="Brennholzanlieferung – Kundenbewertungen"
-              className="block mx-auto w-full h-64 sm:h-80 lg:h-[40rem] xl:h-[44rem] object-cover"
+              className="block mx-auto w-full h-80 sm:h-96 md:h-[32rem] lg:h-[48rem] xl:h-[52rem] 2xl:h-[56rem] object-cover"
               style={{ objectPosition: 'center 25%' }}
             />
           </div>
