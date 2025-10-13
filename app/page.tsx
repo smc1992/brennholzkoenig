@@ -33,7 +33,30 @@ export default function Home() {
       
       <div className="min-h-dvh bg-pergament w-full">
         <HeroSection />
+        {/* Schnellzugriff zum Shop */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <Link
+              href="/shop"
+              className="bg-[#C04020] hover:bg-[#A03318] text-white px-6 py-3 rounded-lg font-bold transition-colors text-center"
+            >
+              Zum Shop
+            </Link>
+            <Link
+              href="/shop"
+              className="bg-white border border-gray-200 hover:border-[#C04020] hover:text-[#C04020] text-gray-900 px-6 py-3 rounded-lg font-bold transition-colors text-center"
+            >
+              Alle Produkte ansehen
+            </Link>
+          </div>
+        </div>
         <USPSection />
+        {/* Produkte weiter nach oben platzieren */}
+        <OptimizedProductSection 
+          initialProducts={products}
+          loadTime={loadTime}
+          error={error}
+        />
         <QualifierSection />
         <TrustSection />
         <TestimonialSection />
@@ -41,11 +64,6 @@ export default function Home() {
         <ComparisonSection />
         <ProcessSection />
         <SafetySection />
-        <OptimizedProductSection 
-          initialProducts={products}
-          loadTime={loadTime}
-          error={error}
-        />
         <RegionSection />
       </div>
     </>
