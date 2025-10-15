@@ -2,8 +2,8 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import DynamicContent from './DynamicContent';
 import Image from 'next/image';
+import DynamicContent from './DynamicContent';
 
 export default function USPSection() {
   const [isVisible, setIsVisible] = useState(false);
@@ -28,102 +28,75 @@ export default function USPSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="py-12 sm:py-16 md:py-20 bg-gradient-to-b from-[#F5F0E0] to-white">
+    <section ref={sectionRef} className="relative z-20 py-12 sm:py-16 md:py-20 bg-gradient-to-b from-[#F5F0E0] to-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-        {/* Main USPs - Mobile-optimierte Karten */}
+        {/* Haupt-USP Karten – Weißes Card-Design mit Bild oben */}
         <div className="text-center mb-8 sm:mb-12 md:mb-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8 max-w-6xl mx-auto">
-            {/* USP 1: Kein Dreck - Mobile optimiert */}
-            <div className={`bg-[#F5F0E0] rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl transition-all duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[540px] mx-auto`}>
-              {/* Top Image */}
-              <div className="relative w-full h-40 sm:h-48 md:h-56">
-                  <img
-                    src="/images/Kein%20Dreck%20in%20der%20Wohnung-2.jpeg"
-                    alt="Kein Dreck in der Wohnung"
-                    className="block w-full h-full object-cover"
-                    loading="eager"
-                  />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-10 max-w-6xl mx-auto">
+            {/* Card 1 */}
+            <div className={`bg-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 transition-all duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[560px] mx-auto`}> 
+              {/* Bild oben – feste Höhe für Gleichheit */}
+              <div className="relative w-full h-[260px] sm:h-[280px] md:h-[300px] rounded-t-2xl overflow-hidden">
+                <Image
+                  src="/images/kein-dreck-in-der-wohnung-2.jpeg"
+                  alt="Familien vertrauen uns"
+                  fill
+                  priority
+                  sizes="(min-width: 768px) 560px, 100vw"
+                  unoptimized
+                  className="object-cover"
+                />
               </div>
-              <div className="text-left px-6 py-6">
-                <h3 className="text-[#1A1A1A] text-lg sm:text-2xl md:text-3xl font-black mb-3 sm:mb-4 leading-tight" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+              {/* Inhalt */}
+              <div className="text-left px-6 sm:px-7 md:px-8 py-6 sm:py-7">
+                <h3 className="text-[#1A1A1A] uppercase tracking-wide text-lg sm:text-xl md:text-2xl font-black mb-3 sm:mb-4 leading-tight" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
                   <DynamicContent
                     page="home"
                     section="usp"
                     contentType="card1_title"
-                    fallback="KEIN DRECK IN DER WOHNUNG"
+                    fallback="FAMILIEN VERTRAUEN UNS"
                     tag="span"
                   />
                 </h3>
-                <p className="text-[#1A1A1A] text-sm sm:text-base md:text-lg mb-3 sm:mb-4 leading-relaxed" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-                  <DynamicContent
-                    page="home"
-                    section="usp"
-                    contentType="card1_description"
-                    fallback="Schluss mit Rinde, Schmutz und Staub! Unser rechteckiges Industrieholz ist sauber und ordentlich - perfekt für moderne Haushalte."
-                    tag="span"
-                  />
+                <p className="text-[#3a3a3a] text-sm sm:text-base md:text-lg leading-relaxed" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+                  Über 6.847 Familien schaffen mit unserem Premium-Brennholz warme, gemütliche Momente. 
+                  <span className="text-[#C04020] font-semibold"> Sauberes, trockenes Holz </span>
+                  bedeutet weniger Arbeit und mehr Zeit für die schönen Dinge im Leben.
                 </p>
-                <div className="flex flex-col sm:flex-row items-center justify-start gap-2 sm:gap-6 text-xs sm:text-sm">
-                  <span className="flex items-center">
-                    <i className="ri-check-line text-[#D4A520] mr-2"></i>
-                    Keine Rinde
-                  </span>
-                  <span className="flex items-center">
-                    <i className="ri-check-line text-[#D4A520] mr-2"></i>
-                    Kein Schmutz
-                  </span>
-                  <span className="flex items-center">
-                    <i className="ri-check-line text-[#D4A520] mr-2"></i>
-                    Saubere Lagerung
-                  </span>
-                </div>
               </div>
             </div>
 
-            {/* USP 2: Möbelholz - Mobile optimiert */}
-            <div className={`bg-[#F5F0E0] rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[540px] mx-auto`}>
-              {/* Top Image */}
-              <div className="relative w-full h-40 sm:h-48 md:h-56">
-                  <img
-                    src="/images/Perfektes%20M%C3%B6belholz-2.jpeg"
-                    alt="Perfektes Möbelholz"
-                    className="block w-full h-full object-cover"
-                    loading="eager"
-                  />
+            {/* Card 2 */}
+            <div className={`bg-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 transition-all duration-700 delay-200 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[560px] mx-auto`}> 
+              {/* Bild oben – feste Höhe für Gleichheit */}
+              <div className="relative w-full h-[260px] sm:h-[280px] md:h-[300px] rounded-t-2xl overflow-hidden">
+                <Image
+                  src="/images/perfektes-moebelholz-2.jpeg"
+                  alt="Geprüfte Qualität"
+                  fill
+                  priority
+                  sizes="(min-width: 768px) 560px, 100vw"
+                  unoptimized
+                  className="object-cover"
+                />
               </div>
-              <div className="text-left px-6 py-6">
-                <h3 className="text-[#1A1A1A] text-lg sm:text-2xl md:text-3xl font-black mb-3 sm:mb-4 leading-tight" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+              {/* Inhalt */}
+              <div className="text-left px-6 sm:px-7 md:px-8 py-6 sm:py-7">
+                <h3 className="text-[#1A1A1A] uppercase tracking-wide text-lg sm:text-xl md:text-2xl font-black mb-3 sm:mb-4 leading-tight" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
                   <DynamicContent
                     page="home"
                     section="usp"
                     contentType="card2_title"
-                    fallback="UNSER PERFEKTES MÖBELHOLZ"
+                    fallback="GEPRÜFTE QUALITÄT"
                     tag="span"
                   />
                 </h3>
-                <p className="text-[#1A1A1A] text-sm sm:text-base md:text-lg mb-3 sm:mb-4 leading-relaxed" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-                  <DynamicContent
-                    page="home"
-                    section="usp"
-                    contentType="card2_description"
-                    fallback="Dieses Premium Buchen-Brennholz wurde von der Möbelindustrie aufgrund minimaler optischer Mängel aussortiert. Es IST perfektes Holz - nur mit kleinen Schönheitsfehlern! Durch den niedrigen Wassergehalt hat es den perfekten Brennwert und ist 70% günstiger als herkömmliches Brennholz!"
-                    tag="span"
-                  />
+                <p className="text-[#3a3a3a] text-sm sm:text-base md:text-lg leading-relaxed" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+                  Jedes Holzstück wird vor der Auslieferung geprüft. 
+                  <span className="text-[#C04020] font-semibold"> 6–8 % </span>
+                  <span className="text-[#C04020] font-semibold"> Restfeuchte garantiert </span>
+                  – gemessen mit professionellen Geräten. So brennt Ihr Holz perfekt ab dem ersten Tag.
                 </p>
-                <div className="flex flex-col sm:flex-row items-center justify-start gap-2 sm:gap-6 text-xs sm:text-sm">
-                  <span className="flex items-center">
-                    <i className="ri-check-line text-[#D4A520] mr-2"></i>
-                    Perfekter Brennwert
-                  </span>
-                  <span className="flex items-center">
-                    <i className="ri-check-line text-[#D4A520] mr-2"></i>
-                    Niedriger Wassergehalt
-                  </span>
-                  <span className="flex items-center">
-                    <i className="ri-check-line text-[#D4A520] mr-2"></i>
-                    70% günstiger
-                  </span>
-                </div>
               </div>
             </div>
           </div>
