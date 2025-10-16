@@ -38,12 +38,15 @@ export default function USPSection() {
             <div className={`bg-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 transition-all duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[560px] mx-auto`}> 
               {/* Bild oben – feste Höhe für Gleichheit */}
               <div className="relative w-full h-[260px] sm:h-[280px] md:h-[300px] rounded-t-2xl overflow-hidden">
-                <img
-                  src="/images/maja-vey-brennholz.webp"
-                  alt="Familien vertrauen uns"
-                  className="absolute inset-0 w-full h-full object-cover"
-                  loading="eager"
-                />
+                <picture>
+                  <source srcSet="/images/maja-vey-brennholz.webp" type="image/webp" />
+                  <img
+                    src="/images/kein-dreck-in-der-wohnung.jpeg"
+                    alt="Familien vertrauen uns"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading="eager"
+                  />
+                </picture>
               </div>
               {/* Inhalt */}
               <div className="text-left px-6 sm:px-7 md:px-8 py-6 sm:py-7">
@@ -68,12 +71,15 @@ export default function USPSection() {
             <div className={`bg-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 transition-all duration-700 delay-200 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[560px] mx-auto`}> 
               {/* Bild oben – feste Höhe für Gleichheit */}
               <div className="relative w-full h-[260px] sm:h-[280px] md:h-[300px] rounded-t-2xl overflow-hidden">
-                <img
-                  src="/images/thorsten-vey-scheitholz.webp"
-                  alt="Geprüfte Qualität"
-                  className="absolute inset-0 w-full h-full object-cover"
-                  loading="eager"
-                />
+                <picture>
+                  <source srcSet="/images/thorsten-vey-scheitholz.webp" type="image/webp" />
+                  <img
+                    src="/images/perfektes-moebelholz2.jpeg"
+                    alt="Geprüfte Qualität"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading="eager"
+                  />
+                </picture>
               </div>
               {/* Inhalt */}
               <div className="text-left px-6 sm:px-7 md:px-8 py-6 sm:py-7">
