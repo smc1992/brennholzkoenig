@@ -27,36 +27,56 @@ export default function HeroSection() {
       >
         <div className="container mx-auto px-6 sm:px-8 lg:px-12 w-full relative max-w-7xl z-10" style={{ minHeight: '75vh', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'auto' }}>
           {/* Overlay-Inhalt: Highlights und CTA auf dem Bild */}
-          <div className={`max-w-3xl w-full bg-gradient-to-br from-black/70 via-black/60 to-black/50 backdrop-blur-md rounded-2xl p-6 sm:p-8 shadow-2xl ring-1 ring-white/10 border border-white/5 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
-            <h1 className="text-white font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight mb-6 drop-shadow-md">
-              Brennholzkönig – Trockenes Brennholz für maximale Wärme
-            </h1>
-            <ul className="space-y-3 sm:space-y-4 text-white">
-              <li className="flex items-start">
-                <span className="w-7 h-7 mr-3 rounded-full bg-[#D4A520]/20 text-[#D4A520] flex items-center justify-center">
-                  <i className="ri-check-line text-lg"></i>
-                </span>
-                <span className="font-semibold text-lg sm:text-xl leading-tight">Trockenes Brennholz mit 70 % höherer Heizleistung</span>
-              </li>
-              <li className="flex items-start">
-                <span className="w-7 h-7 mr-3 rounded-full bg-[#D4A520]/20 text-[#D4A520] flex items-center justify-center">
-                  <i className="ri-check-line text-lg"></i>
-                </span>
-                <span className="font-semibold text-lg sm:text-xl leading-tight">Schnelle Lieferung im Umkreis von 150 km</span>
-              </li>
-              <li className="flex items-start">
-                <span className="w-7 h-7 mr-3 rounded-full bg-[#D4A520]/20 text-[#D4A520] flex items-center justify-center">
-                  <i className="ri-check-line text-lg"></i>
-                </span>
-                <span className="font-semibold text-lg sm:text-xl leading-tight">Zahlung bei Lieferung</span>
-              </li>
-            </ul>
-            <div className="mt-6">
-              <Link href="/shop" aria-label="Zum Shop" className="group inline-flex items-center gap-2 bg-[#D4A520] text-black px-8 sm:px-10 py-4 sm:py-5 text-base sm:text-lg font-extrabold rounded-2xl hover:bg-[#c99a1b] transition-all duration-200 shadow-xl hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A520] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
-                <i className="ri-shopping-cart-line text-lg"></i>
-                ZUM SHOP
-                <i className="ri-arrow-right-line text-lg opacity-80 transition-transform duration-200 group-hover:translate-x-0.5"></i>
-              </Link>
+          <div className={`max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
+            {/* Linke Spalte: Headline, Highlights, CTA (eigene Karte) */}
+            <div className="flex flex-col justify-center bg-gradient-to-br from-black/65 via-black/55 to-black/45 backdrop-blur-md rounded-2xl p-6 sm:p-8 shadow-2xl ring-1 ring-white/10">
+              <h1 className="text-white font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight mb-6 drop-shadow-md">
+                Brennholzkönig – Trockenes Brennholz für maximale Wärme
+              </h1>
+              <ul className="space-y-3 sm:space-y-4 text-white">
+                <li className="flex items-start">
+                  <span className="w-7 h-7 mr-3 rounded-full bg-[#D4A520]/20 text-[#D4A520] flex items-center justify-center">
+                    <i className="ri-check-line text-lg"></i>
+                  </span>
+                  <span className="font-semibold text-lg sm:text-xl leading-tight">Trockenes Brennholz mit 70 % höherer Heizleistung</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="w-7 h-7 mr-3 rounded-full bg-[#D4A520]/20 text-[#D4A520] flex items-center justify-center">
+                    <i className="ri-check-line text-lg"></i>
+                  </span>
+                  <span className="font-semibold text-lg sm:text-xl leading-tight">Schnelle Lieferung im Umkreis von 150 km</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="w-7 h-7 mr-3 rounded-full bg-[#D4A520]/20 text-[#D4A520] flex items-center justify-center">
+                    <i className="ri-check-line text-lg"></i>
+                  </span>
+                  <span className="font-semibold text-lg sm:text-xl leading-tight">Zahlung bei Lieferung</span>
+                </li>
+              </ul>
+              <div className="mt-6">
+                <Link href="/shop" aria-label="Zum Shop" className="group inline-flex items-center gap-2 bg-[#D4A520] text-black px-8 sm:px-10 py-4 sm:py-5 text-base sm:text-lg font-extrabold rounded-2xl hover:bg-[#c99a1b] transition-all duration-200 shadow-xl hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A520] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
+                  <i className="ri-shopping-cart-line text-lg"></i>
+                  ZUM SHOP
+                  <i className="ri-arrow-right-line text-lg opacity-80 transition-transform duration-200 group-hover:translate-x-0.5"></i>
+                </Link>
+              </div>
+            </div>
+
+            {/* Rechte Spalte: Video-Player (eigene Karte) */}
+            <div className="relative overflow-hidden rounded-2xl ring-1 ring-white/10 bg-black/35 shadow-2xl">
+              <video
+                className="w-full h-auto"
+                style={{ aspectRatio: '16 / 9' }}
+                controls
+                preload="metadata"
+                playsInline
+                aria-label="Produktvideo: Brennholzkönig"
+                controlsList="nodownload"
+                poster="/uploads/hero/veyholz-imagevideo-1-poster.jpg"
+              >
+                <source src="/uploads/hero/veyholz-imagevideo-1.webm" type="video/webm" />
+                Ihr Browser unterstützt das WebM-Format nicht. Bitte aktualisieren Sie Ihren Browser.
+              </video>
             </div>
           </div>
         </div>
