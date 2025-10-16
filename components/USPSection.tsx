@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import Image from 'next/image';
+// Bilddarstellung: Fallback auf <img> für maximale Robustheit
 import DynamicContent from './DynamicContent';
 
 export default function USPSection() {
@@ -37,14 +37,11 @@ export default function USPSection() {
             <div className={`bg-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 transition-all duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[560px] mx-auto`}> 
               {/* Bild oben – feste Höhe für Gleichheit */}
               <div className="relative w-full h-[260px] sm:h-[280px] md:h-[300px] rounded-t-2xl overflow-hidden">
-                <Image
+                <img
                   src="/images/kein-dreck-in-der-wohnung-2.jpeg"
                   alt="Familien vertrauen uns"
-                  fill
-                  priority
-                  sizes="(min-width: 768px) 560px, 100vw"
-                  unoptimized
-                  className="object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  loading="eager"
                 />
               </div>
               {/* Inhalt */}
@@ -70,14 +67,11 @@ export default function USPSection() {
             <div className={`bg-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 transition-all duration-700 delay-200 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[560px] mx-auto`}> 
               {/* Bild oben – feste Höhe für Gleichheit */}
               <div className="relative w-full h-[260px] sm:h-[280px] md:h-[300px] rounded-t-2xl overflow-hidden">
-                <Image
+                <img
                   src="/images/perfektes-moebelholz-2.jpeg"
                   alt="Geprüfte Qualität"
-                  fill
-                  priority
-                  sizes="(min-width: 768px) 560px, 100vw"
-                  unoptimized
-                  className="object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  loading="eager"
                 />
               </div>
               {/* Inhalt */}
