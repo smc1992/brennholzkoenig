@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+// Wir verwenden direkte /public-URLs (WebP), um Build-Import-Probleme zu vermeiden
 // Bilddarstellung: Fallback auf <img> für maximale Robustheit
 import DynamicContent from './DynamicContent';
 
@@ -38,7 +39,7 @@ export default function USPSection() {
               {/* Bild oben – feste Höhe für Gleichheit */}
               <div className="relative w-full h-[260px] sm:h-[280px] md:h-[300px] rounded-t-2xl overflow-hidden">
                 <img
-                  src="/images/kein-dreck-in-der-wohnung-2.jpeg"
+                  src="/images/maja-vey-brennholz.webp"
                   alt="Familien vertrauen uns"
                   className="absolute inset-0 w-full h-full object-cover"
                   loading="eager"
@@ -68,7 +69,7 @@ export default function USPSection() {
               {/* Bild oben – feste Höhe für Gleichheit */}
               <div className="relative w-full h-[260px] sm:h-[280px] md:h-[300px] rounded-t-2xl overflow-hidden">
                 <img
-                  src="/images/perfektes-moebelholz-2.jpeg"
+                  src="/images/thorsten-vey-scheitholz.webp"
                   alt="Geprüfte Qualität"
                   className="absolute inset-0 w-full h-full object-cover"
                   loading="eager"
