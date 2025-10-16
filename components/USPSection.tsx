@@ -36,8 +36,8 @@ export default function USPSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-10 max-w-6xl mx-auto">
             {/* Card 1 */}
             <div className={`bg-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 transition-all duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[560px] mx-auto`}> 
-              {/* Bild oben – feste Höhe für Gleichheit */}
-              <div className="relative w-full h-[260px] sm:h-[280px] md:h-[300px] rounded-t-2xl overflow-hidden">
+              {/* Bild oben – festes Seitenverhältnis für identische Höhen */}
+              <div className="relative w-full aspect-[4/3] rounded-t-2xl overflow-hidden">
                 <img
                   src="/images/Kein Dreck in der Wohnung.webp"
                   alt="Familien vertrauen uns"
@@ -66,8 +66,8 @@ export default function USPSection() {
 
             {/* Card 2 */}
             <div className={`bg-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 transition-all duration-700 delay-200 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[560px] mx-auto`}> 
-              {/* Bild oben – feste Höhe für Gleichheit */}
-              <div className="relative w-full h-[260px] sm:h-[280px] md:h-[300px] rounded-t-2xl overflow-hidden">
+              {/* Bild oben – festes Seitenverhältnis für identische Höhen */}
+              <div className="relative w-full aspect-[4/3] rounded-t-2xl overflow-hidden">
                 <img
                   src="/images/Perfektes Möbelholz.webp"
                   alt="Geprüfte Qualität"

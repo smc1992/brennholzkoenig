@@ -62,7 +62,7 @@ export default function ExpertiseSection() {
 
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8">
             <div className="text-center">
-              <h3 className="text-2xl font-bold text-[#D4A520] mb-6">Thorsens Versprechen</h3>
+              <h3 className="text-2xl font-bold text-[#D4A520] mb-6">Thorstens Versprechen</h3>
               <blockquote className="text-xl italic mb-6" style={{ fontFamily: 'Barlow, sans-serif' }}>
                 "Ich nehme mir die Zeit, erkläre verständlich – und das mit echter Freude am Kontakt. 
                 Denn nur wenn Sie verstehen, wie Sie richtig heizen, haben wir beide etwas davon."
