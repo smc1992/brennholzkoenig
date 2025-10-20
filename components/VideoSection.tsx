@@ -27,7 +27,7 @@ export default function VideoSection() {
             poster="/images/Hero Brennholzkönig.webp"
           >
             <source src="/uploads/hero/brennholzkoenig-imagevideo.webm" type="video/webm" />
-            <source src={encodeURI('/uploads/brennholzkönig imagevideo.mp4')} type="video/mp4" />
+            <source src="/uploads/hero/brennholzkoenig-imagevideo.mp4" type="video/mp4" />
             Ihr Browser unterstützt das Videoformat nicht.
           </video>
         </div>
