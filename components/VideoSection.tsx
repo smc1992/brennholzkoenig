@@ -20,13 +20,12 @@ export default function VideoSection() {
             className="w-full h-auto block"
             style={{ aspectRatio: '16 / 9' }}
             controls
-            preload="none"
+            preload="metadata" // Nur Metadaten laden für schnelleren Start
             playsInline
             aria-label="Brennholzkönig Imagevideo"
             controlsList="nodownload"
-            poster="/images/Hero Brennholzkönig.webp"
+            poster="" // Poster entfernt, da es nicht zum Video passt
           >
-            <source src="/uploads/hero/brennholzkoenig-imagevideo.webm" type="video/webm" />
             <source src="/uploads/hero/brennholzkoenig-imagevideo.mp4" type="video/mp4" />
             Ihr Browser unterstützt das Videoformat nicht.
           </video>
