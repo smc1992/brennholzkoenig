@@ -13,6 +13,7 @@ import SafetySection from '@/components/SafetySection';
 import OptimizedProductSection from '../components/OptimizedProductSection';
 import RegionSection from '@/components/RegionSection';
 import SEOMetadata from '../components/SEOMetadata';
+import VideoSection from '@/components/VideoSection';
 export default function Home() {
   const startTime = Date.now();
   
@@ -33,6 +34,7 @@ export default function Home() {
       
       <div className="min-h-dvh bg-pergament w-full">
         <HeroSection />
+        <VideoSection />
         {/* Schnellzugriff zum Shop */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">

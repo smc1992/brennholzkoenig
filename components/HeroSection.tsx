@@ -19,7 +19,7 @@ export default function HeroSection() {
           minHeight: '80vh',
           paddingTop: '64px',
           pointerEvents: 'none',
-          backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url('/images/Hero Brennholzkönig.webp')`,
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url('/images/Herosektion Brennholzkönig.webp')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
@@ -27,7 +27,7 @@ export default function HeroSection() {
       >
         <div className="container mx-auto px-6 sm:px-8 lg:px-12 w-full relative max-w-7xl z-10" style={{ minHeight: '75vh', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'auto' }}>
           {/* Overlay-Inhalt: Highlights und CTA auf dem Bild */}
-          <div className={`max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
+          <div className={`max-w-6xl w-full grid grid-cols-1 gap-6 sm:gap-8 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}`}>
             {/* Linke Spalte: Headline, Highlights, CTA (eigene Karte) */}
             <div className="flex flex-col justify-center bg-gradient-to-br from-black/65 via-black/55 to-black/45 backdrop-blur-md rounded-2xl p-6 sm:p-8 shadow-2xl ring-1 ring-white/10">
               <h1 className="text-white font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight mb-6 drop-shadow-md">
@@ -38,7 +38,7 @@ export default function HeroSection() {
                   <span className="w-7 h-7 mr-3 rounded-full bg-[#D4A520]/20 text-[#D4A520] flex items-center justify-center">
                     <i className="ri-check-line text-lg"></i>
                   </span>
-                  <span className="font-semibold text-lg sm:text-xl leading-tight">Trockenes Brennholz mit 70 % höherer Heizleistung</span>
+                  <span className="font-semibold text-lg sm:text-xl leading-tight">Trockenes Industrieholz mit 70 % höherer Heizleistung</span>
                 </li>
                 <li className="flex items-start">
                   <span className="w-7 h-7 mr-3 rounded-full bg-[#D4A520]/20 text-[#D4A520] flex items-center justify-center">
@@ -63,21 +63,7 @@ export default function HeroSection() {
             </div>
 
             {/* Rechte Spalte: Video-Player (eigene Karte) */}
-            <div className="relative overflow-hidden rounded-2xl ring-1 ring-white/10 bg-black/35 shadow-2xl">
-              <video
-                className="w-full h-auto"
-                style={{ aspectRatio: '16 / 9' }}
-                controls
-                preload="metadata"
-                playsInline
-                aria-label="Produktvideo: Brennholzkönig"
-                controlsList="nodownload"
-                poster="/uploads/hero/veyholz-imagevideo-1-poster.jpg"
-              >
-                <source src="/uploads/hero/veyholz-imagevideo-1.webm" type="video/webm" />
-                Ihr Browser unterstützt das WebM-Format nicht. Bitte aktualisieren Sie Ihren Browser.
-              </video>
-            </div>
+            {/* Video wurde in eine separate Sektion unterhalb des Heroes verschoben */}
           </div>
         </div>
       </section>

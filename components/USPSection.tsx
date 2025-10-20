@@ -35,13 +35,14 @@ export default function USPSection() {
         <div className="text-center mb-8 sm:mb-12 md:mb-16">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-10 max-w-6xl mx-auto">
             {/* Card 1 */}
-            <div className={`bg-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 transition-all duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[560px] mx-auto`}> 
-              {/* Bild oben – festes Seitenverhältnis für identische Höhen */}
-              <div className="relative w-full aspect-[4/3] rounded-t-2xl overflow-hidden">
+            <div className={`bg-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 transition-all duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[560px] mx-auto`}>
+              {/* Bild oben – feste Höhe für identische Bildgrößen */}
+              <div className="relative w-full h-[340px] rounded-t-2xl overflow-hidden">
                 <img
                   src="/images/Kein Dreck in der Wohnung.webp"
                   alt="Familien vertrauen uns"
-                  className="w-full h-full object-cover block"
+                  className="w-full h-full object-cover object-center block"
+                  style={{ width: '100%', height: '100%' }}
                   loading="eager"
                 />
               </div>
@@ -65,13 +66,14 @@ export default function USPSection() {
             </div>
 
             {/* Card 2 */}
-            <div className={`bg-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 transition-all duration-700 delay-200 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[560px] mx-auto`}> 
-              {/* Bild oben – festes Seitenverhältnis für identische Höhen */}
-              <div className="relative w-full aspect-[4/3] rounded-t-2xl overflow-hidden">
+            <div className={`bg-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 transition-all duration-700 delay-200 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[560px] mx-auto`}>
+              {/* Bild oben – feste Höhe für identische Bildgrößen */}
+              <div className="relative w-full h-[340px] rounded-t-2xl overflow-hidden">
                 <img
                   src="/images/Perfektes Möbelholz.webp"
                   alt="Geprüfte Qualität"
-                  className="w-full h-full object-cover block"
+                  className="w-full h-full object-cover object-center block"
+                  style={{ width: '100%', height: '100%' }}
                   loading="eager"
                 />
               </div>
