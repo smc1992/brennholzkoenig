@@ -259,6 +259,54 @@
       opacity: 0.9;
     }
     
+    /* Top info two-column layout (sender/recipient left, details right) */
+    .top-info {
+      display: grid;
+      grid-template-columns: 2fr 1fr; /* mehr Platz links für DIN-Adresse */
+      gap: 8pt;
+      padding: 12mm 15mm 6mm 15mm; /* DIN-Rand links/rechts, Top-Offset fürs Fenster */
+      background: white;
+      color: #1A1A1A;
+      font-size: 9pt; /* leicht kleiner für mehr Inhalt */
+      align-items: start;
+    }
+    .top-left {
+      display: flex;
+      flex-direction: column;
+      gap: 6pt;
+    }
+    .sender-line { font-size: 8pt; white-space: nowrap; color: #555; }
+    .callout { margin-bottom: 4pt; }
+    .callout .phone { font-weight: 800; font-size: 16pt; color: #C04020; }
+    .callout .tagline { font-size: 9pt; color: #333; }
+    .sender-line {
+      color: #555;
+      font-size: 8.5pt;
+    }
+    .recipient-block {
+      line-height: 1.35;
+      margin-top: 6pt; /* kleine Luft zwischen Absenderzeile und Empfänger */
+    }
+    .recipient-block .recipient-name {
+      font-weight: 600;
+      font-size: 10pt;
+    }
+    .top-right {
+      text-align: left;
+      font-size: 9pt;
+    }
+    .brand-logo { max-width: 70pt; max-height: 70pt; object-fit: contain; display: block; margin-left: auto; margin-bottom: 6pt; }
+    .top-right .website {
+      font-weight: 600;
+      margin-bottom: 6pt;
+      text-align: right;
+    }
+    .top-right .detail-row {
+      margin: 2pt 0;
+    }
+    .top-right .detail-row .label { color: #555; }
+    .top-right .detail-row .value { font-weight: 500; }
+    
     /* Recipient (DIN 5008 konform) */
     .recipient-section {
       margin-bottom: 25pt;
@@ -299,7 +347,7 @@
     }
     
     .metadata-table td {
-      padding: 6pt 12pt;
+      padding: 4pt 8pt;
       vertical-align: top;
     }
     
@@ -318,14 +366,14 @@
     /* Invoice Title */
     .invoice-title {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 28pt;
+      font-size: 22pt;
       font-weight: 400;
-      letter-spacing: 2pt;
-      margin: 25pt 0 20pt 0;
+      letter-spacing: 1.5pt;
+      margin: 12pt 0 8pt 0;
       color: #C04020;
       text-transform: uppercase;
       position: relative;
-      padding-bottom: 8pt;
+      padding-bottom: 6pt;
     }
     
     .invoice-title::after {
@@ -343,7 +391,7 @@
     .items-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 20pt 0;
+      margin: 10pt 0;
       font-size: 9pt;
     }
 
@@ -356,7 +404,8 @@
     .delivery-address,
     .order-confirmation,
     .order-confirmation-page,
-    .recipient-section {
+    .recipient-section,
+    .signature-row {
       max-width: 180mm;
       margin-left: auto;
       margin-right: auto;
@@ -400,26 +449,26 @@
     }
     
     .items-table .description {
-      width: 40%;
+      width: 35%;
     }
     
     .items-table .category {
-      width: 20%;
-      text-align: center;
-    }
-    
-    .items-table .quantity {
       width: 15%;
+      text-align: left;
+    }
+
+    .items-table .quantity {
+      width: 10%;
       text-align: right;
     }
     
     .items-table .unit-price {
-      width: 12%;
+      width: 19%;
       text-align: right;
     }
     
     .items-table .total {
-      width: 13%;
+      width: 21%;
       text-align: right;
       font-weight: 600;
     }
@@ -605,18 +654,67 @@
       color: #666;
       min-height: 25pt;
     }
-    
-    /* Delivery Address */
-    .delivery-address {
-      margin-bottom: 25pt;
-      padding: 18pt;
+
+    /* Customer Delivery Notes */
+    .customer-delivery-notes {
+      margin-bottom: 20pt;
+      padding: 14pt 18pt 22pt 18pt;
       background: #f8f9fa;
       border: 1pt solid #ddd;
       border-left: 4pt solid #C04020;
       border-radius: 6pt;
       font-size: 10pt;
-      line-height: 1.4;
       box-shadow: 0 2pt 6pt rgba(192, 64, 32, 0.08);
+      page-break-inside: avoid;
+      break-inside: avoid;
+      display: block;
+      min-height: auto;
+    }
+    .customer-delivery-notes h3 { margin: 0 0 8pt 0; font-size: 12pt; color: #C04020; }
+    .customer-delivery-notes .note-text { line-height: 1.45; }
+    .customer-delivery-notes .final-signature { display: block; width: 80%; margin-top: 12pt; }
+    .customer-delivery-notes .signature-inline { margin-top: 10pt; }
+
+    /* Separate signature row under customer notes */
+    .signature-row {
+      clear: both;
+      margin-top: 10pt;
+      padding: 0 4mm;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      position: relative;
+      z-index: 2; /* ensure above any floated/positioned side content */
+    }
+    .signature-label {
+      font-size: 9pt;
+      color: #666;
+      margin-bottom: 6pt;
+      text-align: left;
+    }
+    .signature-line {
+      display: block;
+      width: 100%;
+      border-bottom: 2pt solid #333;
+      height: 18pt; /* field height */
+      margin-top: 6pt;
+      margin-bottom: 8pt;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Delivery Address */
+    .delivery-address {
+      margin: 14pt 0 12pt 0;
+      padding: 0;
+      background: none;
+      border: none;
+      border-left: none;
+      border-radius: 0;
+      font-size: 10pt;
+      line-height: 1.4;
+      box-shadow: none;
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
     
     .delivery-address h3 {
@@ -646,28 +744,28 @@
     }
     
     .confirmation-statement {
-      margin-top: 18pt;
-      padding: 15pt;
-      background: #fff;
-      border: 1pt solid #ddd;
-      border-radius: 4pt;
-      text-align: center;
+      margin: 8pt 0 10pt 0;
+      padding: 0;
+      background: none;
+      border: none;
+      border-radius: 0;
+      text-align: left;
       font-weight: 600;
       font-size: 10pt;
       line-height: 1.3;
     }
     
     .final-signature {
-      margin-top: 25pt;
+      margin-top: 6pt;
       border-bottom: 1pt solid #333;
-      padding-bottom: 3pt;
-      text-align: center;
+      padding-bottom: 6pt;
+      text-align: left;
       font-size: 9pt;
       color: #666;
-      width: 60%;
-      margin-left: auto;
-      margin-right: auto;
-      min-height: 25pt;
+      width: 70%;
+      margin-left: 0;
+      margin-right: 0;
+      min-height: 20pt;
     }
     
     /* Notes */
@@ -783,121 +881,69 @@
 </head>
 <body>
   <div class="container">
-    <!-- Header -->
-    <header class="header">
-      <div class="logo-section">
-        {{#if company.logo_url}}
-          <img src="{{company.logo_url}}" alt="{{company.name}} Logo" class="logo">
-        {{else}}
-          <div>
-            <h1 class="brand-name">🔥 BRENNHOLZKÖNIG</h1>
-            <p class="brand-tagline">Premium Brennholz direkt vom Produzenten</p>
-          </div>
-        {{/if}}
-      </div>
-      
-      <div class="issuer-section">
-        <div class="issuer-name">{{company.name}}</div>
-        <div class="issuer-address">
-          {{company.address_line1}}<br>
-          {{#if company.address_line2}}{{company.address_line2}}<br>{{/if}}
-          {{company.postal_code}} {{company.city}}
-        </div>
-        <div class="issuer-contact">
-          {{#if company.phone}}📞 {{company.phone}}<br>{{/if}}
-          {{#if company.email}}✉️ {{company.email}}<br>{{/if}}
-          {{#if company.website}}🌐 {{company.website}}<br>{{/if}}
-          {{#if company.tax_id}}🏢 USt-IdNr.: {{company.tax_id}}{{/if}}
-        </div>
-      </div>
-    </header>
+    <!-- Header entfernt: roter Kopfbereich ausgeblendet, weißer Bereich rückt nach oben -->
     
     <div class="content-wrapper">
-    
-    <!-- Recipient (DIN 5008) -->
-    <section class="recipient-section">
-      <div class="recipient">
-        <div class="recipient-name">{{customer.name}}</div>
-        {{#if customer.company}}{{customer.company}}<br>{{/if}}
-        {{customer.address.street}} {{customer.address.house_number}}<br>
-        {{#if customer.address.line2}}{{customer.address.line2}}<br>{{/if}}
-        {{customer.address.postal_code}} {{customer.address.city}}
+
+    <!-- Top info: DIN sender+recipient left, details right -->
+    <section class="top-info">
+      <div class="top-left">
+        {{#if company.phone}}
+        <div class="callout">
+          <div class="phone">📞 {{company.phone}}</div>
+          <div class="tagline">Bestellung und Beratung täglich von 16.30 bis 20.00 Uhr</div>
+        </div>
+        {{/if}}
+        <div class="sender-line">{{company.name}} · {{company.address_line1}} · {{company.postal_code}} {{company.city}}</div>
+        <div class="recipient-block">
+          {{#if delivery_address}}
+            {{#if delivery_address.company}}{{delivery_address.company}}<br>{{/if}}
+            <div class="recipient-name">{{delivery_address.name}}</div>
+            {{delivery_address.street}} {{delivery_address.house_number}}<br>
+            {{!-- Lieferhinweis nicht in Empfängerzeile anzeigen --}}
+            {{delivery_address.postal_code}} {{delivery_address.city}}
+          {{else}}
+            {{#if customer.company}}{{customer.company}}<br>{{/if}}
+            <div class="recipient-name">{{customer.name}}</div>
+            {{customer.address.street}} {{customer.address.house_number}}<br>
+            {{!-- Lieferhinweis nicht in Empfängerzeile anzeigen --}}
+            {{customer.address.postal_code}} {{customer.address.city}}
+          {{/if}}
+        </div>
+      </div>
+      <div class="top-right">
+        {{#if company.logo_url}}
+          <img src="{{company.logo_url}}" alt="{{company.name}} Logo" class="brand-logo">
+        {{/if}}
+        {{#if company.website}}<div class="website">{{company.website}}</div>{{/if}}
+        <div class="detail-row"><span class="label">Kundennummer:</span> <span class="value font-mono">{{#if customer.customer_number}}{{customer.customer_number}}{{else}}{{customer.number}}{{/if}}</span></div>
+        {{#if customer.phone}}<div class="detail-row"><span class="label">Kundenrufnummer:</span> <span class="value">{{customer.phone}}</span></div>{{/if}}
+        {{#if order.date}}<div class="detail-row"><span class="label">Bestellt am:</span> <span class="value">{{order.date}}</span></div>{{/if}}
+        {{#if order.contact_method}}<div class="detail-row"><span class="label">Kontakt über:</span> <span class="value">{{order.contact_method}}</span></div>{{/if}}
       </div>
     </section>
     
-    <!-- Metadata -->
-    <section class="metadata">
-      <table class="metadata-table">
-        <tr>
-          <td class="label">Rechnungs-Nr.:</td>
-          <td class="value font-mono">{{invoice.number}}</td>
-          <td class="label">Kunden-Nr.:</td>
-          <td class="value font-mono">{{#if customer.customer_number}}{{customer.customer_number}}{{else}}-{{/if}}</td>
-        </tr>
-        <tr>
-          <td class="label">Rechnungsdatum:</td>
-          <td class="value">{{invoice.date}}</td>
-          <td class="label">Fällig bis:</td>
-          <td class="value">{{invoice.due_date}}</td>
-        </tr>
-        {{#if order.number}}
-        <tr>
-          <td class="label">Bestell-Nr.:</td>
-          <td class="value font-mono">{{order.number}}</td>
-          <td class="label">Bestell-Datum:</td>
-          <td class="value">{{order.date}}</td>
-        </tr>
-        {{/if}}
-      </table>
-    </section>
+    <!-- Metadata entfernt: nur Zeile "Auftrag/Lieferschein/Rechnung Nr.:" bleibt oberhalb der Positionen -->
     
-    <!-- Invoice Title -->
-    <h1 class="invoice-title">Rechnung</h1>
-    
-    <!-- Items Table -->
+    <!-- Items Table (einfach, ohne Fortsetzungsseite) -->
     <section class="items-section">
-      <h3 style="margin: 20pt 0 10pt 0; font-size: 12pt; color: #333;">Auftrag/Lieferschein/Rechnung Nr.:</h3>
+      <h3 style="margin: 12pt 0 6pt 0; font-size: 11pt; color: #333;">Auftrag/Lieferschein/Rechnung Nr.:</h3>
       <table class="items-table">
         <thead>
           <tr>
-            <th class="description">Produkt</th>
+            <th class="description">Sorte/Art</th>
             <th class="category">Kategorie</th>
             <th class="quantity">Menge</th>
-            <th class="unit-price">Einzelpreis</th>
-            <th class="total">Gesamtpreis</th>
+            <th class="unit-price">Preis Brutto/SRM</th>
+            <th class="total">Gesamt Brutto</th>
           </tr>
         </thead>
         <tbody>
           {{#each items}}
-          {{#if (gt @index 3)}}
-          {{#if (eq @index 4)}}
-          </tbody>
-      </table>
-    </section>
-    
-    <!-- Page Break for Additional Items -->
-    <div style="page-break-before: always;"></div>
-    
-    <!-- Continued Items Table -->
-    <section class="items-section">
-      <h3 style="margin: 20pt 0 10pt 0; font-size: 12pt; color: #333;">Auftrag/Lieferschein/Rechnung Nr. (Fortsetzung):</h3>
-      <table class="items-table">
-        <thead>
           <tr>
-            <th class="description">Produkt</th>
-            <th class="category">Kategorie</th>
-            <th class="quantity">Menge</th>
-            <th class="unit-price">Einzelpreis</th>
-            <th class="total">Gesamtpreis</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{/if}}
-          {{/if}}
-          <tr {{#if (gt @index 3)}}class="continued-item"{{/if}}>
             <td class="description">{{this.name}}</td>
-            <td class="category">{{#if this.category}}{{this.category}}{{else}}Brennholz{{/if}}</td>
-            <td class="quantity number">{{formatNumber this.quantity}} SRM</td>
+            <td class="category">{{#if this.category}}{{this.category}}{{else}}-{{/if}}</td>
+            <td class="quantity number">{{formatNumber this.quantity}}</td>
             <td class="unit-price number">€{{formatCurrency this.unitPrice}}</td>
             <td class="total number">€{{formatCurrency this.totalPrice}}</td>
           </tr>
@@ -905,6 +951,8 @@
         </tbody>
       </table>
     </section>
+    
+    <!-- Bestätigungszeile wird in den Lieferhinweisen des Kunden integriert -->
     
     <!-- Totals -->
     <section class="totals-section">
@@ -927,6 +975,7 @@
       <div style="clear: both; margin-bottom: 15pt;"></div>
     </section>
     
+    
     <!-- Payment Terms -->
     {{#if payment_terms}}
     <section class="payment-terms">
@@ -944,73 +993,65 @@
     </section>
     {{/if}}
     
-    <!-- Dynamic Page Break for Order Confirmation -->
-    {{#if (gt items.length 4)}}
-    <div style="page-break-before: always;"></div>
+    <!-- Auftragsbestätigung (auf derselben Seite) -->
+    <section class="order-confirmation">
+      <h3 style="margin-top: 8pt;">Auftragsbestätigung:</h3>
+      <div class="confirmation-text">
+        Ich erteile / Wir erteilen den Auftrag für die Brennholzlieferung 
+        gemäß obigem Angebot. Die AGBs und Lieferbedingung frei Bordsteinkante 
+        habe ich gelesen und akzeptiert. Für ausdrücklich gewünschte Lieferungen 
+        auf das Grundstück übernimmt der Fahrer und die Firma keine Haftung.
+      </div>
+      <div class="signature-fields">
+        <div class="signature-field">Ort, Datum</div>
+        <div class="signature-field">Unterschrift des Auftraggebers</div>
+      </div>
+    </section>
+
+    {{#if order.delivery_notes}}
+    <section class="customer-delivery-notes">
+      <h3>Lieferhinweise des Kunden:</h3>
+      <div class="note-text">{{order.delivery_notes}}</div>
+      <div class="confirmation-statement">Hiermit bestätige ich den ordnungsgemäßen Zustand und Erhalt der bestellten Ware.</div>
+      <div class="signature-inline">
+        <div class="signature-label">Datum und Unterschrift</div>
+        <div class="signature-line"></div>
+      </div>
+    </section>
     {{else}}
-    <div style="page-break-before: always;"></div>
+      {{#if delivery_address.line2}}
+      <section class="customer-delivery-notes">
+        <h3>Lieferhinweise des Kunden:</h3>
+        <div class="note-text">{{delivery_address.line2}}</div>
+        <div class="confirmation-statement">Hiermit bestätige ich den ordnungsgemäßen Zustand und Erhalt der bestellten Ware.</div>
+        <div class="signature-inline">
+          <div class="signature-label">Datum und Unterschrift</div>
+          <div class="signature-line"></div>
+        </div>
+      </section>
+      {{else}}
+        {{#if customer.address.line2}}
+        <section class="customer-delivery-notes">
+          <h3>Lieferhinweise des Kunden:</h3>
+          <div class="note-text">{{customer.address.line2}}</div>
+          <div class="confirmation-statement">Hiermit bestätige ich den ordnungsgemäßen Zustand und Erhalt der bestellten Ware.</div>
+          <div class="signature-inline">
+            <div class="signature-label">Datum und Unterschrift</div>
+            <div class="signature-line"></div>
+          </div>
+        </section>
+        {{/if}}
+      {{/if}}
     {{/if}}
+
     
-    <!-- Order Confirmation Page -->
-    <div class="order-confirmation-page">
-      
-      <!-- Page Title -->
-      <h1 class="page-title">Auftragsbestätigung</h1>
-      
-      <!-- Order Confirmation -->
-      <section class="order-confirmation">
-        <h3>Auftragsbestätigung:</h3>
-        <div class="confirmation-text">
-          Ich erteile / Wir erteilen den Auftrag für die Brennholzlieferung 
-          gemäß obigem Angebot. Die AGBs und Lieferbedingung frei 
-          Bordsteinkante habe ich gelesen und akzeptiert. Für ausdrücklich 
-          gewünschte Lieferungen auf das Grundstück übernimmt der Fahrer und 
-          die Firma keine Haftung.
-        </div>
-        <div class="signature-fields">
-          <div class="signature-field">Ort, Datum</div>
-          <div class="signature-field">Unterschrift des Auftraggebers</div>
-        </div>
-      </section>
-      
-      <!-- Delivery Address -->
-      <section class="delivery-address">
-        <h3>Lieferadresse:</h3>
-        <div class="delivery-zone">
-          {{#if delivery_address}}
-            {{#if delivery_address.company}}{{delivery_address.company}}<br>{{/if}}
-            {{delivery_address.name}}<br>
-            {{delivery_address.street}} {{delivery_address.house_number}}<br>
-            {{#if delivery_address.line2}}{{delivery_address.line2}}<br>{{/if}}
-            {{delivery_address.postal_code}} {{delivery_address.city}}
-          {{else}}
-            {{#if customer.company}}{{customer.company}}<br>{{/if}}
-            {{customer.name}}<br>
-            {{customer.address.street}} {{customer.address.house_number}}<br>
-            {{#if customer.address.line2}}{{customer.address.line2}}<br>{{/if}}
-            {{customer.address.postal_code}} {{customer.address.city}}
-          {{/if}}
-        </div>
-        <div class="confirmation-statement">
-          Hiermit bestätige ich den ordnungsgemäßen Zustand und Erhalt der bestellten Ware.
-        </div>
-        <div class="final-signature">Datum, Unterschrift</div>
-      </section>
-    </div>
     
     </div> <!-- End content-wrapper -->
     
     <!-- Footer -->
     <footer class="footer">
       <div class="footer-content">
-        <div class="footer-section left">
-          <strong>{{company.name}}</strong>
-          <p>{{company.address_line1}}</p>
-          <p>{{company.postal_code}} {{company.city}}</p>
-          {{#if company.phone}}<p>Mobil: {{company.phone}}</p>{{/if}}
-          {{#if company.email}}<p>Email: {{company.email}}</p>{{/if}}
-          {{#if company.website}}<p>Internet: {{company.website}}</p>{{/if}}
-        </div>
+        
         
         {{#if payment.iban}}
         <div class="footer-section center">
@@ -1022,6 +1063,12 @@
         {{/if}}
         
         <div class="footer-section right">
+          <strong>{{company.name}}</strong>
+          <p>{{company.address_line1}}</p>
+          <p>{{company.postal_code}} {{company.city}}</p>
+          {{#if company.phone}}<p>Mobil: {{company.phone}}</p>{{/if}}
+          {{#if company.email}}<p>Email: {{company.email}}</p>{{/if}}
+          {{#if company.website}}<p>Internet: {{company.website}}</p>{{/if}}
           {{#if company.registration}}<p>Steuer-Nr.: {{company.registration}}</p>{{/if}}
           {{#if company.tax_id}}<p>USt-Ident-Nr.: {{company.tax_id}}</p>{{/if}}
         </div>

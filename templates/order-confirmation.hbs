@@ -335,23 +335,8 @@
     </section>
     
     <!-- Delivery Address -->
+    <!-- Lieferbestätigung (Zone 2): nur Satz + Datum/Unterschrift -->
     <section class="delivery-address">
-      <h3>Lieferadresse (Zone 2):</h3>
-      <div class="delivery-zone">
-        {{#if delivery_address}}
-          {{#if delivery_address.company}}{{delivery_address.company}}<br>{{/if}}
-          {{delivery_address.name}}<br>
-          {{delivery_address.street}} {{delivery_address.house_number}}<br>
-          {{#if delivery_address.line2}}{{delivery_address.line2}}<br>{{/if}}
-          {{delivery_address.postal_code}} {{delivery_address.city}}
-        {{else}}
-          {{#if customer.company}}{{customer.company}}<br>{{/if}}
-          {{customer.name}}<br>
-          {{customer.address.street}} {{customer.address.house_number}}<br>
-          {{#if customer.address.line2}}{{customer.address.line2}}<br>{{/if}}
-          {{customer.address.postal_code}} {{customer.address.city}}
-        {{/if}}
-      </div>
       <div class="confirmation-statement">
         Hiermit bestätige ich den ordnungsgemäßen Zustand und Erhalt der bestellten Ware.
       </div>
