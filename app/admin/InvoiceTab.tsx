@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import InvoicePreview from './InvoicePreview';
 import TaxSettingsModal from './TaxSettingsModal';
@@ -71,6 +72,7 @@ interface Order {
 }
 
 export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
+  const router = useRouter();
   // Nutze absolute Origin für API-Calls, um Port/Protocol-Mismatches zu vermeiden
   const api = (path: string) => {
     const origin = typeof window !== 'undefined'
@@ -88,6 +90,7 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [orderSearchTerm, setOrderSearchTerm] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
   const [showInvoicePreview, setShowInvoicePreview] = useState(false);
@@ -98,6 +101,11 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>('');
   const [showTaxSettings, setShowTaxSettings] = useState(false);
+  // Pagination & Filter für Bestellungen ohne Rechnung
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [ordersPageSize, setOrdersPageSize] = useState(20);
+  const [ordersTotal, setOrdersTotal] = useState<number | null>(null);
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>('all');
 
   useEffect(() => {
     loadInvoices();
@@ -108,6 +116,13 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
       loadOrdersWithoutInvoice();
     }
   }, [invoices]);
+
+  // Reload orders when modal filters/pagination change
+  useEffect(() => {
+    if (showCreateModal) {
+      loadOrdersWithoutInvoice();
+    }
+  }, [orderSearchTerm, ordersPage, ordersPageSize, orderStatusFilter, showCreateModal]);
 
   useEffect(() => {
     filterInvoices();
@@ -162,8 +177,12 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
         existing_order_ids: invoices.map(inv => inv.order_id)
       });
       
-      // Erst alle Bestellungen laden
-      const { data: allOrders, error: allOrdersError } = await supabase
+      // Serverseitige Filter: Bestellungen ohne Rechnung + Suche + Status + Pagination
+      const existingInvoiceOrderIds = invoices.map(inv => inv.order_id).filter(Boolean);
+      const offset = (ordersPage - 1) * ordersPageSize;
+      const to = offset + ordersPageSize - 1;
+
+      let query = supabase
         .from('orders')
         .select(`
           *,
@@ -174,36 +193,37 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
             unit_price,
             total_price
           )
-        `)
-        .order('created_at', { ascending: false });
-        
-      if (allOrdersError) {
-        console.error('❌ Error loading all orders:', allOrdersError);
+        `, { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(offset, to);
+
+      // Filter: ohne Rechnung
+      if (existingInvoiceOrderIds.length > 0) {
+        query = query.not('id', 'in', `(${existingInvoiceOrderIds.join(',')})`);
+      }
+
+      // Filter: Status aus Order (falls gesetzt)
+      if (orderStatusFilter && orderStatusFilter !== 'all') {
+        query = query.eq('status', orderStatusFilter);
+      }
+
+      // Suche: mehrere Felder (ilike)
+      const term = orderSearchTerm?.trim();
+      if (term) {
+        const like = `%${term}%`;
+        query = query.or(`order_number.ilike.${like},delivery_email.ilike.${like},delivery_first_name.ilike.${like},delivery_last_name.ilike.${like},delivery_phone.ilike.${like}`);
+      }
+
+      const { data: pageOrders, error: ordersError, count } = await query;
+
+      if (ordersError) {
+        console.error('❌ Error loading filtered orders:', ordersError);
         return;
       }
-      
-      console.log('📦 All orders loaded:', allOrders?.length || 0);
-      
-      // Dann filtern: Bestellungen ohne Rechnung
-      const existingInvoiceOrderIds = invoices.map(inv => inv.order_id);
-      const ordersWithoutInvoice = (allOrders || []).filter((order: any) => 
-        !existingInvoiceOrderIds.includes(order.id)
-      );
-      
-      console.log('✅ Orders without invoice:', {
-        total_orders: allOrders?.length || 0,
-        existing_invoices: existingInvoiceOrderIds.length,
-        orders_without_invoice: ordersWithoutInvoice.length,
-        filtered_orders: ordersWithoutInvoice.map((o: any) => ({ id: o.id, order_number: o.order_number, status: o.status }))
-      });
-      
-      setOrders(ordersWithoutInvoice);
-      
-      // Fallback: Wenn keine Bestellungen gefunden werden, aber es sollte welche geben
-      if (ordersWithoutInvoice.length === 0 && allOrders && allOrders.length > 0) {
-        console.log('⚠️ No orders without invoice found, but orders exist. Using all orders as fallback.');
-        setOrders(allOrders);
-      }
+
+      setOrders(pageOrders || []);
+      setOrdersTotal(typeof count === 'number' ? count : null);
+      console.log('✅ Orders page loaded:', { page: ordersPage, pageSize: ordersPageSize, count });
       
     } catch (error) {
       console.error('💥 Error loading orders without invoice:', error);
@@ -679,7 +699,7 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
             Test PDF
           </button>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => router.push('/admin/invoices/create')}
             className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors"
           >
             <i className="ri-add-line mr-2"></i>
@@ -714,7 +734,7 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
       </div>
 
       {/* Rechnungsliste */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white overflow-hidden rounded-none shadow-none border-0">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -850,27 +870,81 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
 
       {/* Modal für Rechnung erstellen */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-none border-0 shadow-none max-w-4xl w-full max-h-[90vh] overflow-y-scroll overscroll-contain flex flex-col" style={{ WebkitOverflowScrolling: 'touch', scrollbarGutter: 'stable both-edges', touchAction: 'pan-y' }}>
+            {/* Header */}
             <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Rechnung aus Bestellung erstellen</h3>
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-900">Bestellungen ohne Rechnung</h3>
+                <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-gray-600">
                   <i className="ri-close-line text-xl"></i>
                 </button>
               </div>
+              <p className="mt-2 text-sm text-gray-600">Wählen Sie eine Bestellung und erstellen Sie eine Rechnung.</p>
+            </div>
 
-              <div className="space-y-4">
-                <h4 className="font-medium text-gray-900">Bestellungen ohne Rechnung:</h4>
-                {orders.length === 0 ? (
-                  <p className="text-gray-500">Keine Bestellungen ohne Rechnung gefunden.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {orders.map((order) => (
-                      <div key={order.id} className="border border-gray-200 rounded-lg p-4">
+            {/* Inhalt */}
+            <div className="px-6 pb-6">
+              {/* Suche */}
+              <div className="mt-4 flex items-center gap-3">
+                <input
+                  type="text"
+                  placeholder="Suchen nach Bestellnummer, Name, E-Mail, Telefon..."
+                  value={orderSearchTerm}
+                  onChange={(e) => { setOrderSearchTerm(e.target.value); setOrdersPage(1); }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Filter */}
+              <div className="mt-3 flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-600">Status:</label>
+                  <select
+                    value={orderStatusFilter}
+                    onChange={(e) => { setOrderStatusFilter(e.target.value); setOrdersPage(1); }}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
+                  >
+                    <option value="all">Alle Status</option>
+                    <option value="pending">Ausstehend</option>
+                    <option value="confirmed">Bestätigt</option>
+                    <option value="processing">In Bearbeitung</option>
+                    <option value="shipped">Versendet</option>
+                    <option value="delivered">Geliefert</option>
+                    <option value="cancelled">Storniert</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-600">Pro Seite:</label>
+                  <select
+                    value={ordersPageSize}
+                    onChange={(e) => { setOrdersPageSize(parseInt(e.target.value, 10)); setOrdersPage(1); }}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm"
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Liste */}
+              {orders.length === 0 ? (
+                <div className="py-4 text-gray-500">Keine Bestellungen ohne Rechnung gefunden.</div>
+              ) : (
+                <div className="divide-y divide-gray-200 px-6">
+                  {orders
+                    .filter((order) => {
+                      const hay = [
+                        order.order_number || '',
+                        `${order.delivery_first_name || ''} ${order.delivery_last_name || ''}`.trim(),
+                        order.delivery_email || '',
+                        order.delivery_phone || ''
+                      ].join(' ').toLowerCase();
+                      return hay.includes(orderSearchTerm.toLowerCase());
+                    })
+                    .map((order) => (
+                      <div key={order.id} className="py-4">
                         <div className="flex justify-between items-start">
                           <div>
                             <h5 className="font-medium text-gray-900">{order.order_number}</h5>
@@ -878,6 +952,9 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
                               {order.delivery_first_name} {order.delivery_last_name}
                             </p>
                             <p className="text-sm text-gray-500">{order.delivery_email}</p>
+                            {order.delivery_phone && (
+                              <p className="text-sm text-gray-500">{order.delivery_phone}</p>
+                            )}
                             <p className="text-sm text-gray-500">
                               Bestellt am: {new Date(order.created_at).toLocaleDateString('de-DE')}
                             </p>
@@ -905,8 +982,33 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
                         </div>
                       </div>
                     ))}
+                </div>
+              )}
+
+              {/* Pagination */}
+              <div className="bg-white py-3 px-6 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    Seite {ordersPage}{ordersTotal !== null ? ` von ${Math.max(1, Math.ceil(ordersTotal / ordersPageSize))}` : ''}
+                    {ordersTotal !== null ? ` (${ordersTotal} Einträge)` : ''}
                   </div>
-                )}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setOrdersPage(p => Math.max(1, p - 1))}
+                      disabled={ordersPage <= 1}
+                      className="px-3 py-2 text-sm rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Vorherige
+                    </button>
+                    <button
+                      onClick={() => setOrdersPage(p => p + 1)}
+                      disabled={ordersTotal !== null ? ordersPage >= Math.ceil(ordersTotal / ordersPageSize) : false}
+                      className="px-3 py-2 text-sm rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Nächste
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
