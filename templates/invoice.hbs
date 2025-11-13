@@ -38,9 +38,11 @@
         margin: 0;
         padding: 0;
         box-shadow: none;
-        width: 100% !important;
-        max-width: 100% !important;
-        min-height: 297mm;
+        width: 210mm !important;
+        max-width: 210mm !important;
+        min-height: auto;
+        transform: scale(0.92);
+        transform-origin: top left;
       }
       
       .footer {
@@ -89,7 +91,7 @@
       }
       
       .content-wrapper {
-        padding: 0 15mm 12mm 15mm !important;
+        padding: 0 12mm 10mm 12mm !important;
         margin: 0 !important;
         position: relative;
         z-index: 1;
@@ -262,12 +264,12 @@
     /* Top info two-column layout (sender/recipient left, details right) */
     .top-info {
       display: grid;
-      grid-template-columns: 2fr 1fr; /* mehr Platz links für DIN-Adresse */
-      gap: 8pt;
-      padding: 12mm 15mm 6mm 15mm; /* DIN-Rand links/rechts, Top-Offset fürs Fenster */
+      grid-template-columns: 2fr 1fr;
+      gap: 6pt;
+      padding: 10mm 12mm 4mm 12mm;
       background: white;
       color: #1A1A1A;
-      font-size: 9pt; /* leicht kleiner für mehr Inhalt */
+      font-size: 9pt;
       align-items: start;
     }
     .top-left {
@@ -479,9 +481,9 @@
     
     /* Totals */
     .totals-section {
-      display: block; /* block layout verhindert Verschiebung durch nachfolgendes clear-Element */
-      margin-top: 25pt;
-      margin-bottom: 30pt;
+      display: block;
+      margin-top: 20pt;
+      margin-bottom: 18pt;
       max-width: 180mm;
       margin-left: auto;
       margin-right: auto;
@@ -508,12 +510,16 @@
     }
     
     .totals-header::after {
-      content: '🔥';
+      content: '';
       position: absolute;
       right: 20pt;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 16pt;
+      width: 16pt;
+      height: 16pt;
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M12 2c1.5 2 2.5 4.2 2.5 6.2 0 2.2-1.2 3.8-3.5 4.8 0.3-1.7-0.6-3.5-2.5-5.4-1.5 3.4-2.5 5.6-2.5 7.4 0 3.3 2.7 5 6.5 5 3.9 0 6.5-2.2 6.5-5.5 0-2.7-1.5-4.9-4.5-6.6 0.5 2.5-0.8 4.3-3 5.1 0.5-2.5-0.6-4.3-3-5.8C9.6 4.7 10.7 3.2 12 2z"/></svg>');
     }
     
     .totals-body {
@@ -565,7 +571,7 @@
     
     /* Payment Terms */
     .payment-terms {
-      margin-bottom: 25pt;
+      margin-bottom: 18pt;
       padding: 20pt;
       background: #f8f9fa;
       border: 1pt solid #ddd;
@@ -585,9 +591,14 @@
     }
     
     .payment-terms h3::before {
-      content: '💳';
+      content: '';
+      display: inline-block;
+      width: 14pt;
+      height: 14pt;
       margin-right: 8pt;
-      font-size: 14pt;
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23C04020"><rect x="2" y="5" width="20" height="14" rx="2"/><rect x="2" y="8" width="20" height="3" fill="white"/></svg>');
     }
     
     /* Order Confirmation Page */
@@ -607,7 +618,7 @@
     
     /* Order Confirmation */
     .order-confirmation {
-      margin-bottom: 25pt;
+      margin-bottom: 16pt;
       padding: 18pt;
       background: #f8f9fa;
       border: 1pt solid #ddd;
@@ -628,9 +639,14 @@
     }
     
     .order-confirmation h3::before {
-      content: '📋';
+      content: '';
+      display: inline-block;
+      width: 14pt;
+      height: 14pt;
       margin-right: 8pt;
-      font-size: 14pt;
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%231A1A1A"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M9 6h6v2H9V6zm0 4h6v2H9v-2zm0 4h6v2H9v-2z"/></svg>');
     }
     
     .confirmation-text {
@@ -657,7 +673,7 @@
 
     /* Customer Delivery Notes */
     .customer-delivery-notes {
-      margin-bottom: 20pt;
+      margin-bottom: 14pt;
       padding: 14pt 18pt 22pt 18pt;
       background: #f8f9fa;
       border: 1pt solid #ddd;
@@ -727,9 +743,14 @@
     }
     
     .delivery-address h3::before {
-      content: '🚚';
+      content: '';
+      display: inline-block;
+      width: 14pt;
+      height: 14pt;
       margin-right: 8pt;
-      font-size: 14pt;
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%231A1A1A"><path d="M3 6h11v8H3V6zm12 3h4l2 3v2h-6V9z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>');
     }
     
     .delivery-zone {
@@ -770,7 +791,7 @@
     
     /* Notes */
     .notes {
-      margin-bottom: 30pt;
+      margin-bottom: 18pt;
       padding: 20pt;
       background: #f8f9fa;
       border: 1pt solid #ddd;
@@ -791,9 +812,14 @@
     }
     
     .notes h3::before {
-      content: '📝';
+      content: '';
+      display: inline-block;
+      width: 14pt;
+      height: 14pt;
       margin-right: 8pt;
-      font-size: 14pt;
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%231A1A1A"><path d="M4 4h12l4 4v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M8 12h8v2H8v-2zm0 4h6v2H8v-2z"/></svg>');
     }
     
     /* Footer */
