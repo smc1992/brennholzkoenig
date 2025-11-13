@@ -26,6 +26,7 @@ export interface InvoiceData {
     quantity: number;
     unit_price: number;
     total_price: number;
+    category?: string;
     product_code?: string;
   }>;
   subtotal_amount: number;
@@ -330,7 +331,7 @@ export class ModernInvoiceBuilder {
       delivery_address: invoiceData.delivery_address,
       items: invoiceData.items.map(item => ({
         name: item.description,  // Template erwartet 'name'
-        category: 'Brennholz',   // Template erwartet 'category'
+        category: item.category || 'Brennholz',   // Dynamische Kategorie aus Item, Fallback 'Brennholz'
         quantity: item.quantity,
         unitPrice: item.unit_price,   // Template formatiert mit formatCurrency Helper
         totalPrice: item.total_price, // Template formatiert mit formatCurrency Helper

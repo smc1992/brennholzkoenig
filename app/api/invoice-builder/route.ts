@@ -86,8 +86,13 @@ export async function GET(request: NextRequest) {
             quality: parseInt(searchParams.get('quality') || '90')
           }
         );
-        
-        return new NextResponse(screenshot, {
+        // Buffer -> ArrayBuffer (korrekte Länge via Slice)
+        const screenshotArrayBuffer = screenshot.buffer.slice(
+          screenshot.byteOffset,
+          screenshot.byteOffset + screenshot.byteLength
+        );
+
+        return new NextResponse(screenshotArrayBuffer, {
           headers: {
             'Content-Type': 'image/png',
             'Cache-Control': 'public, max-age=3600'
@@ -262,7 +267,13 @@ export async function POST(request: NextRequest) {
       });
     } else {
       // PDF direkt zurückgeben
-      return new NextResponse(pdfBuffer, {
+      // Buffer -> ArrayBuffer (korrekte Länge via Slice)
+      const pdfArrayBuffer = pdfBuffer.buffer.slice(
+        pdfBuffer.byteOffset,
+        pdfBuffer.byteOffset + pdfBuffer.byteLength
+      );
+
+      return new NextResponse(pdfArrayBuffer, {
         headers: {
           'Content-Type': 'application/pdf',
           'Content-Disposition': `attachment; filename="invoice-${invoiceData.invoice_number}.pdf"`,
@@ -676,6 +687,7 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
          unit_price: parseFloat(item.unit_price),
          total_price: parseFloat(item.total_price),
          product_code: item.product_code || item.id,
+         category: item.product_category || item.category || null,
          tax_included: item.tax_included !== undefined ? item.tax_included : companySettings.default_tax_included || false  // Steuereinstellung aus Datenbank oder global
        };
       
@@ -692,6 +704,7 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
         unit_price: parseFloat(order.delivery_price),
         total_price: parseFloat(order.delivery_price),
         product_code: 'DELIVERY',
+        category: 'Lieferung',
         tax_included: companySettings.default_tax_included || false
       };
       
@@ -729,6 +742,7 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
         unit_price: -parseFloat(order.discount_amount),
         total_price: -parseFloat(order.discount_amount),
         product_code: 'DISCOUNT',
+        category: 'Rabatt',
         tax_included: companySettings.default_tax_included || false
       };
       

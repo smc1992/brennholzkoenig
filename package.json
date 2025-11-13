@@ -9,7 +9,8 @@
     "lint": "next lint",
     "tailwind:dev": "tailwindcss -i ./app/globals.css -o ./app/output.css --watch",
     "tailwind:build": "tailwindcss -i ./app/globals.css -o ./app/output.css",
-    "postinstall": "echo 'Node.js installation successful'"
+    "postinstall": "echo 'Node.js installation successful'",
+    "upload:hero": "node scripts/upload-hero-video-to-supabase.js"
   },
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.10.0",

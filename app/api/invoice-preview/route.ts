@@ -273,6 +273,16 @@ export async function POST(request: NextRequest) {
     const template = Handlebars.compile(templateContent);
     
     // Bereite Template-Daten vor
+    // Hilfswerte für formatierte Felder
+    const formattedOrderDate = orderData?.created_at ? new Date(orderData.created_at).toLocaleDateString('de-DE') : '';
+    const rawNotes = `${orderData?.notes || ''} ${orderData?.delivery_notes || ''}`.trim();
+    const contactMethod = (() => {
+      if (/whatsapp/i.test(rawNotes)) return 'WhatsApp';
+      if (/telefon|anruf|phone/i.test(rawNotes)) return 'Telefon';
+      if (/email|mail/i.test(rawNotes)) return 'E-Mail';
+      return 'Andere';
+    })();
+
     const templateData = {
       company: {
         name: finalSettings.company_name,
@@ -312,7 +322,8 @@ export async function POST(request: NextRequest) {
       },
       order: {
         number: orderData.order_number,
-        date: orderData.created_at
+        date: formattedOrderDate,
+        contact_method: contactMethod
       },
       items: (orderData.order_items && Array.isArray(orderData.order_items) && orderData.order_items.length > 0) 
         ? orderData.order_items.map((item: any, index: number) => {

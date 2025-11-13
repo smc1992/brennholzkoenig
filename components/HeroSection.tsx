@@ -53,12 +53,22 @@ export default function HeroSection() {
                   <span className="font-semibold text-lg sm:text-xl leading-tight">Zahlung bei Lieferung</span>
                 </li>
               </ul>
-              <div className="mt-6">
+              <div className="mt-6 flex flex-wrap items-center gap-3 sm:gap-4">
                 <Link href="/shop" aria-label="Zum Shop" className="group inline-flex items-center gap-2 bg-[#D4A520] text-black px-8 sm:px-10 py-4 sm:py-5 text-base sm:text-lg font-extrabold rounded-2xl hover:bg-[#c99a1b] transition-all duration-200 shadow-xl hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A520] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
                   <i className="ri-shopping-cart-line text-lg"></i>
                   ZUM SHOP
                   <i className="ri-arrow-right-line text-lg opacity-80 transition-transform duration-200 group-hover:translate-x-0.5"></i>
                 </Link>
+                <a
+                  href="https://wa.me/4917671085234"
+                  aria-label="WhatsApp"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 border-2 border-[#D4A520] text-[#D4A520] px-8 sm:px-10 py-4 sm:py-5 text-base sm:text-lg font-extrabold rounded-2xl hover:bg-[#D4A520] hover:text-black transition-all duration-200 shadow-xl hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A520] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                >
+                  <i className="ri-whatsapp-line text-lg"></i>
+                  WhatsApp
+                </a>
               </div>
             </div>
 

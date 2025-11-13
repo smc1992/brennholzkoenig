@@ -440,6 +440,14 @@
   }
 }
 
+/* Utility: ensure modal containers are flat (no border/shadow/outline) */
+.modal-flat {
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background-clip: padding-box;
+}
+
 /* Admin Dashboard Optimierungen */
 .admin-table-container {
   overflow-x: auto;
