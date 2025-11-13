@@ -41,7 +41,7 @@
         width: 210mm !important;
         max-width: 210mm !important;
         min-height: auto;
-        transform: scale(0.92);
+        transform: scale(0.88);
         transform-origin: top left;
       }
       
@@ -281,6 +281,9 @@
     .callout { margin-bottom: 4pt; }
     .callout .phone { font-weight: 800; font-size: 16pt; color: #C04020; }
     .callout .tagline { font-size: 9pt; color: #333; }
+    .icon { display: inline-block; width: 14pt; height: 14pt; vertical-align: middle; margin-right: 6pt; background-repeat: no-repeat; background-size: contain; }
+    .phone-icon { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23C04020"><path d="M6.6 10.2c1.4 2.8 4 5.4 6.8 6.8l2.3-2.3c.3-.3.8-.4 1.2-.3 1 .3 2.1.5 3.1.5.7 0 1.2.5 1.2 1.2v3.5c0 .7-.5 1.2-1.2 1.2-10.1 0-18.3-8.2-18.3-18.3 0-.7.5-1.2 1.2-1.2H6c.7 0 1.2.5 1.2 1.2 0 1.1.2 2.1.5 3.1.1.4 0 .8-.3 1.2l-2.3 2.3z"/></svg>'); }
+    .doc-icon { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23C04020"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M9 6h6v2H9V6zm0 4h6v2H9v-2zm0 4h6v2H9v-2z"/></svg>'); }
     .sender-line {
       color: #555;
       font-size: 8.5pt;
@@ -415,6 +418,7 @@
 
     .items-section {
       padding: 0 4mm;
+      margin-bottom: 8pt;
     }
 
     /* Totals rechtsbündig zur Tabelle ausrichten */
@@ -627,6 +631,8 @@
       font-size: 10pt;
       line-height: 1.4;
       box-shadow: 0 2pt 6pt rgba(192, 64, 32, 0.08);
+      page-break-inside: avoid;
+      page-break-after: avoid;
     }
     
     .order-confirmation h3 {
@@ -664,27 +670,28 @@
     .signature-field {
       width: 45%;
       border-bottom: 1pt solid #333;
-      padding-bottom: 3pt;
+      padding-bottom: 2pt;
       text-align: center;
-      font-size: 9pt;
+      font-size: 8.5pt;
       color: #666;
-      min-height: 25pt;
+      min-height: 18pt;
     }
 
     /* Customer Delivery Notes */
     .customer-delivery-notes {
-      margin-bottom: 14pt;
-      padding: 14pt 18pt 22pt 18pt;
-      background: #f8f9fa;
-      border: 1pt solid #ddd;
-      border-left: 4pt solid #C04020;
-      border-radius: 6pt;
+      margin: 10pt 0 12pt 0;
+      padding: 0;
+      background: none;
+      border: none;
+      border-left: none;
+      border-radius: 0;
       font-size: 10pt;
-      box-shadow: 0 2pt 6pt rgba(192, 64, 32, 0.08);
+      box-shadow: none;
       page-break-inside: avoid;
       break-inside: avoid;
       display: block;
       min-height: auto;
+      page-break-before: avoid;
     }
     .customer-delivery-notes h3 { margin: 0 0 8pt 0; font-size: 12pt; color: #C04020; }
     .customer-delivery-notes .note-text { line-height: 1.45; }
@@ -916,7 +923,7 @@
       <div class="top-left">
         {{#if company.phone}}
         <div class="callout">
-          <div class="phone">📞 {{company.phone}}</div>
+          <div class="phone"><span class="icon phone-icon"></span>{{company.phone}}</div>
           <div class="tagline">Bestellung und Beratung täglich von 16.30 bis 20.00 Uhr</div>
         </div>
         {{/if}}
@@ -998,7 +1005,7 @@
           </tr>
         </table>
       </div>
-      <div style="clear: both; margin-bottom: 15pt;"></div>
+      <div style="clear: both; margin-bottom: 8pt;"></div>
     </section>
     
     
@@ -1021,7 +1028,7 @@
     
     <!-- Auftragsbestätigung (auf derselben Seite) -->
     <section class="order-confirmation">
-      <h3 style="margin-top: 8pt;">Auftragsbestätigung:</h3>
+      <h3 style="margin-top: 8pt;"><span class="icon doc-icon"></span> Auftragsbestätigung:</h3>
       <div class="confirmation-text">
         Ich erteile / Wir erteilen den Auftrag für die Brennholzlieferung 
         gemäß obigem Angebot. Die AGBs und Lieferbedingung frei Bordsteinkante 
@@ -1036,7 +1043,7 @@
 
     {{#if order.delivery_notes}}
     <section class="customer-delivery-notes">
-      <h3>Lieferhinweise des Kunden:</h3>
+      <h3 style="margin: 8pt 0 6pt 0; font-size: 11pt; font-weight: 700; color: #C04020;">Lieferhinweise des Kunden:</h3>
       <div class="note-text">{{order.delivery_notes}}</div>
       <div class="confirmation-statement">Hiermit bestätige ich den ordnungsgemäßen Zustand und Erhalt der bestellten Ware.</div>
       <div class="signature-inline">
@@ -1047,7 +1054,7 @@
     {{else}}
       {{#if delivery_address.line2}}
       <section class="customer-delivery-notes">
-        <h3>Lieferhinweise des Kunden:</h3>
+        <h3 style="margin: 8pt 0 6pt 0; font-size: 11pt; font-weight: 700; color: #C04020;">Lieferhinweise des Kunden:</h3>
         <div class="note-text">{{delivery_address.line2}}</div>
         <div class="confirmation-statement">Hiermit bestätige ich den ordnungsgemäßen Zustand und Erhalt der bestellten Ware.</div>
         <div class="signature-inline">
@@ -1058,7 +1065,7 @@
       {{else}}
         {{#if customer.address.line2}}
         <section class="customer-delivery-notes">
-          <h3>Lieferhinweise des Kunden:</h3>
+          <h3 style="margin: 8pt 0 6pt 0; font-size: 11pt; font-weight: 700; color: #C04020;">Lieferhinweise des Kunden:</h3>
           <div class="note-text">{{customer.address.line2}}</div>
           <div class="confirmation-statement">Hiermit bestätige ich den ordnungsgemäßen Zustand und Erhalt der bestellten Ware.</div>
           <div class="signature-inline">
