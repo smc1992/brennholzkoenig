@@ -985,48 +985,7 @@
       </table>
     </section>
     
-    <!-- Bestätigungszeile wird in den Lieferhinweisen des Kunden integriert -->
-    
-    <!-- Totals -->
-    <section class="totals-section">
-      <div style="float: right; width: 200pt; margin-top: 25pt;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 9pt;">
-          <tr>
-            <td style="padding: 4pt; text-align: left;">Gesamt Netto:</td>
-            <td style="padding: 4pt; text-align: right; font-weight: 600;">{{formatCurrency totals.subtotal}}</td>
-          </tr>
-          <tr>
-            <td style="padding: 4pt; text-align: left;">zzgl. {{totals.tax_rate}}% MwSt.:</td>
-            <td style="padding: 4pt; text-align: right;">{{formatCurrency totals.tax}}</td>
-          </tr>
-          <tr style="border-top: 2pt solid #333; font-weight: 600; font-size: 10pt;">
-            <td style="padding: 6pt 4pt; text-align: left;">Gesamt Brutto</td>
-            <td style="padding: 6pt 4pt; text-align: right;">{{formatCurrency totals.total}}</td>
-          </tr>
-        </table>
-      </div>
-      <div style="clear: both; margin-bottom: 8pt;"></div>
-    </section>
-    
-    
-    <!-- Payment Terms -->
-    {{#if payment_terms}}
-    <section class="payment-terms">
-      <h3>Zahlungsbedingungen</h3>
-      <p>{{payment_terms}}</p>
-
-    </section>
-    {{/if}}
-    
-    <!-- Notes -->
-    {{#if notes}}
-    <section class="notes">
-      <h3>Hinweise</h3>
-      <p>{{notes}}</p>
-    </section>
-    {{/if}}
-    
-    <!-- Auftragsbestätigung (auf derselben Seite) -->
+    <!-- Auftragsbestätigung und Lieferhinweise direkt nach Positionen -->
     <section class="order-confirmation">
       <h3 style="margin-top: 8pt;"><span class="icon doc-icon"></span> Auftragsbestätigung:</h3>
       <div class="confirmation-text">
@@ -1076,6 +1035,46 @@
         {{/if}}
       {{/if}}
     {{/if}}
+
+    <!-- Totals -->
+    <section class="totals-section">
+      <div style="float: right; width: 200pt; margin-top: 25pt;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 9pt;">
+          <tr>
+            <td style="padding: 4pt; text-align: left;">Gesamt Netto:</td>
+            <td style="padding: 4pt; text-align: right; font-weight: 600;">{{formatCurrency totals.subtotal}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 4pt; text-align: left;">zzgl. {{totals.tax_rate}}% MwSt.:</td>
+            <td style="padding: 4pt; text-align: right;">{{formatCurrency totals.tax}}</td>
+          </tr>
+          <tr style="border-top: 2pt solid #333; font-weight: 600; font-size: 10pt;">
+            <td style="padding: 6pt 4pt; text-align: left;">Gesamt Brutto</td>
+            <td style="padding: 6pt 4pt; text-align: right;">{{formatCurrency totals.total}}</td>
+          </tr>
+        </table>
+      </div>
+      <div style="clear: both; margin-bottom: 8pt;"></div>
+    </section>
+    
+    
+    <!-- Payment Terms -->
+    {{#if payment_terms}}
+    <section class="payment-terms">
+      <h3>Zahlungsbedingungen</h3>
+      <p>{{payment_terms}}</p>
+
+    </section>
+    {{/if}}
+    
+    <!-- Notes -->
+    {{#if notes}}
+    <section class="notes">
+      <h3>Hinweise</h3>
+      <p>{{notes}}</p>
+    </section>
+    {{/if}}
+    
 
     
     

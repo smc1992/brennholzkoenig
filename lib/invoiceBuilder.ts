@@ -582,6 +582,9 @@ export class ModernInvoiceBuilder {
    * Lädt ein Template aus der Datenbank oder Datei
    */
   private async getTemplate(templateId: string): Promise<string> {
+    if (process.env.NODE_ENV !== 'production') {
+      this.templateCache.delete(templateId);
+    }
     if (this.templateCache.has(templateId)) {
       return this.templateCache.get(templateId)!;
     }
