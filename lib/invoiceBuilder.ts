@@ -8,6 +8,7 @@ export interface InvoiceData {
   invoice_date: string;
   due_date: string;
   order_number?: string;
+  order_created_at?: string;
   customer: {
     name: string;
     email: string;
@@ -305,6 +306,10 @@ export class ModernInvoiceBuilder {
         date: this.formatDate(invoiceData.invoice_date),
         due_date: this.formatDate(invoiceData.due_date),
         order_number: invoiceData.order_number
+      },
+      order: {
+        number: invoiceData.order_number,
+        date: this.formatDate(invoiceData.order_created_at || invoiceData.invoice_date)
       },
       company: {
         name: companySettings.company_name,

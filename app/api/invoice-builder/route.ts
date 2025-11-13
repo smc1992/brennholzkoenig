@@ -639,6 +639,7 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
     invoice_date: invoice?.invoice_date || new Date().toISOString(),
     due_date: invoice?.due_date || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
     order_number: order.order_number,
+    order_created_at: (order as any)?.created_at || new Date().toISOString(),
     customer: {
       name: `${order.delivery_first_name} ${order.delivery_last_name}`,
       email: order.delivery_email,
