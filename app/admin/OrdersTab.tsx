@@ -1207,7 +1207,10 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
                 </h2>
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => setEditingOrder(selectedOrder)}
+                    onClick={() => {
+                      setEditingOrder(selectedOrder);
+                      setSelectedOrder(null); // Detail-Fenster schließen
+                    }}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
                   >
                     <i className="ri-edit-line mr-2"></i>
@@ -1521,7 +1524,7 @@ function EditOrderModal({ order, onSave, onClose }: EditOrderModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 z-[100] overflow-y-auto">
       <div className="flex min-h-full items-center justify-center p-4">
         <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
           <div className="p-6 border-b border-gray-200 flex-shrink-0">
@@ -1975,7 +1978,7 @@ function CreateOrderModal({ products, customers, onSave, onClose, saving }: Crea
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 z-[100] overflow-y-auto">
       <div className="flex min-h-full items-center justify-center p-4">
         <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
           <div className="p-6 border-b border-gray-200 flex-shrink-0">
