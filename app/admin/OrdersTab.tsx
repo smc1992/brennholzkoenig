@@ -868,18 +868,20 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
         }
       }
 
-      // Gesamtbetrag neu berechnen und aktualisieren
-      const calculateTotalRevenue = (orders: Order[], deliveryPrice: string): number => {
-        return orders.reduce((sum: number, item: Order) => {
-          return sum + parseFloat(item.total_amount);
-        }, 0) + parseFloat(deliveryPrice);
-      };
+      // Gesamtbetrag neu berechnen: Summe aller Items + Lieferkosten
+      const itemsTotal = updatedData.items.reduce((sum: number, item: any) => {
+        return sum + (item.quantity * item.unit_price);
+      }, 0);
+      const deliveryPrice = parseFloat(updatedData.delivery_price) || 0;
+      const newTotal = itemsTotal + deliveryPrice;
 
-      const newTotal = calculateTotalRevenue(orders, updatedData.delivery_price);
-
+      // Auch subtotal_amount aktualisieren (Warenwert ohne Lieferung)
       const { error: totalError } = await supabase
         .from('orders')
-        .update({ total_amount: newTotal })
+        .update({ 
+          total_amount: newTotal,
+          subtotal_amount: itemsTotal
+        })
         .eq('id', orderId);
 
       if (totalError) throw totalError;
