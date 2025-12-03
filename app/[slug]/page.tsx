@@ -5,12 +5,8 @@ import { useParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import CityHeroSection from '@/components/CityHeroSection';
 import USPSection from '@/components/USPSection';
+import QualifierSection from '@/components/QualifierSection';
 import LocalServiceSection from '@/components/LocalServiceSection';
-import TrustSection from '@/components/TrustSection';
-import ComparisonSection from '@/components/ComparisonSection';
-import ProcessSection from '@/components/ProcessSection';
-import SafetySection from '@/components/SafetySection';
-import OptimizedProductSection from '@/components/OptimizedProductSection';
 import RegionSection from '@/components/RegionSection';
 import SEOMetadata from '@/components/SEOMetadata';
 import LocalLandmarksSection from '@/components/LocalLandmarksSection';
@@ -18,7 +14,6 @@ import LocalLandmarksSection from '@/components/LocalLandmarksSection';
 import LocalFAQSection from '@/components/LocalFAQSection';
 import LocalPartnershipsSection from '@/components/LocalPartnershipsSection';
 import ExtendedDeliveryInfoSection from '@/components/ExtendedDeliveryInfoSection';
-import SeasonalEventsSection from '@/components/SeasonalEventsSection';
 import GoogleMapsIntegrationSection from '@/components/GoogleMapsIntegrationSection';
 import LocalKeywordOptimizer from '@/components/LocalKeywordOptimizer';
 import LocalContentEnhancer from '@/components/LocalContentEnhancer';
@@ -161,65 +156,6 @@ export default function CityLandingPage() {
       try {
         setLoading(true);
         
-        // Fallback Test-Daten
-        const testCities = [
-          {
-            id: 'test-berlin',
-            slug: 'berlin',
-            city_name: 'Berlin',
-            meta_title: 'Brennholz Berlin - Premium Kaminholz Lieferung | Brennholzkönig',
-            meta_description: 'Hochwertiges Brennholz in Berlin bestellen. Schnelle Lieferung, faire Preise. Buche, Eiche, Birke - ofenfertig und kammergetrocknet.',
-            hero_title: 'Premium Brennholz für Berlin',
-            hero_subtitle: 'Hochwertige Kaminholz-Lieferung direkt zu Ihnen nach Hause',
-            hero_image_url: '/images/brennholz-hero.jpg',
-            city_image_url: '/images/berlin-city.jpg',
-            content_section_1_main_title: 'Lokale Expertise für {city_name}',
-            content_section_1_subtitle: 'Entdecken Sie die Tradition und Qualität unseres regionalen Brennholzes in {city_name} und Umgebung',
-            content_section_1_title: 'Brennholz Berlin - Ihre lokale Quelle für Premium Kaminholz',
-            content_section_1_content: '<p>Als führender Brennholz-Lieferant in Berlin bieten wir Ihnen hochwertiges, kammergetrocknetes Kaminholz direkt vor Ihre Haustür. Unsere langjährige Erfahrung und unser Engagement für Qualität machen uns zur ersten Wahl für Berliner Haushalte.</p><p>Ob für gemütliche Abende am Kamin oder als zuverlässige Heizquelle - unser Brennholz erfüllt höchste Qualitätsstandards und wird nachhaltig aus regionalen Wäldern gewonnen.</p>',
-            content_section_2_title: 'Warum Brennholzkönig in Berlin wählen?',
-            content_section_2_content: '<p>✓ Schnelle Lieferung in alle Berliner Bezirke<br>✓ Kammergetrocknetes Holz mit unter 20% Restfeuchte<br>✓ Nachhaltige Forstwirtschaft aus der Region<br>✓ Faire Preise ohne versteckte Kosten<br>✓ Professionelle Beratung und Service</p>',
-            local_keywords: ['Brennholz Berlin', 'Kaminholz Berlin', 'Holz Lieferung Berlin', 'Feuerholz Berlin', 'Brennholz kaufen Berlin'],
-            postal_codes: ['10115', '10117', '10119', '10178', '10179', '10435', '10437', '10439', '10551', '10553', '10555', '10557', '10559', '10585', '10587', '10589', '10623', '10625', '10627', '10629', '10707', '10709', '10711', '10713', '10715', '10717', '10719', '10777', '10779', '10781', '10783', '10785', '10787', '10789', '10823', '10825', '10827', '10829', '10961', '10963', '10965', '10967', '10969', '10997', '10999'],
-            service_areas: ['Mitte', 'Friedrichshain-Kreuzberg', 'Pankow', 'Charlottenburg-Wilmersdorf', 'Spandau', 'Steglitz-Zehlendorf', 'Tempelhof-Schöneberg', 'Neukölln', 'Treptow-Köpenick', 'Marzahn-Hellersdorf', 'Lichtenberg', 'Reinickendorf'],
-            contact_phone: '+49 30 12345678',
-            contact_email: 'berlin@brennholz-koenig.de',
-            contact_address: 'Musterstraße 123, 10115 Berlin',
-            delivery_info: 'Zuverlässige Lieferung in ganz Berlin (42,50€ Liefergebühr). Lieferzeit: 2-3 Werktage.',
-            special_offers: 'Neukunden erhalten 10% Rabatt auf die erste Bestellung!',
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          },
-          {
-            id: 'test-muenchen',
-            slug: 'muenchen',
-            city_name: 'München',
-            meta_title: 'Brennholz München - Premium Kaminholz Lieferung | Brennholzkönig',
-            meta_description: 'Hochwertiges Brennholz in München bestellen. Schnelle Lieferung, faire Preise. Buche, Eiche, Birke - ofenfertig und kammergetrocknet.',
-            hero_title: 'Premium Brennholz für München',
-            hero_subtitle: 'Hochwertige Kaminholz-Lieferung direkt zu Ihnen nach Hause',
-            hero_image_url: '/images/brennholz-hero.jpg',
-            city_image_url: '/images/muenchen-city.jpg',
-            content_section_1_main_title: 'Lokale Expertise für {city_name}',
-            content_section_1_subtitle: 'Entdecken Sie die Tradition und Qualität unseres regionalen Brennholzes in {city_name} und Umgebung',
-            content_section_1_title: 'Brennholz München - Ihre lokale Quelle für Premium Kaminholz',
-            content_section_1_content: '<p>Als führender Brennholz-Lieferant in München bieten wir Ihnen hochwertiges, kammergetrocknetes Kaminholz direkt vor Ihre Haustür. Unsere langjährige Erfahrung und unser Engagement für Qualität machen uns zur ersten Wahl für Münchener Haushalte.</p><p>Ob für gemütliche Abende am Kamin oder als zuverlässige Heizquelle - unser Brennholz erfüllt höchste Qualitätsstandards und wird nachhaltig aus bayerischen Wäldern gewonnen.</p>',
-            content_section_2_title: 'Warum Brennholzkönig in München wählen?',
-            content_section_2_content: '<p>✓ Schnelle Lieferung in alle Münchener Stadtteile<br>✓ Kammergetrocknetes Holz mit unter 20% Restfeuchte<br>✓ Nachhaltige Forstwirtschaft aus Bayern<br>✓ Faire Preise ohne versteckte Kosten<br>✓ Professionelle Beratung und Service</p>',
-            local_keywords: ['Brennholz München', 'Kaminholz München', 'Holz Lieferung München', 'Feuerholz München', 'Brennholz kaufen München'],
-            postal_codes: ['80331', '80333', '80335', '80336', '80337', '80339', '80469', '80538', '80539', '80634', '80636', '80637', '80638', '80639', '80687', '80689', '80796', '80797', '80798', '80799', '80801', '80802', '80803', '80804', '80805', '80807', '80809', '80933', '80935', '80937', '80939', '80992', '80993', '80995', '80997', '81241', '81243', '81245', '81247', '81249', '81369', '81371', '81373', '81375', '81377', '81379', '81475', '81476', '81477', '81479', '81539', '81541', '81543', '81545', '81547', '81549', '81667', '81669', '81671', '81673', '81675', '81677', '81679', '81735', '81737', '81739', '81825', '81827', '81829', '81925', '81927', '81929'],
-            service_areas: ['Altstadt-Lehel', 'Ludwigsvorstadt-Isarvorstadt', 'Maxvorstadt', 'Schwabing-West', 'Au-Haidhausen', 'Sendling', 'Sendling-Westpark', 'Schwanthalerhöhe', 'Neuhausen-Nymphenburg', 'Moosach', 'Milbertshofen-Am Hart', 'Schwabing-Freimann', 'Bogenhausen', 'Berg am Laim', 'Trudering-Riem', 'Ramersdorf-Perlach', 'Obergiesing-Fasangarten', 'Untergiesing-Harlaching', 'Thalkirchen-Obersendling-Forstenried-Fürstenried-Solln', 'Hadern', 'Pasing-Obermenzing', 'Aubing-Lochhausen-Langwied', 'Allach-Untermenzing', 'Feldmoching-Hasenbergl', 'Laim'],
-            contact_phone: '+49 89 12345678',
-            contact_email: 'muenchen@brennholz-koenig.de',
-            contact_address: 'Musterstraße 456, 80331 München',
-            delivery_info: 'Zuverlässige Lieferung in ganz München (42,50€ Liefergebühr). Lieferzeit: 2-3 Werktage.',
-            special_offers: 'Neukunden erhalten 10% Rabatt auf die erste Bestellung!',
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ];
 
         // Versuche zuerst Supabase-Daten zu laden
         try {
@@ -232,27 +168,14 @@ export default function CityLandingPage() {
           if (!error && data && data.length > 0) {
             setCityPage(data[0]);
           } else {
-            // Fallback zu Test-Daten
-            const testCity = testCities.find(city => city.slug === slug);
-            if (testCity) {
-              setCityPage(testCity);
-            } else {
-              console.log('No city page found for slug:', slug);
-              notFound();
-              return;
-            }
-          }
-        } catch (supabaseError) {
-          console.log('Supabase error, using test data:', supabaseError);
-          // Fallback zu Test-Daten
-          const testCity = testCities.find(city => city.slug === slug);
-          if (testCity) {
-            setCityPage(testCity);
-          } else {
-            console.log('No test city found for slug:', slug);
+            console.log('No city page found for slug:', slug);
             notFound();
             return;
           }
+        } catch (supabaseError) {
+          console.log('Supabase error:', supabaseError);
+          notFound();
+          return;
         }
 
         // Versuche Local Business-Daten zu laden (optional)
@@ -394,62 +317,60 @@ export default function CityLandingPage() {
                 </p>
               </div>
             
-            {/* Content Section 1 mit Stadtbild */}
-            {cityPage.content_section_1_content && (
-              <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
-                {/* Text Links */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 lg:p-12">
-                  {cityPage.content_section_1_title && (
-                    <h3 className="text-2xl md:text-3xl font-bold text-primary-700 mb-6">
-                      <LocalContentEnhancer
-                        cityName={cityPage.city_name}
-                        postalCodes={cityPage.postal_codes}
-                        serviceAreas={cityPage.service_areas}
-                        originalContent={cityPage.content_section_1_title}
-                        contentType="title"
-                      />
-                    </h3>
-                  )}
-                  <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
-                    <LocalContentEnhancer
-                      cityName={cityPage.city_name}
-                      postalCodes={cityPage.postal_codes}
-                      serviceAreas={cityPage.service_areas}
-                      originalContent={cityPage.content_section_1_content || ''}
-                      contentType="text"
-                    />
-                  </div>
-                </div>
-                
-                {/* Stadtbild Rechts */}
-                <div className="relative">
-                  {cityPage.city_image_url ? (
-                    <div className="relative overflow-hidden rounded-2xl shadow-lg">
-                      <img 
-                        src={cityPage.city_image_url} 
-                        alt={`Stadtansicht von ${cityPage.city_name}`}
-                        className="w-full h-96 object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                      <div className="absolute bottom-4 left-4 text-white">
-                        <p className="text-lg font-semibold">{cityPage.city_name}</p>
-                        <p className="text-sm opacity-90">Ihre Region für Premium-Brennholz</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-gradient-to-br from-wood-100 to-wood-200 rounded-2xl shadow-lg h-96 flex items-center justify-center">
-                      <div className="text-center text-gray-600">
-                        <svg className="w-16 h-16 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                        </svg>
-                        <p className="font-semibold">{cityPage.city_name}</p>
-                        <p className="text-sm">Stadtbild wird geladen...</p>
-                      </div>
-                    </div>
-                  )}
+            {/* Content Section 1 mit Stadtbild — immer sichtbar mit sinnvollen Defaults */}
+            <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
+              {/* Text Links */}
+              <div className="bg-white rounded-2xl shadow-lg p-8 lg:p-12">
+                <h3 className="text-2xl md:text-3xl font-bold text-primary-700 mb-6">
+                  <LocalContentEnhancer
+                    cityName={cityPage.city_name}
+                    postalCodes={cityPage.postal_codes}
+                    serviceAreas={cityPage.service_areas}
+                    originalContent={cityPage.content_section_1_title || `Brennholz-Service für ${cityPage.city_name}`}
+                    contentType="title"
+                  />
+                </h3>
+                <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+                  <LocalContentEnhancer
+                    cityName={cityPage.city_name}
+                    postalCodes={cityPage.postal_codes}
+                    serviceAreas={cityPage.service_areas}
+                    originalContent={
+                      (cityPage.content_section_1_content || `Wir liefern regionales Brennholz in ${cityPage.city_name} und Umgebung. Kurze Wege, faire Preise und nachhaltige Qualität aus der Region.`)
+                    }
+                    contentType="text"
+                  />
                 </div>
               </div>
-            )}
+              
+              {/* Stadtbild Rechts */}
+              <div className="relative">
+                {cityPage.city_image_url ? (
+                  <div className="relative overflow-hidden rounded-2xl shadow-lg">
+                    <img 
+                      src={cityPage.city_image_url} 
+                      alt={`Stadtansicht von ${cityPage.city_name}`}
+                      className="w-full h-96 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                    <div className="absolute bottom-4 left-4 text-white">
+                      <p className="text-lg font-semibold">{cityPage.city_name}</p>
+                      <p className="text-sm opacity-90">Ihre Region für Premium-Brennholz</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-gradient-to-br from-wood-100 to-wood-200 rounded-2xl shadow-lg h-96 flex items-center justify-center">
+                    <div className="text-center text-gray-600">
+                      <svg className="w-16 h-16 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                      </svg>
+                      <p className="font-semibold">{cityPage.city_name}</p>
+                      <p className="text-sm">Stadtbild wird geladen...</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
             
           </div>
         </section>
@@ -470,99 +391,59 @@ export default function CityLandingPage() {
           expertiseBenefits={cityPage.local_service_expertise_benefits}
           localRootedTitle={cityPage.local_service_rooted_title}
           localRootedDescription={cityPage.local_service_rooted_description}
+          expertiseImageUrl={cityPage.expertise_image_url}
+          compact={true}
+          maxAreas={3}
         />
-
-        {/* Trust Section */}
-        <TrustSection />
-
-        {/* Lokale Wahrzeichen */}
-        <LocalLandmarksSection cityName={cityPage.city_name} />
 
         
 
-        {/* Zweiter Content-Bereich: Premium-Service entfernt */}
+        
+
+        
+
+        
+
+        
 
         {/* Servicegebiete Details entfernt */}
 
-        {/* Erweiterte Lieferinformationen */}
         <ExtendedDeliveryInfoSection 
           cityName={cityPage.city_name}
           title={cityPage.extended_delivery_info_title}
           description={cityPage.extended_delivery_info_description}
           deliveryZones={cityPage.delivery_zones}
           deliveryRoutes={cityPage.delivery_routes}
+          maxZones={1}
+          maxRoutes={1}
         />
 
-        {/* Interaktive Komponenten (Kostenrechner entfernt) */}
-        <ComparisonSection />
-        <ProcessSection cityData={cityPage} />
-        <SafetySection />
-        <OptimizedProductSection 
-          initialProducts={[]}
-          loadTime={0}
-          error={null}
-        />
+        
 
-        {/* Lokale FAQs */}
         <LocalFAQSection 
           cityName={cityPage.city_name} 
           customFAQs={cityPage.local_faqs}
+          maxItems={5}
+          compact={true}
         />
 
-        {/* Lokale Partnerschaften */}
-        <LocalPartnershipsSection cityName={cityPage.city_name} />
+        
 
-        {/* Saisonale Events */}
-        <SeasonalEventsSection 
-          cityName={cityPage.city_name}
-          seasonalEvents={cityPage.seasonal_events}
-        />
+        
 
-        {/* Google Maps Integration */}
+        
+
         <GoogleMapsIntegrationSection 
           cityName={cityPage.city_name}
           contactAddress={cityPage.contact_address}
           contactPhone={cityPage.contact_phone}
+          centerLat={cityPage.google_maps_center_lat}
+          centerLng={cityPage.google_maps_center_lng}
+          zoom={cityPage.google_maps_zoom}
+          markers={cityPage.google_maps_markers}
         />
         
-        {/* Zusätzlicher Content-Bereich falls vorhanden */}
-        {cityPage.content_section_3_content && (
-          <section className="py-16 px-4 bg-wood-50">
-            <div className="max-w-6xl mx-auto">
-              {cityPage.content_section_3_image_url ? (
-                <div className="grid lg:grid-cols-2 gap-12 items-center">
-                  <div className="bg-white rounded-2xl shadow-lg p-8 lg:p-12">
-                    {cityPage.content_section_3_title && (
-                      <h3 className="text-2xl md:text-3xl font-bold text-primary-700 mb-6">
-                        {cityPage.content_section_3_title}
-                      </h3>
-                    )}
-                    <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed" 
-                         dangerouslySetInnerHTML={{ __html: cityPage.content_section_3_content }} />
-                  </div>
-                  <div className="relative rounded-2xl shadow-lg overflow-hidden">
-                    <img 
-                      src={cityPage.content_section_3_image_url} 
-                      alt={`${cityPage.city_name} - ${cityPage.content_section_3_title || 'Content Bereich 3'}`}
-                      className="w-full h-full object-cover min-h-[300px]"
-                      loading="lazy"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-white rounded-2xl shadow-lg p-8 lg:p-12">
-                  {cityPage.content_section_3_title && (
-                    <h3 className="text-2xl md:text-3xl font-bold text-primary-700 mb-6 text-center">
-                      {cityPage.content_section_3_title}
-                    </h3>
-                  )}
-                  <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed" 
-                       dangerouslySetInnerHTML={{ __html: cityPage.content_section_3_content }} />
-                </div>
-              )}
-            </div>
-          </section>
-        )}
+        
 
         <RegionSection />
       </div>

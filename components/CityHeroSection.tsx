@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { CityButton } from '@/components/ui/CityButton';
+import { useCityButtons } from '@/hooks/useCityButtons';
 
 interface CityHeroSectionProps {
   cityName: string;
@@ -24,6 +25,7 @@ export default function CityHeroSection({
   const [isVisible, setIsVisible] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [finalHeroImageUrl, setFinalHeroImageUrl] = useState('');
+  const buttonConfig = useCityButtons(cityData);
 
   useEffect(() => {
     setIsVisible(true);
@@ -77,7 +79,8 @@ export default function CityHeroSection({
 
   const handleWhatsAppRedirect = () => {
     const message = encodeURIComponent(`Hallo! Ich interessiere mich für Brennholz-Lieferung nach ${cityName}. Können Sie mir ein Angebot machen?`);
-    window.open(`https://wa.me/4915123456789?text=${message}`, '_blank');
+    const waUrl = (buttonConfig?.contact_whatsapp_url || 'https://wa.me/4917671085234') + `?text=${message}`;
+    window.open(waUrl, '_blank');
     closeWhatsAppModal();
   };
 

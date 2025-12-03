@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import CityImageUploader from '../../components/CityImageUploader';
 
@@ -68,6 +69,7 @@ interface CityPage {
   hero_title: string;
   hero_subtitle: string;
   hero_cta_text: string;
+  hero_secondary_cta_text?: string;
   hero_image_url: string;
   city_image_url: string;
   content_section_1_main_title: string;
@@ -167,6 +169,9 @@ interface CityPage {
   contact_address: string;
   primary_cta_text: string;
   secondary_cta_text: string;
+  primary_cta_url?: string;
+  secondary_cta_url?: string;
+  contact_url?: string;
   phone_display: string;
   whatsapp_url: string;
   shop_url: string;
@@ -272,6 +277,7 @@ export default function CityPagesTab() {
       hero_title: '',
       hero_subtitle: '',
       hero_cta_text: 'Jetzt bestellen',
+      hero_secondary_cta_text: 'WhatsApp Beratung',
       hero_image_url: '',
       city_image_url: '',
       content_section_1_main_title: 'Lokale Expertise für {city_name}',
@@ -363,6 +369,9 @@ export default function CityPagesTab() {
       contact_address: '',
       primary_cta_text: 'Jetzt bestellen',
       secondary_cta_text: 'Mehr erfahren',
+      primary_cta_url: '',
+      secondary_cta_url: '',
+      contact_url: '',
       phone_display: '',
       whatsapp_url: '',
       shop_url: '',
@@ -529,6 +538,62 @@ export default function CityPagesTab() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                  <Link
+                    href={`/${page.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    Öffnen
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      const url = window.prompt('Bild-URL für Hero hochladen (z.B. Wikimedia FilePath):');
+                      if (!url) return;
+                      try {
+                        const res = await fetch('/api/city-assets', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ city_slug: page.slug, section: 'hero', image_url: url })
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data?.error || 'Upload fehlgeschlagen');
+                        const publicUrl = data.publicUrl;
+                        const upd = { ...page, hero_image_url: publicUrl } as any;
+                        await handleSave(upd);
+                        alert('Hero-Bild aktualisiert.');
+                      } catch (e: any) {
+                        alert('Fehler beim Upload: ' + (e?.message || e));
+                      }
+                    }}
+                    className="text-indigo-600 hover:text-indigo-900"
+                  >
+                    Hero-Bild hochladen
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const url = window.prompt('Bild-URL für Stadtbild hochladen:');
+                      if (!url) return;
+                      try {
+                        const res = await fetch('/api/city-assets', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ city_slug: page.slug, section: 'city', image_url: url })
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data?.error || 'Upload fehlgeschlagen');
+                        const publicUrl = data.publicUrl;
+                        const upd = { ...page, city_image_url: publicUrl } as any;
+                        await handleSave(upd);
+                        alert('Stadtbild aktualisiert.');
+                      } catch (e: any) {
+                        alert('Fehler beim Upload: ' + (e?.message || e));
+                      }
+                    }}
+                    className="text-indigo-600 hover:text-indigo-900"
+                  >
+                    Stadtbild hochladen
+                  </button>
                   <button
                     onClick={() => handleEdit(page)}
                     className="text-[#C04020] hover:text-[#A03318]"
@@ -672,11 +737,276 @@ function CityPageForm({ page, onSave, onCancel }: {
     delivery_routes: [],
     is_active: true
   });
+  const [compactMode] = useState(true);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
   };
+
+  if (compactMode) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">
+            {page?.id ? 'Stadtseite bearbeiten (Kompakt)' : 'Neue Stadtseite erstellen (Kompakt)'}
+          </h2>
+          <button onClick={onCancel} className="text-gray-600 hover:text-gray-900">Zurück zur Übersicht</button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Grunddaten</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Stadtname</label>
+                <input type="text" value={formData.city_name} onChange={(e) => setFormData(prev => ({ ...prev, city_name: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">URL Slug</label>
+                <input type="text" value={formData.slug} onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" required />
+              </div>
+              <div className="md:col-span-2">
+                <label className="flex items-center">
+                  <input type="checkbox" checked={formData.is_active} onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))} className="mr-2" />
+                  Seite aktiv
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">SEO</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Meta Titel</label>
+                <input type="text" value={formData.meta_title} onChange={(e) => setFormData(prev => ({ ...prev, meta_title: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Meta Beschreibung</label>
+                <textarea value={formData.meta_description} onChange={(e) => setFormData(prev => ({ ...prev, meta_description: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" rows={3} required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Lokale Keywords (kommagetrennt)</label>
+                <input type="text" value={(formData.local_keywords || []).join(', ')} onChange={(e) => setFormData(prev => ({ ...prev, local_keywords: e.target.value.split(',').map(k => k.trim()).filter(Boolean) }))} className="w-full px-3 py-2 border rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Postleitzahlen (kommagetrennt)</label>
+                <input type="text" value={(formData.postal_codes || []).join(', ')} onChange={(e) => setFormData(prev => ({ ...prev, postal_codes: e.target.value.split(',').map(p => p.trim()).filter(Boolean) }))} className="w-full px-3 py-2 border rounded-lg" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Hero & Stadtbild</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Hero Titel</label>
+                <input type="text" value={formData.hero_title} onChange={(e) => setFormData(prev => ({ ...prev, hero_title: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Hero Untertitel</label>
+                <textarea value={formData.hero_subtitle} onChange={(e) => setFormData(prev => ({ ...prev, hero_subtitle: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" rows={2} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Hero Sekundär-CTA Text</label>
+                <input type="text" value={formData.hero_secondary_cta_text || ''} onChange={(e) => setFormData(prev => ({ ...prev, hero_secondary_cta_text: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="z. B. WhatsApp Beratung" />
+              </div>
+              <CityImageUploader currentImageUrl={formData.hero_image_url} onImageUploaded={(url) => setFormData(prev => ({ ...prev, hero_image_url: url }))} label="Hero Bild" placeholder="Bild hochladen" citySlug={formData.slug} sectionType="hero" />
+              <CityImageUploader currentImageUrl={formData.city_image_url} onImageUploaded={(url) => setFormData(prev => ({ ...prev, city_image_url: url }))} label="Stadtbild" placeholder="Bild hochladen" citySlug={formData.slug} sectionType="city" />
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Lokale Expertise (Content Section 1)</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Hauptüberschrift</label>
+                <input type="text" value={formData.content_section_1_main_title} onChange={(e) => setFormData(prev => ({ ...prev, content_section_1_main_title: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Lokale Expertise für {city_name}" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Unterüberschrift</label>
+                <input type="text" value={formData.content_section_1_subtitle} onChange={(e) => setFormData(prev => ({ ...prev, content_section_1_subtitle: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="Kurzbeschreibung der lokalen Qualität" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Box-Titel</label>
+                <input type="text" value={formData.content_section_1_title} onChange={(e) => setFormData(prev => ({ ...prev, content_section_1_title: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Brennholz für {city_name}" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fließtext</label>
+                <textarea value={formData.content_section_1_content} onChange={(e) => setFormData(prev => ({ ...prev, content_section_1_content: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" rows={6} placeholder="Beschreibung der lokalen Expertise, Tradition und Qualität..." />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Service (max 3 Bereiche)</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Service Titel</label>
+                <input type="text" value={formData.local_service_title} onChange={(e) => setFormData(prev => ({ ...prev, local_service_title: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Service Beschreibung</label>
+                <textarea value={formData.local_service_description} onChange={(e) => setFormData(prev => ({ ...prev, local_service_description: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" rows={3} />
+              </div>
+              {(formData.local_service_areas || []).slice(0,3).map((area, idx) => (
+                <div key={idx} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <input type="text" value={area.title} onChange={(e) => {
+                    const next = [...(formData.local_service_areas || [])];
+                    next[idx] = { ...next[idx], title: e.target.value };
+                    setFormData(prev => ({ ...prev, local_service_areas: next }));
+                  }} className="w-full px-3 py-2 border rounded-lg" placeholder={`Bereich ${idx+1} Titel`} />
+                  <input type="text" value={area.description} onChange={(e) => {
+                    const next = [...(formData.local_service_areas || [])];
+                    next[idx] = { ...next[idx], description: e.target.value };
+                    setFormData(prev => ({ ...prev, local_service_areas: next }));
+                  }} className="w-full px-3 py-2 border rounded-lg" placeholder={`Bereich ${idx+1} Beschreibung`} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Lieferung (kompakt)</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Titel</label>
+                <input type="text" value={formData.extended_delivery_info_title} onChange={(e) => setFormData(prev => ({ ...prev, extended_delivery_info_title: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Beschreibung</label>
+                <textarea value={formData.extended_delivery_info_description} onChange={(e) => setFormData(prev => ({ ...prev, extended_delivery_info_description: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" rows={3} />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" value={formData.delivery_zones?.[0]?.zone_name || ''} onChange={(e) => {
+                  const dz = formData.delivery_zones?.length ? [...formData.delivery_zones] : [{ zone_name: '', delivery_fee: 0, minimum_order: 0, areas: [], delivery_time: '' }];
+                  dz[0].zone_name = e.target.value;
+                  setFormData(prev => ({ ...prev, delivery_zones: dz as any }));
+                }} className="w-full px-3 py-2 border rounded-lg" placeholder="Zone Name" />
+                <input type="text" value={(formData.delivery_zones?.[0]?.areas || []).join(', ')} onChange={(e) => {
+                  const dz = formData.delivery_zones?.length ? [...formData.delivery_zones] : [{ zone_name: '', delivery_fee: 0, minimum_order: 0, areas: [], delivery_time: '' }];
+                  dz[0].areas = e.target.value.split(',').map(a => a.trim()).filter(Boolean);
+                  setFormData(prev => ({ ...prev, delivery_zones: dz as any }));
+                }} className="w-full px-3 py-2 border rounded-lg" placeholder="Gebiete (kommagetrennt)" />
+                <input type="text" value={formData.delivery_zones?.[0]?.delivery_time || ''} onChange={(e) => {
+                  const dz = formData.delivery_zones?.length ? [...formData.delivery_zones] : [{ zone_name: '', delivery_fee: 0, minimum_order: 0, areas: [], delivery_time: '' }];
+                  dz[0].delivery_time = e.target.value;
+                  setFormData(prev => ({ ...prev, delivery_zones: dz as any }));
+                }} className="w-full px-3 py-2 border rounded-lg" placeholder="Lieferzeit" />
+                <input type="number" value={formData.delivery_zones?.[0]?.delivery_fee ?? 0} onChange={(e) => {
+                  const dz = formData.delivery_zones?.length ? [...formData.delivery_zones] : [{ zone_name: '', delivery_fee: 0, minimum_order: 0, areas: [], delivery_time: '' }];
+                  dz[0].delivery_fee = Number(e.target.value);
+                  setFormData(prev => ({ ...prev, delivery_zones: dz as any }));
+                }} className="w-full px-3 py-2 border rounded-lg" placeholder="Liefergebühr" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" value={formData.delivery_routes?.[0]?.name || ''} onChange={(e) => {
+                  const dr = formData.delivery_routes?.length ? [...formData.delivery_routes] : [{ name: '', days: [], time_slots: [], zones: [] }];
+                  dr[0].name = e.target.value;
+                  setFormData(prev => ({ ...prev, delivery_routes: dr as any }));
+                }} className="w-full px-3 py-2 border rounded-lg" placeholder="Route Name" />
+                <input type="text" value={(formData.delivery_routes?.[0]?.days || []).join(', ')} onChange={(e) => {
+                  const dr = formData.delivery_routes?.length ? [...formData.delivery_routes] : [{ name: '', days: [], time_slots: [], zones: [] }];
+                  dr[0].days = e.target.value.split(',').map(a => a.trim()).filter(Boolean);
+                  setFormData(prev => ({ ...prev, delivery_routes: dr as any }));
+                }} className="w-full px-3 py-2 border rounded-lg" placeholder="Tage (Mo, Di, ...)" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">FAQs (max 5)</h3>
+            {(() => {
+              const baseFaqs = Array.isArray(formData.local_faqs) ? formData.local_faqs : [];
+              const ensuredFaqs = [...baseFaqs];
+              while (ensuredFaqs.length < 5) ensuredFaqs.push({ question: '', answer: '' });
+              return ensuredFaqs.slice(0,5).map((faq, idx) => (
+                <div key={idx} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <input type="text" value={faq.question} onChange={(e) => {
+                    const next = [...(formData.local_faqs || ensuredFaqs)];
+                    next[idx] = { ...next[idx], question: e.target.value };
+                    setFormData(prev => ({ ...prev, local_faqs: next }));
+                  }} className="w-full px-3 py-2 border rounded-lg" placeholder={`Frage ${idx+1}`} />
+                  <input type="text" value={faq.answer} onChange={(e) => {
+                    const next = [...(formData.local_faqs || ensuredFaqs)];
+                    next[idx] = { ...next[idx], answer: e.target.value };
+                    setFormData(prev => ({ ...prev, local_faqs: next }));
+                  }} className="w-full px-3 py-2 border rounded-lg" placeholder={`Antwort ${idx+1}`} />
+                </div>
+              ));
+            })()}
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">CTAs & Kontakt</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input type="text" value={formData.primary_cta_url || ''} onChange={(e) => setFormData(prev => ({ ...prev, primary_cta_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="Primärer CTA URL" />
+              <input type="text" value={formData.secondary_cta_url || ''} onChange={(e) => setFormData(prev => ({ ...prev, secondary_cta_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="Sekundärer CTA URL" />
+              <input type="text" value={formData.contact_url || ''} onChange={(e) => setFormData(prev => ({ ...prev, contact_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="Kontakt URL" />
+              <input type="text" value={formData.phone_display || ''} onChange={(e) => setFormData(prev => ({ ...prev, phone_display: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="Telefon Anzeige" />
+              <input type="text" value={formData.whatsapp_url || ''} onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="WhatsApp URL" />
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Google Maps (kompakt)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Center Lat</label>
+                <input type="number" step="any" value={formData.google_maps_center_lat} onChange={(e) => setFormData(prev => ({ ...prev, google_maps_center_lat: parseFloat(e.target.value) || 0 }))} className="w-full px-3 py-2 border rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Center Lng</label>
+                <input type="number" step="any" value={formData.google_maps_center_lng} onChange={(e) => setFormData(prev => ({ ...prev, google_maps_center_lng: parseFloat(e.target.value) || 0 }))} className="w-full px-3 py-2 border rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Zoom</label>
+                <input type="number" value={formData.google_maps_zoom} onChange={(e) => setFormData(prev => ({ ...prev, google_maps_zoom: parseInt(e.target.value) || 12 }))} className="w-full px-3 py-2 border rounded-lg" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <h4 className="text-md font-semibold text-gray-800 mb-2">Marker (max 2)</h4>
+              {(() => {
+                const base = Array.isArray(formData.google_maps_markers) ? formData.google_maps_markers : [];
+                const ensured = [...base];
+                while (ensured.length < 2) ensured.push({ lat: 0, lng: 0, title: '', description: '' } as any);
+                return ensured.slice(0,2).map((m, idx) => (
+                  <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
+                    <input type="number" step="any" value={m.lat ?? 0} onChange={(e) => {
+                      const next = [...(formData.google_maps_markers || ensured)];
+                      next[idx] = { ...next[idx], lat: parseFloat(e.target.value) || 0 };
+                      setFormData(prev => ({ ...prev, google_maps_markers: next as any }));
+                    }} className="w-full px-3 py-2 border rounded-lg" placeholder="Lat" />
+                    <input type="number" step="any" value={m.lng ?? 0} onChange={(e) => {
+                      const next = [...(formData.google_maps_markers || ensured)];
+                      next[idx] = { ...next[idx], lng: parseFloat(e.target.value) || 0 };
+                      setFormData(prev => ({ ...prev, google_maps_markers: next as any }));
+                    }} className="w-full px-3 py-2 border rounded-lg" placeholder="Lng" />
+                    <input type="text" value={m.title ?? ''} onChange={(e) => {
+                      const next = [...(formData.google_maps_markers || ensured)];
+                      next[idx] = { ...next[idx], title: e.target.value };
+                      setFormData(prev => ({ ...prev, google_maps_markers: next as any }));
+                    }} className="w-full px-3 py-2 border rounded-lg" placeholder="Titel" />
+                    <input type="text" value={m.description ?? ''} onChange={(e) => {
+                      const next = [...(formData.google_maps_markers || ensured)];
+                      next[idx] = { ...next[idx], description: e.target.value };
+                      setFormData(prev => ({ ...prev, google_maps_markers: next as any }));
+                    }} className="w-full px-3 py-2 border rounded-lg" placeholder="Beschreibung" />
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg border">Abbrechen</button>
+            <button type="submit" className="px-4 py-2 rounded-lg bg-[#C04020] text-white">Speichern</button>
+          </div>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -728,6 +1058,62 @@ function CityPageForm({ page, onSave, onCancel }: {
                 Seite aktiv
               </label>
             </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg border">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Bilder-Upload (Qualifier & Testimonials)</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CityImageUploader
+              currentImageUrl={formData.qualifier_image_url}
+              onImageUploaded={(url) => setFormData(prev => ({ ...prev, qualifier_image_url: url }))}
+              label="Qualifier Bild"
+              placeholder="Bild-URL oder Datei hochladen"
+              citySlug={formData.slug}
+              sectionType="qualifier"
+            />
+            <CityImageUploader
+              currentImageUrl={formData.testimonial_image_url}
+              onImageUploaded={(url) => setFormData(prev => ({ ...prev, testimonial_image_url: url }))}
+              label="Testimonial Bild"
+              placeholder="Bild-URL oder Datei hochladen"
+              citySlug={formData.slug}
+              sectionType="testimonial"
+            />
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg border">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Service & Partner Bilder</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CityImageUploader
+              currentImageUrl={formData.expertise_image_url}
+              onImageUploaded={(url) => setFormData(prev => ({ ...prev, expertise_image_url: url }))}
+              label="Bild: Expertise"
+              citySlug={formData.slug}
+              sectionType="service-expertise"
+            />
+            <CityImageUploader
+              currentImageUrl={formData.regional_quality_image_url}
+              onImageUploaded={(url) => setFormData(prev => ({ ...prev, regional_quality_image_url: url }))}
+              label="Bild: Regionale Qualität"
+              citySlug={formData.slug}
+              sectionType="service-quality"
+            />
+            <CityImageUploader
+              currentImageUrl={formData.sustainability_image_url}
+              onImageUploaded={(url) => setFormData(prev => ({ ...prev, sustainability_image_url: url }))}
+              label="Bild: Nachhaltigkeit"
+              citySlug={formData.slug}
+              sectionType="service-sustainability"
+            />
+            <CityImageUploader
+              currentImageUrl={formData.local_partnerships_image_url}
+              onImageUploaded={(url) => setFormData(prev => ({ ...prev, local_partnerships_image_url: url }))}
+              label="Header-Bild: Partner"
+              citySlug={formData.slug}
+              sectionType="partners"
+            />
           </div>
         </div>
 
@@ -811,6 +1197,15 @@ function CityPageForm({ page, onSave, onCancel }: {
               />
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Hero Sekundär-CTA Text (WhatsApp)</label>
+              <input
+                type="text"
+                value={formData.hero_secondary_cta_text || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, hero_secondary_cta_text: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+              />
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Hero Bild URL</label>
               <CityImageUploader
                 currentImageUrl={formData.hero_image_url}
@@ -828,6 +1223,75 @@ function CityPageForm({ page, onSave, onCancel }: {
                 value={formData.city_image_url}
                 onChange={(e) => setFormData(prev => ({ ...prev, city_image_url: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg border">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Content-Bilder (Section 2 & 3)</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CityImageUploader
+              currentImageUrl={formData.content_section_2_image_url}
+              onImageUploaded={(url) => setFormData(prev => ({ ...prev, content_section_2_image_url: url }))}
+              label="Bild für Content Section 2"
+              placeholder="Bild-URL oder Datei hochladen"
+              citySlug={formData.slug}
+              sectionType="content2"
+            />
+            <CityImageUploader
+              currentImageUrl={formData.content_section_3_image_url}
+              onImageUploaded={(url) => setFormData(prev => ({ ...prev, content_section_3_image_url: url }))}
+              label="Bild für Content Section 3"
+              placeholder="Bild-URL oder Datei hochladen"
+              citySlug={formData.slug}
+              sectionType="content3"
+            />
+          </div>
+        </div>
+
+        {/* 4. CTAs & Kontakt-URLs */}
+        <div className="bg-white p-6 rounded-lg border">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">4. CTAs & Kontakt-URLs</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Primärer CTA URL</label>
+              <input
+                type="text"
+                value={formData.primary_cta_url || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, primary_cta_url: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+                placeholder="z.B. /shop"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Sekundärer CTA URL</label>
+              <input
+                type="text"
+                value={formData.secondary_cta_url || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, secondary_cta_url: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+                placeholder="z.B. tel:+49..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Kontakt URL</label>
+              <input
+                type="text"
+                value={formData.contact_url || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, contact_url: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+                placeholder="z.B. /kontakt"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">WhatsApp URL</label>
+              <input
+                type="text"
+                value={formData.whatsapp_url || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_url: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+                placeholder="https://wa.me/49..."
               />
             </div>
           </div>

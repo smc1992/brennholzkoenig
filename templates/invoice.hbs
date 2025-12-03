@@ -41,20 +41,16 @@
         width: 210mm !important;
         max-width: 210mm !important;
         min-height: auto;
-        transform: scale(0.88);
+        transform: scale(1);
         transform-origin: top left;
       }
       
       .footer {
-        position: fixed !important;
-        bottom: 12mm !important;
-        left: 15mm !important;
-        right: 15mm !important;
-        margin: 0 !important;
-        padding: 8pt 4mm !important; /* horizontal padding match items-section */
+        position: relative !important;
+        margin-top: 40pt !important;
+        padding: 8pt 4mm !important;
         border-top: 1pt solid #ddd !important;
-        background: white !important;
-        z-index: 1000 !important;
+        background: transparent !important;
         box-sizing: border-box !important;
         overflow: visible !important;
       }
@@ -91,7 +87,7 @@
       }
       
       .content-wrapper {
-        padding: 0 12mm 10mm 12mm !important;
+        padding: 0 12mm 4mm 12mm !important;
         margin: 0 !important;
         position: relative;
         z-index: 1;
@@ -281,9 +277,8 @@
     .callout { margin-bottom: 4pt; }
     .callout .phone { font-weight: 800; font-size: 16pt; color: #C04020; }
     .callout .tagline { font-size: 9pt; color: #333; }
-    .icon { display: inline-block; width: 14pt; height: 14pt; vertical-align: middle; margin-right: 6pt; background-repeat: no-repeat; background-size: contain; }
-    .phone-icon { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23C04020"><path d="M6.6 10.2c1.4 2.8 4 5.4 6.8 6.8l2.3-2.3c.3-.3.8-.4 1.2-.3 1 .3 2.1.5 3.1.5.7 0 1.2.5 1.2 1.2v3.5c0 .7-.5 1.2-1.2 1.2-10.1 0-18.3-8.2-18.3-18.3 0-.7.5-1.2 1.2-1.2H6c.7 0 1.2.5 1.2 1.2 0 1.1.2 2.1.5 3.1.1.4 0 .8-.3 1.2l-2.3 2.3z"/></svg>'); }
-    .doc-icon { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23C04020"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M9 6h6v2H9V6zm0 4h6v2H9v-2zm0 4h6v2H9v-2z"/></svg>'); }
+    .icon { display: inline-block; width: 14pt; height: 14pt; vertical-align: middle; margin-right: 6pt; }
+    .icon svg { width: 100%; height: 100%; }
     .sender-line {
       color: #555;
       font-size: 8.5pt;
@@ -418,7 +413,7 @@
 
     .items-section {
       padding: 0 4mm;
-      margin-bottom: 8pt;
+      margin-bottom: 6pt;
     }
 
     /* Totals rechtsbündig zur Tabelle ausrichten */
@@ -487,7 +482,7 @@
     .totals-section {
       display: block;
       margin-top: 20pt;
-      margin-bottom: 18pt;
+      margin-bottom: 10pt;
       max-width: 180mm;
       margin-left: auto;
       margin-right: auto;
@@ -575,7 +570,7 @@
     
     /* Payment Terms */
     .payment-terms {
-      margin-bottom: 18pt;
+      margin-bottom: 10pt;
       padding: 20pt;
       background: #f8f9fa;
       border: 1pt solid #ddd;
@@ -798,7 +793,7 @@
     
     /* Notes */
     .notes {
-      margin-bottom: 18pt;
+      margin-bottom: 10pt;
       padding: 20pt;
       background: #f8f9fa;
       border: 1pt solid #ddd;
@@ -923,7 +918,7 @@
       <div class="top-left">
         {{#if company.phone}}
         <div class="callout">
-          <div class="phone"><span class="icon phone-icon"></span>{{company.phone}}</div>
+          <div class="phone"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#C04020"><path d="M6.6 10.2c1.4 2.8 4 5.4 6.8 6.8l2.3-2.3c.3-.3.8-.4 1.2-.3 1 .3 2.1.5 3.1.5.7 0 1.2.5 1.2 1.2v3.5c0 .7-.5 1.2-1.2 1.2-10.1 0-18.3-8.2-18.3-18.3 0-.7.5-1.2 1.2-1.2H6c.7 0 1.2.5 1.2 1.2 0 1.1.2 2.1.5 3.1.1.4 0 .8-.3 1.2l-2.3 2.3z"/></svg></span>{{company.phone}}</div>
           <div class="tagline">Bestellung und Beratung täglich von 16.30 bis 20.00 Uhr</div>
         </div>
         {{/if}}
@@ -982,12 +977,19 @@
           </tr>
           {{/each}}
         </tbody>
+        <tfoot>
+          <tr style="background: #f5f5f5; font-weight: 700; border-top: 2pt solid #C04020;">
+            <td class="description" colspan="3" style="text-align: right; padding-right: 10pt;">Gesamtbetrag (Brutto):</td>
+            <td class="unit-price"></td>
+            <td class="total number" style="color: #C04020; font-size: 10pt;">€{{formatCurrency totals.total}}</td>
+          </tr>
+        </tfoot>
       </table>
     </section>
     
     <!-- Auftragsbestätigung und Lieferhinweise direkt nach Positionen -->
     <section class="order-confirmation">
-      <h3 style="margin-top: 8pt;"><span class="icon doc-icon"></span> Auftragsbestätigung:</h3>
+      <h3 style="margin-top: 8pt;"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#C04020"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M9 6h6v2H9V6zm0 4h6v2H9v-2zm0 4h6v2H9v-2z" fill="white"/></svg></span> Auftragsbestätigung:</h3>
       <div class="confirmation-text">
         Ich erteile / Wir erteilen den Auftrag für die Brennholzlieferung 
         gemäß obigem Angebot. Die AGBs und Lieferbedingung frei Bordsteinkante 
@@ -1036,26 +1038,7 @@
       {{/if}}
     {{/if}}
 
-    <!-- Totals -->
-    <section class="totals-section">
-      <div style="float: right; width: 200pt; margin-top: 25pt;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 9pt;">
-          <tr>
-            <td style="padding: 4pt; text-align: left;">Gesamt Netto:</td>
-            <td style="padding: 4pt; text-align: right; font-weight: 600;">{{formatCurrency totals.subtotal}}</td>
-          </tr>
-          <tr>
-            <td style="padding: 4pt; text-align: left;">zzgl. {{totals.tax_rate}}% MwSt.:</td>
-            <td style="padding: 4pt; text-align: right;">{{formatCurrency totals.tax}}</td>
-          </tr>
-          <tr style="border-top: 2pt solid #333; font-weight: 600; font-size: 10pt;">
-            <td style="padding: 6pt 4pt; text-align: left;">Gesamt Brutto</td>
-            <td style="padding: 6pt 4pt; text-align: right;">{{formatCurrency totals.total}}</td>
-          </tr>
-        </table>
-      </div>
-      <div style="clear: both; margin-bottom: 8pt;"></div>
-    </section>
+    <!-- Totals - entfernt, da Gesamtbetrag bereits in der Tabelle angezeigt wird -->
     
     
     <!-- Payment Terms -->

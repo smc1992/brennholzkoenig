@@ -2,6 +2,7 @@
 import { createServerSupabase, adminQueries } from '@/lib/supabase-server'
 import AdminDashboardClient from './AdminDashboardClient'
 import { Suspense } from 'react'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 // Server-side Admin Dashboard mit Supabase SSR-Optimierung
@@ -179,15 +180,15 @@ export default async function AdminPage() {
               </p>
             </div>
           </div>
-          
+
           <div className="mt-4">
-            <button 
-              onClick={() => window.location.reload()}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+            <Link 
+              href="/admin"
+              className="inline-flex items-center bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
             >
               <i className="ri-refresh-line mr-2"></i>
               Seite neu laden
-            </button>
+            </Link>
           </div>
         </div>
       </div>

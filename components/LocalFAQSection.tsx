@@ -6,17 +6,21 @@ interface FAQItem {
   id: string;
   question: string;
   answer: string;
-  category: 'delivery' | 'quality' | 'pricing' | 'local' | 'service';
+  category?: 'delivery' | 'quality' | 'pricing' | 'local' | 'service';
 }
 
 interface LocalFAQSectionProps {
   cityName: string;
   customFAQs?: FAQItem[];
+  maxItems?: number;
+  compact?: boolean;
 }
 
 export default function LocalFAQSection({ 
   cityName, 
-  customFAQs = [] 
+  customFAQs = [],
+  maxItems = 3,
+  compact = true
 }: LocalFAQSectionProps) {
   const [openFAQ, setOpenFAQ] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -84,9 +88,11 @@ export default function LocalFAQSection({
     { id: 'service', name: 'Service', icon: '🛠️' }
   ];
 
-  const filteredFAQs = activeCategory === 'all' 
-    ? allFAQs 
-    : allFAQs.filter(faq => faq.category === activeCategory);
+  const normalizedFAQs = allFAQs.map((f, i) => ({ id: (f as any).id ?? String(i + 1), ...f, category: f.category || 'local' }));
+  const filteredBase = activeCategory === 'all' 
+    ? normalizedFAQs 
+    : normalizedFAQs.filter(faq => faq.category === activeCategory);
+  const filteredFAQs = filteredBase.slice(0, Math.max(0, maxItems));
 
   const toggleFAQ = (id: string) => {
     setOpenFAQ(openFAQ === id ? null : id);
@@ -106,23 +112,24 @@ export default function LocalFAQSection({
           </p>
         </div>
 
-        {/* Category Filter */}
-        <div className="flex flex-wrap justify-center gap-3 mb-8">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setActiveCategory(category.id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                activeCategory === category.id
-                  ? 'bg-primary-600 text-white shadow-lg'
-                  : 'bg-white text-primary-600 hover:bg-wood-50 border border-gray-200'
-              }`}
-            >
-              <span className="mr-2">{category.icon}</span>
-              {category.name}
-            </button>
-          ))}
-        </div>
+        {!compact && (
+          <div className="flex flex-wrap justify-center gap-3 mb-8">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setActiveCategory(category.id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                  activeCategory === category.id
+                    ? 'bg-primary-600 text-white shadow-lg'
+                    : 'bg-white text-primary-600 hover:bg-wood-50 border border-gray-200'
+                }`}
+              >
+                <span className="mr-2">{category.icon}</span>
+                {category.name}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* FAQ Items */}
         <div className="space-y-4">
@@ -141,7 +148,7 @@ export default function LocalFAQSection({
                 <div className="flex items-center space-x-2">
                   {/* Category Badge */}
                   <span className="px-2 py-1 bg-gray-100 text-primary-600 text-xs rounded-full">
-                    {categories.find(cat => cat.id === faq.category)?.icon}
+                    {categories.find(cat => cat.id === (faq.category || 'local'))?.icon}
                   </span>
                   {/* Expand Icon */}
                   <svg 
@@ -170,46 +177,48 @@ export default function LocalFAQSection({
           ))}
         </div>
 
-        {/* Contact CTA */}
-        <div className="mt-12 text-center">
-          <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-8 text-white">
-            <h3 className="text-2xl font-bold mb-4">
-              Weitere Fragen zu unserem Service in {cityName}?
-            </h3>
-            <p className="text-wood-100 mb-6">
-              Unser lokales Team in {cityName} hilft Ihnen gerne weiter. 
-              Kontaktieren Sie uns für eine persönliche Beratung.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-white text-primary-700 px-6 py-3 rounded-lg font-semibold hover:bg-wood-50 transition-colors duration-300">
-                📞 Jetzt anrufen
-              </button>
-              <button className="bg-primary-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-400 transition-colors duration-300">
-                ✉️ E-Mail schreiben
-              </button>
+        {!compact && (
+          <div className="mt-12 text-center">
+            <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-8 text-white">
+              <h3 className="text-2xl font-bold mb-4">
+                Weitere Fragen zu unserem Service in {cityName}?
+              </h3>
+              <p className="text-wood-100 mb-6">
+                Unser lokales Team in {cityName} hilft Ihnen gerne weiter. 
+                Kontaktieren Sie uns für eine persönliche Beratung.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button className="bg-white text-primary-700 px-6 py-3 rounded-lg font-semibold hover:bg-wood-50 transition-colors duration-300">
+                  📞 Jetzt anrufen
+                </button>
+                <button className="bg-primary-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-400 transition-colors duration-300">
+                  ✉️ E-Mail schreiben
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Quick Stats */}
-        <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="text-center bg-white rounded-lg shadow-lg p-4">
-            <div className="text-2xl font-bold text-primary-700">24h</div>
-            <div className="text-sm text-wood-800">Durchschnittliche Antwortzeit</div>
+        {!compact && (
+          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="text-center bg-white rounded-lg shadow-lg p-4">
+              <div className="text-2xl font-bold text-primary-700">24h</div>
+              <div className="text-sm text-wood-800">Durchschnittliche Antwortzeit</div>
+            </div>
+            <div className="text-center bg-white rounded-lg shadow-lg p-4">
+              <div className="text-2xl font-bold text-primary-700">98%</div>
+              <div className="text-sm text-wood-800">Zufriedenheitsrate in {cityName}</div>
+            </div>
+            <div className="text-center bg-white rounded-lg shadow-lg p-4">
+              <div className="text-2xl font-bold text-primary-700">5+</div>
+              <div className="text-sm text-wood-800">Jahre Erfahrung in {cityName}</div>
+            </div>
+            <div className="text-center bg-white rounded-lg shadow-lg p-4">
+              <div className="text-2xl font-bold text-primary-700">500+</div>
+              <div className="text-sm text-wood-800">Zufriedene Kunden</div>
+            </div>
           </div>
-          <div className="text-center bg-white rounded-lg shadow-lg p-4">
-            <div className="text-2xl font-bold text-primary-700">98%</div>
-            <div className="text-sm text-wood-800">Zufriedenheitsrate in {cityName}</div>
-          </div>
-          <div className="text-center bg-white rounded-lg shadow-lg p-4">
-            <div className="text-2xl font-bold text-primary-700">5+</div>
-            <div className="text-sm text-wood-800">Jahre Erfahrung in {cityName}</div>
-          </div>
-          <div className="text-center bg-white rounded-lg shadow-lg p-4">
-            <div className="text-2xl font-bold text-primary-700">500+</div>
-            <div className="text-sm text-wood-800">Zufriedene Kunden</div>
-          </div>
-        </div>
+        )}
       </div>
     </section>
   );

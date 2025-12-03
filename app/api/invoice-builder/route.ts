@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
     // Lade Rechnungsdaten
     const { invoiceData, companySettings } = await loadInvoiceData(invoiceId, orderId);
     const invoiceBuilder = getInvoiceBuilder();
+    invoiceBuilder.clearTemplateCache();
 
     switch (action) {
       case 'preview':
@@ -145,6 +146,7 @@ export async function POST(request: NextRequest) {
     // Lade Rechnungsdaten
     const { invoiceData, companySettings } = await loadInvoiceData(invoiceId, orderId);
     const invoiceBuilder = getInvoiceBuilder();
+    invoiceBuilder.clearTemplateCache();
 
     // PDF generieren basierend auf Action
     const actualTemplateId = action === 'order-confirmation' ? 'order-confirmation' : templateId;
@@ -663,50 +665,60 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
       city: order.delivery_city
     },
     items: [],
-    subtotal_amount: 0,
-    tax_amount: 0,
-    total_amount: 0,
+    subtotal_amount: parseFloat(order.subtotal_amount || '0'),
+    tax_amount: parseFloat(order.tax_amount || '0'),
+    total_amount: parseFloat(order.total_amount || '0'),
     tax_rate: companySettings.vat_rate || 19,
     payment_terms: invoice?.payment_terms || invoiceSettings?.invoice_footer_text || 'Zahlbar innerhalb von 14 Tagen.',
     notes: invoice?.notes
   };
 
+  console.log('📊 Initial invoice data from order:', {
+    subtotal_amount: invoiceData.subtotal_amount,
+    tax_amount: invoiceData.tax_amount,
+    total_amount: invoiceData.total_amount,
+    order_subtotal: order.subtotal_amount,
+    order_total: order.total_amount
+  });
+
   // Verarbeite order_items und berechne Summen
   if (order.order_items && order.order_items.length > 0) {
+    // Übernehme Preise direkt aus der Bestellung - keine Umrechnung!
+    // Die Bestellung enthält bereits die korrekten Brutto-Preise
     const processedItems = order.order_items.map((item: any, index: number) => {
-      console.log(`🔍 Converting order item ${index + 1} for InvoiceData:`, {
-        raw_item: item,
+      const unitPrice = parseFloat(item.unit_price);
+      const totalPrice = parseFloat(item.total_price);
+      
+      console.log(`📦 Order item ${index + 1}:`, {
         product_name: item.product_name,
         quantity: item.quantity,
-        unit_price: item.unit_price,
-        total_price: item.total_price
+        unit_price: unitPrice,
+        total_price: totalPrice
       });
       
-      const convertedItem = {
-         description: item.product_name,
-         quantity: item.quantity,
-         unit_price: parseFloat(item.unit_price),
-         total_price: parseFloat(item.total_price),
-         product_code: item.product_code || item.id,
-         category: item.product_category || item.category || null,
-         tax_included: item.tax_included !== undefined ? item.tax_included : companySettings.default_tax_included || false  // Steuereinstellung aus Datenbank oder global
-       };
-      
-      console.log(`📦 Converted item ${index + 1}:`, convertedItem);
-      console.log(`🔍 Tax setting for item ${index + 1}: tax_included=${convertedItem.tax_included}, default_tax_included=${companySettings.default_tax_included}`);
-      return convertedItem;
+      return {
+        description: item.product_name,
+        quantity: item.quantity,
+        unit_price: unitPrice,
+        total_price: totalPrice,
+        product_code: item.product_code || item.id,
+        category: item.product_category || item.category || 'Brennholz',
+        tax_included: true
+      };
     });
     
     // Füge Lieferkosten als separate Position hinzu falls vorhanden
+    // Lieferkosten sind in der Bestellung bereits als Brutto gespeichert
     if (order.delivery_price && parseFloat(order.delivery_price) > 0) {
+      const deliveryPrice = parseFloat(order.delivery_price);
       const deliveryItem = {
         description: `Lieferung (${order.delivery_type === 'express' ? 'Express 24-48h' : 'Standard'})`,
         quantity: 1,
-        unit_price: parseFloat(order.delivery_price),
-        total_price: parseFloat(order.delivery_price),
+        unit_price: deliveryPrice,
+        total_price: deliveryPrice,
         product_code: 'DELIVERY',
         category: 'Lieferung',
-        tax_included: companySettings.default_tax_included || false
+        tax_included: true  // Lieferkosten sind Brutto
       };
       
       console.log('🚚 Adding delivery item:', deliveryItem);
@@ -751,70 +763,70 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
       processedItems.push(discountItem);
     }
     
-    // Berechne Summen basierend auf Steuereinstellung
-     let calculatedSubtotal = 0;
-     let calculatedTaxAmount = 0;
-     let calculatedTotal = 0;
-     
-     // Prüfe ob alle Items die gleiche Steuereinstellung haben
-      const taxIncludedItems = processedItems.filter((item: any) => item.tax_included);
-      const taxExcludedItems = processedItems.filter((item: any) => !item.tax_included);
-     
-     console.log('🧮 Tax calculation analysis:', {
-       total_items: processedItems.length,
-       tax_included_items: taxIncludedItems.length,
-       tax_excluded_items: taxExcludedItems.length
-     });
-     
-     // Berechne Netto-Summe für Artikel mit enthaltener Steuer (Brutto -> Netto)
-     const bruttoToNettoSum = taxIncludedItems.reduce((sum: number, item: any) => {
-       const nettoPrice = item.total_price / (1 + (companySettings.vat_rate || 19) / 100);
-       console.log(`💰 Brutto->Netto: ${item.description}: €${item.total_price} -> €${nettoPrice.toFixed(2)}`);
-       return sum + nettoPrice;
-     }, 0);
-     
-     // Berechne Netto-Summe für Artikel ohne Steuer (bereits Netto)
-     const nettoSum = taxExcludedItems.reduce((sum: number, item: any) => {
-       console.log(`💰 Netto: ${item.description}: €${item.total_price}`);
-       return sum + item.total_price;
-     }, 0);
-     
-     // Gesamte Netto-Summe
-     calculatedSubtotal = bruttoToNettoSum + nettoSum;
-     
-     // Steuer berechnen basierend auf Steuereinstellung
-     if (taxIncludedItems.length > 0 && taxExcludedItems.length === 0) {
-       // Alle Items haben Steuer enthalten: Steuer aus Brutto-Summe berechnen
-       const originalBruttoSum = taxIncludedItems.reduce((sum: number, item: any) => sum + item.total_price, 0);
-       calculatedTaxAmount = originalBruttoSum - calculatedSubtotal;
-       calculatedTotal = originalBruttoSum;
-     } else if (taxExcludedItems.length > 0 && taxIncludedItems.length === 0) {
-       // Alle Items sind Netto: Steuer hinzurechnen
-       calculatedTaxAmount = calculatedSubtotal * (invoiceData.tax_rate || 19) / 100;
-       calculatedTotal = calculatedSubtotal + calculatedTaxAmount;
-     } else {
-       // Gemischte Items: Komplexe Berechnung
-       const bruttoSum = taxIncludedItems.reduce((sum: number, item: any) => sum + item.total_price, 0);
-       const nettoTaxAmount = bruttoSum - bruttoToNettoSum;
-       const additionalTaxAmount = nettoSum * (invoiceData.tax_rate || 19) / 100;
-       calculatedTaxAmount = nettoTaxAmount + additionalTaxAmount;
-       calculatedTotal = bruttoSum + nettoSum + additionalTaxAmount;
-     }
+    // Verwende die Bestellwerte direkt - diese sind bereits korrekt berechnet
+    // order.total_amount = Gesamtbetrag (Brutto) inkl. Lieferung und abzgl. Rabatt
+    // order.subtotal_amount = Warenwert (Brutto) ohne Lieferung
+    const orderTotal = parseFloat(order.total_amount || '0');
+    const orderSubtotal = parseFloat(order.subtotal_amount || '0');
+    const orderDelivery = parseFloat(order.delivery_price || '0');
+    const orderDiscount = parseFloat(order.discount_amount || '0');
     
-    console.log('💰 Calculated totals from items:', {
-      items_count: processedItems.length,
-      calculated_subtotal: calculatedSubtotal,
-      calculated_tax: calculatedTaxAmount,
-      calculated_total: calculatedTotal,
-      tax_rate: companySettings.vat_rate || 19
+    // Berechne Summe aus Items für Validierung
+    const itemsSum = processedItems.reduce((sum: number, item: any) => sum + item.total_price, 0);
+    
+    console.log('💰 Order values:', {
+      order_total: orderTotal,
+      order_subtotal: orderSubtotal,
+      order_delivery: orderDelivery,
+      order_discount: orderDiscount,
+      items_sum: itemsSum,
+      items_count: processedItems.length
     });
     
-    // Aktualisiere invoiceData mit berechneten Werten
+    // Verwende order.total_amount als Gesamtbetrag (Brutto)
+    const finalTotal = orderTotal;
+    
+    // Berechne Netto aus Brutto (MwSt. herausrechnen)
+    const taxRate = companySettings.vat_rate || 19;
+    const finalSubtotal = finalTotal / (1 + taxRate / 100);
+    const finalTax = finalTotal - finalSubtotal;
+    
+    console.log('💰 Final invoice totals:', {
+      total: finalTotal,
+      subtotal: finalSubtotal,
+      tax: finalTax,
+      tax_rate: taxRate
+    });
+    
+    // Aktualisiere invoiceData mit den Bestellwerten
     invoiceData.items = processedItems;
-    invoiceData.subtotal_amount = calculatedSubtotal;
-    invoiceData.tax_amount = calculatedTaxAmount;
-    invoiceData.total_amount = calculatedTotal;
+    invoiceData.subtotal_amount = finalSubtotal;
+    invoiceData.tax_amount = finalTax;
+    invoiceData.total_amount = finalTotal;
+  } else {
+    // Fallback: Wenn keine order_items vorhanden sind, verwende order.total_amount
+    console.log('⚠️ No order items found, using order totals as fallback');
+    
+    // Berechne Steuer aus total_amount falls nicht vorhanden
+    if (invoiceData.total_amount > 0 && invoiceData.tax_amount === 0) {
+      const taxRate = companySettings.vat_rate || 19;
+      // Annahme: total_amount ist Brutto
+      invoiceData.subtotal_amount = invoiceData.total_amount / (1 + taxRate / 100);
+      invoiceData.tax_amount = invoiceData.total_amount - invoiceData.subtotal_amount;
+      console.log('📊 Calculated tax from total:', {
+        total: invoiceData.total_amount,
+        subtotal: invoiceData.subtotal_amount,
+        tax: invoiceData.tax_amount
+      });
+    }
   }
+
+  console.log('📄 Final invoice data:', {
+    items_count: invoiceData.items.length,
+    subtotal: invoiceData.subtotal_amount,
+    tax: invoiceData.tax_amount,
+    total: invoiceData.total_amount
+  });
 
   return { invoiceData, companySettings };
 }

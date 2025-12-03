@@ -22,10 +22,21 @@
       
       .container {
         margin: 0;
-        padding: 20mm 15mm;
+        padding: 20mm 15mm 28mm 15mm;
         box-shadow: none;
         width: 210mm;
         min-height: 297mm;
+      }
+      
+      .footer {
+        position: fixed !important;
+        bottom: 6mm !important;
+        left: 15mm !important;
+        right: 15mm !important;
+        margin: 0 !important;
+        background: white !important;
+        z-index: 1000 !important;
+        box-sizing: border-box !important;
       }
     }
     
@@ -46,7 +57,7 @@
     .container {
       max-width: 210mm;
       margin: 0 auto;
-      padding: 20mm 15mm;
+      padding: 20mm 15mm 30mm 15mm;
       background: white;
       min-height: 297mm;
     }
@@ -143,12 +154,14 @@
       display: flex;
       align-items: center;
     }
-    
-    .order-confirmation h3::before {
-      content: '📋';
-      margin-right: 10pt;
-      font-size: 16pt;
-    }
+    .icon { display: inline-block; width: 14pt; height: 14pt; margin-right: 8pt; background-repeat: no-repeat; background-size: contain; }
+    .doc-icon { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23C04020"><path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M20 7h-5V2" fill="%23ffffff" opacity="0.3"/></svg>'); }
+    .truck-icon { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23C04020"><path d="M3 5h11v8H3z"/><path d="M14 8h4l3 3v2h-7z"/><circle cx="6" cy="17" r="2"/><circle cx="18" cy="17" r="2"/></svg>'); }
+    .contact-icon { display: inline-block; width: 10pt; height: 10pt; margin-right: 6pt; background-repeat: no-repeat; background-size: contain; vertical-align: -1pt; }
+    .phone-icon { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%231A1A1A"><path d="M6.6 10.8c1.8 3.5 4.1 5.8 7.6 7.6l2.5-2.5c.3-.3.8-.4 1.2-.3 1 .3 2 .5 3 .5.6 0 1 .4 1 1v3c0 .6-.4 1-1 1C10.1 22 2 13.9 2 3c0-.6.4-1 1-1h3c.6 0 1 .4 1 1 0 1 .2 2 .5 3 .1.4 0 .9-.3 1.2l-2.6 2.6z"/></svg>'); }
+    .mail-icon { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%231A1A1A"><path d="M2 5h20v14H2z"/><path d="M2 7l10 6 10-6" fill="%23ffffff"/></svg>'); }
+    .web-icon { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%231A1A1A"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2c3 4 3 16 0 20M7 4c2 3 2 13 0 16M17 4c-2 3-2 13 0 16" fill="%23ffffff"/></svg>'); }
+    .tax-icon { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%231A1A1A"><path d="M4 4h16v16H4z"/><path d="M4 8h16" fill="%23ffffff"/><path d="M8 12h8v2H8z" fill="%23ffffff"/></svg>'); }
     
     .confirmation-text {
       margin-bottom: 25pt;
@@ -194,11 +207,7 @@
       align-items: center;
     }
     
-    .delivery-address h3::before {
-      content: '🚚';
-      margin-right: 10pt;
-      font-size: 16pt;
-    }
+    .delivery-address h3::before { content: ''; }
     
     .delivery-zone {
       margin-top: 20pt;
@@ -233,6 +242,45 @@
       margin-left: auto;
       margin-right: auto;
       min-height: 30pt;
+    }
+    
+    .totals {
+      margin-top: 20pt;
+      display: flex;
+      justify-content: flex-end;
+    }
+    
+    .totals-box {
+      width: 200pt;
+      font-size: 9pt;
+      border: 1pt solid #ddd;
+      border-radius: 6pt;
+      overflow: hidden;
+      background: #fff;
+    }
+    
+    .totals-box table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .totals-box td {
+      padding: 6pt 8pt;
+    }
+    
+    .totals-box .label {
+      text-align: left;
+    }
+    
+    .totals-box .value {
+      text-align: right;
+      font-weight: 600;
+    }
+    
+    .totals-box .grand {
+      border-top: 2pt solid #333;
+      font-weight: 700;
+      font-size: 10pt;
     }
     
     /* Footer */
@@ -307,10 +355,10 @@
           {{company.postal_code}} {{company.city}}
         </div>
         <div class="issuer-contact">
-          {{#if company.phone}}📞 {{company.phone}}<br>{{/if}}
-          {{#if company.email}}✉️ {{company.email}}<br>{{/if}}
-          {{#if company.website}}🌐 {{company.website}}<br>{{/if}}
-          {{#if company.tax_id}}🏢 USt-IdNr.: {{company.tax_id}}{{/if}}
+          {{#if company.phone}}<span class="contact-icon phone-icon"></span> {{company.phone}}<br>{{/if}}
+          {{#if company.email}}<span class="contact-icon mail-icon"></span> {{company.email}}<br>{{/if}}
+          {{#if company.website}}<span class="contact-icon web-icon"></span> {{company.website}}<br>{{/if}}
+          {{#if company.tax_id}}<span class="contact-icon tax-icon"></span> USt-IdNr.: {{company.tax_id}}{{/if}}
         </div>
       </div>
     </header>
@@ -320,7 +368,7 @@
     
     <!-- Order Confirmation -->
     <section class="order-confirmation">
-      <h3>Auftragsbestätigung:</h3>
+      <h3><span class="icon doc-icon"></span> Auftragsbestätigung:</h3>
       <div class="confirmation-text">
         Ich erteile / Wir erteilen den Auftrag für die Brennholzlieferung 
         gemäß obigem Angebot. Die AGBs und Lieferbedingung frei 
@@ -341,6 +389,25 @@
         Hiermit bestätige ich den ordnungsgemäßen Zustand und Erhalt der bestellten Ware.
       </div>
       <div class="final-signature">Datum, Unterschrift</div>
+    </section>
+    
+    <section class="totals">
+      <div class="totals-box">
+        <table>
+          <tr>
+            <td class="label">Gesamt Netto:</td>
+            <td class="value">{{formatCurrency totals.subtotal}}</td>
+          </tr>
+          <tr>
+            <td class="label">zzgl. {{totals.tax_rate}}% MwSt.:</td>
+            <td class="value">{{formatCurrency totals.tax}}</td>
+          </tr>
+          <tr class="grand">
+            <td class="label">Gesamt Brutto</td>
+            <td class="value">{{formatCurrency totals.total}}</td>
+          </tr>
+        </table>
+      </div>
     </section>
     
     <!-- Footer -->

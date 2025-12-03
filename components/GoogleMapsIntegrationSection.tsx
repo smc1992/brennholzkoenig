@@ -32,6 +32,10 @@ interface GoogleMapsIntegrationSectionProps {
   cityName: string;
   contactAddress?: string;
   contactPhone?: string;
+  centerLat?: number;
+  centerLng?: number;
+  zoom?: number;
+  markers?: Array<{ lat: number; lng: number; type?: string; title?: string; description?: string }>;
 }
 
 interface DeliveryRoute {
@@ -45,7 +49,11 @@ interface DeliveryRoute {
 export default function GoogleMapsIntegrationSection({ 
   cityName, 
   contactAddress,
-  contactPhone 
+  contactPhone,
+  centerLat,
+  centerLng,
+  zoom,
+  markers = []
 }: GoogleMapsIntegrationSectionProps) {
   const [activeTab, setActiveTab] = useState<'map' | 'routes' | 'contact'>('map');
 
@@ -90,7 +98,8 @@ export default function GoogleMapsIntegrationSection({
     const query = contactAddress ? 
       encodeURIComponent(contactAddress) : 
       encodeURIComponent(`Brennholz ${cityName}`);
-    return `https://www.google.com/maps/embed/v1/search?key=YOUR_API_KEY&q=${query}&zoom=12`;
+    const z = zoom || 12;
+    return `https://www.google.com/maps/embed/v1/search?key=YOUR_API_KEY&q=${query}&zoom=${z}`;
   };
 
   return (
@@ -162,6 +171,14 @@ export default function GoogleMapsIntegrationSection({
                   <p className="text-gray-600 mt-2">
                     Google Maps Integration wird hier angezeigt
                   </p>
+                  <div className="mt-3 text-sm text-gray-700">
+                    {typeof centerLat === 'number' && typeof centerLng === 'number' && (
+                      <p>Center: {centerLat.toFixed(5)}, {centerLng.toFixed(5)} • Zoom: {zoom || 12}</p>
+                    )}
+                    {markers.length > 0 && (
+                      <p>Marker: {markers.length}</p>
+                    )}
+                  </div>
                   <div className="mt-4 p-4 bg-white rounded-lg shadow-sm">
                     <p className="text-sm text-wood-800">
                       <strong>Hinweis:</strong> Für die vollständige Google Maps Integration 

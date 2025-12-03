@@ -300,6 +300,19 @@ export class ModernInvoiceBuilder {
     const template = await this.getTemplate(templateId);
     const compiledTemplate = Handlebars.compile(template);
     
+    // Breakdown nach Komponenten (Netto) vorbereiten
+    const vat = (companySettings.vat_rate ?? invoiceData.tax_rate ?? 19);
+    const toNet = (item: any) => item.tax_included ? (item.total_price / (1 + vat / 100)) : item.total_price;
+    const itemsNet = (invoiceData.items || [])
+      .filter((it: any) => (it.category || '').toLowerCase() !== 'lieferung' && (it.product_code || '') !== 'DISCOUNT')
+      .reduce((sum: number, it: any) => sum + toNet(it), 0);
+    const deliveryNet = (invoiceData.items || [])
+      .filter((it: any) => (it.category || '').toLowerCase() === 'lieferung')
+      .reduce((sum: number, it: any) => sum + toNet(it), 0);
+    const discountNet = (invoiceData.items || [])
+      .filter((it: any) => (it.product_code || '') === 'DISCOUNT' || (it.category || '').toLowerCase() === 'rabatt')
+      .reduce((sum: number, it: any) => sum + toNet(it), 0);
+
     const templateData = {
       invoice: {
         number: invoiceData.invoice_number,
@@ -348,7 +361,14 @@ export class ModernInvoiceBuilder {
         subtotal: invoiceData.subtotal_amount,  // Rohe Zahl für Handlebars Helper
         tax_rate: invoiceData.tax_rate,
         tax: invoiceData.tax_amount,  // Rohe Zahl für Handlebars Helper
-        total: invoiceData.total_amount  // Rohe Zahl für Handlebars Helper
+        total: invoiceData.total_amount,  // Rohe Zahl für Handlebars Helper
+        breakdown: {
+          items_net: itemsNet,
+          delivery_net: deliveryNet,
+          discount_net: discountNet,
+          has_delivery: deliveryNet > 0,
+          has_discount: discountNet !== 0
+        }
       },
       payment: {
         terms: invoiceData.payment_terms,
@@ -495,6 +515,13 @@ export class ModernInvoiceBuilder {
         throw new Error('Page was closed before PDF generation');
       }
       
+      // Stelle sicher, dass Print-CSS angewendet wird
+      try {
+        await page.emulateMediaType('print');
+      } catch (e) {
+        console.warn('⚠️ Failed to emulate print media type:', e);
+      }
+
       let pdfBuffer;
       try {
         // Überprüfe nochmals Page-Status
@@ -582,9 +609,7 @@ export class ModernInvoiceBuilder {
    * Lädt ein Template aus der Datenbank oder Datei
    */
   private async getTemplate(templateId: string): Promise<string> {
-    if (process.env.NODE_ENV !== 'production') {
-      this.templateCache.delete(templateId);
-    }
+    this.templateCache.delete(templateId);
     if (this.templateCache.has(templateId)) {
       return this.templateCache.get(templateId)!;
     }

@@ -17,10 +17,17 @@ export default function LocalLandmarksSection({
   cityName, 
   landmarks = [] 
 }: LocalLandmarksSectionProps) {
+  const normalized = (landmarks || []).map((l: any) => ({
+    name: l.name,
+    description: l.description,
+    imageUrl: l.imageUrl || l.image_url,
+    distance: l.distance,
+    relevance: l.relevance
+  }));
   const [selectedLandmark, setSelectedLandmark] = useState<number | null>(null);
   // Wenn keine echten Wahrzeichen übergeben werden, rendere diese Sektion nicht,
   // um doppelte, nicht editierbare Inhalte zu vermeiden.
-  const displayLandmarks = landmarks.length > 0 ? landmarks : [];
+  const displayLandmarks = normalized.length > 0 ? normalized : [];
 
   if (displayLandmarks.length === 0) {
     return null;

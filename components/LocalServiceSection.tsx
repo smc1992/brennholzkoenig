@@ -27,6 +27,9 @@ interface LocalServiceSectionProps {
   expertiseBenefits?: LocalServiceBenefit[];
   localRootedTitle?: string;
   localRootedDescription?: string;
+  expertiseImageUrl?: string;
+  compact?: boolean;
+  maxAreas?: number;
 }
 
 export default function LocalServiceSection({
@@ -78,9 +81,15 @@ export default function LocalServiceSection({
   ],
   localRootedTitle = `Lokal verwurzelt in ${cityName}`,
   localRootedDescription = `Seit Jahren vertrauen Kunden in ${cityName} auf unsere Qualität und unseren Service.`
+  ,expertiseImageUrl,
+  compact = true,
+  maxAreas = 3
 }: LocalServiceSectionProps) {
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
+  const safeServiceAreasBase = Array.isArray(serviceAreas) ? serviceAreas : [];
+  const safeServiceAreas = safeServiceAreasBase.slice(0, Math.max(0, maxAreas));
+  const safeExpertiseBenefits = Array.isArray(expertiseBenefits) ? expertiseBenefits : [];
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -120,11 +129,13 @@ export default function LocalServiceSection({
             {title}
           </h2>
           
-          <p className="text-xl text-wood-800 max-w-4xl mx-auto leading-relaxed">
-            {subtitle}
-          </p>
+          {!compact && (
+            <p className="text-xl text-wood-800 max-w-4xl mx-auto leading-relaxed">
+              {subtitle}
+            </p>
+          )}
           
-          {description && (
+          {description && !compact && (
             <div className="mt-6 prose prose-lg max-w-4xl mx-auto text-wood-700"
                  dangerouslySetInnerHTML={{ __html: description }} />
           )}
@@ -134,7 +145,7 @@ export default function LocalServiceSection({
         <div className={`grid md:grid-cols-3 gap-8 mb-16 transition-all duration-1000 delay-300 ${
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         }`}>
-          {serviceAreas.map((area, index) => (
+          {safeServiceAreas.map((area, index) => (
             <div 
               key={index}
               className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group"
@@ -161,7 +172,7 @@ export default function LocalServiceSection({
           ))}
         </div>
 
-        {/* Expertise Section */}
+        {!compact && (
         <div className={`bg-white rounded-3xl shadow-xl p-8 lg:p-12 transition-all duration-1000 delay-500 ${
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         }`}>
@@ -185,7 +196,7 @@ export default function LocalServiceSection({
               
               {/* Benefits */}
               <div className="space-y-6">
-                {expertiseBenefits.map((benefit, index) => (
+                {safeExpertiseBenefits.map((benefit, index) => (
                   <div key={index} className="flex items-start">
                     <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-4 mt-1">
                       <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
@@ -203,37 +214,38 @@ export default function LocalServiceSection({
             
             {/* Visual Element */}
             <div className="relative">
-              {/* Holz-inspirierter Hintergrund mit Corporate Identity */}
-              <div className="bg-gradient-to-br from-wood-50 via-pergament to-wood-100 rounded-2xl p-8 text-center relative border border-wood-200 shadow-medium">
-                
-                {/* Icon mit Brennholz-Farben */}
-                <div className="relative z-10">
-                  <div className="w-24 h-24 bg-gradient-to-br from-brennholz-rot to-primary-700 rounded-full flex items-center justify-center mx-auto mb-6 shadow-strong">
-                    <svg className="w-12 h-12 text-pergament" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </div>
-                  
-                  <h4 className="text-2xl font-bold text-brennholz-rot mb-4 font-heading">
-                    {localRootedTitle}
-                  </h4>
-                  
-                  <p className="text-holz-braun font-medium leading-relaxed">
-                    {localRootedDescription}
-                  </p>
-                  
-                  {/* Dekorative Elemente */}
-                  <div className="flex justify-center mt-6 space-x-2">
-                    <div className="w-2 h-2 bg-gold rounded-full opacity-60"></div>
-                    <div className="w-2 h-2 bg-flammen-orange rounded-full opacity-60"></div>
-                    <div className="w-2 h-2 bg-gold rounded-full opacity-60"></div>
+              {expertiseImageUrl ? (
+                <div className="relative overflow-hidden rounded-2xl shadow-lg">
+                  <img src={expertiseImageUrl} alt="Lokale Expertise" className="w-full h-96 object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                </div>
+              ) : (
+                <div className="bg-gradient-to-br from-wood-50 via-pergament to-wood-100 rounded-2xl p-8 text-center relative border border-wood-200 shadow-medium">
+                  <div className="relative z-10">
+                    <div className="w-24 h-24 bg-gradient-to-br from-brennholz-rot to-primary-700 rounded-full flex items-center justify-center mx-auto mb-6 shadow-strong">
+                      <svg className="w-12 h-12 text-pergament" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <h4 className="text-2xl font-bold text-brennholz-rot mb-4 font-heading">
+                      {localRootedTitle}
+                    </h4>
+                    <p className="text-holz-braun font-medium leading-relaxed">
+                      {localRootedDescription}
+                    </p>
+                    <div className="flex justify-center mt-6 space-x-2">
+                      <div className="w-2 h-2 bg-gold rounded-full opacity-60"></div>
+                      <div className="w-2 h-2 bg-flammen-orange rounded-full opacity-60"></div>
+                      <div className="w-2 h-2 bg-gold rounded-full opacity-60"></div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
+        )}
       </div>
     </section>
   );

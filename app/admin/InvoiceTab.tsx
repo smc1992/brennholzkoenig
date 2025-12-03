@@ -469,7 +469,7 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = fileUrl;
-      a.download = `rechnung-${invoice.invoice_number}.pdf`;
+      a.download = `rechnung-${invoice.invoice_number}-${Date.now()}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(fileUrl);
@@ -484,9 +484,56 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
     }
   };
 
+  const generateOrderConfirmationPDF = async (invoice: Invoice) => {
+    setIsGeneratingPDF(true);
+    try {
+      const apiUrl = api('/api/invoice-builder');
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          orderId: invoice.order_id,
+          action: 'order-confirmation',
+          templateId: 'order-confirmation',
+          saveToFile: false
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText };
+        }
+        throw new Error(`PDF generation failed: ${errorData.details || errorData.error || response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const fileUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = fileUrl;
+      a.download = `auftragsbestaetigung-${invoice.invoice_number}-${Date.now()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(fileUrl);
+      document.body.removeChild(a);
+
+      alert('PDF erfolgreich generiert!');
+    } catch (error) {
+      alert(`Fehler beim Generieren der PDF: ${error instanceof Error ? error.message : error}`);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   const showPreview = async (invoice: Invoice) => {
     try {
-      const response = await fetch(api(`/api/invoice-builder?action=preview&invoiceId=${invoice.id}&templateId=default`));
+      const response = await fetch(api(`/api/invoice-builder?action=preview&invoiceId=${invoice.id}&templateId=invoice`));
       
       if (!response.ok) {
         throw new Error('Preview generation failed');
@@ -813,14 +860,22 @@ export default function InvoiceTab({ onStatsUpdate }: InvoiceTabProps) {
                     >
                       <i className="ri-eye-line"></i>
                     </button>
-                    <button
-                      onClick={() => generatePDF(invoice)}
-                      disabled={isGeneratingPDF}
-                      className="text-blue-600 hover:text-blue-900 disabled:opacity-50"
-                      title="PDF herunterladen"
-                    >
-                      <i className="ri-download-line"></i>
-                    </button>
+                  <button
+                    onClick={() => generatePDF(invoice)}
+                    disabled={isGeneratingPDF}
+                    className="text-blue-600 hover:text-blue-900 disabled:opacity-50"
+                    title="PDF herunterladen"
+                  >
+                    <i className="ri-download-line"></i>
+                  </button>
+                  <button
+                    onClick={() => generateOrderConfirmationPDF(invoice)}
+                    disabled={isGeneratingPDF}
+                    className="text-amber-600 hover:text-amber-900 disabled:opacity-50"
+                    title="Auftragsbestätigung PDF"
+                  >
+                    <i className="ri-file-list-3-line"></i>
+                  </button>
                     <button
                       onClick={() => previewHTML(invoice)}
                       className="text-green-600 hover:text-green-900"

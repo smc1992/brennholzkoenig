@@ -14,13 +14,24 @@ interface Partner {
 interface LocalPartnershipsSectionProps {
   cityName: string;
   customPartners?: Partner[];
+  headerImageUrl?: string;
 }
 
 export default function LocalPartnershipsSection({ 
   cityName, 
-  customPartners = [] 
+  customPartners = [],
+  headerImageUrl
 }: LocalPartnershipsSectionProps) {
-  
+  const normalizedPartners: Partner[] = (customPartners || []).map((p: any, idx: number) => ({
+    id: p.id || String(idx + 1),
+    name: p.name,
+    type: (p.type as Partner['type']) || 'service',
+    description: p.description,
+    website: p.website || p.website_url,
+    logo: p.logo || p.logo_url,
+    established: p.established || (p.founded_year ? String(p.founded_year) : undefined),
+    location: p.location || cityName
+  }));
   // Fallback-Partner für bessere lokale Glaubwürdigkeit
   const defaultPartners: Partner[] = [
     {
@@ -73,7 +84,7 @@ export default function LocalPartnershipsSection({
     }
   ];
 
-  const allPartners = customPartners.length > 0 ? customPartners : defaultPartners;
+  const allPartners = normalizedPartners.length > 0 ? normalizedPartners : defaultPartners;
 
   const partnerTypes = [
     { 
@@ -124,6 +135,12 @@ export default function LocalPartnershipsSection({
   return (
     <section className="py-16 px-4 bg-gradient-to-b from-white to-wood-50">
       <div className="max-w-6xl mx-auto">
+        {headerImageUrl && (
+          <div className="relative overflow-hidden rounded-2xl shadow-lg mb-8">
+            <img src={headerImageUrl} alt={`Partner in ${cityName}`} className="w-full h-64 object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+          </div>
+        )}
         {/* Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-primary-700 mb-4">

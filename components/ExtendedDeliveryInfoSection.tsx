@@ -47,6 +47,8 @@ interface ExtendedDeliveryInfoSectionProps {
   customRoutes?: DeliveryRoute[];
   deliveryZones?: Array<DatabaseDeliveryZone | any>;
   deliveryRoutes?: DatabaseDeliveryRoute[];
+  maxZones?: number;
+  maxRoutes?: number;
 }
 
 export default function ExtendedDeliveryInfoSection({ 
@@ -56,7 +58,9 @@ export default function ExtendedDeliveryInfoSection({
   customZones = [],
   customRoutes = [],
   deliveryZones = [],
-  deliveryRoutes = []
+  deliveryRoutes = [],
+  maxZones,
+  maxRoutes
 }: ExtendedDeliveryInfoSectionProps) {
   const [activeTab, setActiveTab] = useState<'zones' | 'routes'>('zones');
 
@@ -177,10 +181,13 @@ export default function ExtendedDeliveryInfoSection({
   }));
 
   // Verwende editierbare Daten falls vorhanden, sonst Fallback zu Standard-Daten
-  const allZones = convertedZones.length > 0 ? convertedZones : 
-                   customZones.length > 0 ? customZones : defaultZones;
-  const allRoutes = convertedRoutes.length > 0 ? convertedRoutes : 
-                    customRoutes.length > 0 ? customRoutes : defaultRoutes;
+  const allZonesBase = convertedZones.length > 0 ? convertedZones : 
+                      customZones.length > 0 ? customZones : defaultZones;
+  const allRoutesBase = convertedRoutes.length > 0 ? convertedRoutes : 
+                       customRoutes.length > 0 ? customRoutes : defaultRoutes;
+
+  const allZones = typeof maxZones === 'number' ? allZonesBase.slice(0, Math.max(0, maxZones)) : allZonesBase;
+  const allRoutes = typeof maxRoutes === 'number' ? allRoutesBase.slice(0, Math.max(0, maxRoutes)) : allRoutesBase;
 
 
   const getRouteForZone = (zoneId: string) => {
