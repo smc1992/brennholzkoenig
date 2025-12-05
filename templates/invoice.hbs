@@ -196,16 +196,7 @@
       position: relative;
     }
     
-    .header::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 100pt;
-      height: 100%;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M20,20 Q50,5 80,20 Q50,35 20,20" fill="%23ffffff" opacity="0.1"/></svg>') no-repeat center;
-      background-size: contain;
-    }
+    /* Schwarze Ecke entfernt */
     
     .logo-section {
       flex: 0 0 auto;
@@ -639,16 +630,7 @@
       align-items: center;
     }
     
-    .order-confirmation h3::before {
-      content: '';
-      display: inline-block;
-      width: 14pt;
-      height: 14pt;
-      margin-right: 8pt;
-      background-repeat: no-repeat;
-      background-size: contain;
-      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%231A1A1A"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M9 6h6v2H9V6zm0 4h6v2H9v-2zm0 4h6v2H9v-2z"/></svg>');
-    }
+    /* Schwarzes Icon entfernt */
     
     .confirmation-text {
       margin-bottom: 18pt;
@@ -978,6 +960,11 @@
           {{/each}}
         </tbody>
         <tfoot>
+          <tr style="background: #f8f9fa;">
+            <td class="description" colspan="3" style="text-align: right; padding-right: 10pt; font-weight: 500;">Umsatzsteuer (7%):</td>
+            <td class="unit-price"></td>
+            <td class="total number" style="font-weight: 500;">€{{formatCurrency totals.tax}}</td>
+          </tr>
           <tr style="background: #f5f5f5; font-weight: 700; border-top: 2pt solid #C04020;">
             <td class="description" colspan="3" style="text-align: right; padding-right: 10pt;">Gesamtbetrag (Brutto):</td>
             <td class="unit-price"></td>
@@ -989,7 +976,7 @@
     
     <!-- Auftragsbestätigung und Lieferhinweise direkt nach Positionen -->
     <section class="order-confirmation">
-      <h3 style="margin-top: 8pt;"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#C04020"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M9 6h6v2H9V6zm0 4h6v2H9v-2zm0 4h6v2H9v-2z" fill="white"/></svg></span> Auftragsbestätigung:</h3>
+      <h3 style="margin-top: 8pt;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#C04020" style="display: inline-block; width: 14pt; height: 14pt; margin-right: 8pt; vertical-align: middle;"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M9 6h6v2H9V6zm0 4h6v2H9v-2zm0 4h6v2H9v-2z" fill="white"/></svg>Auftragsbestätigung:</h3>
       <div class="confirmation-text">
         Ich erteile / Wir erteilen den Auftrag für die Brennholzlieferung 
         gemäß obigem Angebot. Die AGBs und Lieferbedingung frei Bordsteinkante 
