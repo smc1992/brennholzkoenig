@@ -60,7 +60,7 @@ export default function LocalFAQSection({
     {
       id: '6',
       question: `Welche Zahlungsmöglichkeiten gibt es in ${cityName}?`,
-      answer: `In ${cityName} bieten wir alle gängigen Zahlungsmethoden an: Barzahlung bei Lieferung, Überweisung, EC-Karte und auch PayPal. Für Stammkunden in ${cityName} ist auch eine Zahlung auf Rechnung möglich.`,
+      answer: `Zahlung ausschließlich in bar bei Lieferung.`,
       category: 'service'
     },
     {
@@ -71,9 +71,15 @@ export default function LocalFAQSection({
     },
     {
       id: '8',
-      question: `Welche Holzarten sind in ${cityName} besonders beliebt?`,
-      answer: `In ${cityName} sind besonders Buche und Eiche sehr beliebt, da sie lange brennen und eine schöne Glut entwickeln. Birke wird gerne zum Anheizen verwendet. Wir beraten Sie gerne, welche Holzart für Ihren Kamin oder Ofen in ${cityName} am besten geeignet ist.`,
+      question: `Welche Holzarten liefern Sie?`,
+      answer: `Wir liefern Buche Scheitholz (25 cm und 33 cm), Fichte 33 cm sowie Industrieholz Buche (Klasse I/II). Alle Sorten sind ofenfertig, fachgerecht getrocknet und haben in der Regel <= 20% Restfeuchte.`,
       category: 'quality'
+    },
+    {
+      id: '9',
+      question: `Wie hoch ist die Mindestbestellmenge?`,
+      answer: `Die Mindestbestellmenge beträgt 3 Schüttraummeter (SRM).`,
+      category: 'pricing'
     }
   ];
 

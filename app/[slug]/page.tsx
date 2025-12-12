@@ -13,8 +13,8 @@ import LocalLandmarksSection from '@/components/LocalLandmarksSection';
 // ServiceAreaDetailsSection entfernt
 import LocalFAQSection from '@/components/LocalFAQSection';
 import LocalPartnershipsSection from '@/components/LocalPartnershipsSection';
-import ExtendedDeliveryInfoSection from '@/components/ExtendedDeliveryInfoSection';
-import GoogleMapsIntegrationSection from '@/components/GoogleMapsIntegrationSection';
+// ExtendedDeliveryInfoSection entfernt
+// GoogleMapsIntegrationSection entfernt
 import LocalKeywordOptimizer from '@/components/LocalKeywordOptimizer';
 import LocalContentEnhancer from '@/components/LocalContentEnhancer';
 import { notFound } from 'next/navigation';
@@ -408,15 +408,7 @@ export default function CityLandingPage() {
 
         {/* Servicegebiete Details entfernt */}
 
-        <ExtendedDeliveryInfoSection 
-          cityName={cityPage.city_name}
-          title={cityPage.extended_delivery_info_title}
-          description={cityPage.extended_delivery_info_description}
-          deliveryZones={cityPage.delivery_zones}
-          deliveryRoutes={cityPage.delivery_routes}
-          maxZones={1}
-          maxRoutes={1}
-        />
+        {/* ExtendedDeliveryInfoSection entfernt */}
 
         
 
@@ -433,15 +425,7 @@ export default function CityLandingPage() {
 
         
 
-        <GoogleMapsIntegrationSection 
-          cityName={cityPage.city_name}
-          contactAddress={cityPage.contact_address}
-          contactPhone={cityPage.contact_phone}
-          centerLat={cityPage.google_maps_center_lat}
-          centerLng={cityPage.google_maps_center_lng}
-          zoom={cityPage.google_maps_zoom}
-          markers={cityPage.google_maps_markers}
-        />
+        {/* GoogleMapsIntegrationSection entfernt */}
         
         
 
