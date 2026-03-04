@@ -1004,75 +1004,6 @@ function CityPageForm({ page, onSave, onCancel }: {
               </div>
             </div>
           </div>
-
-          <div className="bg-white p-6 rounded-lg border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Lieferung</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Lieferinfo Titel</label>
-                <input type="text" value={formData.extended_delivery_info_title} onChange={(e) => setFormData(prev => ({ ...prev, extended_delivery_info_title: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Lieferinfo Beschreibung</label>
-                <textarea value={formData.extended_delivery_info_description} onChange={(e) => setFormData(prev => ({ ...prev, extended_delivery_info_description: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" rows={3} />
-              </div>
-              <h4 className="text-md font-semibold text-gray-800">Lieferzone 1</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Zone Name</label>
-                  <input type="text" value={formData.delivery_zones?.[0]?.zone_name || ''} onChange={(e) => {
-                    const dz = formData.delivery_zones?.length ? [...formData.delivery_zones] : [{ zone_name: '', delivery_fee: 0, minimum_order: 0, areas: [], delivery_time: '' }];
-                    dz[0].zone_name = e.target.value;
-                    setFormData(prev => ({ ...prev, delivery_zones: dz as any }));
-                  }} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Kerngebiet" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Gebiete (kommagetrennt)</label>
-                  <input type="text" value={(formData.delivery_zones?.[0]?.areas || []).join(', ')} onChange={(e) => {
-                    const dz = formData.delivery_zones?.length ? [...formData.delivery_zones] : [{ zone_name: '', delivery_fee: 0, minimum_order: 0, areas: [], delivery_time: '' }];
-                    dz[0].areas = e.target.value.split(',').map(a => a.trim()).filter(Boolean);
-                    setFormData(prev => ({ ...prev, delivery_zones: dz as any }));
-                  }} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Mitte, Vorderer Westen" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Lieferzeit</label>
-                  <input type="text" value={formData.delivery_zones?.[0]?.delivery_time || ''} onChange={(e) => {
-                    const dz = formData.delivery_zones?.length ? [...formData.delivery_zones] : [{ zone_name: '', delivery_fee: 0, minimum_order: 0, areas: [], delivery_time: '' }];
-                    dz[0].delivery_time = e.target.value;
-                    setFormData(prev => ({ ...prev, delivery_zones: dz as any }));
-                  }} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. 24–48h" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Liefergebühr (€)</label>
-                  <input type="number" value={formData.delivery_zones?.[0]?.delivery_fee ?? 0} onChange={(e) => {
-                    const dz = formData.delivery_zones?.length ? [...formData.delivery_zones] : [{ zone_name: '', delivery_fee: 0, minimum_order: 0, areas: [], delivery_time: '' }];
-                    dz[0].delivery_fee = Number(e.target.value);
-                    setFormData(prev => ({ ...prev, delivery_zones: dz as any }));
-                  }} className="w-full px-3 py-2 border rounded-lg" />
-                </div>
-              </div>
-              <h4 className="text-md font-semibold text-gray-800">Lieferroute 1</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Route Name</label>
-                  <input type="text" value={formData.delivery_routes?.[0]?.name || ''} onChange={(e) => {
-                    const dr = formData.delivery_routes?.length ? [...formData.delivery_routes] : [{ name: '', days: [], time_slots: [], zones: [] }];
-                    dr[0].name = e.target.value;
-                    setFormData(prev => ({ ...prev, delivery_routes: dr as any }));
-                  }} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Wilhelmshöhe-Route" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Liefertage (kommagetrennt)</label>
-                  <input type="text" value={(formData.delivery_routes?.[0]?.days || []).join(', ')} onChange={(e) => {
-                    const dr = formData.delivery_routes?.length ? [...formData.delivery_routes] : [{ name: '', days: [], time_slots: [], zones: [] }];
-                    dr[0].days = e.target.value.split(',').map(a => a.trim()).filter(Boolean);
-                    setFormData(prev => ({ ...prev, delivery_routes: dr as any }));
-                  }} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Mo, Mi, Sa" />
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div className="bg-white p-6 rounded-lg border">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">FAQs (max 5)</h3>
             {(() => {
@@ -1162,8 +1093,8 @@ function CityPageForm({ page, onSave, onCancel }: {
             <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg border">Abbrechen</button>
             <button type="submit" className="px-4 py-2 rounded-lg bg-[#C04020] text-white">Speichern</button>
           </div>
-        </form>
-      </div>
+        </form >
+      </div >
     );
   }
 

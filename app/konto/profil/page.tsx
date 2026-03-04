@@ -85,6 +85,26 @@ export default function ProfilePage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Nicht angemeldet');
 
+      // Check if a customer with this email already exists but has a different ID (e.g., from Guest Checkout)
+      const { data: existingCustomer } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('email', profile.email)
+        .maybeSingle();
+
+      if (existingCustomer && existingCustomer.id !== user.id) {
+        // Use the secure RPC to merge the guest record with the new authenticated user ID.
+        // This handles cases where auth_user_id might already exist or where PostgREST blocks PK updates.
+        const { error: mergeError } = await supabase.rpc('merge_guest_customer', {
+          auth_user_id: user.id,
+          user_email: profile.email
+        });
+
+        if (mergeError) {
+          console.error('Fehler beim Zusammenführen des Gastkontos:', mergeError);
+        }
+      }
+
       const updateData = {
         id: user.id,
         email: profile.email,
