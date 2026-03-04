@@ -16,36 +16,14 @@ export default function NotFound() {
         </div>
 
         <div className="space-y-4">
-          <Link 
+          <Link
             href="/"
             className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
           >
             Zur Startseite
           </Link>
-          
-          <div className="mt-6">
-            <p className="text-wood-800 mb-4">Oder besuchen Sie eine unserer verfügbaren Städte:</p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <Link 
-                href="/stuttgart"
-                className="bg-white border border-gray-300 hover:border-primary-500 text-primary-700 px-4 py-2 rounded-md transition-colors duration-200"
-              >
-                Stuttgart
-              </Link>
-              <Link 
-                href="/muenchen"
-                className="bg-white border border-gray-300 hover:border-primary-500 text-primary-700 px-4 py-2 rounded-md transition-colors duration-200"
-              >
-                München
-              </Link>
-              <Link 
-                href="/hamburg"
-                className="bg-white border border-gray-300 hover:border-primary-500 text-primary-700 px-4 py-2 rounded-md transition-colors duration-200"
-              >
-                Hamburg
-              </Link>
-            </div>
-          </div>
+
+
         </div>
 
         <div className="mt-12 p-6 bg-white rounded-lg shadow-md">
@@ -55,7 +33,7 @@ export default function NotFound() {
           <p className="text-wood-800 mb-4">
             Kontaktieren Sie uns gerne - wir prüfen, ob wir auch in Ihr Gebiet liefern können.
           </p>
-          <Link 
+          <Link
             href="/kontakt"
             className="inline-block border-2 border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white px-6 py-2 rounded-lg font-semibold transition-all duration-300"
           >
