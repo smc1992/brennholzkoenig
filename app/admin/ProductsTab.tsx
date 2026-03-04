@@ -793,6 +793,7 @@ export default function ProductsTab() {
                     specifications,
                     in_stock: parseInt(stockQuantityValue, 10) > 0,
                     has_quantity_discount: data.has_quantity_discount === 'on',
+                    is_active: data.is_active === 'on',
                   });
                 }}
                 className="p-6 space-y-6"
@@ -913,22 +914,41 @@ export default function ProductsTab() {
                     />
                   </div>
 
-                  <div className="md:col-span-2">
-                    <div className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        name="has_quantity_discount"
-                        id="has_quantity_discount"
-                        defaultChecked={editingProduct.has_quantity_discount || false}
-                        className="w-4 h-4 text-[#C04020] bg-gray-100 border-gray-300 rounded focus:ring-[#C04020] focus:ring-2"
-                      />
-                      <label htmlFor="has_quantity_discount" className="text-sm font-medium text-gray-700">
-                        Mengenrabatt ab 25 SRM aktivieren
-                      </label>
+                  <div className="md:col-span-2 space-y-4">
+                    <div>
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          name="has_quantity_discount"
+                          id="has_quantity_discount"
+                          defaultChecked={editingProduct.has_quantity_discount || false}
+                          className="w-4 h-4 text-[#C04020] bg-gray-100 border-gray-300 rounded focus:ring-[#C04020] focus:ring-2"
+                        />
+                        <label htmlFor="has_quantity_discount" className="text-sm font-medium text-gray-700">
+                          Mengenrabatt ab 25 SRM aktivieren
+                        </label>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Wenn aktiviert, erhalten Kunden €2,50 Rabatt pro SRM bei Bestellungen ab 25 SRM für dieses Produkt.
+                      </p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Wenn aktiviert, erhalten Kunden €2,50 Rabatt pro SRM bei Bestellungen ab 25 SRM für dieses Produkt.
-                    </p>
+                    <div>
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          name="is_active"
+                          id="is_active"
+                          defaultChecked={editingProduct.is_active !== false}
+                          className="w-4 h-4 text-[#C04020] bg-gray-100 border-gray-300 rounded focus:ring-[#C04020] focus:ring-2"
+                        />
+                        <label htmlFor="is_active" className="text-sm font-medium text-gray-700">
+                          Produkt im Shop aktivieren
+                        </label>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Wenn deaktiviert, wird das Produkt nicht auf der Website angezeigt.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -1289,7 +1309,7 @@ export default function ProductsTab() {
                     wood_type: formData.get('wood_type') as string,
                     size: formData.get('size') as string,
                     in_stock: true,
-                    is_active: true,
+                    is_active: formData.get('is_active') === 'on',
                     has_quantity_discount: formData.get('has_quantity_discount') === 'on',
                     slug: generateSlug(formData.get('name') as string)
                   };
@@ -1469,21 +1489,40 @@ export default function ProductsTab() {
                   />
                 </div>
 
-                <div className="md:col-span-2">
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      name="has_quantity_discount"
-                      id="new_has_quantity_discount"
-                      className="w-4 h-4 text-[#C04020] bg-gray-100 border-gray-300 rounded focus:ring-[#C04020] focus:ring-2"
-                    />
-                    <label htmlFor="new_has_quantity_discount" className="text-sm font-medium text-gray-700">
-                      Mengenrabatt ab 25 SRM aktivieren
-                    </label>
+                <div className="md:col-span-2 space-y-4">
+                  <div>
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        name="has_quantity_discount"
+                        id="new_has_quantity_discount"
+                        className="w-4 h-4 text-[#C04020] bg-gray-100 border-gray-300 rounded focus:ring-[#C04020] focus:ring-2"
+                      />
+                      <label htmlFor="new_has_quantity_discount" className="text-sm font-medium text-gray-700">
+                        Mengenrabatt ab 25 SRM aktivieren
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Wenn aktiviert, erhalten Kunden €2,50 Rabatt pro SRM bei Bestellungen ab 25 SRM für dieses Produkt.
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Wenn aktiviert, erhalten Kunden €2,50 Rabatt pro SRM bei Bestellungen ab 25 SRM für dieses Produkt.
-                  </p>
+                  <div>
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        name="is_active"
+                        id="new_is_active"
+                        defaultChecked={true}
+                        className="w-4 h-4 text-[#C04020] bg-gray-100 border-gray-300 rounded focus:ring-[#C04020] focus:ring-2"
+                      />
+                      <label htmlFor="new_is_active" className="text-sm font-medium text-gray-700">
+                        Produkt im Shop aktivieren
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Wenn deaktiviert, wird das Produkt nicht auf der Website angezeigt.
+                    </p>
+                  </div>
                 </div>
 
                 {/* Hidden fields */}

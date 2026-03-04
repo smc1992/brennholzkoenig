@@ -402,7 +402,7 @@ export default function CustomersTab() {
     e.preventDefault();
     try {
       // Process data to ensure empty dates are sent as null
-      const processedData = { ...newCustomerData };
+      const processedData: any = { ...newCustomerData };
       if (processedData.date_of_birth === '') {
         processedData.date_of_birth = null;
       }
@@ -860,7 +860,7 @@ export default function CustomersTab() {
                         <div className="text-sm text-gray-500">Bestellungen</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-bold text-[#C04020)">
+                        <div className="text-sm font-bold text-[#C04020]">
                           €{stats.totalSpent.toFixed(2)}
                         </div>
                         <div className="text-sm text-gray-500">Gesamtumsatz</div>
@@ -947,7 +947,7 @@ export default function CustomersTab() {
             <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] flex flex-col">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-[#1A1A1A)">
+                  <h2 className="text-2xl font-bold text-[#1A1A1A]">
                     Kundendetails - {selectedCustomer.first_name} {selectedCustomer.last_name}
                   </h2>
                   <div className="flex items-center space-x-2">
