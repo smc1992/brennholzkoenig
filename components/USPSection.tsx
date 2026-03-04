@@ -35,14 +35,13 @@ export default function USPSection() {
         <div className="text-center mb-8 sm:mb-12 md:mb-16">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-10 max-w-6xl mx-auto">
             {/* Card 1 */}
-            <div className={`bg-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 transition-all duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[560px] mx-auto`}>
-              {/* Bild oben – feste Höhe für identische Bildgrößen */}
-              <div className="relative w-full h-[340px] rounded-t-2xl overflow-hidden">
+            <div className={`bg-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 transition-all duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[560px] mx-auto flex flex-col`}>
+              {/* Bild oben – feste Höhe, absolute Positionierung verhindert Overflow */}
+              <div className="relative w-full flex-shrink-0" style={{ height: '340px', minHeight: '340px', maxHeight: '340px', overflow: 'hidden' }}>
                 <img
                   src="/images/Kein Dreck in der Wohnung.webp"
                   alt="Familien vertrauen uns"
-                  className="w-full h-full object-cover object-center block"
-                  style={{ width: '100%', height: '100%' }}
+                  className="absolute inset-0 w-full h-full object-cover object-center"
                   loading="eager"
                 />
               </div>
@@ -58,7 +57,7 @@ export default function USPSection() {
                   />
                 </h3>
                 <p className="text-[#3a3a3a] text-sm sm:text-base md:text-lg leading-relaxed" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-                  Über 6.847 Familien schaffen mit unserem Premium-Brennholz warme, gemütliche Momente. 
+                  Über 6.847 Familien schaffen mit unserem Premium-Brennholz warme, gemütliche Momente.
                   <span className="text-[#C04020] font-semibold"> Sauberes, trockenes Holz </span>
                   bedeutet weniger Arbeit und mehr Zeit für die schönen Dinge im Leben.
                 </p>
@@ -66,14 +65,13 @@ export default function USPSection() {
             </div>
 
             {/* Card 2 */}
-            <div className={`bg-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 transition-all duration-700 delay-200 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[560px] mx-auto`}>
-              {/* Bild oben – feste Höhe für identische Bildgrößen */}
-              <div className="relative w-full h-[340px] rounded-t-2xl overflow-hidden">
+            <div className={`bg-white rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 transition-all duration-700 delay-200 ${isVisible ? 'opacity-100' : 'opacity-0'} max-w-[560px] mx-auto flex flex-col`}>
+              {/* Bild oben – feste Höhe, absolute Positionierung verhindert Overflow */}
+              <div className="relative w-full flex-shrink-0" style={{ height: '340px', minHeight: '340px', maxHeight: '340px', overflow: 'hidden' }}>
                 <img
                   src="/images/Perfektes Möbelholz.webp"
                   alt="Geprüfte Qualität"
-                  className="w-full h-full object-cover object-center block"
-                  style={{ width: '100%', height: '100%' }}
+                  className="absolute inset-0 w-full h-full object-cover object-center"
                   loading="eager"
                 />
               </div>
@@ -89,7 +87,7 @@ export default function USPSection() {
                   />
                 </h3>
                 <p className="text-[#3a3a3a] text-sm sm:text-base md:text-lg leading-relaxed" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-                  Jedes Holzstück wird vor der Auslieferung geprüft. 
+                  Jedes Holzstück wird vor der Auslieferung geprüft.
                   <span className="text-[#C04020] font-semibold"> 6–8 % </span>
                   <span className="text-[#C04020] font-semibold"> Restfeuchte garantiert </span>
                   – gemessen mit professionellen Geräten. So brennt Ihr Holz perfekt ab dem ersten Tag.
@@ -132,7 +130,7 @@ export default function USPSection() {
 
         {/* Benefits Grid - Mobile responsive Layout */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto px-2 sm:px-4">
-          {[ 
+          {[
             {
               icon: 'ri-truck-line',
               bg: 'from-[#C04020] to-[#A03318]',

@@ -26,10 +26,10 @@ function generateCustomerNumber(email: string): string {
 // Funktion zum Abrufen oder Erstellen einer Kundennummer
 async function getOrCreateCustomerNumber(email: string): Promise<string> {
   if (!email) return 'KD-GAST';
-  
+
   try {
     console.log('🔍 Fetching customer for email:', email);
-    
+
     // Prüfe ob Kunde bereits existiert und hole customer_number falls vorhanden
     const { data: existingCustomer, error: fetchError } = await supabase
       .from('customers')
@@ -50,7 +50,7 @@ async function getOrCreateCustomerNumber(email: string): Promise<string> {
     // Generiere neue Kundennummer
     const newCustomerNumber = generateCustomerNumber(email);
     console.log('🔢 Generated new customer number:', newCustomerNumber);
-    
+
     if (existingCustomer) {
       // Kunde existiert, aber hat keine customer_number - aktualisiere ihn
       try {
@@ -58,7 +58,7 @@ async function getOrCreateCustomerNumber(email: string): Promise<string> {
           .from('customers')
           .update({ customer_number: newCustomerNumber })
           .eq('id', existingCustomer.id);
-        
+
         if (updateError) {
           console.log('ℹ️ Could not update customer_number (column may not exist):', updateError.message);
         } else {
@@ -78,7 +78,7 @@ async function getOrCreateCustomerNumber(email: string): Promise<string> {
             first_name: '',
             last_name: ''
           });
-        
+
         if (insertError) {
           console.log('ℹ️ Could not insert with customer_number (column may not exist):', insertError.message);
           // Fallback: Erstelle Kunde ohne customer_number
@@ -96,7 +96,7 @@ async function getOrCreateCustomerNumber(email: string): Promise<string> {
         console.log('ℹ️ customer_number column not available for insert');
       }
     }
-    
+
     return newCustomerNumber;
   } catch (error) {
     console.error('💥 Error in getOrCreateCustomerNumber:', error);
@@ -227,7 +227,7 @@ export default function CheckoutPage() {
         .from('app_settings')
         .select('setting_key, setting_value')
         .in('setting_key', ['minimum_order_quantity', 'shipping_cost_standard', 'shipping_cost_express']);
-      
+
       // Lade Steuersatz und Steuereinstellungen aus invoice_settings
       const { data: invoiceSettings } = await supabase
         .from('invoice_settings')
@@ -250,19 +250,19 @@ export default function CheckoutPage() {
           express: parseFloat(settings.shipping_cost_express) || 139
         });
       }
-      
+
       // Setze Steuersatz und Steuereinstellungen aus invoice_settings
-        if (invoiceSettings) {
-          if (invoiceSettings.vat_rate) {
-            setVatRate(parseFloat(invoiceSettings.vat_rate));
-            console.log('✅ Steuersatz geladen:', invoiceSettings.vat_rate + '%');
-          }
-          if (invoiceSettings.default_tax_included !== undefined) {
-            setTaxIncluded(invoiceSettings.default_tax_included);
-            console.log('✅ Steuereinstellung geladen: Preise sind', invoiceSettings.default_tax_included ? 'Brutto' : 'Netto');
-            console.log('🔍 Debug: taxIncluded =', invoiceSettings.default_tax_included, 'vatRate =', invoiceSettings.vat_rate);
-          }
+      if (invoiceSettings) {
+        if (invoiceSettings.vat_rate) {
+          setVatRate(parseFloat(invoiceSettings.vat_rate));
+          console.log('✅ Steuersatz geladen:', invoiceSettings.vat_rate + '%');
         }
+        if (invoiceSettings.default_tax_included !== undefined) {
+          setTaxIncluded(invoiceSettings.default_tax_included);
+          console.log('✅ Steuereinstellung geladen: Preise sind', invoiceSettings.default_tax_included ? 'Brutto' : 'Netto');
+          console.log('🔍 Debug: taxIncluded =', invoiceSettings.default_tax_included, 'vatRate =', invoiceSettings.vat_rate);
+        }
+      }
 
       // Lade Preisstaffeln
       const { data: tiersData } = await supabase
@@ -298,7 +298,7 @@ export default function CheckoutPage() {
           console.error('Error parsing saved discount:', error);
         }
       }
-      
+
       setIsLoading(false);
     };
 
@@ -401,13 +401,13 @@ export default function CheckoutPage() {
 
   const calculateTotal = () => {
     const subtotalBrutto = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    
+
     const selectedOption = getDeliveryOptions().find((opt) => opt.type === selectedDelivery);
     const shippingBrutto = selectedOption ? selectedOption.price : 43.5;
-    
+
     if (taxIncluded) {
       // Bruttopreise: Steuer ist bereits in den Preisen enthalten
-      
+
       // 1. Rabatt vom Bruttopreis abziehen (wie gefordert)
       let discountAmountBrutto = 0;
       if (appliedDiscount) {
@@ -417,25 +417,25 @@ export default function CheckoutPage() {
           discountAmountBrutto = Math.round(appliedDiscount.discount_value * 100) / 100;
         }
       }
-      
+
       // 2. Zwischensumme brutto nach Rabatt
       const subtotalAfterDiscountBrutto = Math.max(0, subtotalBrutto - discountAmountBrutto);
-      
+
       // 3. Netto-Beträge berechnen (mit korrekter Rundung)
       const subtotalAfterDiscountNetto = Math.round((subtotalAfterDiscountBrutto / (1 + vatRate / 100)) * 100) / 100;
       const shippingNetto = Math.round((shippingBrutto / (1 + vatRate / 100)) * 100) / 100;
-      
+
       // 4. Gesamt-Netto-Betrag (Waren + Versand)
       const totalNetto = Math.round((subtotalAfterDiscountNetto + shippingNetto) * 100) / 100;
-      
+
       // 5. MwSt.-Betrag berechnen (Waren + Versand)
       const taxAmountWaren = Math.round((subtotalAfterDiscountNetto * vatRate / 100) * 100) / 100;
       const taxAmountVersand = Math.round((shippingNetto * vatRate / 100) * 100) / 100;
       const taxAmountGesamt = Math.round((taxAmountWaren + taxAmountVersand) * 100) / 100;
-      
+
       // 6. Gesamt-Brutto-Betrag
       const totalBrutto = Math.round((subtotalAfterDiscountBrutto + shippingBrutto) * 100) / 100;
-      
+
       console.log('🧮 Brutto-Berechnung (Transparent):', {
         subtotalBrutto,
         discountAmountBrutto,
@@ -450,20 +450,20 @@ export default function CheckoutPage() {
         totalBrutto,
         vatRate
       });
-      
-      return { 
+
+      return {
         subtotal: subtotalBrutto, // Zwischensumme vor Rabatt (brutto)
         subtotalAfterDiscount: subtotalAfterDiscountBrutto, // Zwischensumme nach Rabatt (brutto)
         subtotalNetto: subtotalAfterDiscountNetto, // Netto-Zwischensumme nach Rabatt
-        discountAmount: discountAmountBrutto, 
-        shipping: shippingBrutto, 
+        discountAmount: discountAmountBrutto,
+        shipping: shippingBrutto,
         shippingNetto: shippingNetto,
-        netAmount: totalNetto, 
+        netAmount: totalNetto,
         taxAmount: taxAmountGesamt, // MwSt. gesamt (Waren + Versand)
         taxAmountWaren: taxAmountWaren, // MwSt. nur Waren
         taxAmountVersand: taxAmountVersand, // MwSt. nur Versand
         taxRate: vatRate,
-        total: totalBrutto 
+        total: totalBrutto
       };
     } else {
       // Nettopreise: Steuer muss hinzugerechnet werden
@@ -475,25 +475,25 @@ export default function CheckoutPage() {
           discountAmount = Math.round(appliedDiscount.discount_value * 100) / 100;
         }
       }
-      
+
       const subtotalAfterDiscount = Math.max(0, subtotalBrutto - discountAmount);
       const netAmount = Math.max(0, subtotalBrutto - discountAmount + shippingBrutto);
       const taxAmount = Math.round((netAmount * vatRate / 100) * 100) / 100;
       const total = Math.round((netAmount + taxAmount) * 100) / 100;
-      
-      return { 
-        subtotal: subtotalBrutto, 
+
+      return {
+        subtotal: subtotalBrutto,
         subtotalAfterDiscount: subtotalAfterDiscount,
         subtotalNetto: subtotalAfterDiscount,
-        discountAmount, 
-        shipping: shippingBrutto, 
+        discountAmount,
+        shipping: shippingBrutto,
         shippingNetto: shippingBrutto,
-        netAmount, 
-        taxAmount, 
+        netAmount,
+        taxAmount,
         taxAmountWaren: Math.round((subtotalAfterDiscount * vatRate / 100) * 100) / 100,
         taxAmountVersand: Math.round((shippingBrutto * vatRate / 100) * 100) / 100,
         taxRate: vatRate,
-        total 
+        total
       };
     }
   };
@@ -506,7 +506,7 @@ export default function CheckoutPage() {
 
   const validateStep1 = () => {
     const newErrors: { [key: string]: string } = {};
-    
+
     // Prüfe Mindestbestellmenge
     if (!validateMinimumOrderQuantity()) {
       const unit = cartItems.length > 0 ? cartItems[0].unit : 'SRM';
@@ -708,7 +708,7 @@ export default function CheckoutPage() {
 
   const handleSubmitOrder = async () => {
     if (!validateStep3()) return;
-    
+
     // Prüfe Mindestbestellmenge vor dem Absenden
     if (!validateMinimumOrderQuantity()) {
       setErrors({ minQuantity: `Die Mindestbestellmenge beträgt ${minOrderQuantity} SRM. Ihre aktuelle Bestellung enthält nur ${cartItems.reduce((total, item) => total + item.quantity, 0)} SRM.` });
@@ -721,7 +721,7 @@ export default function CheckoutPage() {
     // 🛡️ KRITISCHE BESTANDSPRÜFUNG - Verhindert Überverkäufe
     try {
       console.log('🔍 Führe Bestandsprüfung durch...');
-      
+
       // Hole aktuelle Bestände für alle Warenkorb-Artikel
       // IDs aus dem Warenkorb robust in Zahlen konvertieren, um Typ-Mismatches zu vermeiden
       const productIds = cartItems
@@ -740,11 +740,11 @@ export default function CheckoutPage() {
 
       // Prüfe jeden Artikel auf verfügbaren Bestand
       const stockIssues: string[] = [];
-      
+
       for (const cartItem of cartItems) {
         // Vergleiche IDs robust als String, da DB-IDs numerisch sein können
         const product = currentProducts?.find((p: ProductStock) => p.id?.toString() === cartItem.id?.toString());
-        
+
         if (!product) {
           stockIssues.push(`Produkt "${cartItem.name}" wurde nicht gefunden.`);
           continue;
@@ -764,7 +764,7 @@ export default function CheckoutPage() {
         }
 
         let actualStock = product.stock_quantity;
-        
+
         // Berechne aktuellen Bestand aus Bewegungen (genauer)
         if (movements && movements.length > 0) {
           actualStock = movements.reduce((stock: number, movement: InventoryMovement) => {
@@ -790,18 +790,18 @@ export default function CheckoutPage() {
       // Wenn Bestandsprobleme gefunden wurden, Bestellung abbrechen
       if (stockIssues.length > 0) {
         setIsProcessing(false);
-        
+
         const errorMessage = `❌ Bestellung kann nicht abgeschlossen werden:\n\n${stockIssues.join('\n')}\n\nBitte passen Sie Ihren Warenkorb an und versuchen Sie es erneut.`;
-        
+
         alert(errorMessage);
-        
+
         // Zurück zum Warenkorb-Schritt
         setCurrentStep(1);
         return;
       }
 
       console.log('✅ Bestandsprüfung erfolgreich - alle Artikel verfügbar');
-      
+
     } catch (error) {
       console.error('❌ Kritischer Fehler bei der Bestandsprüfung:', error);
       setIsProcessing(false);
@@ -834,7 +834,7 @@ export default function CheckoutPage() {
                 hint: customerError.hint,
                 details: customerError.details
               });
-              
+
               // Fallback: Versuche Bestellung ohne Kundenerstellung
               if (customerError.code === '42501' || customerError.code === '401') {
                 console.warn('RLS-Policy-Problem erkannt, verwende Fallback-Mechanismus');
@@ -867,7 +867,7 @@ export default function CheckoutPage() {
                 hint: customerError.hint,
                 details: customerError.details
               });
-              
+
               // Fallback: Versuche Bestellung ohne Kundenerstellung
               if (customerError.code === '42501' || customerError.code === '401') {
                 console.warn('RLS-Policy-Problem erkannt, verwende Fallback-Mechanismus');
@@ -887,7 +887,7 @@ export default function CheckoutPage() {
       // Kundenerstellung
       customerId = await handleCustomerCreation();
       const finalCustomerId = customerId === undefined ? null : customerId;
-      
+
       console.log('Final Customer ID:', finalCustomerId, 'Type:', typeof finalCustomerId);
 
       // Create order with improved order number format
@@ -898,12 +898,21 @@ export default function CheckoutPage() {
         const randomNum = Math.floor(Math.random() * 9000) + 1000; // 4-digit random number
         return `BK-${year}${month}-${randomNum}`;
       };
-      
+
       const orderNumber = generateOrderNumber();
       const { subtotal, discountAmount, shipping, netAmount, taxAmount, taxRate, total } = calculateTotal();
 
+      // Generate a UUID for the order to avoid needing to .select() it back, complying with RLS
+      const orderId = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+          var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+
       // Validiere und bereinige alle Datenfelder für UUID-Kompatibilität
       const orderData = {
+        id: orderId,
         order_number: orderNumber || `BK-${Date.now()}`,
         customer_id: finalCustomerId,
         status: 'pending',
@@ -936,7 +945,7 @@ export default function CheckoutPage() {
         delivery_method: selectedDelivery || 'standard',
         delivery_type: selectedDelivery || 'standard',
       };
-      
+
       console.log('🔍 Order Data Validation:');
       console.log('customer_id:', finalCustomerId, 'Type:', typeof finalCustomerId);
       console.log('discount_code_id:', orderData.discount_code_id, 'Type:', typeof orderData.discount_code_id);
@@ -948,22 +957,16 @@ export default function CheckoutPage() {
       console.log('Bestelldaten:', orderData);
 
       // Erstelle Bestellung
-      const { data: order, error: orderError } = await supabase
+      const { error: orderError } = await supabase
         .from('orders')
-        .insert(orderData)
-        .select()
-        .single();
+        .insert(orderData);
 
       if (orderError) {
         console.error('Bestellfehler:', orderError);
         throw new Error(`Fehler beim Erstellen der Bestellung: ${orderError.message}`);
       }
 
-      if (!order || !order.id) {
-        console.error('Bestellung konnte nicht erstellt werden: order ist null oder hat keine ID');
-        throw new Error('Bestellung konnte nicht erstellt werden: Keine gültige Bestell-ID erhalten');
-      }
-
+      const order = { id: orderId };
       console.log('Bestellung erstellt:', order);
 
       // Lade Steuereinstellungen für tax_included
@@ -971,13 +974,13 @@ export default function CheckoutPage() {
         .from('invoice_settings')
         .select('default_tax_included')
         .single();
-      
+
       const defaultTaxIncluded = taxSettings?.default_tax_included || false;
-      
+
       // Erstelle oder hole Kundennummer für diese Email
       const customerNumber = await getOrCreateCustomerNumber(deliveryData.email);
       console.log('📋 Customer number for order:', customerNumber);
-      
+
       // Aktualisiere Order mit Kundennummer (falls Spalte existiert)
       try {
         await supabase
@@ -987,7 +990,7 @@ export default function CheckoutPage() {
       } catch (error) {
         console.log('ℹ️ customer_number column not available yet:', error);
       }
-      
+
       // Add order items
       const orderItems = cartItems.map((item) => ({
         order_id: order.id,
@@ -1035,7 +1038,8 @@ export default function CheckoutPage() {
       }
 
       // FRÜHE WEITERLEITUNG - Benutzer sieht sofort die Bestätigungsseite
-      router.push(`/bestellbestaetigung?order=${orderNumber}`);
+      // Include the unguessable orderId (UUID) as a secure token in the URL for the confirmation page
+      router.push(`/bestellbestaetigung?order=${orderNumber}&token=${orderId}`);
 
       // Alle weiteren Operationen im Hintergrund (non-blocking)
       Promise.allSettled([
@@ -1060,7 +1064,7 @@ export default function CheckoutPage() {
             // Update product stock
             const { error: stockError } = await supabase
               .from('products')
-              .update({ 
+              .update({
                 stock_quantity: newStock,
                 updated_at: new Date().toISOString()
               })
@@ -1089,7 +1093,7 @@ export default function CheckoutPage() {
             }
 
             console.log(`Lagerbestand aktualisiert für ${item.name}: ${currentStock} → ${newStock}`);
-            
+
             // Check for low stock and send alert if necessary
             try {
               const response = await fetch('/api/stock-monitoring/check', {
@@ -1099,7 +1103,7 @@ export default function CheckoutPage() {
                 },
                 body: JSON.stringify({ productId: item.id }),
               });
-              
+
               if (!response.ok) {
                 console.warn(`Stock-Monitoring-API-Aufruf fehlgeschlagen für ${item.name}`);
               }
@@ -1126,18 +1130,18 @@ export default function CheckoutPage() {
 
             const emailItems = (dbOrderItems && Array.isArray(dbOrderItems) && dbOrderItems.length > 0)
               ? dbOrderItems.map((item: any) => ({
-                  name: item.product_name,
-                  quantity: item.quantity,
-                  // Unit-Preis aus DB bevorzugen
-                  unit_price: typeof item.unit_price === 'string' ? parseFloat(item.unit_price) : item.unit_price,
-                  unit: 'SRM',
-                }))
+                name: item.product_name,
+                quantity: item.quantity,
+                // Unit-Preis aus DB bevorzugen
+                unit_price: typeof item.unit_price === 'string' ? parseFloat(item.unit_price) : item.unit_price,
+                unit: 'SRM',
+              }))
               : cartItems.map((item) => ({
-                  name: item.name,
-                  quantity: item.quantity,
-                  unit_price: item.price,
-                  unit: item.unit || 'SRM',
-                }));
+                name: item.name,
+                quantity: item.quantity,
+                unit_price: item.price,
+                unit: item.unit || 'SRM',
+              }));
 
             const emailData = {
               orderData: {
@@ -1190,7 +1194,7 @@ export default function CheckoutPage() {
             try {
               await supabase
                 .from('discount_codes')
-                .update({ 
+                .update({
                   usage_count: (appliedDiscount.usage_count || 0) + 1,
                   updated_at: new Date().toISOString()
                 })
@@ -1228,7 +1232,7 @@ export default function CheckoutPage() {
         (async () => {
           try {
             console.log('🎯 Starte Loyalty-Punktevergabe für Bestellung:', orderNumber);
-            
+
             const orderItems = cartItems.map(item => ({
               product_name: item.name,
               product_category: 'Brennholz', // Kann später erweitert werden
@@ -1282,7 +1286,7 @@ export default function CheckoutPage() {
   const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const isCartEmpty = cartItems.length === 0 && !isLoading;
   const isBelowMinimumQuantity = totalQuantity < minOrderQuantity && !isLoading;
-  
+
   // Zeige Loading-Spinner während des Ladens
   if (isLoading) {
     return (
@@ -1299,15 +1303,15 @@ export default function CheckoutPage() {
       </div>
     );
   }
-  
+
   if (isCartEmpty || isBelowMinimumQuantity) {
     return (
       <div className="min-h-screen bg-white py-12">
         <div className="max-w-4xl mx-auto px-4">
           <div className="text-center">
             <div className="w-16 h-16 flex items-center justify-center bg-red-100 rounded-full mx-auto mb-6">
-          <i className="ri-shopping-cart-line text-2xl text-[#C04020]"></i>
-        </div>
+              <i className="ri-shopping-cart-line text-2xl text-[#C04020]"></i>
+            </div>
             {isCartEmpty ? (
               <>
                 <h1 className="text-3xl font-bold text-gray-900 mb-4">Ihr Warenkorb ist leer</h1>
@@ -1332,8 +1336,8 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8" style={{overflow: 'hidden', paddingTop: '120px'}}>
-      <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12" style={{overflow: 'hidden'}}>
+    <div className="min-h-screen bg-gray-50 py-8" style={{ overflow: 'hidden', paddingTop: '120px' }}>
+      <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12" style={{ overflow: 'hidden' }}>
         {/* Fortschrittsanzeige */}
         <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6 md:mb-8">
           {/* Mobile Progress Indicator */}
@@ -1350,21 +1354,20 @@ export default function CheckoutPage() {
               </div>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
+              <div
                 className="bg-[#C04020] h-2 rounded-full transition-all duration-300"
                 style={{ width: `${(currentStep / 4) * 100}%` }}
               ></div>
             </div>
           </div>
-          
+
           {/* Desktop Progress Indicator */}
           <div className="hidden md:flex items-center justify-between">
             {[1, 2, 3, 4].map((step, index) => (
               <div key={step} className="flex items-center">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-                    currentStep >= step ? 'bg-[#C04020] text-white' : 'bg-gray-200 text-gray-500'
-                  }`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${currentStep >= step ? 'bg-[#C04020] text-white' : 'bg-gray-200 text-gray-500'
+                    }`}
                 >
                   {step}
                 </div>
@@ -1462,9 +1465,8 @@ export default function CheckoutPage() {
                         type="text"
                         value={deliveryData.firstName}
                         onChange={(e) => setDeliveryData({ ...deliveryData, firstName: e.target.value })}
-                        className={`w-full px-4 py-3 md:py-3 border rounded-lg text-base md:text-sm ${
-                          errors.firstName ? 'border-red-500' : 'border-gray-300'
-                        } focus:ring-2 focus:ring-[#C04020] focus:border-transparent`}
+                        className={`w-full px-4 py-3 md:py-3 border rounded-lg text-base md:text-sm ${errors.firstName ? 'border-red-500' : 'border-gray-300'
+                          } focus:ring-2 focus:ring-[#C04020] focus:border-transparent`}
                       />
                       {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
                     </div>
@@ -1477,9 +1479,8 @@ export default function CheckoutPage() {
                         type="text"
                         value={deliveryData.lastName}
                         onChange={(e) => setDeliveryData({ ...deliveryData, lastName: e.target.value })}
-                        className={`w-full px-4 py-3 border rounded-lg text-sm ${
-                          errors.lastName ? 'border-red-500' : 'border-gray-300'
-                        } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
+                        className={`w-full px-4 py-3 border rounded-lg text-sm ${errors.lastName ? 'border-red-500' : 'border-gray-300'
+                          } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
                       />
                       {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
                     </div>
@@ -1492,9 +1493,8 @@ export default function CheckoutPage() {
                         type="email"
                         value={deliveryData.email}
                         onChange={(e) => setDeliveryData({ ...deliveryData, email: e.target.value })}
-                        className={`w-full px-4 py-3 border rounded-lg text-sm ${
-                          errors.email ? 'border-red-500' : 'border-gray-300'
-                        } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
+                        className={`w-full px-4 py-3 border rounded-lg text-sm ${errors.email ? 'border-red-500' : 'border-gray-300'
+                          } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
                       />
                       {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                     </div>
@@ -1507,9 +1507,8 @@ export default function CheckoutPage() {
                         type="tel"
                         value={deliveryData.phone}
                         onChange={(e) => setDeliveryData({ ...deliveryData, phone: e.target.value })}
-                        className={`w-full px-4 py-3 border rounded-lg text-sm ${
-                          errors.phone ? 'border-red-500' : 'border-gray-300'
-                        } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
+                        className={`w-full px-4 py-3 border rounded-lg text-sm ${errors.phone ? 'border-red-500' : 'border-gray-300'
+                          } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
                       />
                       {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                     </div>
@@ -1535,9 +1534,8 @@ export default function CheckoutPage() {
                         type="text"
                         value={deliveryData.street}
                         onChange={(e) => setDeliveryData({ ...deliveryData, street: e.target.value })}
-                        className={`w-full px-4 py-3 border rounded-lg text-sm ${
-                          errors.street ? 'border-red-500' : 'border-gray-300'
-                        } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
+                        className={`w-full px-4 py-3 border rounded-lg text-sm ${errors.street ? 'border-red-500' : 'border-gray-300'
+                          } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
                       />
                       {errors.street && <p className="text-red-500 text-sm mt-1">{errors.street}</p>}
                     </div>
@@ -1550,9 +1548,8 @@ export default function CheckoutPage() {
                         type="text"
                         value={deliveryData.houseNumber}
                         onChange={(e) => setDeliveryData({ ...deliveryData, houseNumber: e.target.value })}
-                        className={`w-full px-4 py-3 border rounded-lg text-sm ${
-                          errors.houseNumber ? 'border-red-500' : 'border-gray-300'
-                        } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
+                        className={`w-full px-4 py-3 border rounded-lg text-sm ${errors.houseNumber ? 'border-red-500' : 'border-gray-300'
+                          } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
                       />
                       {errors.houseNumber && <p className="text-red-500 text-sm mt-1">{errors.houseNumber}</p>}
                     </div>
@@ -1565,9 +1562,8 @@ export default function CheckoutPage() {
                         type="text"
                         value={deliveryData.postalCode}
                         onChange={(e) => setDeliveryData({ ...deliveryData, postalCode: e.target.value })}
-                        className={`w-full px-4 py-3 border rounded-lg text-sm ${
-                          errors.postalCode ? 'border-red-500' : 'border-gray-300'
-                        } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
+                        className={`w-full px-4 py-3 border rounded-lg text-sm ${errors.postalCode ? 'border-red-500' : 'border-gray-300'
+                          } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
                       />
                       {errors.postalCode && <p className="text-red-500 text-sm mt-1">{errors.postalCode}</p>}
                     </div>
@@ -1580,9 +1576,8 @@ export default function CheckoutPage() {
                         type="text"
                         value={deliveryData.city}
                         onChange={(e) => setDeliveryData({ ...deliveryData, city: e.target.value })}
-                        className={`w-full px-4 py-3 border rounded-lg text-sm ${
-                          errors.city ? 'border-red-500' : 'border-gray-300'
-                        } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
+                        className={`w-full px-4 py-3 border rounded-lg text-sm ${errors.city ? 'border-red-500' : 'border-gray-300'
+                          } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
                       />
                       {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
                     </div>
@@ -1694,9 +1689,8 @@ export default function CheckoutPage() {
                           type="text"
                           value={billingData.firstName}
                           onChange={(e) => setBillingData({ ...billingData, firstName: e.target.value })}
-                          className={`w-full px-4 py-3 border rounded-lg text-sm ${
-                            errors.billingFirstName ? 'border-red-500' : 'border-gray-300'
-                          } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
+                          className={`w-full px-4 py-3 border rounded-lg text-sm ${errors.billingFirstName ? 'border-red-500' : 'border-gray-300'
+                            } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
                         />
                         {errors.billingFirstName && <p className="text-red-500 text-sm mt-1">{errors.billingFirstName}</p>}
                       </div>
@@ -1709,9 +1703,8 @@ export default function CheckoutPage() {
                           type="text"
                           value={billingData.lastName}
                           onChange={(e) => setBillingData({ ...billingData, lastName: e.target.value })}
-                          className={`w-full px-4 py-3 border rounded-lg text-sm ${
-                            errors.billingLastName ? 'border-red-500' : 'border-gray-300'
-                          } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
+                          className={`w-full px-4 py-3 border rounded-lg text-sm ${errors.billingLastName ? 'border-red-500' : 'border-gray-300'
+                            } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
                         />
                         {errors.billingLastName && <p className="text-red-500 text-sm mt-1">{errors.billingLastName}</p>}
                       </div>
@@ -1724,9 +1717,8 @@ export default function CheckoutPage() {
                           type="text"
                           value={billingData.street}
                           onChange={(e) => setBillingData({ ...billingData, street: e.target.value })}
-                          className={`w-full px-4 py-3 border rounded-lg text-sm ${
-                            errors.billingStreet ? 'border-red-500' : 'border-gray-300'
-                          } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
+                          className={`w-full px-4 py-3 border rounded-lg text-sm ${errors.billingStreet ? 'border-red-500' : 'border-gray-300'
+                            } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
                         />
                         {errors.billingStreet && <p className="text-red-500 text-sm mt-1">{errors.billingStreet}</p>}
                       </div>
@@ -1739,9 +1731,8 @@ export default function CheckoutPage() {
                           type="text"
                           value={billingData.houseNumber}
                           onChange={(e) => setBillingData({ ...billingData, houseNumber: e.target.value })}
-                          className={`w-full px-4 py-3 border rounded-lg text-sm ${
-                            errors.billingHouseNumber ? 'border-red-500' : 'border-gray-300'
-                          } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
+                          className={`w-full px-4 py-3 border rounded-lg text-sm ${errors.billingHouseNumber ? 'border-red-500' : 'border-gray-300'
+                            } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
                         />
                         {errors.billingHouseNumber && <p className="text-red-500 text-sm mt-1">{errors.billingHouseNumber}</p>}
                       </div>
@@ -1754,9 +1745,8 @@ export default function CheckoutPage() {
                           type="text"
                           value={billingData.postalCode}
                           onChange={(e) => setBillingData({ ...billingData, postalCode: e.target.value })}
-                          className={`w-full px-4 py-3 border rounded-lg text-sm ${
-                            errors.billingPostalCode ? 'border-red-500' : 'border-gray-300'
-                          } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
+                          className={`w-full px-4 py-3 border rounded-lg text-sm ${errors.billingPostalCode ? 'border-red-500' : 'border-gray-300'
+                            } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
                         />
                         {errors.billingPostalCode && <p className="text-red-500 text-sm mt-1">{errors.billingPostalCode}</p>}
                       </div>
@@ -1769,9 +1759,8 @@ export default function CheckoutPage() {
                           type="text"
                           value={billingData.city}
                           onChange={(e) => setBillingData({ ...billingData, city: e.target.value })}
-                          className={`w-full px-4 py-3 border rounded-lg text-sm ${
-                            errors.billingCity ? 'border-red-500' : 'border-gray-300'
-                          } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
+                          className={`w-full px-4 py-3 border rounded-lg text-sm ${errors.billingCity ? 'border-red-500' : 'border-gray-300'
+                            } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
                         />
                         {errors.billingCity && <p className="text-red-500 text-sm mt-1">{errors.billingCity}</p>}
                       </div>
@@ -1807,9 +1796,8 @@ export default function CheckoutPage() {
                       {getDeliveryOptions().map((option) => (
                         <label key={option.type} className="block cursor-pointer">
                           <div
-                            className={`border-2 rounded-lg p-3 sm:p-4 transition-colors ${
-                              selectedDelivery === option.type ? 'border-amber-600 bg-amber-50' : 'border-gray-200 hover:border-gray-300'
-                            }`}
+                            className={`border-2 rounded-lg p-3 sm:p-4 transition-colors ${selectedDelivery === option.type ? 'border-amber-600 bg-amber-50' : 'border-gray-200 hover:border-gray-300'
+                              }`}
                           >
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                               <div className="flex items-start sm:items-center">
@@ -1850,9 +1838,8 @@ export default function CheckoutPage() {
                       ].map((method) => (
                         <label key={method.id} className="block cursor-pointer">
                           <div
-                            className={`border-2 rounded-lg p-3 sm:p-4 transition-colors ${
-                              paymentMethod === method.id ? 'border-amber-600 bg-amber-50' : 'border-gray-200 hover:border-gray-300'
-                            }`}
+                            className={`border-2 rounded-lg p-3 sm:p-4 transition-colors ${paymentMethod === method.id ? 'border-amber-600 bg-amber-50' : 'border-gray-200 hover:border-gray-300'
+                              }`}
                           >
                             <div className="flex items-start sm:items-center">
                               <input
@@ -1885,9 +1872,8 @@ export default function CheckoutPage() {
                           type="checkbox"
                           checked={agbAccepted}
                           onChange={(e) => setAgbAccepted(e.target.checked)}
-                          className={`mr-3 mt-0.5 w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500 flex-shrink-0 ${
-                            errors.agb ? 'border-red-500' : ''
-                          }`}
+                          className={`mr-3 mt-0.5 w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500 flex-shrink-0 ${errors.agb ? 'border-red-500' : ''
+                            }`}
                         />
                         <span className="text-xs sm:text-sm text-gray-700 leading-relaxed">
                           Ich akzeptiere die{' '}
@@ -1908,9 +1894,8 @@ export default function CheckoutPage() {
                           type="checkbox"
                           checked={privacyAccepted}
                           onChange={(e) => setPrivacyAccepted(e.target.checked)}
-                          className={`mr-3 mt-0.5 w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500 flex-shrink-0 ${
-                            errors.privacy ? 'border-red-500' : ''
-                          }`}
+                          className={`mr-3 mt-0.5 w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500 flex-shrink-0 ${errors.privacy ? 'border-red-500' : ''
+                            }`}
                         />
                         <span className="text-xs sm:text-sm text-gray-700 leading-relaxed">
                           Ich habe die{' '}
@@ -1997,13 +1982,13 @@ export default function CheckoutPage() {
                     <button
                       onClick={handlePrevStep}
                       className="w-full sm:w-auto bg-gray-200 text-gray-800 px-6 md:px-8 py-3 md:py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium text-center order-2 sm:order-1"
-              >
-                Zurück
-              </button>
-              <button
-                 onClick={handleSubmitOrder}
-                 disabled={isProcessing}
-                 className="w-full sm:w-auto bg-[#C04020] text-white px-6 md:px-8 py-4 md:py-3 rounded-lg hover:bg-[#A03318] transition-colors disabled:opacity-50 font-medium text-center order-1 sm:order-2 text-sm md:text-base"
+                    >
+                      Zurück
+                    </button>
+                    <button
+                      onClick={handleSubmitOrder}
+                      disabled={isProcessing}
+                      className="w-full sm:w-auto bg-[#C04020] text-white px-6 md:px-8 py-4 md:py-3 rounded-lg hover:bg-[#A03318] transition-colors disabled:opacity-50 font-medium text-center order-1 sm:order-2 text-sm md:text-base"
                     >
                       {isProcessing ? 'Verarbeitung...' : (
                         <>
@@ -2043,7 +2028,7 @@ export default function CheckoutPage() {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Expandable Items List */}
                 <details className="mt-3">
                   <summary className="text-sm text-amber-600 cursor-pointer hover:text-amber-700">
@@ -2052,12 +2037,12 @@ export default function CheckoutPage() {
                   <div className="mt-3 space-y-3">
                     {cartItems.map((item) => (
                       <div key={`mobile-${item.id}`} className="flex items-center space-x-3 text-sm">
-                        <div className="w-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0" style={{height: '80px'}}>
+                        <div className="w-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0" style={{ height: '80px' }}>
                           <img
                             src={getImageUrl(item.image_url)}
                             alt={item.name}
                             className="w-full object-cover object-center"
-                            style={{height: '80px'}}
+                            style={{ height: '80px' }}
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.src = '/api/placeholder?width=80&height=80';
@@ -2083,12 +2068,12 @@ export default function CheckoutPage() {
               <div className="hidden md:block space-y-4 mb-6">
                 {cartItems.map((item) => (
                   <div key={`desktop-${item.id}`} className="flex items-center space-x-4">
-                    <div className="w-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0" style={{height: '96px'}}>
+                    <div className="w-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0" style={{ height: '96px' }}>
                       <img
                         src={getImageUrl(item.image_url)}
                         alt={item.name}
                         className="w-full object-cover object-center hover:scale-105 transition-transform duration-300"
-                        style={{height: '96px'}}
+                        style={{ height: '96px' }}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.src = '/api/placeholder?width=96&height=96';
@@ -2116,7 +2101,7 @@ export default function CheckoutPage() {
                     {calculateTotal().subtotal.toFixed(2)} €
                   </span>
                 </div>
-                
+
                 {/* Rabatt */}
                 {appliedDiscount && (
                   <div className="flex justify-between text-sm mb-2">
@@ -2124,7 +2109,7 @@ export default function CheckoutPage() {
                     <span className="text-green-600 whitespace-nowrap">–{calculateTotal().discountAmount.toFixed(2)} €</span>
                   </div>
                 )}
-                
+
                 {/* Versandkosten */}
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-gray-600">Versandkosten</span>
@@ -2132,7 +2117,7 @@ export default function CheckoutPage() {
                     {calculateTotal().shipping.toFixed(2)} €
                   </span>
                 </div>
-                
+
                 {/* MwSt. Hinweis */}
                 <div className="flex justify-between text-xs text-gray-500 mb-4">
                   <span>inkl. {calculateTotal().taxRate}% MwSt.</span>

@@ -14,13 +14,13 @@ interface CityHeroSectionProps {
   cityData?: any;
 }
 
-export default function CityHeroSection({ 
-  cityName, 
-  heroTitle, 
-  heroSubtitle, 
+export default function CityHeroSection({
+  cityName,
+  heroTitle,
+  heroSubtitle,
   heroImageUrl,
   postalCodes,
-  cityData 
+  cityData
 }: CityHeroSectionProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
@@ -41,18 +41,18 @@ export default function CityHeroSection({
       const loadHeroImage = async () => {
         try {
           const response = await fetch('/api/content?page=home&section=hero&type=background_image');
-          
+
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           }
-          
+
           const contentType = response.headers.get('content-type');
           if (!contentType || !contentType.includes('application/json')) {
             throw new Error(`Expected JSON, got ${contentType}`);
           }
-          
+
           const data = await response.json();
-          
+
           if (data && typeof data === 'object' && data.content) {
             setFinalHeroImageUrl(data.content);
           } else {
@@ -86,7 +86,7 @@ export default function CityHeroSection({
 
   return (
     <>
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#1A1A1A] via-[#2A2A2A] to-[#1A1A1A]">
+      <section className="relative overflow-hidden bg-[#1A1A1A]" style={{ minHeight: '500px' }}>
         {/* Hintergrundbild */}
         <div className="absolute inset-0 z-0">
           {finalHeroImageUrl && (
@@ -97,11 +97,14 @@ export default function CityHeroSection({
               loading="eager"
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/70"></div>
+          {/* Overlay für Lesbarkeit */}
+          <div className="absolute inset-0 bg-black/50"></div>
+          {/* Unterer Verlauf für sanften Übergang */}
+          <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#F5F0E0] to-transparent"></div>
         </div>
 
         {/* Hauptinhalt */}
-        <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl text-center">
+        <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl text-center w-full pt-28 pb-16">
           <div className={`transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             {/* Haupttitel */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white mb-4 sm:mb-6 md:mb-8 leading-tight tracking-tight" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>

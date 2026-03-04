@@ -5,18 +5,10 @@ import { useParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import CityHeroSection from '@/components/CityHeroSection';
 import USPSection from '@/components/USPSection';
-import QualifierSection from '@/components/QualifierSection';
-import LocalServiceSection from '@/components/LocalServiceSection';
+import LocalFAQSection from '@/components/LocalFAQSection';
 import RegionSection from '@/components/RegionSection';
 import SEOMetadata from '@/components/SEOMetadata';
-import LocalLandmarksSection from '@/components/LocalLandmarksSection';
-// ServiceAreaDetailsSection entfernt
-import LocalFAQSection from '@/components/LocalFAQSection';
-import LocalPartnershipsSection from '@/components/LocalPartnershipsSection';
-// ExtendedDeliveryInfoSection entfernt
-// GoogleMapsIntegrationSection entfernt
-import LocalKeywordOptimizer from '@/components/LocalKeywordOptimizer';
-import LocalContentEnhancer from '@/components/LocalContentEnhancer';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 interface CityPage {
@@ -33,7 +25,6 @@ interface CityPage {
   content_section_1_subtitle?: string;
   content_section_1_title?: string;
   content_section_1_content?: string;
-  content_section_1_image_url?: string;
   content_section_2_title?: string;
   content_section_2_content?: string;
   content_section_2_image_url?: string;
@@ -46,95 +37,15 @@ interface CityPage {
   contact_phone?: string;
   contact_email?: string;
   contact_address?: string;
-  delivery_info?: string;
-  special_offers?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
-  // Lokale Service-Sektion Felder
-  local_service_title?: string;
-  local_service_subtitle?: string;
-  local_service_description?: string;
-  local_service_areas?: Array<{
-    name: string;
-    category: string;
-    title: string;
-    description: string;
-    badge: string;
-    cta_text?: string;
-  }>;
-  local_service_expertise_title?: string;
-  local_service_expertise_description?: string;
-  local_service_expertise_benefits?: Array<{
-    title: string;
-    description: string;
-  }>;
-  local_service_rooted_title?: string;
-  local_service_rooted_description?: string;
-
-  // Testimonial Section Felder
-  testimonial_badge_text?: string;
-  testimonial_title?: string;
-  testimonial_description?: string;
-  testimonial_image_url?: string;
-  testimonial_reviews?: Array<{
-    name: string;
-    initials?: string;
-    role?: string;
-    order_info?: string;
-    rating?: number;
-    text?: string;
-    date?: string;
-    verified?: boolean;
-  }>;
-  testimonial_cta_text?: string;
-  // Local SEO Fields - Editierbare Inhalte
   local_faqs?: {
     id: string;
     question: string;
     answer: string;
     category: 'delivery' | 'quality' | 'pricing' | 'local' | 'service';
   }[];
-  service_areas_details?: {
-    id: string;
-    name: string;
-    description: string;
-    postal_codes: string[];
-    delivery_time: string;
-  }[];
-  // Erweiterte Lieferinformationen (Datenbank-Formate)
-  // Editierbare Texte für die Lieferservice-Sektion
-  extended_delivery_info_title?: string;
-  extended_delivery_info_description?: string;
-  delivery_zones?: Array<{
-    name: string;
-    areas: string[];
-    delivery_time: string;
-    fee: number;
-    min_order?: number;
-    special_notes?: string;
-    postal_codes: string[];
-  }>;
-  delivery_routes?: Array<{
-    name: string;
-    days: string[];
-    time_slots: string[];
-    zones: string[];
-  }>;
-  seasonal_events?: Array<{
-    title: string;
-    description: string;
-    season: 'spring' | 'summer' | 'autumn' | 'winter';
-    month: number;
-    type: 'festival' | 'market' | 'tradition' | 'weather' | 'special_offer';
-    icon: string;
-    relevant_products?: string[];
-    special_offer?: {
-      discount: number;
-      description: string;
-      valid_until: string;
-    };
-  }>;
 }
 
 // Supabase Client
@@ -155,30 +66,21 @@ export default function CityLandingPage() {
     async function fetchCityPage() {
       try {
         setLoading(true);
-        
 
-        // Versuche zuerst Supabase-Daten zu laden
-        try {
-          const { data, error } = await supabase
-            .from('city_pages')
-            .select('*')
-            .eq('slug', slug)
-            .eq('is_active', true);
+        const { data, error } = await supabase
+          .from('city_pages')
+          .select('*')
+          .eq('slug', slug)
+          .eq('is_active', true);
 
-          if (!error && data && data.length > 0) {
-            setCityPage(data[0]);
-          } else {
-            console.log('No city page found for slug:', slug);
-            notFound();
-            return;
-          }
-        } catch (supabaseError) {
-          console.log('Supabase error:', supabaseError);
+        if (!error && data && data.length > 0) {
+          setCityPage(data[0]);
+        } else {
           notFound();
           return;
         }
 
-        // Versuche Local Business-Daten zu laden (optional)
+        // Local Business-Daten (optional)
         try {
           const { data: businessData, error: businessError } = await supabase
             .from('local_business_settings')
@@ -188,109 +90,75 @@ export default function CityLandingPage() {
           if (!businessError && businessData) {
             setLocalBusinessData(businessData);
           }
-        } catch (businessError) {
-          console.log('Business data not available:', businessError);
+        } catch (e) {
+          // silently fail — not critical
         }
-
       } catch (err) {
-        console.error('Unexpected error:', err);
-        setError('Unerwarteter Fehler beim Laden der Seite');
+        console.error('Error loading city page:', err);
+        setError('Seite konnte nicht geladen werden.');
       } finally {
         setLoading(false);
       }
     }
 
-    if (slug) {
-      fetchCityPage();
-    }
+    if (slug) fetchCityPage();
   }, [slug]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-pergament flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-700 text-lg">Seite wird geladen...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Seite wird geladen...</p>
         </div>
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-pergament flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-wood-800 mb-4">Fehler</h1>
-          <p className="text-gray-600">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!cityPage) {
+  if (error || !cityPage) {
     notFound();
     return null;
   }
 
-  // Strukturierte Daten für Local SEO
+  // Structured Data für Local SEO
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": localBusinessData?.business_name ? 
-      `${localBusinessData.business_name} ${cityPage.city_name}` : 
-      `Brennholz König ${cityPage.city_name}`,
-    "description": localBusinessData?.business_description || cityPage.meta_description,
-    "url": localBusinessData?.website_url || `https://brennholz-koenig.de/${cityPage.slug}`,
+    "name": `Brennholz König ${cityPage.city_name}`,
+    "description": cityPage.meta_description,
+    "url": `https://brennholz-koenig.de/${cityPage.slug}`,
     "telephone": localBusinessData?.phone || cityPage.contact_phone,
     "email": localBusinessData?.email || cityPage.contact_email,
-    "address": localBusinessData?.address ? {
+    "address": {
       "@type": "PostalAddress",
-      "streetAddress": localBusinessData.address,
       "addressLocality": cityPage.city_name,
       "addressCountry": "DE"
-    } : undefined,
-    "geo": localBusinessData?.latitude && localBusinessData?.longitude ? {
-      "@type": "GeoCoordinates",
-      "latitude": localBusinessData.latitude,
-      "longitude": localBusinessData.longitude
-    } : undefined,
-    "areaServed": localBusinessData?.service_areas ? 
-      localBusinessData.service_areas.map((area: string) => ({
-        "@type": "City",
-        "name": area
-      })) : 
-      (cityPage.service_areas || [cityPage.city_name]).map(area => ({
-        "@type": "City",
-        "name": area
-      })),
+    },
+    "areaServed": {
+      "@type": "City",
+      "name": cityPage.city_name
+    },
     "serviceType": "Brennholz Lieferung",
-    "priceRange": localBusinessData?.price_range || "€€",
-    "openingHours": localBusinessData?.opening_hours || "Mo-Fr 08:00-18:00, Sa 09:00-16:00",
-    "paymentAccepted": localBusinessData?.payment_methods || ["Cash", "Credit Card", "Bank Transfer"],
-    "currenciesAccepted": localBusinessData?.accepted_currencies || "EUR",
-    "sameAs": localBusinessData?.google_maps_url ? [localBusinessData.google_maps_url] : undefined
+    "priceRange": "€€",
   };
 
   return (
     <>
-      <SEOMetadata 
+      <SEOMetadata
         pageSlug={`/${cityPage.slug}`}
         defaultTitle={cityPage.meta_title}
         defaultDescription={cityPage.meta_description}
         keywords={cityPage.local_keywords}
       />
 
-      {/* Strukturierte Daten für Local SEO */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(structuredData)
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
 
       <div className="min-h-dvh bg-pergament w-full">
-        {/* Hero Section mit stadtspezifischen Inhalten */}
-        <CityHeroSection 
+        {/* 1. HERO — Stadt-Hintergrundbild + CTA */}
+        <CityHeroSection
           cityName={cityPage.city_name}
           heroTitle={cityPage.hero_title}
           heroSubtitle={cityPage.hero_subtitle}
@@ -299,136 +167,212 @@ export default function CityLandingPage() {
           cityData={cityPage}
         />
 
-        {/* Erster Content-Bereich: Lokale Expertise mit Stadtbild */}
-        <LocalKeywordOptimizer
-          cityName={cityPage.city_name}
-          postalCodes={cityPage.postal_codes}
-          serviceAreas={cityPage.service_areas}
-          localKeywords={cityPage.local_keywords}
-        >
-          <section className="py-20 px-4 bg-gradient-to-b from-pergament to-wood-50">
+        {/* 2. CONTENT SECTION 1 — Lokale Expertise mit Stadtbild */}
+        <section className="pt-20 pb-16 md:pt-28 md:pb-24 px-4 bg-gradient-to-b from-pergament to-white">
           <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-primary-700 mb-6">
-                  {cityPage.content_section_1_main_title?.replace('{city_name}', cityPage.city_name) || `Lokale Expertise für ${cityPage.city_name}`}
-                </h2>
-                <p className="text-xl text-wood-800 max-w-3xl mx-auto">
-                  {cityPage.content_section_1_subtitle?.replace('{city_name}', cityPage.city_name) || `Entdecken Sie die Tradition und Qualität unseres regionalen Brennholzes in ${cityPage.city_name} und Umgebung`}
-                </p>
-              </div>
-            
-            {/* Content Section 1 mit Stadtbild — immer sichtbar mit sinnvollen Defaults */}
-            <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
-              {/* Text Links */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 lg:p-12">
-                <h3 className="text-2xl md:text-3xl font-bold text-primary-700 mb-6">
-                  <LocalContentEnhancer
-                    cityName={cityPage.city_name}
-                    postalCodes={cityPage.postal_codes}
-                    serviceAreas={cityPage.service_areas}
-                    originalContent={cityPage.content_section_1_title || `Brennholz-Service für ${cityPage.city_name}`}
-                    contentType="title"
-                  />
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-5xl font-bold text-primary-700 mb-4">
+                {cityPage.content_section_1_main_title || `Ihr Brennholz-Partner in ${cityPage.city_name}`}
+              </h2>
+              <p className="text-lg md:text-xl text-wood-800 max-w-3xl mx-auto">
+                {cityPage.content_section_1_subtitle || `Regional, nachhaltig und ofenfertig – Brennholz König liefert Premium-Brennholz nach ${cityPage.city_name}`}
+              </p>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-10 items-start">
+              {/* Text */}
+              <div className="bg-white rounded-2xl shadow-lg p-8 lg:p-10">
+                <h3 className="text-2xl md:text-3xl font-bold text-primary-700 mb-5">
+                  {cityPage.content_section_1_title || `Brennholz-Service für ${cityPage.city_name}`}
                 </h3>
-                <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
-                  <LocalContentEnhancer
-                    cityName={cityPage.city_name}
-                    postalCodes={cityPage.postal_codes}
-                    serviceAreas={cityPage.service_areas}
-                    originalContent={
-                      (cityPage.content_section_1_content || `Wir liefern regionales Brennholz in ${cityPage.city_name} und Umgebung. Kurze Wege, faire Preise und nachhaltige Qualität aus der Region.`)
-                    }
-                    contentType="text"
-                  />
-                </div>
+                <div
+                  className="prose prose-lg max-w-none text-gray-700 leading-relaxed"
+                  dangerouslySetInnerHTML={{
+                    __html: cityPage.content_section_1_content ||
+                      `<p>Wir liefern regionales Premium-Brennholz nach ${cityPage.city_name} und Umgebung. Kurze Wege, faire Preise und nachhaltige Qualität aus heimischen Wäldern.</p>`
+                  }}
+                />
+                <Link
+                  href="/shop"
+                  className="inline-flex items-center mt-6 px-6 py-3 bg-[#C04020] hover:bg-[#A03318] text-white font-bold rounded-xl shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+                >
+                  🔥 Jetzt Brennholz bestellen
+                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </Link>
               </div>
-              
-              {/* Stadtbild Rechts */}
+
+              {/* Stadtbild */}
               <div className="relative">
                 {cityPage.city_image_url ? (
-                  <div className="relative overflow-hidden rounded-2xl shadow-lg">
-                    <img 
-                      src={cityPage.city_image_url} 
-                      alt={`Stadtansicht von ${cityPage.city_name}`}
-                      className="w-full h-96 object-cover"
+                  <div className="relative overflow-hidden rounded-2xl shadow-xl" style={{ height: '400px', maxHeight: '400px' }}>
+                    <img
+                      src={cityPage.city_image_url}
+                      alt={`${cityPage.city_name} – Brennholz König Liefergebiet`}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
                     <div className="absolute bottom-4 left-4 text-white">
-                      <p className="text-lg font-semibold">{cityPage.city_name}</p>
-                      <p className="text-sm opacity-90">Ihre Region für Premium-Brennholz</p>
+                      <p className="text-lg font-bold">{cityPage.city_name}</p>
+                      <p className="text-sm opacity-90">Ihr regionales Brennholz direkt geliefert</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-gradient-to-br from-wood-100 to-wood-200 rounded-2xl shadow-lg h-96 flex items-center justify-center">
-                    <div className="text-center text-gray-600">
-                      <svg className="w-16 h-16 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="bg-gradient-to-br from-wood-100 to-wood-200 rounded-2xl shadow-lg flex items-center justify-center" style={{ height: '400px' }}>
+                    <div className="text-center text-gray-500">
+                      <svg className="w-16 h-16 mx-auto mb-3" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
                       </svg>
                       <p className="font-semibold">{cityPage.city_name}</p>
-                      <p className="text-sm">Stadtbild wird geladen...</p>
                     </div>
                   </div>
                 )}
               </div>
             </div>
-            
           </div>
         </section>
-        </LocalKeywordOptimizer>
 
-        {/* USP Section */}
+        {/* 3. USP Section — Brennholzkönig Vorteile */}
         <USPSection />
 
-        {/* Local Service Section */}
-        <LocalServiceSection 
+        {/* 4. CONTENT SECTION 2 — Regionale Qualität */}
+        {(cityPage.content_section_2_title || cityPage.content_section_2_content) && (
+          <section className="py-16 md:py-24 px-4 bg-white">
+            <div className="max-w-7xl mx-auto">
+              <div className="grid lg:grid-cols-2 gap-10 items-center">
+                {/* Bild links */}
+                {cityPage.content_section_2_image_url ? (
+                  <div className="relative overflow-hidden rounded-2xl shadow-xl">
+                    <img
+                      src={cityPage.content_section_2_image_url}
+                      alt={`${cityPage.content_section_2_title} – ${cityPage.city_name}`}
+                      className="w-full h-[360px] object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-10 flex items-center justify-center h-[360px]">
+                    <div className="text-center">
+                      <div className="w-20 h-20 bg-[#C04020] rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                      </div>
+                      <p className="text-xl font-bold text-gray-800">Geprüfte Qualität</p>
+                      <p className="text-gray-600 mt-1">6–8% Restfeuchte garantiert</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Text rechts */}
+                <div>
+                  <h2 className="text-3xl md:text-4xl font-bold text-primary-700 mb-5">
+                    {cityPage.content_section_2_title || 'Regionale Qualität'}
+                  </h2>
+                  <div
+                    className="prose prose-lg max-w-none text-gray-700 leading-relaxed"
+                    dangerouslySetInnerHTML={{
+                      __html: cityPage.content_section_2_content || ''
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* 5. CONTENT SECTION 3 — Nachhaltigkeit */}
+        {(cityPage.content_section_3_title || cityPage.content_section_3_content) && (
+          <section className="py-16 md:py-24 px-4 bg-gradient-to-b from-white to-pergament">
+            <div className="max-w-7xl mx-auto">
+              <div className="grid lg:grid-cols-2 gap-10 items-center">
+                {/* Text links */}
+                <div>
+                  <h2 className="text-3xl md:text-4xl font-bold text-primary-700 mb-5">
+                    {cityPage.content_section_3_title || 'Nachhaltigkeit'}
+                  </h2>
+                  <div
+                    className="prose prose-lg max-w-none text-gray-700 leading-relaxed"
+                    dangerouslySetInnerHTML={{
+                      __html: cityPage.content_section_3_content || ''
+                    }}
+                  />
+                </div>
+
+                {/* Bild rechts */}
+                {cityPage.content_section_3_image_url ? (
+                  <div className="relative overflow-hidden rounded-2xl shadow-xl">
+                    <img
+                      src={cityPage.content_section_3_image_url}
+                      alt={`Nachhaltiges Brennholz für ${cityPage.city_name}`}
+                      className="w-full h-[360px] object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-10 flex items-center justify-center h-[360px]">
+                    <div className="text-center">
+                      <div className="w-20 h-20 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
+                        </svg>
+                      </div>
+                      <p className="text-xl font-bold text-gray-800">Nachhaltige Forstwirtschaft</p>
+                      <p className="text-gray-600 mt-1">100% aus heimischen Wäldern</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* 6. SHOP CTA — Prominent bestellen */}
+        <section className="py-16 md:py-20 px-4 bg-[#1A1A1A] text-white">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl md:text-5xl font-black mb-6" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+              Brennholz für <span className="text-[#D4A520]">{cityPage.city_name}</span> bestellen
+            </h2>
+            <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+              Premium Buche & Eiche – ofenfertig, trocken und direkt zu Ihnen nach {cityPage.city_name} geliefert.
+              27 Jahre Erfahrung, über 10.000 zufriedene Kunden.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/shop"
+                className="inline-flex items-center justify-center px-8 py-4 bg-[#C04020] hover:bg-[#A03318] text-white text-lg font-bold rounded-xl shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+              >
+                🔥 Zum Online-Shop
+                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
+              <a
+                href="tel:+4917671085234"
+                className="inline-flex items-center justify-center px-8 py-4 border-2 border-[#D4A520] text-[#D4A520] hover:bg-[#D4A520] hover:text-[#1A1A1A] text-lg font-bold rounded-xl transition-all duration-300"
+              >
+                📞 Jetzt anrufen
+              </a>
+            </div>
+            <div className="flex flex-wrap justify-center gap-6 mt-8 text-sm text-gray-400">
+              <span>✓ 6–8% Restfeuchte</span>
+              <span>✓ Ofenfertig gespalten</span>
+              <span>✓ Regional aus Hessen</span>
+            </div>
+          </div>
+        </section>
+
+        {/* 7. FAQs — Stadtspezifisch */}
+        <LocalFAQSection
           cityName={cityPage.city_name}
-          title={cityPage.local_service_title}
-          subtitle={cityPage.local_service_subtitle}
-          description={cityPage.local_service_description}
-          serviceAreas={cityPage.local_service_areas}
-          expertiseTitle={cityPage.local_service_expertise_title}
-          expertiseDescription={cityPage.local_service_expertise_description}
-          expertiseBenefits={cityPage.local_service_expertise_benefits}
-          localRootedTitle={cityPage.local_service_rooted_title}
-          localRootedDescription={cityPage.local_service_rooted_description}
-          expertiseImageUrl={cityPage.expertise_image_url}
-          compact={true}
-          maxAreas={3}
-        />
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        {/* Servicegebiete Details entfernt */}
-
-        {/* ExtendedDeliveryInfoSection entfernt */}
-
-        
-
-        <LocalFAQSection 
-          cityName={cityPage.city_name} 
           customFAQs={cityPage.local_faqs}
           maxItems={5}
           compact={true}
         />
 
-        
-
-        
-
-        
-
-        {/* GoogleMapsIntegrationSection entfernt */}
-        
-        
-
+        {/* 8. Region Section — Liefergebiet-Übersicht */}
         <RegionSection />
       </div>
     </>

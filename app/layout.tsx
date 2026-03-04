@@ -107,7 +107,7 @@ export default function RootLayout({
       <head>
         <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet" />
       </head>
-      <body className={`${inter.className} min-h-dvh bg-pergament text-tiefschwarz antialiased`}>
+      <body suppressHydrationWarning className={`${inter.className} min-h-dvh bg-pergament text-tiefschwarz antialiased`}>
         <QueryProvider>
           <DataPreloader />
           <CookieBanner />

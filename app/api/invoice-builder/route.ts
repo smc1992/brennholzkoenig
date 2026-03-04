@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 function getAdminSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
+
   if (serviceRoleKey) {
     return createClient(supabaseUrl, serviceRoleKey, {
       auth: {
@@ -16,7 +16,7 @@ function getAdminSupabaseClient() {
       }
     });
   }
-  
+
   return supabase; // Fallback auf normalen Client
 }
 
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
           companySettings,
           templateId
         );
-        
+
         return new NextResponse(htmlPreview, {
           headers: {
             'Content-Type': 'text/html; charset=utf-8',
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
           companySettings,
           'order-confirmation'
         );
-        
+
         return new NextResponse(orderConfirmationHtml, {
           headers: {
             'Content-Type': 'text/html; charset=utf-8',
@@ -127,13 +127,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { 
-      invoiceId, 
-      orderId, 
+    const {
+      invoiceId,
+      orderId,
       templateId = 'default',
       action = 'generate',
       options = {},
-      saveToFile = true 
+      saveToFile = true
     } = body;
 
     if (!invoiceId && !orderId) {
@@ -147,6 +147,8 @@ export async function POST(request: NextRequest) {
     const { invoiceData, companySettings } = await loadInvoiceData(invoiceId, orderId);
     const invoiceBuilder = getInvoiceBuilder();
     invoiceBuilder.clearTemplateCache();
+
+    const adminSupabase = getAdminSupabaseClient();
 
     // PDF generieren basierend auf Action
     const actualTemplateId = action === 'order-confirmation' ? 'order-confirmation' : templateId;
@@ -167,8 +169,8 @@ export async function POST(request: NextRequest) {
       // PDF in Supabase Storage speichern
       const fileName = `invoice-${invoiceData.invoice_number}-${Date.now()}.pdf`;
       const filePath = `invoices/${fileName}`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
+
+      const { data: uploadData, error: uploadError } = await adminSupabase.storage
         .from('documents')
         .upload(filePath, pdfBuffer, {
           contentType: 'application/pdf',
@@ -178,41 +180,41 @@ export async function POST(request: NextRequest) {
       if (uploadError) {
         console.error('PDF upload error:', uploadError);
       }
-      
+
       let createdInvoiceId = invoiceId;
-      
+
       // Wenn orderId aber keine invoiceId, erstelle neue Rechnung in Datenbank
       if (orderId && !invoiceId) {
         console.log('📦 Creating new invoice for order:', orderId);
-        
+
         // Versuche zuerst mit ID, dann mit order_number
-        let { data: orderData, error: orderError } = await supabase
+        let { data: orderData, error: orderError } = await adminSupabase
           .from('orders')
           .select('*')
           .eq('id', orderId)
           .single();
-          
+
         console.log('📋 Order by ID result:', orderData, 'Error:', orderError);
-        
+
         // Falls nicht gefunden, versuche mit order_number
         if (!orderData && orderError) {
           console.log('🔄 Trying to find order by order_number:', orderId);
-          const { data: orderByNumber, error: orderByNumberError } = await supabase
+          const { data: orderByNumber, error: orderByNumberError } = await adminSupabase
             .from('orders')
             .select('*')
             .eq('order_number', orderId)
             .single();
-          
+
           console.log('📋 Order by number result:', orderByNumber, 'Error:', orderByNumberError);
           orderData = orderByNumber;
         }
-          
+
         if (orderData) {
           // Generiere neue Rechnungsnummer
           const newInvoiceNumber = await generateInvoiceNumber();
-          
+
           console.log('💾 Creating invoice with number:', newInvoiceNumber);
-          
+
           const invoiceData = {
             invoice_number: newInvoiceNumber,
             order_id: orderData.id,  // Verwende die echte order.id, nicht orderId
@@ -226,19 +228,17 @@ export async function POST(request: NextRequest) {
             payment_terms: 'Zahlbar innerhalb von 14 Tagen.',
             pdf_path: uploadData?.path || filePath
           };
-          
+
           console.log('📄 Invoice data to insert:', invoiceData);
-          
-          // Verwende Admin-Client für Rechnungserstellung (umgeht RLS)
-          const adminSupabase = getAdminSupabaseClient();
+
           console.log('🔑 Using admin client for invoice creation...');
-          
+
           const { data: newInvoice, error: createError } = await adminSupabase
             .from('invoices')
             .insert(invoiceData)
             .select()
             .single();
-            
+
           if (createError) {
             console.error('❌ Invoice creation error:', createError);
             console.error('❌ Error details:', JSON.stringify(createError, null, 2));
@@ -253,7 +253,7 @@ export async function POST(request: NextRequest) {
         }
       } else if (invoiceId && uploadData?.path) {
         // PDF-Pfad in bestehende Rechnung speichern
-        await supabase
+        await adminSupabase
           .from('invoices')
           .update({ pdf_path: filePath })
           .eq('id', invoiceId);
@@ -287,7 +287,7 @@ export async function POST(request: NextRequest) {
     console.error('Invoice builder POST error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to generate PDF',
         details: errorMessage,
         stack: error instanceof Error ? error.stack : undefined
@@ -313,10 +313,10 @@ function generateCustomerNumber(email: string): string {
 // Funktion zum Abrufen oder Erstellen einer Kundennummer
 async function getOrCreateCustomerNumber(email: string): Promise<string> {
   if (!email) return 'KD-GAST';
-  
+
   try {
     console.log('🔍 Fetching customer for email:', email);
-    
+
     // Prüfe ob Kunde bereits existiert und hole customer_number falls vorhanden
     const { data: existingCustomer, error: fetchError } = await supabase
       .from('customers')
@@ -337,7 +337,7 @@ async function getOrCreateCustomerNumber(email: string): Promise<string> {
     // Generiere neue Kundennummer
     const newCustomerNumber = generateCustomerNumber(email);
     console.log('🔢 Generated new customer number:', newCustomerNumber);
-    
+
     if (existingCustomer) {
       // Kunde existiert, aber hat keine customer_number - aktualisiere ihn
       try {
@@ -345,7 +345,7 @@ async function getOrCreateCustomerNumber(email: string): Promise<string> {
           .from('customers')
           .update({ customer_number: newCustomerNumber })
           .eq('id', existingCustomer.id);
-        
+
         if (updateError) {
           console.log('ℹ️ Could not update customer_number (column may not exist):', updateError.message);
         } else {
@@ -365,7 +365,7 @@ async function getOrCreateCustomerNumber(email: string): Promise<string> {
             first_name: '',
             last_name: ''
           });
-        
+
         if (insertError) {
           console.log('ℹ️ Could not insert with customer_number (column may not exist):', insertError.message);
           // Fallback: Erstelle Kunde ohne customer_number
@@ -383,7 +383,7 @@ async function getOrCreateCustomerNumber(email: string): Promise<string> {
         console.log('ℹ️ customer_number column not available for insert');
       }
     }
-    
+
     return newCustomerNumber;
   } catch (error) {
     console.error('💥 Error in getOrCreateCustomerNumber:', error);
@@ -398,65 +398,87 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
   let invoice = null;
   let order = null;
 
+  const isUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+  let clientToUse = supabase;
+  if ((invoiceId && isUUID(invoiceId)) || (orderId && isUUID(orderId))) {
+    clientToUse = getAdminSupabaseClient();
+  } else {
+    try {
+      const { cookies } = require('next/headers');
+      const { createServerClient } = require('@supabase/ssr');
+      const cookieStore = cookies();
+      clientToUse = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: { get(name: string) { return cookieStore.get(name)?.value; } }
+        }
+      );
+    } catch (e) {
+      console.warn('Could not create auth client, using anon', e);
+    }
+  }
+
   // Lade Rechnung falls vorhanden
   if (invoiceId) {
     // Versuche zuerst mit ID als String, dann als Nummer
     let invoiceResult = null;
     let invoiceError = null;
-    
+
     // Versuche immer zuerst mit invoice_number (numerisch oder alphanumerisch)
-      const { data, error } = await supabase
-        .from('invoices')
-        .select(`
+    const { data, error } = await clientToUse
+      .from('invoices')
+      .select(`
           *,
           orders(*),
           customers(*)
         `)
-        .eq('invoice_number', invoiceId)
-        .limit(1);
-      invoiceResult = data?.[0] || null;
-      invoiceError = error;
-      
-      console.log(`Searching for invoice_number: ${invoiceId}, found: ${invoiceResult ? 'yes' : 'no'}`);
-     
-     // Falls nicht gefunden und es ist eine UUID, versuche mit ID
-      if (!invoiceResult && !invoiceError && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(invoiceId)) {
-        const { data, error } = await supabase
-          .from('invoices')
-          .select(`
+      .eq('invoice_number', invoiceId)
+      .limit(1);
+    invoiceResult = data?.[0] || null;
+    invoiceError = error;
+
+    console.log(`Searching for invoice_number: ${invoiceId}, found: ${invoiceResult ? 'yes' : 'no'}`);
+
+    // Falls nicht gefunden und es ist eine UUID, versuche mit ID
+    if (!invoiceResult && !invoiceError && isUUID(invoiceId)) {
+      const { data, error } = await clientToUse
+        .from('invoices')
+        .select(`
             *,
             orders(*),
             customers(*)
           `)
-          .eq('id', invoiceId)
-          .limit(1);
-        invoiceResult = data?.[0] || null;
-        invoiceError = error;
-      }
-    
+        .eq('id', invoiceId)
+        .limit(1);
+      invoiceResult = data?.[0] || null;
+      invoiceError = error;
+    }
+
     if (invoiceError) {
-       console.error('Invoice loading error:', invoiceError);
-       throw new Error(`Invoice not found: ${invoiceError.message}`);
-     }
-     
-     if (!invoiceResult) {
-       throw new Error(`Invoice with ID ${invoiceId} not found`);
-     }
-     
-     invoice = invoiceResult;
-     order = invoiceResult?.orders;
-     
-     console.log('Loaded invoice:', invoice?.invoice_number);
-     console.log('Linked order:', order?.order_number || 'none');
-     console.log('Customer data:', invoice?.customers?.email || 'none');
+      console.error('Invoice loading error:', invoiceError);
+      throw new Error(`Invoice not found: ${invoiceError.message}`);
+    }
+
+    if (!invoiceResult) {
+      throw new Error(`Invoice with ID ${invoiceId} not found`);
+    }
+
+    invoice = invoiceResult;
+    order = invoiceResult?.orders;
+
+    console.log('Loaded invoice:', invoice?.invoice_number);
+    console.log('Linked order:', order?.order_number || 'none');
+    console.log('Customer data:', invoice?.customers?.email || 'none');
   }
-  
+
   // Lade Bestellung falls keine Rechnung vorhanden
   if (!invoice && orderId) {
     console.log('🔍 Searching for order with ID/Number:', orderId);
-    
+
     // Versuche zuerst mit ID
-    let { data: orderResult, error: orderError } = await supabase
+    let { data: orderResult, error: orderError } = await clientToUse
       .from('orders')
       .select(`
         *,
@@ -464,16 +486,16 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
       `)
       .eq('id', orderId)
       .single();
-    
+
     console.log('📋 Order by ID result:', orderResult, 'Error:', orderError);
-    
+
     // Lade order_items separat für ID-basierte Suche
     if (orderResult) {
-      const { data: items, error: itemsError } = await supabase
+      const { data: items, error: itemsError } = await clientToUse
         .from('order_items')
         .select('*')
         .eq('order_id', orderResult.id);
-        
+
       if (itemsError) {
         console.error('❌ Error loading order items for ID search:', itemsError);
       } else {
@@ -484,11 +506,11 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
         });
       }
     }
-    
+
     // Falls nicht gefunden, versuche mit order_number
     if (!orderResult && orderError) {
       console.log('🔄 Trying to find order by order_number:', orderId);
-      const { data: orderByNumber, error: orderByNumberError } = await supabase
+      const { data: orderByNumber, error: orderByNumberError } = await clientToUse
         .from('orders')
         .select(`
           *,
@@ -496,16 +518,16 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
         `)
         .eq('order_number', orderId)
         .single();
-      
+
       console.log('📋 Order by number result:', orderByNumber, 'Error:', orderByNumberError);
-      
+
       // Lade order_items separat für zuverlässige Datenladung
       if (orderByNumber) {
-        const { data: items, error: itemsError } = await supabase
+        const { data: items, error: itemsError } = await clientToUse
           .from('order_items')
           .select('*')
           .eq('order_id', orderByNumber.id);
-          
+
         if (itemsError) {
           console.error('❌ Error loading order items:', itemsError);
         } else {
@@ -516,10 +538,10 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
           });
         }
       }
-      
+
       orderResult = orderByNumber;
     }
-    
+
     order = orderResult;
   }
 
@@ -528,14 +550,14 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
     // Lade Kunden-Daten separat falls nicht über Join geladen
     let customer = invoice.customers;
     if (!customer && invoice.customer_id) {
-      const { data: customerData } = await supabase
+      const { data: customerData } = await clientToUse
         .from('customers')
         .select('*')
         .eq('id', invoice.customer_id)
         .single();
       customer = customerData;
     }
-    
+
     // Erstelle eine virtuelle Bestellung aus den Rechnungsdaten
     order = {
       id: invoice.order_id || 'virtual-order',
@@ -563,7 +585,7 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
       customers: customer
     };
   }
-  
+
   if (!order) {
     // Fallback: Erstelle Mock-Bestellung für Tests
     if (orderId && (orderId.includes('test') || orderId.includes('mock'))) {
@@ -605,12 +627,12 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
   }
 
   // Lade Firmeneinstellungen aus invoice_settings
-  const { data: invoiceSettings } = await supabase
+  const { data: invoiceSettings } = await clientToUse
     .from('invoice_settings')
     .select('*')
     .limit(1)
     .single();
-  
+
   console.log('📋 Loaded invoice settings for PDF:', invoiceSettings);
 
   const companySettings: CompanySettings = {
@@ -688,14 +710,14 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
     const processedItems = order.order_items.map((item: any, index: number) => {
       const unitPrice = parseFloat(item.unit_price);
       const totalPrice = parseFloat(item.total_price);
-      
+
       console.log(`📦 Order item ${index + 1}:`, {
         product_name: item.product_name,
         quantity: item.quantity,
         unit_price: unitPrice,
         total_price: totalPrice
       });
-      
+
       return {
         description: item.product_name,
         quantity: item.quantity,
@@ -706,7 +728,7 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
         tax_included: true
       };
     });
-    
+
     // Füge Lieferkosten als separate Position hinzu falls vorhanden
     // Lieferkosten sind in der Bestellung bereits als Brutto gespeichert
     if (order.delivery_price && parseFloat(order.delivery_price) > 0) {
@@ -720,24 +742,24 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
         category: 'Lieferung',
         tax_included: true  // Lieferkosten sind Brutto
       };
-      
+
       console.log('🚚 Adding delivery item:', deliveryItem);
       processedItems.push(deliveryItem);
     }
-    
+
     // Füge Gutschein als separate Position hinzu falls vorhanden
     if (order.discount_amount && parseFloat(order.discount_amount) > 0) {
       let discountDescription = 'Gutschein/Rabatt';
-      
+
       // Hole Gutschein-Details falls discount_code_id vorhanden
       if (order.discount_code_id) {
         try {
-          const { data: discountCode } = await supabase
+          const { data: discountCode } = await clientToUse
             .from('discount_codes')
             .select('code, description')
             .eq('id', order.discount_code_id)
             .single();
-          
+
           if (discountCode) {
             discountDescription = `Gutschein (${discountCode.code})`;
             if (discountCode.description) {
@@ -748,7 +770,7 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
           console.warn('Could not fetch discount code details:', error);
         }
       }
-      
+
       const discountItem = {
         description: discountDescription,
         quantity: 1,
@@ -758,11 +780,11 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
         category: 'Rabatt',
         tax_included: companySettings.default_tax_included || false
       };
-      
+
       console.log('🎫 Adding discount item:', discountItem);
       processedItems.push(discountItem);
     }
-    
+
     // Verwende die Bestellwerte direkt - diese sind bereits korrekt berechnet
     // order.total_amount = Gesamtbetrag (Brutto) inkl. Lieferung und abzgl. Rabatt
     // order.subtotal_amount = Warenwert (Brutto) ohne Lieferung
@@ -770,10 +792,10 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
     const orderSubtotal = parseFloat(order.subtotal_amount || '0');
     const orderDelivery = parseFloat(order.delivery_price || '0');
     const orderDiscount = parseFloat(order.discount_amount || '0');
-    
+
     // Berechne Summe aus Items für Validierung
     const itemsSum = processedItems.reduce((sum: number, item: any) => sum + item.total_price, 0);
-    
+
     console.log('💰 Order values:', {
       order_total: orderTotal,
       order_subtotal: orderSubtotal,
@@ -782,22 +804,22 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
       items_sum: itemsSum,
       items_count: processedItems.length
     });
-    
+
     // Verwende order.total_amount als Gesamtbetrag (Brutto)
     const finalTotal = orderTotal;
-    
+
     // Berechne Netto aus Brutto (MwSt. herausrechnen)
     const taxRate = companySettings.vat_rate || 19;
     const finalSubtotal = finalTotal / (1 + taxRate / 100);
     const finalTax = finalTotal - finalSubtotal;
-    
+
     console.log('💰 Final invoice totals:', {
       total: finalTotal,
       subtotal: finalSubtotal,
       tax: finalTax,
       tax_rate: taxRate
     });
-    
+
     // Aktualisiere invoiceData mit den Bestellwerten
     invoiceData.items = processedItems;
     invoiceData.subtotal_amount = finalSubtotal;
@@ -806,7 +828,7 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
   } else {
     // Fallback: Wenn keine order_items vorhanden sind, verwende order.total_amount
     console.log('⚠️ No order items found, using order totals as fallback');
-    
+
     // Berechne Steuer aus total_amount falls nicht vorhanden
     if (invoiceData.total_amount > 0 && invoiceData.tax_amount === 0) {
       const taxRate = companySettings.vat_rate || 19;
@@ -848,15 +870,15 @@ function calculateTax(subtotal: string, taxRate: number): string {
 async function generateInvoiceNumber(): Promise<string> {
   try {
     console.log('🔢 Generating invoice number...');
-    
+
     // Lade Rechnungseinstellungen
     let { data: settings, error: settingsError } = await supabase
       .from('app_settings')
       .select('setting_key, setting_value')
       .in('setting_key', ['invoice_prefix', 'invoice_counter']);
-    
+
     console.log('⚙️ Settings loaded:', settings, 'Error:', settingsError);
-    
+
     // Stelle sicher, dass die Einstellungen existieren
     if (!settings || settings.length === 0) {
       console.log('🔧 Creating default invoice settings...');
@@ -866,22 +888,22 @@ async function generateInvoiceNumber(): Promise<string> {
           { setting_key: 'invoice_prefix', setting_value: 'RG-' },
           { setting_key: 'invoice_counter', setting_value: '10000' }
         ]);
-      
+
       // Lade die Einstellungen erneut
       const { data: newSettings } = await supabase
         .from('app_settings')
         .select('setting_key, setting_value')
         .in('setting_key', ['invoice_prefix', 'invoice_counter']);
-      
+
       settings = newSettings;
       console.log('🔄 Reloaded settings:', settings);
     }
-    
+
     const prefix = getSettingValue(settings, 'invoice_prefix', 'RG-');
     let counter = parseInt(getSettingValue(settings, 'invoice_counter', '10000'));
-    
+
     console.log('📋 Using prefix:', prefix, 'Starting counter:', counter);
-    
+
     // Finde die höchste existierende Rechnungsnummer mit diesem Präfix
     const { data: existingInvoices } = await supabase
       .from('invoices')
@@ -889,9 +911,9 @@ async function generateInvoiceNumber(): Promise<string> {
       .like('invoice_number', `${prefix}%`)
       .order('invoice_number', { ascending: false })
       .limit(1);
-    
+
     console.log('📄 Existing invoices with prefix:', existingInvoices);
-    
+
     if (existingInvoices && existingInvoices.length > 0) {
       const lastNumber = existingInvoices[0].invoice_number;
       const numberPart = lastNumber.replace(prefix, '');
@@ -900,10 +922,10 @@ async function generateInvoiceNumber(): Promise<string> {
         counter = Math.max(counter, lastCounter + 1);
       }
     }
-    
+
     const newInvoiceNumber = `${prefix}${counter}`;
     console.log('✅ Generated invoice number:', newInvoiceNumber);
-    
+
     // Aktualisiere den Counter in den Einstellungen
     await supabase
       .from('app_settings')
@@ -911,7 +933,7 @@ async function generateInvoiceNumber(): Promise<string> {
         setting_key: 'invoice_counter',
         setting_value: (counter + 1).toString()
       });
-    
+
     return newInvoiceNumber;
   } catch (error) {
     console.error('❌ Error generating invoice number:', error);

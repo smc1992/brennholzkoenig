@@ -1,12 +1,12 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function AccountPage() {
+function AccountForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
@@ -28,7 +28,7 @@ export default function AccountPage() {
       const verified = searchParams.get('verified');
       const token = searchParams.get('token');
       const type = searchParams.get('type');
-      
+
       // Check if user is already authenticated after email verification
       if (verified === 'true') {
         try {
@@ -44,26 +44,26 @@ export default function AccountPage() {
           console.error('Error checking user:', error);
         }
       }
-      
+
       // Handle direct token verification (fallback)
       if (token && type === 'signup') {
         try {
           setLoading(true);
           setMessage('E-Mail wird verifiziert...');
-          
+
           // Verify the email token
           const { data, error } = await supabase.auth.verifyOtp({
             token_hash: token,
             type: 'signup'
           });
-          
+
           if (error) {
             console.error('Verification error:', error);
             setMessage('E-Mail-Verifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.');
             setLoading(false);
             return;
           }
-          
+
           if (data.user) {
             setMessage('E-Mail erfolgreich verifiziert! Sie werden weitergeleitet...');
             // Redirect to dashboard after successful verification
@@ -78,7 +78,7 @@ export default function AccountPage() {
         }
       }
     };
-    
+
     handleEmailVerification();
   }, [searchParams, router]);
 
@@ -272,13 +272,12 @@ export default function AccountPage() {
 
             {message && (
               <div
-                className={`p-4 rounded-lg text-sm whitespace-pre-line ${
-                  message.includes('Erfolg') || message.includes('erfolgreich')
+                className={`p-4 rounded-lg text-sm whitespace-pre-line ${message.includes('Erfolg') || message.includes('erfolgreich')
                     ? 'bg-green-50 text-green-700 border border-green-200'
                     : message.includes('Demo-Modus') || message.includes('⚠️')
-                    ? 'bg-yellow-50 text-yellow-800 border border-yellow-200'
-                    : 'bg-red-50 text-red-700 border border-red-200'
-                }`}
+                      ? 'bg-yellow-50 text-yellow-800 border border-yellow-200'
+                      : 'bg-red-50 text-red-700 border border-red-200'
+                  }`}
               >
                 {message}
               </div>
@@ -331,5 +330,13 @@ export default function AccountPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Lade...</div>}>
+      <AccountForm />
+    </Suspense>
   );
 }

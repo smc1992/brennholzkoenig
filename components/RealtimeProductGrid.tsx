@@ -10,6 +10,7 @@ import { getCDNUrl } from '../utils/cdn';
 interface Product {
   id: number;
   name: string;
+  slug?: string;
   description: string;
   price: number;
   image_url: string;
@@ -42,20 +43,20 @@ interface RealtimeProductGridProps {
   error?: string | null;
 }
 
-export default function RealtimeProductGrid({ 
-  initialProducts = [], 
-  loadTime = 0, 
-  error: serverError = null 
+export default function RealtimeProductGrid({
+  initialProducts = [],
+  loadTime = 0,
+  error: serverError = null
 }: RealtimeProductGridProps = {}) {
   const { products: realtimeProducts, isLoading, error: realtimeError, refreshProducts, updateProductStockOptimistically } = useRealtimeSync();
-  
+
   // Verwende Server-Side Daten wenn verfügbar, sonst Real-time Daten
   const products = initialProducts.length > 0 ? initialProducts : realtimeProducts;
   const combinedError = serverError || realtimeError;
-  
+
   const [filteredProducts, setFilteredProducts] = useState(products);
   const [selectedCategory, setSelectedCategory] = useState<string>('Alle');
-  
+
   // Debug-Logs
   console.log('RealtimeProductGrid - isLoading:', isLoading, 'products:', products.length, 'error:', combinedError);
 
@@ -96,8 +97,8 @@ export default function RealtimeProductGrid({
   // Get unique categories
   const categories = ['Alle', ...Array.from(new Set(products.map(product => product.category)))];
 
-  const getProductUrl = (productId: number): string => {
-    return productUrlMapping[productId] || `product-${productId}`;
+  const getProductUrl = (product: Product): string => {
+    return product.slug || productUrlMapping[product.id] || `produkt-${product.id}`;
   };
 
   const formatPrice = (price: number): string => {
@@ -126,7 +127,7 @@ export default function RealtimeProductGrid({
         <div className="text-center">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             <p>Fehler beim Laden der Produkte: {combinedError}</p>
-            <button 
+            <button
               onClick={refreshProducts}
               className="mt-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
             >
@@ -145,7 +146,7 @@ export default function RealtimeProductGrid({
         <h2 className="text-2xl font-bold text-gray-900">Unsere Produkte</h2>
         <div className="flex items-center space-x-4">
 
-          <button 
+          <button
             onClick={refreshProducts}
             className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded transition-colors"
             title="Produkte aktualisieren"
@@ -157,7 +158,7 @@ export default function RealtimeProductGrid({
       </div>
 
       {/* Category Filter */}
-      <CategoryFilter 
+      <CategoryFilter
         selectedCategory={selectedCategory}
         onCategoryChange={setSelectedCategory}
         showAllOption={true}
@@ -194,19 +195,19 @@ export default function RealtimeProductGrid({
       ) : (
         <div className="product-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredProducts.map((product) => {
-            const productUrl = productUrlMapping[product.id] || `product-${product.id}`;
+            const productUrl = product.slug || productUrlMapping[product.id] || `produkt-${product.id}`;
             const imageUrl = getCDNUrl(product.image_url);
-            
+
             return (
               <div key={product.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
                 {/* Product Image */}
-                <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden rounded-xl" style={{height: '256px'}}>
+                <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden rounded-xl" style={{ height: '256px' }}>
                   <Link href={`/shop/${productUrl}`}>
                     <img
                       src={imageUrl}
                       alt={product.name}
                       className="w-full object-cover object-center hover:scale-105 transition-transform duration-300 cursor-pointer block"
-                      style={{height: '256px'}}
+                      style={{ height: '256px' }}
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         console.log('Image load error for product:', product.name, 'URL:', imageUrl);
@@ -217,7 +218,7 @@ export default function RealtimeProductGrid({
                       }}
                     />
                   </Link>
-                  
+
                   {/* Wishlist Button */}
                   <div className="absolute top-4 right-4">
                     <WishlistButton productId={product.id} />
@@ -242,13 +243,13 @@ export default function RealtimeProductGrid({
                       {product.category}
                     </span>
                   </div>
-                  
+
                   <h3 className="text-xl font-bold text-gray-900 mb-3">
                     <Link href={`/shop/${productUrl}`} className="hover:text-[#C04020] transition-colors">
                       {product.name}
                     </Link>
                   </h3>
-                  
+
                   <p className="text-gray-600 mb-4 line-clamp-3">
                     {product.description}
                   </p>
@@ -278,8 +279,8 @@ export default function RealtimeProductGrid({
                         </div>
                       )}
                     </div>
-                    
-                    <Link 
+
+                    <Link
                       href={`/shop/${productUrl}`}
                       className="bg-[#C04020] text-white px-6 py-2 rounded-lg hover:bg-[#A03318] transition-colors font-medium"
                     >

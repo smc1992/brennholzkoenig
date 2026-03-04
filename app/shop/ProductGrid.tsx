@@ -23,6 +23,7 @@ const productUrlMapping: { [key: number]: string } = {
 interface Product {
   id: number;
   name: string;
+  slug?: string;
   description: string;
   price: number;
   image_url: string;
@@ -52,9 +53,10 @@ export default function ProductGrid() {
   // Fallback-Produkte, falls keine aus der Datenbank geladen werden können
   const fallbackProducts: Product[] = [
     {
-      id: 1,
+      id: 3,
       name: 'Industrieholz Buche Klasse 1',
-      description: 'Hochwertiges Industrieholz aus Buche, Klasse 1',
+      slug: 'industrieholz-buche-klasse-1',
+      description: 'Zertifiziertes Industrieholz der Güteklasse 1',
       price: 115.00,
       image_url: '/images/industrieholz-buche-klasse-1-1756333840437.png',
       category: 'Industrieholz',
@@ -80,9 +82,10 @@ export default function ProductGrid() {
       created_at: new Date().toISOString()
     },
     {
-      id: 3,
-      name: 'Scheitholz Buche 33cm',
-      description: 'Klassisches Scheitholz aus Buche, 33cm Länge',
+      id: 1,
+      name: 'Scheitholz Buche 33 cm',
+      slug: 'scheitholz-buche-33-cm',
+      description: 'Hochwertiges Buchenbrennholz, 33cm Länge',
       price: 99.99,
       image_url: '/images/scheitholz-buche-33-cm-1756681329634.webp',
       category: 'Scheitholz',
@@ -93,9 +96,10 @@ export default function ProductGrid() {
       created_at: new Date().toISOString()
     },
     {
-      id: 4,
-      name: 'Scheitholz Buche 25 cm',
-      description: 'Premium Buchenscheitholz in kompakter 25 cm Länge',
+      id: 2,
+      name: 'Stammholz Buche Premium',
+      slug: 'stammholz-buche-premium',
+      description: 'Ganze Stämme in Premium-Qualität',
       price: 90.00,
       image_url: '/images/scheitholz-buche-25-cm-1756684793745.webp',
       category: 'Scheitholz',
@@ -105,22 +109,11 @@ export default function ProductGrid() {
       in_stock: true,
       created_at: new Date().toISOString()
     },
-    {
-      id: 5,
-      name: 'Scheitholz - Industrieholz Mix 33 cm',
-      description: 'Optimale Mischung aus 70% Industrieholz und 30% Fichte',
-      price: 90.00,
-      image_url: '/images/scheitholz-industrieholz-mix-33-cm-1756683834112.jpg',
-      category: 'Mix-Sortiment',
-      stock_quantity: 38,
-      unit: 'SRM',
-      is_active: true,
-      in_stock: true,
-      created_at: new Date().toISOString()
-    },
+
     {
       id: 6,
       name: 'Scheitholz Fichte 33 cm',
+      slug: 'scheitholz-fichte-33-cm',
       description: 'Hochwertiges Fichtenscheitholz, 33cm Länge',
       price: 75.00,
       image_url: '/images/scheitholz-fichte-33-cm-1756684168933.webp',
@@ -131,10 +124,10 @@ export default function ProductGrid() {
       in_stock: true,
       created_at: new Date().toISOString()
     }
-   ];
+  ];
 
   const { products: realtimeProducts, isLoading: realtimeLoading, error: realtimeError } = useRealtimeSync();
-  
+
   // Debug: Prüfe useRealtimeSync Rückgabe
   console.log('🔍 ProductGrid: useRealtimeSync result:', {
     realtimeProducts,
@@ -152,10 +145,10 @@ export default function ProductGrid() {
   console.log('🔍 ProductGrid: realtimeProducts:', realtimeProducts);
   console.log('🔍 ProductGrid: realtimeProducts.length:', realtimeProducts.length);
   console.log('🔍 ProductGrid: fallbackProducts:', fallbackProducts);
-  
+
   // Verwende Real-time-Produkte oder Fallback
   const products = realtimeProducts.length > 0 ? realtimeProducts : fallbackProducts;
-  
+
   console.log('🔍 ProductGrid: Final products used:', products);
   console.log('🔍 ProductGrid: Product 4 details:', products.find(p => p.id === 4));
 
@@ -174,8 +167,8 @@ export default function ProductGrid() {
 
   const categories = ['Alle', ...Array.from(new Set(products.map(product => product.category)))];
 
-  const getProductUrl = (productId: number): string => {
-    return productUrlMapping[productId] || `product-${productId}`;
+  const getProductUrl = (product: Product): string => {
+    return product.slug || productUrlMapping[product.id] || `produkt-${product.id}`;
   };
 
   const formatPrice = (price: number): string => {
@@ -218,11 +211,10 @@ export default function ProductGrid() {
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                selectedCategory === category
-                  ? 'bg-[#C04020] text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === category
+                ? 'bg-[#C04020] text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               {category}
             </button>
@@ -241,16 +233,16 @@ export default function ProductGrid() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 product-grid">
           {filteredProducts.map((product) => {
-            const productUrl = getProductUrl(product.id);
+            const productUrl = getProductUrl(product);
             const imageUrl = getCDNUrl(product.image_url);
-            
+
             // Debug-Logging für Bildladung
             console.log(`🖼️ ProductGrid: Product ${product.id} (${product.name}):`, {
               original_image_url: product.image_url,
               processed_imageUrl: imageUrl,
               productUrl
             });
-            
+
             return (
               <div key={product.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
                 {/* Product Image */}
@@ -274,7 +266,7 @@ export default function ProductGrid() {
                       }}
                     />
                   </Link>
-                  
+
                   {/* Wishlist Button */}
                   <div className="absolute top-4 right-4">
                     <WishlistButton productId={product.id} />
@@ -299,13 +291,13 @@ export default function ProductGrid() {
                       {product.category}
                     </span>
                   </div>
-                  
+
                   <h3 className="text-xl font-bold text-gray-900 mb-3">
                     <Link href={`/shop/${productUrl}`} className="hover:text-[#C04020] transition-colors">
                       {product.name}
                     </Link>
                   </h3>
-                  
+
                   <p className="text-gray-600 mb-4 line-clamp-3">
                     {product.description}
                   </p>
@@ -330,18 +322,18 @@ export default function ProductGrid() {
                         {formatPrice(product.price)}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {product.unit === 'SRM' ? 'pro Schüttraummeter' : 
-                         product.unit === 'RM' ? 'pro Raummeter' :
-                         product.unit === 'FM' ? 'pro Festmeter' :
-                         product.unit === 'kg' ? 'pro Kilogramm' :
-                         product.unit === 'Stück' ? 'pro Stück' :
-                         product.unit === 'Palette' ? 'pro Palette' :
-                         product.unit === 'm³' ? 'pro Kubikmeter' :
-                         product.unit || 'pro Schüttraummeter'}
+                        {product.unit === 'SRM' ? 'pro Schüttraummeter' :
+                          product.unit === 'RM' ? 'pro Raummeter' :
+                            product.unit === 'FM' ? 'pro Festmeter' :
+                              product.unit === 'kg' ? 'pro Kilogramm' :
+                                product.unit === 'Stück' ? 'pro Stück' :
+                                  product.unit === 'Palette' ? 'pro Palette' :
+                                    product.unit === 'm³' ? 'pro Kubikmeter' :
+                                      product.unit || 'pro Schüttraummeter'}
                       </div>
                     </div>
-                    
-                    <Link 
+
+                    <Link
                       href={`/shop/${productUrl}`}
                       className="bg-[#C04020] text-white px-6 py-2 rounded-lg hover:bg-[#A03318] transition-colors font-medium"
                     >

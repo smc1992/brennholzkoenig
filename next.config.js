@@ -8,17 +8,16 @@ const nextConfig = {
   },
   // Basic configuration
   reactStrictMode: false,
-  swcMinify: true,
   poweredByHeader: false,
-  
+
   // Output standalone for better Docker compatibility
   output: 'standalone',
-  
+
   // Environment variables
   env: {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://brennholz-koenig.de'
   },
-  
+
   // Disable strict checks for production builds
   eslint: {
     ignoreDuringBuilds: true,
@@ -26,12 +25,10 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  
+
   // Explizite Server-Konfiguration für Node.js
-  experimental: {
-    serverComponentsExternalPackages: ['@supabase/supabase-js']
-  },
-  
+  serverExternalPackages: ['@supabase/supabase-js'],
+
   // Erhöhte Timeouts für API-Routen
   serverRuntimeConfig: {
     api: {

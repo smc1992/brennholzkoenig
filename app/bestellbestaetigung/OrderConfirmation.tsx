@@ -6,37 +6,39 @@ import { trackPurchase } from '../../components/GoogleAnalytics';
 
 interface OrderConfirmationProps {
   orderNumber: string;
+  token?: string;
   appliedDiscount?: {
     code: string;
     discountAmount: number;
   };
 }
 
-export default function OrderConfirmation({ orderNumber, appliedDiscount }: OrderConfirmationProps) {
+export default function OrderConfirmation({ orderNumber, token, appliedDiscount }: OrderConfirmationProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [orderTotals, setOrderTotals] = useState<{ total: number; tax: number; subtotal: number } | null>(null);
   const [orderItems, setOrderItems] = useState<any[]>([]);
 
   useEffect(() => {
     setIsVisible(true);
-    
+
     const fetchAndTrack = async () => {
       if (!orderNumber) return;
 
       try {
         // Lade Bestelldaten (Totals und Items) über vorhandene API
-        const res = await fetch(`/api/invoice-builder?orderId=${encodeURIComponent(orderNumber)}`);
+        const idToUse = token || orderNumber;
+        const res = await fetch(`/api/invoice-builder?orderId=${encodeURIComponent(idToUse)}`);
         const data = await res.json();
 
         // Mappe Items für Tracking
         const items = Array.isArray(data.items)
           ? data.items.map((it: any, idx: number) => ({
-              id: `item-${idx + 1}`,
-              name: it.description || it.product_name || 'Artikel',
-              quantity: Number(it.quantity || 1),
-              price: Number(it.unit_price || it.total_price || 0),
-              category: 'Brennholz'
-            }))
+            id: `item-${idx + 1}`,
+            name: it.description || it.product_name || 'Artikel',
+            quantity: Number(it.quantity || 1),
+            price: Number(it.unit_price || it.total_price || 0),
+            category: 'Brennholz'
+          }))
           : [];
 
         const total = Number(data.total_amount || 0);
@@ -112,7 +114,7 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
                     country: countryH
                   }
                 });
-                try { window.sessionStorage?.removeItem('ec_user_data'); } catch {}
+                try { window.sessionStorage?.removeItem('ec_user_data'); } catch { }
               }
             }
           } catch (ecErr) {
@@ -131,7 +133,7 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
             });
             try {
               window.sessionStorage?.setItem(guardKey, '1');
-            } catch {}
+            } catch { }
           }
 
           // Optional: Remarketing Page View, wenn in der Konfiguration aktiviert
@@ -167,7 +169,7 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 pt-20 md:pt-24 pb-8 md:pb-16">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="max-w-4xl mx-auto">
-          
+
           {/* Success Animation */}
           <div className={`text-center mb-8 md:mb-12 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <div className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-6 md:mb-8 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
@@ -190,7 +192,7 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
                 </div>
                 <span className="font-bold text-sm md:text-lg">Bestellnummer: {orderNumber}</span>
               </div>
-              
+
               {appliedDiscount && (
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 mb-6">
                   <div className="flex items-center justify-center">
@@ -209,7 +211,7 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-              
+
               {/* Status */}
               <div className="text-center p-4 md:p-0">
                 <div className="w-14 h-14 md:w-16 md:h-16 mx-auto mb-3 md:mb-4 bg-blue-100 rounded-full flex items-center justify-center">
@@ -257,7 +259,7 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
               </div>
               Wie geht es weiter?
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div className="flex items-start p-3 md:p-0">
                 <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-white text-[#C04020] rounded-full mr-3 md:mr-4 font-bold text-sm md:text-base flex-shrink-0 shadow-sm">
@@ -270,7 +272,7 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start p-3 md:p-0">
                 <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-white text-[#C04020] rounded-full mr-3 md:mr-4 font-bold text-sm md:text-base flex-shrink-0 shadow-sm">
                   2
@@ -293,26 +295,26 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
               </div>
               Wichtige Informationen
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 text-xs md:text-sm">
               <div>
                 <h4 className="font-medium text-[#1A1A1A] mb-2">📞 Kontakt</h4>
                 <p className="text-gray-600 mb-1">Telefon: +49 176 71085234</p>
                 <p className="text-gray-600">E-Mail: info@brennholz-koenig.de</p>
               </div>
-              
+
               <div>
                 <h4 className="font-medium text-[#1A1A1A] mb-2">💶 Bezahlung</h4>
                 <p className="text-gray-600 mb-1">Nur Barzahlung bei Lieferung</p>
                 <p className="text-gray-600">Bestellbestätigung/Rechnung wird vor Ort ausgestellt</p>
               </div>
-              
+
               <div>
                 <h4 className="font-medium text-[#1A1A1A] mb-2">🚚 Lieferung</h4>
                 <p className="text-gray-600 mb-1">Anlieferung frei Bordsteinkante</p>
                 <p className="text-gray-600">Bei LKW-Zufahrt: Lieferung bis vor Haustür/Garage/Scheune möglich</p>
               </div>
-              
+
               <div>
                 <h4 className="font-medium text-[#1A1A1A] mb-2">📋 Bestellung</h4>
                 <p className="text-gray-600 mb-1">Änderungen bis 24h vor Lieferung</p>
@@ -330,7 +332,7 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
               <i className="ri-home-line mr-2 md:mr-3"></i>
               Zurück zur Startseite
             </Link>
-            
+
             <Link
               href="/shop"
               className="bg-white hover:bg-gray-50 text-[#C04020] border-2 border-[#C04020] px-6 md:px-8 py-3 md:py-4 rounded-lg md:rounded-xl font-bold text-center transition-all hover:shadow-lg transform hover:scale-[1.02] cursor-pointer text-sm md:text-base"
@@ -338,7 +340,7 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
               <i className="ri-shopping-bag-line mr-2 md:mr-3"></i>
               Weitereinkaufen
             </Link>
-            
+
             <a
               href="tel:+4917671085234"
               className="bg-green-500 hover:bg-green-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-lg md:rounded-xl font-bold text-center transition-all hover:shadow-lg transform hover:scale-[1.02] cursor-pointer text-sm md:text-base"
@@ -351,7 +353,7 @@ export default function OrderConfirmation({ orderNumber, appliedDiscount }: Orde
           {/* Footer Note */}
           <div className={`text-center mt-8 md:mt-12 px-4 transition-all duration-1000 delay-1100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <p className="text-gray-500 text-xs md:text-sm">
-              Bei Fragen stehen wir Ihnen gerne telefonisch zur Verfügung: 
+              Bei Fragen stehen wir Ihnen gerne telefonisch zur Verfügung:
               <strong className="text-[#C04020] ml-1">+49 176 71085234</strong>
             </p>
           </div>

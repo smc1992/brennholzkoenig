@@ -20,11 +20,11 @@ interface Order {
   notes?: string;
   created_at: string;
   updated_at?: string;
-  
+
   // Gutschein-Felder
   discount_amount?: string;
   discount_code_id?: number;
-  
+
   // Lieferadresse
   delivery_first_name?: string;
   delivery_last_name?: string;
@@ -37,7 +37,7 @@ interface Order {
   delivery_notes?: string;
   preferred_delivery_month?: string;
   preferred_delivery_year?: string;
-  
+
   // Rechnungsadresse
   billing_same_as_delivery?: boolean;
   billing_company?: string;
@@ -47,7 +47,7 @@ interface Order {
   billing_house_number?: string;
   billing_postal_code?: string;
   billing_city?: string;
-  
+
   customers?: {
     id: string;
     first_name: string;
@@ -150,7 +150,7 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
   const loadProducts = async () => {
     try {
       console.log('🔄 Loading products from Supabase database...');
-      
+
       // Direkte Abfrage ohne Session-Prüfung für bessere Kompatibilität
       const { data, error } = await supabase
         .from('products')
@@ -163,117 +163,101 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
         // Fallback: Verwende bekannte Produktdaten aus der Datenbank
         console.log('🔄 Using fallback product data...');
         const fallbackProducts = [
-           {
-             id: 1,
-             name: 'Industrieholz Buche Klasse 1',
-             price: '115',
-             category: 'Industrieholz',
-             unit: 'SRM',
-             is_active: true
-           },
-           {
-             id: 2,
-             name: 'Industrieholz Buche Klasse II',
-             price: '90',
-             category: 'Industrieholz',
-             unit: 'SRM',
-             is_active: true
-           },
-           {
-             id: 3,
-             name: 'Scheitholz Buche 33 cm',
-             price: '95',
-             category: 'Brennholz',
-             unit: 'SRM',
-             is_active: true
-           },
-           {
-             id: 4,
-             name: 'Scheitholz Buche 25 cm',
-             price: '100',
-             category: 'Brennholz',
-             unit: 'SRM',
-             is_active: true
-           },
-           {
-             id: 5,
-             name: 'Scheitholz - Industrieholz Mix 33 cm',
-             price: '90',
-             category: 'Brennholz',
-             unit: 'SRM',
-             is_active: true
-           },
-           {
-             id: 6,
-             name: 'Scheitholz Fichte 33 cm',
-             price: '55',
-             category: 'Brennholz',
-             unit: 'SRM',
-             is_active: true
-           }
-         ];
+          {
+            id: 1,
+            name: 'Industrieholz Buche Klasse 1',
+            price: '115',
+            category: 'Industrieholz',
+            unit: 'SRM',
+            is_active: true
+          },
+          {
+            id: 2,
+            name: 'Industrieholz Buche Klasse II',
+            price: '90',
+            category: 'Industrieholz',
+            unit: 'SRM',
+            is_active: true
+          },
+          {
+            id: 3,
+            name: 'Scheitholz Buche 33 cm',
+            price: '95',
+            category: 'Brennholz',
+            unit: 'SRM',
+            is_active: true
+          },
+          {
+            id: 4,
+            name: 'Scheitholz Buche 25 cm',
+            price: '100',
+            category: 'Brennholz',
+            unit: 'SRM',
+            is_active: true
+          },
+          {
+            id: 6,
+            name: 'Scheitholz Fichte 33 cm',
+            price: '55',
+            category: 'Brennholz',
+            unit: 'SRM',
+            is_active: true
+          }
+        ];
         console.log('✅ Fallback products loaded:', fallbackProducts.length, 'products');
         setProducts(fallbackProducts);
         return;
       }
-      
+
       console.log('✅ Products loaded from database:', data?.length || 0, 'products');
       console.log('📦 Sample product:', data?.[0]);
       setProducts(data || []);
-      
+
     } catch (error) {
       console.error('💥 Failed to load products:', error);
       // Verwende Fallback-Daten bei jedem Fehler
       const fallbackProducts = [
-         {
-           id: 1,
-           name: 'Industrieholz Buche Klasse 1',
-           price: '115',
-           category: 'Industrieholz',
-           unit: 'SRM',
-           is_active: true
-         },
-         {
-           id: 2,
-           name: 'Industrieholz Buche Klasse II',
-           price: '90',
-           category: 'Industrieholz',
-           unit: 'SRM',
-           is_active: true
-         },
-         {
-           id: 3,
-           name: 'Scheitholz Buche 33 cm',
-           price: '95',
-           category: 'Brennholz',
-           unit: 'SRM',
-           is_active: true
-         },
-         {
-           id: 4,
-           name: 'Scheitholz Buche 25 cm',
-           price: '100',
-           category: 'Brennholz',
-           unit: 'SRM',
-           is_active: true
-         },
-         {
-           id: 5,
-           name: 'Scheitholz - Industrieholz Mix 33 cm',
-           price: '90',
-           category: 'Brennholz',
-           unit: 'SRM',
-           is_active: true
-         },
-         {
-           id: 6,
-           name: 'Scheitholz Fichte 33 cm',
-           price: '55',
-           category: 'Brennholz',
-           unit: 'SRM',
-           is_active: true
-         }
-       ];
+        {
+          id: 1,
+          name: 'Industrieholz Buche Klasse 1',
+          price: '115',
+          category: 'Industrieholz',
+          unit: 'SRM',
+          is_active: true
+        },
+        {
+          id: 2,
+          name: 'Industrieholz Buche Klasse II',
+          price: '90',
+          category: 'Industrieholz',
+          unit: 'SRM',
+          is_active: true
+        },
+        {
+          id: 3,
+          name: 'Scheitholz Buche 33 cm',
+          price: '95',
+          category: 'Brennholz',
+          unit: 'SRM',
+          is_active: true
+        },
+        {
+          id: 4,
+          name: 'Scheitholz Buche 25 cm',
+          price: '100',
+          category: 'Brennholz',
+          unit: 'SRM',
+          is_active: true
+        },
+        {
+          id: 6,
+          name: 'Scheitholz Fichte 33 cm',
+          price: '55',
+          category: 'Brennholz',
+          unit: 'SRM',
+          is_active: true
+        }
+      ];
       console.log('🔄 Using fallback products due to error:', fallbackProducts.length);
       setProducts(fallbackProducts);
     }
@@ -282,21 +266,21 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
   const loadCustomers = async () => {
     try {
       console.log('🔄 Loading customers from Supabase database...');
-      
+
       // Check if we have a valid session first
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) {
         console.error('❌ Session error:', sessionError);
         throw sessionError;
       }
-      
+
       if (!session) {
         console.warn('⚠️ No active session found for customers');
         throw new Error('No active session');
       }
-      
+
       console.log('✅ Valid session found, fetching customers...');
-      
+
       const { data, error } = await supabase
         .from('customers')
         .select('id, first_name, last_name, email, phone, street, house_number, postal_code, city')
@@ -306,28 +290,28 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
         console.error('❌ Error loading customers:', error);
         throw error;
       }
-      
+
       console.log('✅ Customers loaded from database:', data?.length || 0, 'customers');
       setCustomers(data || []);
-      
+
     } catch (error) {
       console.error('💥 Failed to load customers from database:', error);
       console.log('🔄 Retrying customers with fresh session...');
-      
+
       // Try to refresh the session and retry
       try {
         const { data: { session: newSession }, error: refreshError } = await supabase.auth.refreshSession();
         if (refreshError) throw refreshError;
-        
+
         if (newSession) {
           console.log('✅ Session refreshed, retrying customers fetch...');
           const { data: retryData, error: retryError } = await supabase
             .from('customers')
             .select('id, first_name, last_name, email, phone, street, house_number, postal_code, city')
             .order('first_name');
-            
+
           if (retryError) throw retryError;
-          
+
           console.log('✅ Customers loaded after session refresh:', retryData?.length || 0, 'customers');
           setCustomers(retryData || []);
         } else {
@@ -369,9 +353,9 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
         const randomNum = Math.floor(Math.random() * 9000) + 1000; // 4-digit random number
         return `BK-${year}${month}-${randomNum}`;
       };
-      
+
       const orderNumber = generateOrderNumber();
-      
+
       // Create or get customer
       let customerId = orderData.customer.id;
       if (!customerId) {
@@ -389,16 +373,16 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
           })
           .select()
           .single();
-        
+
         if (customerError) throw customerError;
         customerId = newCustomer.id;
       }
-      
+
       // Calculate totals
       const subtotal = orderData.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
       const deliveryPrice = parseFloat(orderData.delivery_price);
       const total = subtotal + deliveryPrice;
-      
+
       // Create order
       const { data: newOrder, error: orderError } = await supabase
         .from('orders')
@@ -422,17 +406,17 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
         })
         .select()
         .single();
-      
+
       if (orderError) throw orderError;
-      
+
       // Lade Steuereinstellungen für tax_included
       const { data: taxSettings } = await supabase
         .from('invoice_settings')
         .select('default_tax_included')
         .single();
-      
+
       const defaultTaxIncluded = taxSettings?.default_tax_included || false;
-      
+
       // Create order items
       const orderItems = orderData.items.map(item => ({
         order_id: newOrder.id,
@@ -443,13 +427,13 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
         total_price: item.quantity * item.unit_price,
         tax_included: defaultTaxIncluded
       }));
-      
+
       const { error: itemsError } = await supabase
         .from('order_items')
         .insert(orderItems);
-      
+
       if (itemsError) throw itemsError;
-      
+
       // Send order confirmation email
       try {
         const emailData = {
@@ -470,7 +454,7 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
         };
 
         console.log('Sende Admin-Bestellbestätigung an:', orderData.customer.email);
-        
+
         const emailResponse = await fetch('/api/send-order-email', {
           method: 'POST',
           headers: {
@@ -480,7 +464,7 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
         });
 
         const emailResult = await emailResponse.json();
-        
+
         if (emailResult.success) {
           console.log('✅ Admin-Bestellbestätigung erfolgreich gesendet:', emailResult.template_used);
         } else {
@@ -489,14 +473,14 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
       } catch (emailError) {
         console.error('Admin E-Mail Fehler (nicht kritisch):', emailError);
       }
-      
+
       await loadOrders();
       setShowCreateModal(false);
-      
+
       if (onStatsUpdate) {
         await onStatsUpdate();
       }
-      
+
     } catch (error) {
       console.error('Error creating order:', error);
       alert('Fehler beim Erstellen der Bestellung');
@@ -531,22 +515,22 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
       // Prepare customer data
       const customerName = `${orderData.delivery_first_name || ''} ${orderData.delivery_last_name || ''}`.trim();
       const customerEmail = orderData.delivery_email;
-      
+
       if (!customerEmail) {
         throw new Error('Keine E-Mail-Adresse für den Kunden gefunden');
       }
 
       // Build complete delivery address with fallback logic
       const deliveryAddressParts = [];
-      
+
       // Add street and house number
       if (orderData.delivery_street) {
-        const streetPart = orderData.delivery_house_number 
+        const streetPart = orderData.delivery_house_number
           ? `${orderData.delivery_street} ${orderData.delivery_house_number}`
           : orderData.delivery_street;
         deliveryAddressParts.push(streetPart);
       }
-      
+
       // Add postal code and city
       if (orderData.delivery_postal_code || orderData.delivery_city) {
         const cityPart = [orderData.delivery_postal_code, orderData.delivery_city]
@@ -556,11 +540,11 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
           deliveryAddressParts.push(cityPart);
         }
       }
-      
-      const deliveryAddress = deliveryAddressParts.length > 0 
+
+      const deliveryAddress = deliveryAddressParts.length > 0
         ? deliveryAddressParts.join(', ')
         : 'Lieferadresse nicht verfügbar';
-      
+
       console.log('🏠 Lieferadresse-Debug:', {
         street: orderData.delivery_street,
         houseNumber: orderData.delivery_house_number,
@@ -568,9 +552,9 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
         city: orderData.delivery_city,
         finalAddress: deliveryAddress
       });
-      
+
       // Format product list for template
-      const productList = orderData.order_items?.map((item: any) => 
+      const productList = orderData.order_items?.map((item: any) =>
         `${item.quantity}x ${item.product_name} (${parseFloat(item.unit_price).toFixed(2)}€)`
       ).join('<br>') || 'Keine Produkte';
 
@@ -627,7 +611,7 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
       });
 
       const emailResult = await emailResponse.json();
-      
+
       if (!emailResult.success) {
         throw new Error(emailResult.error || 'E-Mail-Versand fehlgeschlagen');
       }
@@ -665,15 +649,15 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
       // Prepare email data
       const customerName = `${orderData.delivery_first_name || ''} ${orderData.delivery_last_name || ''}`.trim();
       const customerEmail = orderData.delivery_email;
-      
+
       if (!customerEmail) {
         throw new Error('Keine E-Mail-Adresse für den Kunden gefunden');
       }
 
       const deliveryAddress = `${orderData.delivery_street || ''} ${orderData.delivery_house_number || ''}, ${orderData.delivery_postal_code || ''} ${orderData.delivery_city || ''}`.trim();
-      
+
       // Format product list
-      const productList = orderData.order_items?.map((item: any) => 
+      const productList = orderData.order_items?.map((item: any) =>
         `${item.quantity}x ${item.product_name} (${parseFloat(item.unit_price).toFixed(2)}€)`
       ).join(', ') || 'Keine Produkte';
 
@@ -694,7 +678,7 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
       });
 
       const emailResult = await emailResponse.json();
-      
+
       if (!emailResult.success) {
         throw new Error(emailResult.error || 'E-Mail-Versand fehlgeschlagen');
       }
@@ -878,7 +862,7 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
       // Auch subtotal_amount aktualisieren (Warenwert ohne Lieferung)
       const { error: totalError } = await supabase
         .from('orders')
-        .update({ 
+        .update({
           total_amount: newTotal,
           subtotal_amount: itemsTotal
         })
@@ -1263,7 +1247,7 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
                     )}
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Rechnungsadresse</h3>
                   <div className="space-y-2 text-sm">
@@ -1334,7 +1318,7 @@ export default function OrdersTab({ onStatsUpdate }: OrdersTabProps) {
                       <p>
                         <span className="font-medium">Gutschein:</span>{' '}
                         <span className="text-green-600 font-medium">
-                          {selectedOrder.discount_codes?.code || 'Rabattcode'} 
+                          {selectedOrder.discount_codes?.code || 'Rabattcode'}
                           (-€{parseFloat(selectedOrder.discount_amount).toFixed(2)})
                         </span>
                         {selectedOrder.discount_codes?.description && (
@@ -1540,249 +1524,249 @@ function EditOrderModal({ order, onSave, onClose }: EditOrderModalProps) {
 
           <div className="flex-1 overflow-y-auto p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Customer Information */}
-          <div>
-            <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Kundeninformationen</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Customer Information */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Kundennummer</label>
-                <input
-                  type="text"
-                  value={order.customers?.id ? `KD-${String(parseInt(order.customers.id.replace(/-/g, '').slice(-5), 16) % 99999 + 10000).padStart(5, '0')}` : (order.delivery_email ? `KD-${String(Math.abs(order.delivery_email.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0)) % 89999 + 10000).padStart(5, '0')}` : '-')}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600 font-mono text-sm"
-                  readOnly
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vorname</label>
-                <input
-                  type="text"
-                  value={formData.customer.first_name}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      customer: { ...formData.customer, first_name: e.target.value }
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nachname</label>
-                <input
-                  type="text"
-                  value={formData.customer.last_name}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      customer: { ...formData.customer, last_name: e.target.value }
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
-                <input
-                  type="email"
-                  value={formData.customer.email}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      customer: { ...formData.customer, email: e.target.value }
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
-                <input
-                  type="tel"
-                  value={formData.customer.phone}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      customer: { ...formData.customer, phone: e.target.value }
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Straße</label>
-                <input
-                  type="text"
-                  value={formData.customer.street}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      customer: { ...formData.customer, street: e.target.value }
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Hausnummer</label>
-                <input
-                  type="text"
-                  value={formData.customer.house_number}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      customer: { ...formData.customer, house_number: e.target.value }
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">PLZ</label>
-                <input
-                  type="text"
-                  value={formData.customer.postal_code}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      customer: { ...formData.customer, postal_code: e.target.value }
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Stadt</label>
-                <input
-                  type="text"
-                  value={formData.customer.city}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      customer: { ...formData.customer, city: e.target.value }
-                    })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                />
-              </div>
-            </div>
-          </div>
+                <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Kundeninformationen</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Kundennummer</label>
+                    <input
+                      type="text"
+                      value={order.customers?.id ? `KD-${String(parseInt(order.customers.id.replace(/-/g, '').slice(-5), 16) % 99999 + 10000).padStart(5, '0')}` : (order.delivery_email ? `KD-${String(Math.abs(order.delivery_email.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0)) % 89999 + 10000).padStart(5, '0')}` : '-')}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600 font-mono text-sm"
+                      readOnly
+                    />
+                  </div>
 
-          {/* Delivery Settings */}
-          <div>
-            <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Liefereinstellungen</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Lieferart</label>
-                <select
-                  value={formData.delivery_type}
-                  onChange={e => setFormData({ ...formData, delivery_type: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm cursor-pointer pr-8"
-                >
-                  <option value="standard">Standard (1-3 Wochen)</option>
-                  <option value="express">Express (24-48h)</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Lieferkosten (€)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.delivery_price}
-                  onChange={e => setFormData({ ...formData, delivery_price: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Order Items */}
-          <div>
-            <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Bestellte Artikel</h3>
-            <div className="space-y-3">
-              {formData.items.map((item, index) => (
-                <div key={item.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Produkt</label>
-                      <input
-                        type="text"
-                        value={item.product_name}
-                        readOnly
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Menge (SRM)</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={item.quantity}
-                        onChange={e => updateItemQuantity(index, e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Preis pro SRM (€)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={item.unit_price}
-                        onChange={e => updateItemPrice(index, e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Gesamtpreis</label>
-                      <div className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-sm font-bold text-[#C04020]">
-                        €{(item.quantity * item.unit_price).toFixed(2)}
-                      </div>
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Vorname</label>
+                    <input
+                      type="text"
+                      value={formData.customer.first_name}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          customer: { ...formData.customer, first_name: e.target.value }
+                        })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nachname</label>
+                    <input
+                      type="text"
+                      value={formData.customer.last_name}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          customer: { ...formData.customer, last_name: e.target.value }
+                        })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+                    <input
+                      type="email"
+                      value={formData.customer.email}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          customer: { ...formData.customer, email: e.target.value }
+                        })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                    <input
+                      type="tel"
+                      value={formData.customer.phone}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          customer: { ...formData.customer, phone: e.target.value }
+                        })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Straße</label>
+                    <input
+                      type="text"
+                      value={formData.customer.street}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          customer: { ...formData.customer, street: e.target.value }
+                        })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Hausnummer</label>
+                    <input
+                      type="text"
+                      value={formData.customer.house_number}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          customer: { ...formData.customer, house_number: e.target.value }
+                        })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">PLZ</label>
+                    <input
+                      type="text"
+                      value={formData.customer.postal_code}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          customer: { ...formData.customer, postal_code: e.target.value }
+                        })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Stadt</label>
+                    <input
+                      type="text"
+                      value={formData.customer.city}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          customer: { ...formData.customer, city: e.target.value }
+                        })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          {/* Notes */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Hinweise</label>
-            <textarea
-              value={formData.notes}
-              onChange={e => setFormData({ ...formData, notes: e.target.value })}
-              rows={3}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-              placeholder="Zusätzliche Hinweise zur Bestellung..."
-            />
-          </div>
+              {/* Delivery Settings */}
+              <div>
+                <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Liefereinstellungen</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Lieferart</label>
+                    <select
+                      value={formData.delivery_type}
+                      onChange={e => setFormData({ ...formData, delivery_type: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm cursor-pointer pr-8"
+                    >
+                      <option value="standard">Standard (1-3 Wochen)</option>
+                      <option value="express">Express (24-48h)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Lieferkosten (€)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.delivery_price}
+                      onChange={e => setFormData({ ...formData, delivery_price: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
 
-          {/* Total */}
-          <div className="border-t border-gray-200 pt-4">
-            <div className="flex justify-between items-center text-lg font-bold">
-              <span>Neue Gesamtsumme:</span>
-              <span className="text-[#C04020]">€{calculateTotal().toFixed(2)}</span>
-            </div>
-          </div>
+              {/* Order Items */}
+              <div>
+                <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Bestellte Artikel</h3>
+                <div className="space-y-3">
+                  {formData.items.map((item, index) => (
+                    <div key={item.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Produkt</label>
+                          <input
+                            type="text"
+                            value={item.product_name}
+                            readOnly
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Menge (SRM)</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={e => updateItemQuantity(index, e.target.value)}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Preis pro SRM (€)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={item.unit_price}
+                            onChange={e => updateItemPrice(index, e.target.value)}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Gesamtpreis</label>
+                          <div className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-sm font-bold text-[#C04020]">
+                            €{(item.quantity * item.unit_price).toFixed(2)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-          {/* Action Buttons */}
-          <div className="flex space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-            >
-              Abbrechen
-            </button>
-            <button
-              type="submit"
-              className="flex-1 bg-[#C04020] hover:bg-[#A03318] text-white py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-            >
-              <i className="ri-save-line mr-2"></i>
-              Änderungen speichern
-            </button>
-          </div>
+              {/* Notes */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Hinweise</label>
+                <textarea
+                  value={formData.notes}
+                  onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                  rows={3}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                  placeholder="Zusätzliche Hinweise zur Bestellung..."
+                />
+              </div>
+
+              {/* Total */}
+              <div className="border-t border-gray-200 pt-4">
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span>Neue Gesamtsumme:</span>
+                  <span className="text-[#C04020]">€{calculateTotal().toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  Abbrechen
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-[#C04020] hover:bg-[#A03318] text-white py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  <i className="ri-save-line mr-2"></i>
+                  Änderungen speichern
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -1818,7 +1802,7 @@ function CreateOrderModal({ products, customers, onSave, onClose, saving }: Crea
     notes: '',
     items: []
   });
-  
+
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [newItem, setNewItem] = useState({
     product_id: '',
@@ -1870,30 +1854,30 @@ function CreateOrderModal({ products, customers, onSave, onClose, saving }: Crea
       selected_product_id: newItem.product_id,
       product_id_type: typeof newItem.product_id
     });
-    
+
     if (!newItem.product_id) {
       console.error('❌ No product selected');
       alert('Bitte wählen Sie ein Produkt aus.');
       return;
     }
-    
+
     if (newItem.quantity <= 0) {
       console.error('❌ Invalid quantity:', newItem.quantity);
       alert('Bitte geben Sie eine gültige Menge ein.');
       return;
     }
-    
+
     // Konvertiere product_id zu Number für Vergleich, falls nötig
     const productId = typeof newItem.product_id === 'string' ? parseInt(newItem.product_id) : newItem.product_id;
     const product = products.find(p => p.id === productId || p.id.toString() === newItem.product_id.toString());
-    
+
     console.log('🎯 Product search details:', {
       searching_for: newItem.product_id,
       converted_id: productId,
       available_products: products.map(p => ({ id: p.id, name: p.name, id_type: typeof p.id })),
       found_product: product
     });
-    
+
     if (!product) {
       console.error('❌ Product not found in products array');
       console.error('Available product IDs:', products.map(p => p.id));
@@ -1901,7 +1885,7 @@ function CreateOrderModal({ products, customers, onSave, onClose, saving }: Crea
       alert(`Produkt nicht gefunden. Verfügbare Produkte: ${products.map(p => p.name).join(', ')}`);
       return;
     }
-    
+
     const item: OrderItem = {
       id: `temp-${Date.now()}`,
       product_name: product.name,
@@ -1909,16 +1893,16 @@ function CreateOrderModal({ products, customers, onSave, onClose, saving }: Crea
       quantity: newItem.quantity,
       unit_price: parseFloat(product.price)
     };
-    
+
     console.log('✅ Adding item to order:', item);
-    
+
     setFormData({
       ...formData,
       items: [...formData.items, item]
     });
-    
+
     console.log('📦 Updated formData.items:', [...formData.items, item]);
-    
+
     setNewItem({ product_id: '', quantity: 1 });
     console.log('🔄 Reset newItem');
   };
@@ -1940,7 +1924,7 @@ function CreateOrderModal({ products, customers, onSave, onClose, saving }: Crea
       itemsCount: formData.items.length,
       delivery_price: formData.delivery_price
     });
-    
+
     const itemsTotal = formData.items.reduce((sum, item) => {
       const itemTotal = item.quantity * item.unit_price;
       console.log('📦 Item calculation:', {
@@ -1951,16 +1935,16 @@ function CreateOrderModal({ products, customers, onSave, onClose, saving }: Crea
       });
       return sum + itemTotal;
     }, 0);
-    
+
     const deliveryPrice = parseFloat(formData.delivery_price) || 0;
     const total = itemsTotal + deliveryPrice;
-    
+
     console.log('🧮 Total calculation result:', {
       itemsTotal,
       deliveryPrice,
       total
     });
-    
+
     return total;
   };
 
@@ -1994,354 +1978,354 @@ function CreateOrderModal({ products, customers, onSave, onClose, saving }: Crea
 
           <div className="flex-1 overflow-y-auto p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Customer Selection */}
-          <div>
-            <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Kunde auswählen</h3>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Bestehender Kunde</label>
-              <select
-                value={selectedCustomer}
-                onChange={(e) => handleCustomerSelect(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-              >
-                <option value="">Neuen Kunden erstellen</option>
-                {customers.map(customer => (
-                  <option key={customer.id} value={customer.id}>
-                    {customer.first_name} {customer.last_name} ({customer.email})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Customer Information */}
-          <div>
-            <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Kundeninformationen</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Customer Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Kundennummer</label>
-                <input
-                  type="text"
-                  value={formData.customer.id ? `KD-${String(parseInt(formData.customer.id.replace(/-/g, '').slice(-5), 16) % 99999 + 10000).padStart(5, '0')}` : (formData.customer.email ? `KD-${String(Math.abs(formData.customer.email.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0)) % 89999 + 10000).padStart(5, '0')}` : 'Wird automatisch generiert')}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600 font-mono text-sm"
-                  readOnly
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vorname *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.customer.first_name}
-                  onChange={e => setFormData({
-                    ...formData,
-                    customer: { ...formData.customer, first_name: e.target.value }
-                  })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nachname *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.customer.last_name}
-                  onChange={e => setFormData({
-                    ...formData,
-                    customer: { ...formData.customer, last_name: e.target.value }
-                  })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail *</label>
-                <input
-                  type="email"
-                  required
-                  value={formData.customer.email}
-                  onChange={e => setFormData({
-                    ...formData,
-                    customer: { ...formData.customer, email: e.target.value }
-                  })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
-                <input
-                  type="tel"
-                  value={formData.customer.phone}
-                  onChange={e => setFormData({
-                    ...formData,
-                    customer: { ...formData.customer, phone: e.target.value }
-                  })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Straße</label>
-                <input
-                  type="text"
-                  value={formData.customer.street}
-                  onChange={e => setFormData({
-                    ...formData,
-                    customer: { ...formData.customer, street: e.target.value }
-                  })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Hausnummer</label>
-                <input
-                  type="text"
-                  value={formData.customer.house_number}
-                  onChange={e => setFormData({
-                    ...formData,
-                    customer: { ...formData.customer, house_number: e.target.value }
-                  })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">PLZ</label>
-                <input
-                  type="text"
-                  value={formData.customer.postal_code}
-                  onChange={e => setFormData({
-                    ...formData,
-                    customer: { ...formData.customer, postal_code: e.target.value }
-                  })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Stadt</label>
-                <input
-                  type="text"
-                  value={formData.customer.city}
-                  onChange={e => setFormData({
-                    ...formData,
-                    customer: { ...formData.customer, city: e.target.value }
-                  })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Products */}
-          <div>
-            <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Produkte hinzufügen</h3>
-            <div className="space-y-4 mb-4">
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Produkt auswählen</label>
+                <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Kunde auswählen</h3>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bestehender Kunde</label>
                   <select
-                    value={newItem.product_id}
-                    onChange={e => {
-                      console.log('🔄 Product selection changed:', {
-                        selected_value: e.target.value,
-                        available_products: products.map(p => ({ id: p.id, name: p.name })),
-                        products_count: products.length
-                      });
-                      setNewItem({ ...newItem, product_id: e.target.value });
-                    }}
+                    value={selectedCustomer}
+                    onChange={(e) => handleCustomerSelect(e.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
                   >
-                    <option value="">Produkt auswählen</option>
-                    {products.map(product => {
-                      console.log('🏷️ Rendering product option:', { id: product.id, name: product.name, price: product.price });
-                      return (
-                        <option key={product.id} value={product.id}>
-                          {product.name} - €{product.price} / {product.unit}
-                        </option>
-                      );
-                    })}
+                    <option value="">Neuen Kunden erstellen</option>
+                    {customers.map(customer => (
+                      <option key={customer.id} value={customer.id}>
+                        {customer.first_name} {customer.last_name} ({customer.email})
+                      </option>
+                    ))}
                   </select>
                 </div>
-                <div className="w-24">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Menge</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={newItem.quantity}
-                    onChange={e => setNewItem({ ...newItem, quantity: parseInt(e.target.value) || 1 })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-                    placeholder="1"
-                  />
-                </div>
-                <div className="w-32 flex items-end">
-                  <button
-                    type="button"
-                    onClick={addItem}
-                    disabled={!newItem.product_id}
-                    className="w-full bg-[#C04020] hover:bg-[#A03318] disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer"
-                  >
-                    <i className="ri-add-line mr-1"></i>
-                    Hinzufügen
-                  </button>
+              </div>
+
+              {/* Customer Information */}
+              <div>
+                <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Kundeninformationen</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Kundennummer</label>
+                    <input
+                      type="text"
+                      value={formData.customer.id ? `KD-${String(parseInt(formData.customer.id.replace(/-/g, '').slice(-5), 16) % 99999 + 10000).padStart(5, '0')}` : (formData.customer.email ? `KD-${String(Math.abs(formData.customer.email.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0)) % 89999 + 10000).padStart(5, '0')}` : 'Wird automatisch generiert')}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600 font-mono text-sm"
+                      readOnly
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Vorname *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.customer.first_name}
+                      onChange={e => setFormData({
+                        ...formData,
+                        customer: { ...formData.customer, first_name: e.target.value }
+                      })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nachname *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.customer.last_name}
+                      onChange={e => setFormData({
+                        ...formData,
+                        customer: { ...formData.customer, last_name: e.target.value }
+                      })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail *</label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.customer.email}
+                      onChange={e => setFormData({
+                        ...formData,
+                        customer: { ...formData.customer, email: e.target.value }
+                      })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                    <input
+                      type="tel"
+                      value={formData.customer.phone}
+                      onChange={e => setFormData({
+                        ...formData,
+                        customer: { ...formData.customer, phone: e.target.value }
+                      })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Straße</label>
+                    <input
+                      type="text"
+                      value={formData.customer.street}
+                      onChange={e => setFormData({
+                        ...formData,
+                        customer: { ...formData.customer, street: e.target.value }
+                      })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Hausnummer</label>
+                    <input
+                      type="text"
+                      value={formData.customer.house_number}
+                      onChange={e => setFormData({
+                        ...formData,
+                        customer: { ...formData.customer, house_number: e.target.value }
+                      })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">PLZ</label>
+                    <input
+                      type="text"
+                      value={formData.customer.postal_code}
+                      onChange={e => setFormData({
+                        ...formData,
+                        customer: { ...formData.customer, postal_code: e.target.value }
+                      })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Stadt</label>
+                    <input
+                      type="text"
+                      value={formData.customer.city}
+                      onChange={e => setFormData({
+                        ...formData,
+                        customer: { ...formData.customer, city: e.target.value }
+                      })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                    />
+                  </div>
                 </div>
               </div>
-              
-              {/* Live Price Preview */}
-              {(() => {
-                console.log('🔍 Price Preview Debug:', {
-                  product_id: newItem.product_id,
-                  products_count: products.length,
-                  quantity: newItem.quantity
-                });
-                
-                if (newItem.product_id) {
-                  const selectedProduct = products.find(p => p.id === newItem.product_id);
-                  console.log('🎯 Selected product:', selectedProduct);
-                  
-                  if (selectedProduct) {
-                    const unitPrice = parseFloat(selectedProduct.price);
-                    const totalPrice = unitPrice * newItem.quantity;
-                    console.log('💰 Price calculation:', { unitPrice, quantity: newItem.quantity, totalPrice });
-                    
-                    return (
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium text-gray-900">{selectedProduct.name}</div>
-                            <div className="text-sm text-gray-500">{selectedProduct.category || 'Brennholz'}</div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm text-gray-600">€{unitPrice.toFixed(2)} / {selectedProduct.unit || 'Stück'}</div>
-                            <div className="text-lg font-bold text-[#C04020]">€{totalPrice.toFixed(2)}</div>
-                            <div className="text-xs text-gray-500">{newItem.quantity} × €{unitPrice.toFixed(2)}</div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  } else {
-                    console.log('❌ Product not found in products array');
-                  }
-                }
-                return null;
-              })()}
-            </div>
 
-            {/* Items List */}
-            {formData.items.length > 0 && (
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <div className="bg-gray-50 px-4 py-2 font-medium text-sm text-gray-700 grid grid-cols-12 gap-4">
-                  <div className="col-span-5">Produkt</div>
-                  <div className="col-span-2">Menge</div>
-                  <div className="col-span-2">Einzelpreis</div>
-                  <div className="col-span-2">Gesamt</div>
-                  <div className="col-span-1">Aktion</div>
-                </div>
-                {formData.items.map((item, index) => (
-                  <div key={index} className="px-4 py-3 border-t border-gray-200 grid grid-cols-12 gap-4 items-center">
-                    <div className="col-span-5">
-                      <div className="font-medium">{item.product_name}</div>
-                      <div className="text-sm text-gray-500">{item.product_category}</div>
+              {/* Products */}
+              <div>
+                <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Produkte hinzufügen</h3>
+                <div className="space-y-4 mb-4">
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Produkt auswählen</label>
+                      <select
+                        value={newItem.product_id}
+                        onChange={e => {
+                          console.log('🔄 Product selection changed:', {
+                            selected_value: e.target.value,
+                            available_products: products.map(p => ({ id: p.id, name: p.name })),
+                            products_count: products.length
+                          });
+                          setNewItem({ ...newItem, product_id: e.target.value });
+                        }}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                      >
+                        <option value="">Produkt auswählen</option>
+                        {products.map(product => {
+                          console.log('🏷️ Rendering product option:', { id: product.id, name: product.name, price: product.price });
+                          return (
+                            <option key={product.id} value={product.id}>
+                              {product.name} - €{product.price} / {product.unit}
+                            </option>
+                          );
+                        })}
+                      </select>
                     </div>
-                    <div className="col-span-2">
+                    <div className="w-24">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Menge</label>
                       <input
                         type="number"
                         min="1"
-                        value={item.quantity}
-                        onChange={e => updateItemQuantity(index, parseInt(e.target.value) || 1)}
-                        className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                        value={newItem.quantity}
+                        onChange={e => setNewItem({ ...newItem, quantity: parseInt(e.target.value) || 1 })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                        placeholder="1"
                       />
                     </div>
-                    <div className="col-span-2">€{item.unit_price.toFixed(2)}</div>
-                    <div className="col-span-2 font-medium">€{(item.quantity * item.unit_price).toFixed(2)}</div>
-                    <div className="col-span-1">
+                    <div className="w-32 flex items-end">
                       <button
                         type="button"
-                        onClick={() => removeItem(index)}
-                        className="text-red-600 hover:text-red-800 cursor-pointer"
+                        onClick={addItem}
+                        disabled={!newItem.product_id}
+                        className="w-full bg-[#C04020] hover:bg-[#A03318] disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer"
                       >
-                        <i className="ri-delete-bin-line"></i>
+                        <i className="ri-add-line mr-1"></i>
+                        Hinzufügen
                       </button>
                     </div>
                   </div>
-                ))}
+
+                  {/* Live Price Preview */}
+                  {(() => {
+                    console.log('🔍 Price Preview Debug:', {
+                      product_id: newItem.product_id,
+                      products_count: products.length,
+                      quantity: newItem.quantity
+                    });
+
+                    if (newItem.product_id) {
+                      const selectedProduct = products.find(p => p.id === newItem.product_id);
+                      console.log('🎯 Selected product:', selectedProduct);
+
+                      if (selectedProduct) {
+                        const unitPrice = parseFloat(selectedProduct.price);
+                        const totalPrice = unitPrice * newItem.quantity;
+                        console.log('💰 Price calculation:', { unitPrice, quantity: newItem.quantity, totalPrice });
+
+                        return (
+                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="font-medium text-gray-900">{selectedProduct.name}</div>
+                                <div className="text-sm text-gray-500">{selectedProduct.category || 'Brennholz'}</div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-sm text-gray-600">€{unitPrice.toFixed(2)} / {selectedProduct.unit || 'Stück'}</div>
+                                <div className="text-lg font-bold text-[#C04020]">€{totalPrice.toFixed(2)}</div>
+                                <div className="text-xs text-gray-500">{newItem.quantity} × €{unitPrice.toFixed(2)}</div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      } else {
+                        console.log('❌ Product not found in products array');
+                      }
+                    }
+                    return null;
+                  })()}
+                </div>
+
+                {/* Items List */}
+                {formData.items.length > 0 && (
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-gray-50 px-4 py-2 font-medium text-sm text-gray-700 grid grid-cols-12 gap-4">
+                      <div className="col-span-5">Produkt</div>
+                      <div className="col-span-2">Menge</div>
+                      <div className="col-span-2">Einzelpreis</div>
+                      <div className="col-span-2">Gesamt</div>
+                      <div className="col-span-1">Aktion</div>
+                    </div>
+                    {formData.items.map((item, index) => (
+                      <div key={index} className="px-4 py-3 border-t border-gray-200 grid grid-cols-12 gap-4 items-center">
+                        <div className="col-span-5">
+                          <div className="font-medium">{item.product_name}</div>
+                          <div className="text-sm text-gray-500">{item.product_category}</div>
+                        </div>
+                        <div className="col-span-2">
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={e => updateItemQuantity(index, parseInt(e.target.value) || 1)}
+                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                          />
+                        </div>
+                        <div className="col-span-2">€{item.unit_price.toFixed(2)}</div>
+                        <div className="col-span-2 font-medium">€{(item.quantity * item.unit_price).toFixed(2)}</div>
+                        <div className="col-span-1">
+                          <button
+                            type="button"
+                            onClick={() => removeItem(index)}
+                            className="text-red-600 hover:text-red-800 cursor-pointer"
+                          >
+                            <i className="ri-delete-bin-line"></i>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Delivery */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Lieferart</label>
-              <select
-                value={formData.delivery_type}
-                onChange={e => setFormData({ ...formData, delivery_type: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-              >
-                <option value="standard">Standard Lieferung</option>
-                <option value="express">Express Lieferung</option>
-                <option value="pickup">Selbstabholung</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Lieferkosten (€)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.delivery_price}
-                onChange={e => setFormData({ ...formData, delivery_price: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-              />
-            </div>
-          </div>
+              {/* Delivery */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Lieferart</label>
+                  <select
+                    value={formData.delivery_type}
+                    onChange={e => setFormData({ ...formData, delivery_type: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                  >
+                    <option value="standard">Standard Lieferung</option>
+                    <option value="express">Express Lieferung</option>
+                    <option value="pickup">Selbstabholung</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Lieferkosten (€)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.delivery_price}
+                    onChange={e => setFormData({ ...formData, delivery_price: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                  />
+                </div>
+              </div>
 
-          {/* Notes */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
-            <textarea
-              value={formData.notes}
-              onChange={e => setFormData({ ...formData, notes: e.target.value })}
-              rows={3}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
-              placeholder="Zusätzliche Hinweise zur Bestellung..."
-            />
-          </div>
+              {/* Notes */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
+                <textarea
+                  value={formData.notes}
+                  onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                  rows={3}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors text-sm"
+                  placeholder="Zusätzliche Hinweise zur Bestellung..."
+                />
+              </div>
 
-          {/* Total */}
-          <div className="border-t border-gray-200 pt-4">
-            <div className="flex justify-between items-center text-lg font-bold">
-              <span>Gesamtsumme:</span>
-              <span className="text-[#C04020]">€{calculateTotal().toFixed(2)}</span>
-            </div>
-          </div>
+              {/* Total */}
+              <div className="border-t border-gray-200 pt-4">
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span>Gesamtsumme:</span>
+                  <span className="text-[#C04020]">€{calculateTotal().toFixed(2)}</span>
+                </div>
+              </div>
 
-          {/* Action Buttons */}
-          <div className="flex space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={saving}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
-            >
-              Abbrechen
-            </button>
-            <button
-              type="submit"
-              disabled={saving || formData.items.length === 0}
-              className="flex-1 bg-[#C04020] hover:bg-[#A03318] text-white py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
-            >
-              {saving ? (
-                <>
-                  <i className="ri-loader-4-line mr-2 animate-spin"></i>
-                  Erstelle...
-                </>
-              ) : (
-                <>
-                  <i className="ri-add-line mr-2"></i>
-                  Bestellung erstellen
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+              {/* Action Buttons */}
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={saving}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
+                >
+                  Abbrechen
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving || formData.items.length === 0}
+                  className="flex-1 bg-[#C04020] hover:bg-[#A03318] text-white py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50"
+                >
+                  {saving ? (
+                    <>
+                      <i className="ri-loader-4-line mr-2 animate-spin"></i>
+                      Erstelle...
+                    </>
+                  ) : (
+                    <>
+                      <i className="ri-add-line mr-2"></i>
+                      Bestellung erstellen
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>

@@ -46,18 +46,6 @@ Ofenfertiges Buchen-Scheitholz, Länge 25 cm.
 
 ---
 
-## Scheitholz – Industrieholz Mix 33 cm
-**Beschreibung:**  
-70 % Industrieholz Buche Klasse I, 30 % Fichte.  
-Länge 33 cm.  
-
-- **Preis pro Schüttraummeter:** ~105,00 €~ → 90,00 €  
-- **Mindestbestellmenge:** 3 Schüttraummeter  
-- **Lieferzeit:** 1–3 Wochen  
-- **Preis inkl. MwSt, zzgl. Versandkosten**
-
----
-
 ## Scheitholz Fichte 33 cm
 **Beschreibung:**  
 Ofenfertiges Scheitholz aus Fichte, Länge 33 cm.  

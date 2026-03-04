@@ -18,20 +18,20 @@ const clearSupabaseCookies = () => {
         document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
       }
     });
-    
+
     // Clear localStorage and sessionStorage
     Object.keys(localStorage).forEach(key => {
       if (key.includes('supabase') || key.includes('sb-')) {
         localStorage.removeItem(key);
       }
     });
-    
+
     Object.keys(sessionStorage).forEach(key => {
       if (key.includes('supabase') || key.includes('sb-')) {
         sessionStorage.removeItem(key);
       }
     });
-    
+
     console.log('Supabase cookies and storage cleared due to parsing error');
   } catch (error) {
     console.error('Error clearing Supabase cookies:', error);
@@ -250,7 +250,7 @@ export default function CityPagesTab() {
     } catch (error) {
       console.error('Fehler beim Laden der Stadtseiten:', error);
       setError('Fehler beim Laden der Stadtseiten. Bitte versuchen Sie es erneut.');
-      
+
       // If it's a cookie-related error, try to reset and reload
       if (error instanceof Error && (error.message.includes('cookie') || error.message.includes('JSON'))) {
         clearSupabaseCookies();
@@ -410,7 +410,7 @@ export default function CityPagesTab() {
     } catch (error) {
       console.error('Fehler beim Löschen:', error);
       setError('Fehler beim Löschen. Bitte versuchen Sie es erneut.');
-      
+
       // If it's a cookie-related error, try to reset and reload
       if (error instanceof Error && (error.message.includes('cookie') || error.message.includes('JSON') || error.message.includes('parse'))) {
         clearSupabaseCookies();
@@ -456,7 +456,7 @@ export default function CityPagesTab() {
           } catch (error) {
             console.error('Fehler beim Speichern:', error);
             setError('Fehler beim Speichern. Bitte versuchen Sie es erneut.');
-            
+
             // If it's a cookie-related error, try to reset and reload
             if (error instanceof Error && (error.message.includes('cookie') || error.message.includes('JSON') || error.message.includes('parse'))) {
               clearSupabaseCookies();
@@ -531,9 +531,8 @@ export default function CityPagesTab() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{page.city_name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{page.slug}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    page.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${page.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
                     {page.is_active ? 'Aktiv' : 'Inaktiv'}
                   </span>
                 </td>
@@ -809,6 +808,10 @@ function CityPageForm({ page, onSave, onCancel }: {
                 <textarea value={formData.hero_subtitle} onChange={(e) => setFormData(prev => ({ ...prev, hero_subtitle: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" rows={2} />
               </div>
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Hero CTA Text</label>
+                <input type="text" value={formData.hero_cta_text || ''} onChange={(e) => setFormData(prev => ({ ...prev, hero_cta_text: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Jetzt bestellen" />
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Hero Sekundär-CTA Text</label>
                 <input type="text" value={formData.hero_secondary_cta_text || ''} onChange={(e) => setFormData(prev => ({ ...prev, hero_secondary_cta_text: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="z. B. WhatsApp Beratung" />
               </div>
@@ -833,14 +836,44 @@ function CityPageForm({ page, onSave, onCancel }: {
                 <input type="text" value={formData.content_section_1_title} onChange={(e) => setFormData(prev => ({ ...prev, content_section_1_title: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Brennholz für {city_name}" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Fließtext</label>
-                <textarea value={formData.content_section_1_content} onChange={(e) => setFormData(prev => ({ ...prev, content_section_1_content: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" rows={6} placeholder="Beschreibung der lokalen Expertise, Tradition und Qualität..." />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fließtext (HTML möglich)</label>
+                <textarea value={formData.content_section_1_content} onChange={(e) => setFormData(prev => ({ ...prev, content_section_1_content: e.target.value }))} className="w-full px-3 py-2 border rounded-lg font-mono text-sm" rows={6} placeholder="Beschreibung der lokalen Expertise, Tradition und Qualität..." />
               </div>
             </div>
           </div>
 
           <div className="bg-white p-6 rounded-lg border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Service (max 3 Bereiche)</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Regionale Qualität (Content Section 2)</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Titel</label>
+                <input type="text" value={formData.content_section_2_title || ''} onChange={(e) => setFormData(prev => ({ ...prev, content_section_2_title: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Effiziente Wärme für Stadt und Umland" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fließtext (HTML möglich)</label>
+                <textarea value={formData.content_section_2_content || ''} onChange={(e) => setFormData(prev => ({ ...prev, content_section_2_content: e.target.value }))} className="w-full px-3 py-2 border rounded-lg font-mono text-sm" rows={6} placeholder="Beschreibung der regionalen Qualität..." />
+              </div>
+              <CityImageUploader currentImageUrl={formData.content_section_2_image_url || ''} onImageUploaded={(url) => setFormData(prev => ({ ...prev, content_section_2_image_url: url }))} label="Bild: Content Section 2" citySlug={formData.slug} sectionType="content-2" />
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Nachhaltigkeit & Umwelt (Content Section 3)</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Titel</label>
+                <input type="text" value={formData.content_section_3_title || ''} onChange={(e) => setFormData(prev => ({ ...prev, content_section_3_title: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Nachhaltig aus der Region" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fließtext (HTML möglich)</label>
+                <textarea value={formData.content_section_3_content || ''} onChange={(e) => setFormData(prev => ({ ...prev, content_section_3_content: e.target.value }))} className="w-full px-3 py-2 border rounded-lg font-mono text-sm" rows={6} placeholder="Beschreibung der Nachhaltigkeit..." />
+              </div>
+              <CityImageUploader currentImageUrl={formData.content_section_3_image_url || ''} onImageUploaded={(url) => setFormData(prev => ({ ...prev, content_section_3_image_url: url }))} label="Bild: Content Section 3" citySlug={formData.slug} sectionType="content-3" />
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Service-Bereiche</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Service Titel</label>
@@ -850,67 +883,83 @@ function CityPageForm({ page, onSave, onCancel }: {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Service Beschreibung</label>
                 <textarea value={formData.local_service_description} onChange={(e) => setFormData(prev => ({ ...prev, local_service_description: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" rows={3} />
               </div>
-              {(formData.local_service_areas || []).slice(0,3).map((area, idx) => (
-                <div key={idx} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input type="text" value={area.title} onChange={(e) => {
-                    const next = [...(formData.local_service_areas || [])];
-                    next[idx] = { ...next[idx], title: e.target.value };
-                    setFormData(prev => ({ ...prev, local_service_areas: next }));
-                  }} className="w-full px-3 py-2 border rounded-lg" placeholder={`Bereich ${idx+1} Titel`} />
-                  <input type="text" value={area.description} onChange={(e) => {
-                    const next = [...(formData.local_service_areas || [])];
-                    next[idx] = { ...next[idx], description: e.target.value };
-                    setFormData(prev => ({ ...prev, local_service_areas: next }));
-                  }} className="w-full px-3 py-2 border rounded-lg" placeholder={`Bereich ${idx+1} Beschreibung`} />
-                </div>
-              ))}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Service-Gebiete (kommagetrennt, z.B. Mitte, Vorderer Westen, Wilhelmshöhe)</label>
+                <input type="text" value={
+                  Array.isArray(formData.local_service_areas)
+                    ? (typeof formData.local_service_areas[0] === 'string'
+                      ? (formData.local_service_areas as unknown as string[]).join(', ')
+                      : (formData.local_service_areas as any[]).map(a => a.name || a.title || '').join(', '))
+                    : ''
+                } onChange={(e) => setFormData(prev => ({ ...prev, local_service_areas: e.target.value.split(',').map(a => a.trim()).filter(Boolean) as any }))} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Mitte, Vorderer Westen, Wilhelmshöhe" />
+              </div>
             </div>
           </div>
 
           <div className="bg-white p-6 rounded-lg border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Lieferung (kompakt)</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Lieferung</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Titel</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Lieferinfo Titel</label>
                 <input type="text" value={formData.extended_delivery_info_title} onChange={(e) => setFormData(prev => ({ ...prev, extended_delivery_info_title: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Beschreibung</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Lieferinfo Beschreibung</label>
                 <textarea value={formData.extended_delivery_info_description} onChange={(e) => setFormData(prev => ({ ...prev, extended_delivery_info_description: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" rows={3} />
               </div>
+              <h4 className="text-md font-semibold text-gray-800">Lieferzone 1</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" value={formData.delivery_zones?.[0]?.zone_name || ''} onChange={(e) => {
-                  const dz = formData.delivery_zones?.length ? [...formData.delivery_zones] : [{ zone_name: '', delivery_fee: 0, minimum_order: 0, areas: [], delivery_time: '' }];
-                  dz[0].zone_name = e.target.value;
-                  setFormData(prev => ({ ...prev, delivery_zones: dz as any }));
-                }} className="w-full px-3 py-2 border rounded-lg" placeholder="Zone Name" />
-                <input type="text" value={(formData.delivery_zones?.[0]?.areas || []).join(', ')} onChange={(e) => {
-                  const dz = formData.delivery_zones?.length ? [...formData.delivery_zones] : [{ zone_name: '', delivery_fee: 0, minimum_order: 0, areas: [], delivery_time: '' }];
-                  dz[0].areas = e.target.value.split(',').map(a => a.trim()).filter(Boolean);
-                  setFormData(prev => ({ ...prev, delivery_zones: dz as any }));
-                }} className="w-full px-3 py-2 border rounded-lg" placeholder="Gebiete (kommagetrennt)" />
-                <input type="text" value={formData.delivery_zones?.[0]?.delivery_time || ''} onChange={(e) => {
-                  const dz = formData.delivery_zones?.length ? [...formData.delivery_zones] : [{ zone_name: '', delivery_fee: 0, minimum_order: 0, areas: [], delivery_time: '' }];
-                  dz[0].delivery_time = e.target.value;
-                  setFormData(prev => ({ ...prev, delivery_zones: dz as any }));
-                }} className="w-full px-3 py-2 border rounded-lg" placeholder="Lieferzeit" />
-                <input type="number" value={formData.delivery_zones?.[0]?.delivery_fee ?? 0} onChange={(e) => {
-                  const dz = formData.delivery_zones?.length ? [...formData.delivery_zones] : [{ zone_name: '', delivery_fee: 0, minimum_order: 0, areas: [], delivery_time: '' }];
-                  dz[0].delivery_fee = Number(e.target.value);
-                  setFormData(prev => ({ ...prev, delivery_zones: dz as any }));
-                }} className="w-full px-3 py-2 border rounded-lg" placeholder="Liefergebühr" />
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Zone Name</label>
+                  <input type="text" value={formData.delivery_zones?.[0]?.zone_name || ''} onChange={(e) => {
+                    const dz = formData.delivery_zones?.length ? [...formData.delivery_zones] : [{ zone_name: '', delivery_fee: 0, minimum_order: 0, areas: [], delivery_time: '' }];
+                    dz[0].zone_name = e.target.value;
+                    setFormData(prev => ({ ...prev, delivery_zones: dz as any }));
+                  }} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Kerngebiet" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Gebiete (kommagetrennt)</label>
+                  <input type="text" value={(formData.delivery_zones?.[0]?.areas || []).join(', ')} onChange={(e) => {
+                    const dz = formData.delivery_zones?.length ? [...formData.delivery_zones] : [{ zone_name: '', delivery_fee: 0, minimum_order: 0, areas: [], delivery_time: '' }];
+                    dz[0].areas = e.target.value.split(',').map(a => a.trim()).filter(Boolean);
+                    setFormData(prev => ({ ...prev, delivery_zones: dz as any }));
+                  }} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Mitte, Vorderer Westen" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Lieferzeit</label>
+                  <input type="text" value={formData.delivery_zones?.[0]?.delivery_time || ''} onChange={(e) => {
+                    const dz = formData.delivery_zones?.length ? [...formData.delivery_zones] : [{ zone_name: '', delivery_fee: 0, minimum_order: 0, areas: [], delivery_time: '' }];
+                    dz[0].delivery_time = e.target.value;
+                    setFormData(prev => ({ ...prev, delivery_zones: dz as any }));
+                  }} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. 24–48h" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Liefergebühr (€)</label>
+                  <input type="number" value={formData.delivery_zones?.[0]?.delivery_fee ?? 0} onChange={(e) => {
+                    const dz = formData.delivery_zones?.length ? [...formData.delivery_zones] : [{ zone_name: '', delivery_fee: 0, minimum_order: 0, areas: [], delivery_time: '' }];
+                    dz[0].delivery_fee = Number(e.target.value);
+                    setFormData(prev => ({ ...prev, delivery_zones: dz as any }));
+                  }} className="w-full px-3 py-2 border rounded-lg" />
+                </div>
               </div>
+              <h4 className="text-md font-semibold text-gray-800">Lieferroute 1</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" value={formData.delivery_routes?.[0]?.name || ''} onChange={(e) => {
-                  const dr = formData.delivery_routes?.length ? [...formData.delivery_routes] : [{ name: '', days: [], time_slots: [], zones: [] }];
-                  dr[0].name = e.target.value;
-                  setFormData(prev => ({ ...prev, delivery_routes: dr as any }));
-                }} className="w-full px-3 py-2 border rounded-lg" placeholder="Route Name" />
-                <input type="text" value={(formData.delivery_routes?.[0]?.days || []).join(', ')} onChange={(e) => {
-                  const dr = formData.delivery_routes?.length ? [...formData.delivery_routes] : [{ name: '', days: [], time_slots: [], zones: [] }];
-                  dr[0].days = e.target.value.split(',').map(a => a.trim()).filter(Boolean);
-                  setFormData(prev => ({ ...prev, delivery_routes: dr as any }));
-                }} className="w-full px-3 py-2 border rounded-lg" placeholder="Tage (Mo, Di, ...)" />
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Route Name</label>
+                  <input type="text" value={formData.delivery_routes?.[0]?.name || ''} onChange={(e) => {
+                    const dr = formData.delivery_routes?.length ? [...formData.delivery_routes] : [{ name: '', days: [], time_slots: [], zones: [] }];
+                    dr[0].name = e.target.value;
+                    setFormData(prev => ({ ...prev, delivery_routes: dr as any }));
+                  }} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Wilhelmshöhe-Route" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Liefertage (kommagetrennt)</label>
+                  <input type="text" value={(formData.delivery_routes?.[0]?.days || []).join(', ')} onChange={(e) => {
+                    const dr = formData.delivery_routes?.length ? [...formData.delivery_routes] : [{ name: '', days: [], time_slots: [], zones: [] }];
+                    dr[0].days = e.target.value.split(',').map(a => a.trim()).filter(Boolean);
+                    setFormData(prev => ({ ...prev, delivery_routes: dr as any }));
+                  }} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Mo, Mi, Sa" />
+                </div>
               </div>
             </div>
           </div>
@@ -921,18 +970,24 @@ function CityPageForm({ page, onSave, onCancel }: {
               const baseFaqs = Array.isArray(formData.local_faqs) ? formData.local_faqs : [];
               const ensuredFaqs = [...baseFaqs];
               while (ensuredFaqs.length < 5) ensuredFaqs.push({ question: '', answer: '' });
-              return ensuredFaqs.slice(0,5).map((faq, idx) => (
-                <div key={idx} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <input type="text" value={faq.question} onChange={(e) => {
-                    const next = [...(formData.local_faqs || ensuredFaqs)];
-                    next[idx] = { ...next[idx], question: e.target.value };
-                    setFormData(prev => ({ ...prev, local_faqs: next }));
-                  }} className="w-full px-3 py-2 border rounded-lg" placeholder={`Frage ${idx+1}`} />
-                  <input type="text" value={faq.answer} onChange={(e) => {
-                    const next = [...(formData.local_faqs || ensuredFaqs)];
-                    next[idx] = { ...next[idx], answer: e.target.value };
-                    setFormData(prev => ({ ...prev, local_faqs: next }));
-                  }} className="w-full px-3 py-2 border rounded-lg" placeholder={`Antwort ${idx+1}`} />
+              return ensuredFaqs.slice(0, 5).map((faq, idx) => (
+                <div key={idx} className="mb-4 p-3 bg-gray-50 rounded-lg">
+                  <div className="mb-2">
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Frage {idx + 1}</label>
+                    <input type="text" value={faq.question} onChange={(e) => {
+                      const next = [...(formData.local_faqs || ensuredFaqs)];
+                      next[idx] = { ...next[idx], question: e.target.value };
+                      setFormData(prev => ({ ...prev, local_faqs: next }));
+                    }} className="w-full px-3 py-2 border rounded-lg" placeholder={`Frage ${idx + 1}`} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Antwort {idx + 1}</label>
+                    <textarea value={faq.answer} onChange={(e) => {
+                      const next = [...(formData.local_faqs || ensuredFaqs)];
+                      next[idx] = { ...next[idx], answer: e.target.value };
+                      setFormData(prev => ({ ...prev, local_faqs: next }));
+                    }} className="w-full px-3 py-2 border rounded-lg" rows={3} placeholder={`Antwort ${idx + 1}`} />
+                  </div>
                 </div>
               ));
             })()}
@@ -941,16 +996,43 @@ function CityPageForm({ page, onSave, onCancel }: {
           <div className="bg-white p-6 rounded-lg border">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">CTAs & Kontakt</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="text" value={formData.primary_cta_url || ''} onChange={(e) => setFormData(prev => ({ ...prev, primary_cta_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="Primärer CTA URL" />
-              <input type="text" value={formData.secondary_cta_url || ''} onChange={(e) => setFormData(prev => ({ ...prev, secondary_cta_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="Sekundärer CTA URL" />
-              <input type="text" value={formData.contact_url || ''} onChange={(e) => setFormData(prev => ({ ...prev, contact_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="Kontakt URL" />
-              <input type="text" value={formData.phone_display || ''} onChange={(e) => setFormData(prev => ({ ...prev, phone_display: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="Telefon Anzeige" />
-              <input type="text" value={formData.whatsapp_url || ''} onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="WhatsApp URL" />
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Primärer CTA Text</label>
+                <input type="text" value={formData.primary_cta_text || ''} onChange={(e) => setFormData(prev => ({ ...prev, primary_cta_text: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Jetzt bestellen" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Primärer CTA URL</label>
+                <input type="text" value={formData.primary_cta_url || ''} onChange={(e) => setFormData(prev => ({ ...prev, primary_cta_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="/shop" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Sekundärer CTA Text</label>
+                <input type="text" value={formData.secondary_cta_text || ''} onChange={(e) => setFormData(prev => ({ ...prev, secondary_cta_text: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Mehr erfahren" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Sekundärer CTA URL</label>
+                <input type="text" value={formData.secondary_cta_url || ''} onChange={(e) => setFormData(prev => ({ ...prev, secondary_cta_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="tel:+49..." />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Kontakt URL</label>
+                <input type="text" value={formData.contact_url || ''} onChange={(e) => setFormData(prev => ({ ...prev, contact_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="/kontakt" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Telefon Anzeige</label>
+                <input type="text" value={formData.phone_display || ''} onChange={(e) => setFormData(prev => ({ ...prev, phone_display: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="+49 176 71085234" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">WhatsApp URL</label>
+                <input type="text" value={formData.whatsapp_url || ''} onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="https://wa.me/49..." />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Shop URL</label>
+                <input type="text" value={formData.shop_url || ''} onChange={(e) => setFormData(prev => ({ ...prev, shop_url: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="/shop" />
+              </div>
             </div>
           </div>
 
           <div className="bg-white p-6 rounded-lg border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Google Maps (kompakt)</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Google Maps</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Center Lat</label>
@@ -964,38 +1046,6 @@ function CityPageForm({ page, onSave, onCancel }: {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Zoom</label>
                 <input type="number" value={formData.google_maps_zoom} onChange={(e) => setFormData(prev => ({ ...prev, google_maps_zoom: parseInt(e.target.value) || 12 }))} className="w-full px-3 py-2 border rounded-lg" />
               </div>
-            </div>
-            <div className="mt-4">
-              <h4 className="text-md font-semibold text-gray-800 mb-2">Marker (max 2)</h4>
-              {(() => {
-                const base = Array.isArray(formData.google_maps_markers) ? formData.google_maps_markers : [];
-                const ensured = [...base];
-                while (ensured.length < 2) ensured.push({ lat: 0, lng: 0, title: '', description: '' } as any);
-                return ensured.slice(0,2).map((m, idx) => (
-                  <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
-                    <input type="number" step="any" value={m.lat ?? 0} onChange={(e) => {
-                      const next = [...(formData.google_maps_markers || ensured)];
-                      next[idx] = { ...next[idx], lat: parseFloat(e.target.value) || 0 };
-                      setFormData(prev => ({ ...prev, google_maps_markers: next as any }));
-                    }} className="w-full px-3 py-2 border rounded-lg" placeholder="Lat" />
-                    <input type="number" step="any" value={m.lng ?? 0} onChange={(e) => {
-                      const next = [...(formData.google_maps_markers || ensured)];
-                      next[idx] = { ...next[idx], lng: parseFloat(e.target.value) || 0 };
-                      setFormData(prev => ({ ...prev, google_maps_markers: next as any }));
-                    }} className="w-full px-3 py-2 border rounded-lg" placeholder="Lng" />
-                    <input type="text" value={m.title ?? ''} onChange={(e) => {
-                      const next = [...(formData.google_maps_markers || ensured)];
-                      next[idx] = { ...next[idx], title: e.target.value };
-                      setFormData(prev => ({ ...prev, google_maps_markers: next as any }));
-                    }} className="w-full px-3 py-2 border rounded-lg" placeholder="Titel" />
-                    <input type="text" value={m.description ?? ''} onChange={(e) => {
-                      const next = [...(formData.google_maps_markers || ensured)];
-                      next[idx] = { ...next[idx], description: e.target.value };
-                      setFormData(prev => ({ ...prev, google_maps_markers: next as any }));
-                    }} className="w-full px-3 py-2 border rounded-lg" placeholder="Beschreibung" />
-                  </div>
-                ));
-              })()}
             </div>
           </div>
 
@@ -1316,7 +1366,7 @@ function CityPageForm({ page, onSave, onCancel }: {
                 </div>
               </div>
             </div>
-            
+
             {/* Hauptüberschrift der Sektion */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1361,7 +1411,7 @@ function CityPageForm({ page, onSave, onCancel }: {
                 placeholder="z.B. Brennholz für Fulda - Tradition aus dem Herzen Hessens"
               />
             </div>
-            
+
             {/* Content-Box Fließtext */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1376,7 +1426,7 @@ function CityPageForm({ page, onSave, onCancel }: {
                 placeholder="Beschreibung der lokalen Expertise, Tradition und Qualität..."
               />
             </div>
-            
+
             {/* Bild Upload mit CityImageUploader */}
             <div>
               <CityImageUploader
@@ -1424,7 +1474,7 @@ function CityPageForm({ page, onSave, onCancel }: {
                 rows={3}
               />
             </div>
-            
+
             {/* Service Areas */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Service-Bereiche</label>
@@ -1542,7 +1592,7 @@ function CityPageForm({ page, onSave, onCancel }: {
                   placeholder="Wir kennen {city_name} wie unsere Westentasche..."
                 />
               </div>
-              
+
               {/* Expertise Benefits */}
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Expertise Vorteile</label>
@@ -2009,16 +2059,16 @@ function CityPageForm({ page, onSave, onCancel }: {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Highlights (kommagetrennt)</label>
               <input
-                  type="text"
-                  value={(formData.service_area_details_highlights || []).join(', ')}
-                  onChange={(e) => setFormData(prev => ({ ...prev, service_area_details_highlights: e.target.value.split(',').map(item => item.trim()).filter(item => item) }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-                />
+                type="text"
+                value={(formData.service_area_details_highlights || []).join(', ')}
+                onChange={(e) => setFormData(prev => ({ ...prev, service_area_details_highlights: e.target.value.split(',').map(item => item.trim()).filter(item => item) }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+              />
             </div>
           </div>
         </div>
 
-        
+
 
         {/* 11. Kostenrechner Section */}
         <div className="bg-white p-6 rounded-lg border">

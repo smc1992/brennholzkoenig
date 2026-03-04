@@ -46,6 +46,7 @@ interface Customer {
   last_name: string;
   email: string;
   phone?: string;
+  phone_2?: string;
   address?: string;
   notes?: string;
   created_at: string;
@@ -78,6 +79,7 @@ export default function CustomersTab() {
     last_name: '',
     email: '',
     phone: '',
+    phone_2: '',
     company: '',
     street: '',
     house_number: '',
@@ -250,14 +252,14 @@ export default function CustomersTab() {
               stats.totalOrders > 0 &&
               stats.lastOrderDate &&
               Date.now() - stats.lastOrderDate.getTime() <
-                90 * 24 * 60 * 60 * 1000
+              90 * 24 * 60 * 60 * 1000
             );
           case 'inactive':
             return (
               stats.totalOrders === 0 ||
               !stats.lastOrderDate ||
               Date.now() - stats.lastOrderDate.getTime() >=
-                90 * 24 * 60 * 60 * 1000
+              90 * 24 * 60 * 60 * 1000
             );
           case 'vip':
             return stats.totalSpent >= 1000 || stats.totalOrders >= 5;
@@ -312,7 +314,7 @@ export default function CustomersTab() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-         setCustomerOrders((data as unknown as Order[]) || []);
+      setCustomerOrders((data as unknown as Order[]) || []);
     } catch (error) {
       console.error('Error loading customer orders:', error);
       setCustomerOrders([]);
@@ -399,10 +401,16 @@ export default function CustomersTab() {
   const createCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Process data to ensure empty dates are sent as null
+      const processedData = { ...newCustomerData };
+      if (processedData.date_of_birth === '') {
+        processedData.date_of_birth = null;
+      }
+
       const { data, error } = await supabase
         .from('customers')
         .insert({
-          ...newCustomerData,
+          ...processedData,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
@@ -416,6 +424,7 @@ export default function CustomersTab() {
         last_name: '',
         email: '',
         phone: '',
+        phone_2: '',
         company: '',
         street: '',
         house_number: '',
@@ -456,6 +465,7 @@ export default function CustomersTab() {
         Nachname: customer.last_name || '',
         'E-Mail': customer.email || '',
         Telefon: customer.phone || '',
+        'Telefon 2': customer.phone_2 || '',
         Straße: customer.street || '',
         Hausnummer: customer.house_number || '',
         PLZ: customer.postal_code || '',
@@ -656,7 +666,7 @@ export default function CustomersTab() {
                     stats.totalOrders > 0 &&
                     stats.lastOrderDate &&
                     Date.now() - stats.lastOrderDate.getTime() <
-                      90 * 24 * 60 * 60 * 1000
+                    90 * 24 * 60 * 60 * 1000
                   );
                 }).length}
               </p>
@@ -782,15 +792,14 @@ export default function CustomersTab() {
                               return `KD-${String(parseInt(customer.id.replace(/-/g, '').slice(-5), 16) % 99999 + 10000).padStart(5, '0')}`;
                             }
                             return '-';
-                          })()} 
+                          })()}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div
-                            className={`w-10 h-10 flex items-center justify-center rounded-full mr-3 ${
-                              customer.is_deleted ? 'bg-gray-400' : 'bg-[#C04020]'
-                            }`}
+                            className={`w-10 h-10 flex items-center justify-center rounded-full mr-3 ${customer.is_deleted ? 'bg-gray-400' : 'bg-[#C04020]'
+                              }`}
                           >
                             <span className="text-white font-bold text-sm">
                               {customer.first_name?.[0]}
@@ -799,9 +808,8 @@ export default function CustomersTab() {
                           </div>
                           <div>
                             <div
-                              className={`text-sm font-medium ${
-                                customer.is_deleted ? 'text-gray-500' : 'text-gray-900'
-                              }`}
+                              className={`text-sm font-medium ${customer.is_deleted ? 'text-gray-500' : 'text-gray-900'
+                                }`}
                             >
                               {customer.first_name} {customer.last_name}
                               {customer.is_deleted && (
@@ -823,9 +831,8 @@ export default function CustomersTab() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div
-                          className={`text-sm ${
-                            customer.is_deleted ? 'text-gray-400' : 'text-gray-900'
-                          }`}
+                          className={`text-sm ${customer.is_deleted ? 'text-gray-400' : 'text-gray-900'
+                            }`}
                         >
                           {customer.is_deleted ? 'E-Mail gelöscht' : customer.email}
                         </div>
@@ -938,262 +945,270 @@ export default function CustomersTab() {
         <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-[#1A1A1A)">
-                  Kundendetails - {selectedCustomer.first_name} {selectedCustomer.last_name}
-                </h2>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setEditingCustomer(selectedCustomer)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-                  >
-                    <i className="ri-edit-line mr-2"></i>
-                    Bearbeiten
-                  </button>
-                  <button
-                    onClick={() => setSelectedCustomer(null)}
-                    className="text-gray-400 hover:text-gray-600 cursor-pointer"
-                  >
-                    <i className="ri-close-line text-2xl"></i>
-                  </button>
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-[#1A1A1A)">
+                    Kundendetails - {selectedCustomer.first_name} {selectedCustomer.last_name}
+                  </h2>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setEditingCustomer(selectedCustomer)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      <i className="ri-edit-line mr-2"></i>
+                      Bearbeiten
+                    </button>
+                    <button
+                      onClick={() => setSelectedCustomer(null)}
+                      className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                    >
+                      <i className="ri-close-line text-2xl"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-1">
-                  {selectedCustomer.is_deleted && (
-                    <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
-                      <h3 className="text-lg font-bold text-red-900 mb-4">
-                        <i className="ri-alert-line mr-2"></i>
-                        Gelöschtes Konto
-                      </h3>
-                      <div className="space-y-2 text-sm text-red-800">
-                        <p>
-                          Dieser Kunde hat sein Konto am{' '}
-                          {new Date(selectedCustomer.deleted_at).toLocaleDateString('de-DE')} gelöscht.
-                        </p>
-                        <p>Persönliche Daten wurden anonymisiert.</p>
-                        <p>Bestellhistorie bleibt für administrative Zwecke erhalten.</p>
+              <div className="p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div className="lg:col-span-1">
+                    {selectedCustomer.is_deleted && (
+                      <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
+                        <h3 className="text-lg font-bold text-red-900 mb-4">
+                          <i className="ri-alert-line mr-2"></i>
+                          Gelöschtes Konto
+                        </h3>
+                        <div className="space-y-2 text-sm text-red-800">
+                          <p>
+                            Dieser Kunde hat sein Konto am{' '}
+                            {new Date(selectedCustomer.deleted_at).toLocaleDateString('de-DE')} gelöscht.
+                          </p>
+                          <p>Persönliche Daten wurden anonymisiert.</p>
+                          <p>Bestellhistorie bleibt für administrative Zwecke erhalten.</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  <div className="bg-gray-50 rounded-xl p-6 mb-6">
-                    <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Grundinformationen</h3>
-                    <div className="space-y-3 text-sm">
-                      <div>
-                        <span className="font-medium text-gray-700">Name:</span>
-                        <p className="text-gray-900">
-                          {selectedCustomer.first_name} {selectedCustomer.last_name}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-700">E-Mail:</span>
-                        <p className="text-gray-900">
-                          {selectedCustomer.is_deleted ? 'E-Mail gelöscht' : selectedCustomer.email}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-700">Telefon:</span>
-                        <p className="text-gray-900">
-                          {selectedCustomer.is_deleted ? '-' : selectedCustomer.phone || '-'}
-                        </p>
-                      </div>
-                      {!selectedCustomer.is_deleted && (
+                    <div className="bg-gray-50 rounded-xl p-6 mb-6">
+                      <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Grundinformationen</h3>
+                      <div className="space-y-3 text-sm">
                         <div>
-                          <span className="font-medium text-gray-700">Lieferadresse:</span>
+                          <span className="font-medium text-gray-700">Name:</span>
                           <p className="text-gray-900">
-                            {selectedCustomer.street} {selectedCustomer.house_number}
-                            <br />
-                            {selectedCustomer.postal_code} {selectedCustomer.city}
+                            {selectedCustomer.first_name} {selectedCustomer.last_name}
                           </p>
                         </div>
-                      )}
-                      <div>
-                        <span className="font-medium text-gray-700">Registriert am:</span>
-                        <p className="text-gray-900">
-                          {new Date(selectedCustomer.created_at).toLocaleDateString('de-DE')}
-                        </p>
-                      </div>
-                      {selectedCustomer.date_of_birth && !selectedCustomer.is_deleted && (
                         <div>
-                          <span className="font-medium text-gray-700">Geburtsdatum:</span>
+                          <span className="font-medium text-gray-700">E-Mail:</span>
                           <p className="text-gray-900">
-                            {new Date(selectedCustomer.date_of_birth).toLocaleDateString('de-DE')}
+                            {selectedCustomer.is_deleted ? 'E-Mail gelöscht' : selectedCustomer.email}
                           </p>
                         </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="bg-orange-50 rounded-xl p-6 mb-6">
-                    <h3 className="text-lg font-bold text-orange-900 mb-4">Rechnungsadresse</h3>
-                    <div className="space-y-3 text-sm">
-                      {selectedCustomer.billing_same_as_delivery ? (
-                        <p className="text-orange-700 font-medium">
-                          <i className="ri-check-line mr-2"></i>
-                          Gleich der Lieferadresse
-                        </p>
-                      ) : (
-                        <>
-                          {selectedCustomer.billing_company && (
-                            <div>
-                              <span className="font-medium text-orange-700">Firma:</span>
-                              <p className="text-orange-900">{selectedCustomer.billing_company}</p>
-                            </div>
-                          )}
+                        <div>
+                          <span className="font-medium text-gray-700">Telefon:</span>
+                          <p className="text-gray-900">
+                            {selectedCustomer.is_deleted ? '-' : selectedCustomer.phone || '-'}
+                          </p>
+                        </div>
+                        {selectedCustomer.phone_2 && !selectedCustomer.is_deleted && (
                           <div>
-                            <span className="font-medium text-orange-700">Name:</span>
-                            <p className="text-orange-900">
-                              {selectedCustomer.billing_first_name} {selectedCustomer.billing_last_name}
+                            <span className="font-medium text-gray-700">Telefon 2:</span>
+                            <p className="text-gray-900">
+                              {selectedCustomer.phone_2}
                             </p>
                           </div>
+                        )}
+                        {!selectedCustomer.is_deleted && (
                           <div>
-                            <span className="font-medium text-orange-700">Adresse:</span>
-                            <p className="text-orange-900">
-                              {selectedCustomer.billing_street} {selectedCustomer.billing_house_number}
+                            <span className="font-medium text-gray-700">Lieferadresse:</span>
+                            <p className="text-gray-900">
+                              {selectedCustomer.street} {selectedCustomer.house_number}
                               <br />
-                              {selectedCustomer.billing_postal_code} {selectedCustomer.billing_city}
+                              {selectedCustomer.postal_code} {selectedCustomer.city}
                             </p>
                           </div>
-                        </>
-                      )}
+                        )}
+                        <div>
+                          <span className="font-medium text-gray-700">Registriert am:</span>
+                          <p className="text-gray-900">
+                            {new Date(selectedCustomer.created_at).toLocaleDateString('de-DE')}
+                          </p>
+                        </div>
+                        {selectedCustomer.date_of_birth && !selectedCustomer.is_deleted && (
+                          <div>
+                            <span className="font-medium text-gray-700">Geburtsdatum:</span>
+                            <p className="text-gray-900">
+                              {new Date(selectedCustomer.date_of_birth).toLocaleDateString('de-DE')}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-                    <h3 className="text-lg font-bold text-blue-900 mb-4">Kundenstatistiken</h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-blue-700">Bestellungen gesamt:</span>
-                        <span className="font-bold text-blue-900">
-                          {selectedCustomer.orders?.length || 0}
-                        </span>
+                    <div className="bg-orange-50 rounded-xl p-6 mb-6">
+                      <h3 className="text-lg font-bold text-orange-900 mb-4">Rechnungsadresse</h3>
+                      <div className="space-y-3 text-sm">
+                        {selectedCustomer.billing_same_as_delivery ? (
+                          <p className="text-orange-700 font-medium">
+                            <i className="ri-check-line mr-2"></i>
+                            Gleich der Lieferadresse
+                          </p>
+                        ) : (
+                          <>
+                            {selectedCustomer.billing_company && (
+                              <div>
+                                <span className="font-medium text-orange-700">Firma:</span>
+                                <p className="text-orange-900">{selectedCustomer.billing_company}</p>
+                              </div>
+                            )}
+                            <div>
+                              <span className="font-medium text-orange-700">Name:</span>
+                              <p className="text-orange-900">
+                                {selectedCustomer.billing_first_name} {selectedCustomer.billing_last_name}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-orange-700">Adresse:</span>
+                              <p className="text-orange-900">
+                                {selectedCustomer.billing_street} {selectedCustomer.billing_house_number}
+                                <br />
+                                {selectedCustomer.billing_postal_code} {selectedCustomer.billing_city}
+                              </p>
+                            </div>
+                          </>
+                        )}
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-700">Gesamtumsatz:</span>
-                        <span className="font-bold text-blue-900">
-                          €
-                          {(selectedCustomer.orders || [])
-                            .reduce((sum, order) => sum + parseFloat(order.total_amount), 0)
-                            .toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-700">Durchschnittlicher Bestellwert:</span>
-                        <span className="font-bold text-blue-900">
-                          €
-                          {(selectedCustomer.orders || []).length > 0
-                            ? (
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                      <h3 className="text-lg font-bold text-blue-900 mb-4">Kundenstatistiken</h3>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-blue-700">Bestellungen gesamt:</span>
+                          <span className="font-bold text-blue-900">
+                            {selectedCustomer.orders?.length || 0}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-blue-700">Gesamtumsatz:</span>
+                          <span className="font-bold text-blue-900">
+                            €
+                            {(selectedCustomer.orders || [])
+                              .reduce((sum, order) => sum + parseFloat(order.total_amount), 0)
+                              .toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-blue-700">Durchschnittlicher Bestellwert:</span>
+                          <span className="font-bold text-blue-900">
+                            €
+                            {(selectedCustomer.orders || []).length > 0
+                              ? (
                                 (selectedCustomer.orders || []).reduce(
                                   (sum, order) => sum + parseFloat(order.total_amount),
                                   0
                                 ) / (selectedCustomer.orders || []).length
                               ).toFixed(2)
-                            : '0.00'}
-                        </span>
+                              : '0.00'}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="lg:col-span-2">
-                  <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Bestellhistorie</h3>
+                  <div className="lg:col-span-2">
+                    <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Bestellhistorie</h3>
 
-                  {selectedCustomer.orders?.length === 0 ? (
-                    <div className="text-center py-8">
-                      <div className="w-16 h-16 flex items-center justify-center bg-gray-100 rounded-full mx-auto mb-4">
-                        <i className="ri-shopping-bag-line text-2xl text-gray-400"></i>
-                      </div>
-                      <p className="text-gray-500">Dieser Kunde hat noch keine Bestellungen</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {selectedCustomer.orders?.map((order) => (
-                        <div
-                          key={order.id}
-                          className="border border-gray-200 rounded-lg p-4"
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <div>
-                              <h4 className="font-bold text-[#1A1A1A]">#{order.order_number}</h4>
-                              <p className="text-sm text-gray-600">
-                                {new Date(order.created_at).toLocaleDateString('de-DE')} •
-                                {order.payment_method === 'cash' ? 'Barzahlung' : order.payment_method}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-lg font-bold text-[#C04020]">
-                                €{parseFloat(String(order.total_amount)).toFixed(2)}
-                              </div>
-                              <span
-                                className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${getStatusColor(
-                                  order.status
-                                )}`}
-                              >
-                                {getStatusText(order.status)}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                            <div className="bg-green-50 rounded p-3">
-                              <h6 className="font-medium text-green-800 mb-2">Lieferadresse:</h6>
-                              <div className="text-sm text-green-700">
-                                <p>{order.delivery_first_name} {order.delivery_last_name}</p>
-                                <p>{order.delivery_street} {order.delivery_house_number}</p>
-                                <p>{order.delivery_postal_code} {order.delivery_city}</p>
-                                {order.delivery_phone && <p>Tel: {order.delivery_phone}</p>}
-                              </div>
-                            </div>
-                            <div className="bg-orange-50 rounded p-3">
-                              <h6 className="font-medium text-orange-800 mb-2">Rechnungsadresse:</h6>
-                              <div className="text-sm text-orange-700">
-                                {order.billing_same_as_delivery ? (
-                                  <p className="italic">Gleich der Lieferadresse</p>
-                                ) : (
-                                  <>
-                                    {order.billing_company && <p>Firma: {order.billing_company}</p>}
-                                    <p>{order.billing_first_name} {order.billing_last_name}</p>
-                                    <p>{order.billing_street} {order.billing_house_number}</p>
-                                    <p>{order.billing_postal_code} {order.billing_city}</p>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="bg-gray-50 rounded-lg p-3">
-                            <h5 className="font-medium text-gray-700 mb-2">Bestellpositionen:</h5>
-                            <div className="space-y-1">
-                              {order.order_items?.map((item: OrderItem, index: number) => (
-                                <div
-                                  key={index}
-                                  className="flex justify-between text-sm"
-                                >
-                                  <span>
-                                    {item.product_name} × {item.quantity}
-                                  </span>
-                                  <span className="font-medium">
-                                    €{parseFloat(String(item.total_price)).toFixed(2)}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
+                    {selectedCustomer.orders?.length === 0 ? (
+                      <div className="text-center py-8">
+                        <div className="w-16 h-16 flex items-center justify-center bg-gray-100 rounded-full mx-auto mb-4">
+                          <i className="ri-shopping-bag-line text-2xl text-gray-400"></i>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                        <p className="text-gray-500">Dieser Kunde hat noch keine Bestellungen</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {selectedCustomer.orders?.map((order) => (
+                          <div
+                            key={order.id}
+                            className="border border-gray-200 rounded-lg p-4"
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <div>
+                                <h4 className="font-bold text-[#1A1A1A]">#{order.order_number}</h4>
+                                <p className="text-sm text-gray-600">
+                                  {new Date(order.created_at).toLocaleDateString('de-DE')} •
+                                  {order.payment_method === 'cash' ? 'Barzahlung' : order.payment_method}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-lg font-bold text-[#C04020]">
+                                  €{parseFloat(String(order.total_amount)).toFixed(2)}
+                                </div>
+                                <span
+                                  className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${getStatusColor(
+                                    order.status
+                                  )}`}
+                                >
+                                  {getStatusText(order.status)}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                              <div className="bg-green-50 rounded p-3">
+                                <h6 className="font-medium text-green-800 mb-2">Lieferadresse:</h6>
+                                <div className="text-sm text-green-700">
+                                  <p>{order.delivery_first_name} {order.delivery_last_name}</p>
+                                  <p>{order.delivery_street} {order.delivery_house_number}</p>
+                                  <p>{order.delivery_postal_code} {order.delivery_city}</p>
+                                  {order.delivery_phone && <p>Tel: {order.delivery_phone}</p>}
+                                </div>
+                              </div>
+                              <div className="bg-orange-50 rounded p-3">
+                                <h6 className="font-medium text-orange-800 mb-2">Rechnungsadresse:</h6>
+                                <div className="text-sm text-orange-700">
+                                  {order.billing_same_as_delivery ? (
+                                    <p className="italic">Gleich der Lieferadresse</p>
+                                  ) : (
+                                    <>
+                                      {order.billing_company && <p>Firma: {order.billing_company}</p>}
+                                      <p>{order.billing_first_name} {order.billing_last_name}</p>
+                                      <p>{order.billing_street} {order.billing_house_number}</p>
+                                      <p>{order.billing_postal_code} {order.billing_city}</p>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="bg-gray-50 rounded-lg p-3">
+                              <h5 className="font-medium text-gray-700 mb-2">Bestellpositionen:</h5>
+                              <div className="space-y-1">
+                                {order.order_items?.map((item: OrderItem, index: number) => (
+                                  <div
+                                    key={index}
+                                    className="flex justify-between text-sm"
+                                  >
+                                    <span>
+                                      {item.product_name} × {item.quantity}
+                                    </span>
+                                    <span className="font-medium">
+                                      €{parseFloat(String(item.total_price)).toFixed(2)}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
       )}
 
       {editingCustomer && (
@@ -1214,305 +1229,319 @@ export default function CustomersTab() {
 
               <div className="flex-1 overflow-y-auto p-6">
                 <form
-              onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
-                e.preventDefault();
-                const form = e.currentTarget;
-                const formData = new FormData(form);
-                const data: Record<string, any> = {};
-                
-                // Process form data with proper type handling
-                formData.forEach((value, key) => {
-                  data[key] = value;
-                });
-                
-                data.billing_same_as_delivery = formData.get('billing_same_as_delivery') === 'on';
-                updateCustomer(editingCustomer.id, data);
-              }}
-              className="space-y-6"
-            >
-              <div>
-                <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Grundinformationen</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Kundennummer</label>
-                    <input
-                      type="text"
-                      value={editingCustomer.id ? `KD-${String(parseInt(editingCustomer.id.replace(/-/g, '').slice(-5), 16) % 99999 + 10000).padStart(5, '0')}` : '-'}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600 font-mono"
-                      readOnly
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Vorname</label>
-                    <input
-                      type="text"
-                      name="first_name"
-                      defaultValue={editingCustomer.first_name}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                      required
-                    />
-                  </div>
+                  onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
+                    e.preventDefault();
+                    const form = e.currentTarget;
+                    const formData = new FormData(form);
+                    const data: Record<string, any> = {};
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Nachname</label>
-                    <input
-                      type="text"
-                      name="last_name"
-                      defaultValue={editingCustomer.last_name}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                      required
-                    />
-                  </div>
+                    // Process form data with proper type handling
+                    formData.forEach((value, key) => {
+                      if (value === '' && (key === 'date_of_birth' || key.includes('date'))) {
+                        data[key] = null;
+                      } else {
+                        data[key] = value;
+                      }
+                    });
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">E-Mail</label>
-                    <input
-                      type="email"
-                      name="email"
-                      defaultValue={editingCustomer.email}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Telefon</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      defaultValue={editingCustomer.phone}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Firmenname (optional)</label>
-                    <input
-                      type="text"
-                      name="company"
-                      defaultValue={editingCustomer.company}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                      placeholder="Firmenname eingeben..."
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Geburtsdatum</label>
-                    <input
-                      type="date"
-                      name="date_of_birth"
-                      defaultValue={editingCustomer.date_of_birth}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Land</label>
-                    <select
-                      name="country"
-                      defaultValue={editingCustomer.country || 'Deutschland'}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                    >
-                      <option value="Deutschland">Deutschland</option>
-                      <option value="Österreich">Österreich</option>
-                      <option value="Schweiz">Schweiz</option>
-                      <option value="Andere">Andere</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Bevorzugter Liefermonat</label>
-                    <select
-                      name="preferred_delivery_month"
-                      defaultValue={editingCustomer.preferred_delivery_month || ''}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                    >
-                      <option value="">Keine Präferenz</option>
-                      <option value="Januar">Januar</option>
-                      <option value="Februar">Februar</option>
-                      <option value="März">März</option>
-                      <option value="April">April</option>
-                      <option value="Mai">Mai</option>
-                      <option value="Juni">Juni</option>
-                      <option value="Juli">Juli</option>
-                      <option value="August">August</option>
-                      <option value="September">September</option>
-                      <option value="Oktober">Oktober</option>
-                      <option value="November">November</option>
-                      <option value="Dezember">Dezember</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Bevorzugtes Lieferjahr</label>
-                    <select
-                      name="preferred_delivery_year"
-                      defaultValue={editingCustomer.preferred_delivery_year || new Date().getFullYear().toString()}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                    >
-                      <option value={new Date().getFullYear().toString()}>{new Date().getFullYear()}</option>
-                      <option value={(new Date().getFullYear() + 1).toString()}>{new Date().getFullYear() + 1}</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Lieferadresse</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Straße</label>
-                    <input
-                      type="text"
-                      name="street"
-                      defaultValue={editingCustomer.street}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Hausnummer</label>
-                    <input
-                      type="text"
-                      name="house_number"
-                      defaultValue={editingCustomer.house_number}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Postleitzahl</label>
-                    <input
-                      type="text"
-                      name="postal_code"
-                      defaultValue={editingCustomer.postal_code}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Stadt</label>
-                    <input
-                      type="text"
-                      name="city"
-                      defaultValue={editingCustomer.city}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Rechnungsadresse</h3>
-
-                <div className="mb-4">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="billing_same_as_delivery"
-                      checked={billingSameAsDelivery}
-                      onChange={(e) => setBillingSameAsDelivery(e.target.checked)}
-                      className="mr-2"
-                    />
-                    <span className="text-sm font-medium text-gray-700">
-                      Rechnungsadresse gleich Lieferadresse
-                    </span>
-                  </label>
-                </div>
-
-                {!billingSameAsDelivery && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Firma (optional)</label>
-                      <input
-                        type="text"
-                        name="billing_company"
-                        defaultValue={editingCustomer.billing_company}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Vorname</label>
-                      <input
-                        type="text"
-                        name="billing_first_name"
-                        defaultValue={editingCustomer.billing_first_name}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Nachname</label>
-                      <input
-                        type="text"
-                        name="billing_last_name"
-                        defaultValue={editingCustomer.billing_last_name}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Straße</label>
-                      <input
-                        type="text"
-                        name="billing_street"
-                        defaultValue={editingCustomer.billing_street}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Hausnummer</label>
-                      <input
-                        type="text"
-                        name="billing_house_number"
-                        defaultValue={editingCustomer.billing_house_number}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Postleitzahl</label>
-                      <input
-                        type="text"
-                        name="billing_postal_code"
-                        defaultValue={editingCustomer.billing_postal_code}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Stadt</label>
-                      <input
-                        type="text"
-                        name="billing_city"
-                        defaultValue={editingCustomer.billing_city}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex space-x-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setEditingCustomer(null)}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
+                    data.billing_same_as_delivery = formData.get('billing_same_as_delivery') === 'on';
+                    updateCustomer(editingCustomer.id, data);
+                  }}
+                  className="space-y-6"
                 >
-                  Abbrechen
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-[#C04020] hover:bg-[#A03318] text-white py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
-                >
-                  <i className="ri-save-line mr-2"></i>
-                  Änderungen speichern
-                </button>
-              </div>
-            </form>
+                  <div>
+                    <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Grundinformationen</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Kundennummer</label>
+                        <input
+                          type="text"
+                          value={editingCustomer.id ? `KD-${String(parseInt(editingCustomer.id.replace(/-/g, '').slice(-5), 16) % 99999 + 10000).padStart(5, '0')}` : '-'}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-600 font-mono"
+                          readOnly
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Vorname</label>
+                        <input
+                          type="text"
+                          name="first_name"
+                          defaultValue={editingCustomer.first_name}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Nachname</label>
+                        <input
+                          type="text"
+                          name="last_name"
+                          defaultValue={editingCustomer.last_name}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">E-Mail</label>
+                        <input
+                          type="email"
+                          name="email"
+                          defaultValue={editingCustomer.email}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Telefon</label>
+                        <input
+                          type="tel"
+                          name="phone"
+                          defaultValue={editingCustomer.phone}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Telefon 2 (optional)</label>
+                        <input
+                          type="tel"
+                          name="phone_2"
+                          defaultValue={editingCustomer.phone_2}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Firmenname (optional)</label>
+                        <input
+                          type="text"
+                          name="company"
+                          defaultValue={editingCustomer.company}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                          placeholder="Firmenname eingeben..."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Geburtsdatum</label>
+                        <input
+                          type="date"
+                          name="date_of_birth"
+                          defaultValue={editingCustomer.date_of_birth}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Land</label>
+                        <select
+                          name="country"
+                          defaultValue={editingCustomer.country || 'Deutschland'}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                        >
+                          <option value="Deutschland">Deutschland</option>
+                          <option value="Österreich">Österreich</option>
+                          <option value="Schweiz">Schweiz</option>
+                          <option value="Andere">Andere</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Bevorzugter Liefermonat</label>
+                        <select
+                          name="preferred_delivery_month"
+                          defaultValue={editingCustomer.preferred_delivery_month || ''}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                        >
+                          <option value="">Keine Präferenz</option>
+                          <option value="Januar">Januar</option>
+                          <option value="Februar">Februar</option>
+                          <option value="März">März</option>
+                          <option value="April">April</option>
+                          <option value="Mai">Mai</option>
+                          <option value="Juni">Juni</option>
+                          <option value="Juli">Juli</option>
+                          <option value="August">August</option>
+                          <option value="September">September</option>
+                          <option value="Oktober">Oktober</option>
+                          <option value="November">November</option>
+                          <option value="Dezember">Dezember</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Bevorzugtes Lieferjahr</label>
+                        <select
+                          name="preferred_delivery_year"
+                          defaultValue={editingCustomer.preferred_delivery_year || new Date().getFullYear().toString()}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                        >
+                          <option value={new Date().getFullYear().toString()}>{new Date().getFullYear()}</option>
+                          <option value={(new Date().getFullYear() + 1).toString()}>{new Date().getFullYear() + 1}</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Lieferadresse</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Straße</label>
+                        <input
+                          type="text"
+                          name="street"
+                          defaultValue={editingCustomer.street}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Hausnummer</label>
+                        <input
+                          type="text"
+                          name="house_number"
+                          defaultValue={editingCustomer.house_number}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Postleitzahl</label>
+                        <input
+                          type="text"
+                          name="postal_code"
+                          defaultValue={editingCustomer.postal_code}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Stadt</label>
+                        <input
+                          type="text"
+                          name="city"
+                          defaultValue={editingCustomer.city}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-bold text-[#1A1A1A] mb-4">Rechnungsadresse</h3>
+
+                    <div className="mb-4">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="billing_same_as_delivery"
+                          checked={billingSameAsDelivery}
+                          onChange={(e) => setBillingSameAsDelivery(e.target.checked)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm font-medium text-gray-700">
+                          Rechnungsadresse gleich Lieferadresse
+                        </span>
+                      </label>
+                    </div>
+
+                    {!billingSameAsDelivery && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Firma (optional)</label>
+                          <input
+                            type="text"
+                            name="billing_company"
+                            defaultValue={editingCustomer.billing_company}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Vorname</label>
+                          <input
+                            type="text"
+                            name="billing_first_name"
+                            defaultValue={editingCustomer.billing_first_name}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Nachname</label>
+                          <input
+                            type="text"
+                            name="billing_last_name"
+                            defaultValue={editingCustomer.billing_last_name}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Straße</label>
+                          <input
+                            type="text"
+                            name="billing_street"
+                            defaultValue={editingCustomer.billing_street}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Hausnummer</label>
+                          <input
+                            type="text"
+                            name="billing_house_number"
+                            defaultValue={editingCustomer.billing_house_number}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Postleitzahl</label>
+                          <input
+                            type="text"
+                            name="billing_postal_code"
+                            defaultValue={editingCustomer.billing_postal_code}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Stadt</label>
+                          <input
+                            type="text"
+                            name="billing_city"
+                            defaultValue={editingCustomer.billing_city}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] transition-colors"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex space-x-3 pt-4 border-t border-gray-200">
+                    <button
+                      type="button"
+                      onClick={() => setEditingCustomer(null)}
+                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      Abbrechen
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 bg-[#C04020] hover:bg-[#A03318] text-white py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      <i className="ri-save-line mr-2"></i>
+                      Änderungen speichern
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
@@ -1535,330 +1564,342 @@ export default function CustomersTab() {
                   </button>
                 </div>
               </div>
-              
+
               <div className="flex-1 overflow-y-auto p-6">
                 <form onSubmit={createCustomer} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Kundennummer
-                  </label>
-                  <input
-                    type="text"
-                    value={newCustomerData.email ? `KD-${String(Math.abs(newCustomerData.email.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0)) % 89999 + 10000).padStart(5, '0')}` : 'Wird automatisch generiert'}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 font-mono focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    readOnly
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Vorname *
-                  </label>
-                  <input
-                    type="text"
-                    value={newCustomerData.first_name}
-                    onChange={(e) => setNewCustomerData({...newCustomerData, first_name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nachname *
-                  </label>
-                  <input
-                    type="text"
-                    value={newCustomerData.last_name}
-                    onChange={(e) => setNewCustomerData({...newCustomerData, last_name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  E-Mail *
-                </label>
-                <input
-                  type="email"
-                  value={newCustomerData.email}
-                  onChange={(e) => setNewCustomerData({...newCustomerData, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Telefon
-                </label>
-                <input
-                  type="tel"
-                  value={newCustomerData.phone}
-                  onChange={(e) => setNewCustomerData({...newCustomerData, phone: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Firmenname (optional)
-                </label>
-                <input
-                  type="text"
-                  value={newCustomerData.company || ''}
-                  onChange={(e) => setNewCustomerData({...newCustomerData, company: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Firmenname eingeben..."
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Straße
-                  </label>
-                  <input
-                    type="text"
-                    value={newCustomerData.street}
-                    onChange={(e) => setNewCustomerData({...newCustomerData, street: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Hausnummer
-                  </label>
-                  <input
-                    type="text"
-                    value={newCustomerData.house_number}
-                    onChange={(e) => setNewCustomerData({...newCustomerData, house_number: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    PLZ
-                  </label>
-                  <input
-                    type="text"
-                    value={newCustomerData.postal_code}
-                    onChange={(e) => setNewCustomerData({...newCustomerData, postal_code: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Stadt
-                  </label>
-                  <input
-                    type="text"
-                    value={newCustomerData.city}
-                    onChange={(e) => setNewCustomerData({...newCustomerData, city: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Geburtsdatum
-                  </label>
-                  <input
-                    type="date"
-                    value={newCustomerData.date_of_birth}
-                    onChange={(e) => setNewCustomerData({...newCustomerData, date_of_birth: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Land
-                  </label>
-                  <select
-                    value={newCustomerData.country}
-                    onChange={(e) => setNewCustomerData({...newCustomerData, country: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="Deutschland">Deutschland</option>
-                    <option value="Österreich">Österreich</option>
-                    <option value="Schweiz">Schweiz</option>
-                    <option value="Andere">Andere</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-md font-semibold text-gray-800 mb-3">Lieferpräferenzen</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Bevorzugter Liefermonat
-                    </label>
-                    <select
-                      value={newCustomerData.preferred_delivery_month}
-                      onChange={(e) => setNewCustomerData({...newCustomerData, preferred_delivery_month: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="">Kein Präferenz</option>
-                      <option value="Januar">Januar</option>
-                      <option value="Februar">Februar</option>
-                      <option value="März">März</option>
-                      <option value="April">April</option>
-                      <option value="Mai">Mai</option>
-                      <option value="Juni">Juni</option>
-                      <option value="Juli">Juli</option>
-                      <option value="August">August</option>
-                      <option value="September">September</option>
-                      <option value="Oktober">Oktober</option>
-                      <option value="November">November</option>
-                      <option value="Dezember">Dezember</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Bevorzugtes Lieferjahr
-                    </label>
-                    <select
-                      value={newCustomerData.preferred_delivery_year}
-                      onChange={(e) => setNewCustomerData({...newCustomerData, preferred_delivery_year: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value={new Date().getFullYear().toString()}>{new Date().getFullYear()}</option>
-                      <option value={(new Date().getFullYear() + 1).toString()}>{new Date().getFullYear() + 1}</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-md font-semibold text-gray-800 mb-3">Rechnungsadresse</h4>
-                <div className="mb-4">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={newCustomerData.billing_same_as_delivery}
-                      onChange={(e) => setNewCustomerData({...newCustomerData, billing_same_as_delivery: e.target.checked})}
-                      className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="text-sm text-gray-700">Rechnungsadresse ist identisch mit Lieferadresse</span>
-                  </label>
-                </div>
-
-                {!newCustomerData.billing_same_as_delivery && (
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Firma (optional)
+                        Kundennummer
                       </label>
                       <input
                         type="text"
-                        value={newCustomerData.billing_company}
-                        onChange={(e) => setNewCustomerData({...newCustomerData, billing_company: e.target.value})}
+                        value={newCustomerData.email ? `KD-${String(Math.abs(newCustomerData.email.split('').reduce((a: number, b: string) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0)) % 89999 + 10000).padStart(5, '0')}` : 'Wird automatisch generiert'}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 font-mono focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        readOnly
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Vorname *
+                      </label>
+                      <input
+                        type="text"
+                        value={newCustomerData.first_name}
+                        onChange={(e) => setNewCustomerData({ ...newCustomerData, first_name: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nachname *
+                      </label>
+                      <input
+                        type="text"
+                        value={newCustomerData.last_name}
+                        onChange={(e) => setNewCustomerData({ ...newCustomerData, last_name: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      E-Mail *
+                    </label>
+                    <input
+                      type="email"
+                      value={newCustomerData.email}
+                      onChange={(e) => setNewCustomerData({ ...newCustomerData, email: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Telefon
+                    </label>
+                    <input
+                      type="tel"
+                      value={newCustomerData.phone}
+                      onChange={(e) => setNewCustomerData({ ...newCustomerData, phone: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Telefon 2 (optional)
+                    </label>
+                    <input
+                      type="tel"
+                      value={newCustomerData.phone_2}
+                      onChange={(e) => setNewCustomerData({ ...newCustomerData, phone_2: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Firmenname (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={newCustomerData.company || ''}
+                      onChange={(e) => setNewCustomerData({ ...newCustomerData, company: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Firmenname eingeben..."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Straße
+                      </label>
+                      <input
+                        type="text"
+                        value={newCustomerData.street}
+                        onChange={(e) => setNewCustomerData({ ...newCustomerData, street: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
-                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Hausnummer
+                      </label>
+                      <input
+                        type="text"
+                        value={newCustomerData.house_number}
+                        onChange={(e) => setNewCustomerData({ ...newCustomerData, house_number: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        PLZ
+                      </label>
+                      <input
+                        type="text"
+                        value={newCustomerData.postal_code}
+                        onChange={(e) => setNewCustomerData({ ...newCustomerData, postal_code: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Stadt
+                      </label>
+                      <input
+                        type="text"
+                        value={newCustomerData.city}
+                        onChange={(e) => setNewCustomerData({ ...newCustomerData, city: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Geburtsdatum
+                      </label>
+                      <input
+                        type="date"
+                        value={newCustomerData.date_of_birth}
+                        onChange={(e) => setNewCustomerData({ ...newCustomerData, date_of_birth: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Land
+                      </label>
+                      <select
+                        value={newCustomerData.country}
+                        onChange={(e) => setNewCustomerData({ ...newCustomerData, country: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="Deutschland">Deutschland</option>
+                        <option value="Österreich">Österreich</option>
+                        <option value="Schweiz">Schweiz</option>
+                        <option value="Andere">Andere</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-md font-semibold text-gray-800 mb-3">Lieferpräferenzen</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Vorname
+                          Bevorzugter Liefermonat
                         </label>
-                        <input
-                          type="text"
-                          value={newCustomerData.billing_first_name}
-                          onChange={(e) => setNewCustomerData({...newCustomerData, billing_first_name: e.target.value})}
+                        <select
+                          value={newCustomerData.preferred_delivery_month}
+                          onChange={(e) => setNewCustomerData({ ...newCustomerData, preferred_delivery_month: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
+                        >
+                          <option value="">Kein Präferenz</option>
+                          <option value="Januar">Januar</option>
+                          <option value="Februar">Februar</option>
+                          <option value="März">März</option>
+                          <option value="April">April</option>
+                          <option value="Mai">Mai</option>
+                          <option value="Juni">Juni</option>
+                          <option value="Juli">Juli</option>
+                          <option value="August">August</option>
+                          <option value="September">September</option>
+                          <option value="Oktober">Oktober</option>
+                          <option value="November">November</option>
+                          <option value="Dezember">Dezember</option>
+                        </select>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Nachname
+                          Bevorzugtes Lieferjahr
                         </label>
-                        <input
-                          type="text"
-                          value={newCustomerData.billing_last_name}
-                          onChange={(e) => setNewCustomerData({...newCustomerData, billing_last_name: e.target.value})}
+                        <select
+                          value={newCustomerData.preferred_delivery_year}
+                          onChange={(e) => setNewCustomerData({ ...newCustomerData, preferred_delivery_year: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Straße
-                        </label>
-                        <input
-                          type="text"
-                          value={newCustomerData.billing_street}
-                          onChange={(e) => setNewCustomerData({...newCustomerData, billing_street: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Hausnummer
-                        </label>
-                        <input
-                          type="text"
-                          value={newCustomerData.billing_house_number}
-                          onChange={(e) => setNewCustomerData({...newCustomerData, billing_house_number: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          PLZ
-                        </label>
-                        <input
-                          type="text"
-                          value={newCustomerData.billing_postal_code}
-                          onChange={(e) => setNewCustomerData({...newCustomerData, billing_postal_code: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Stadt
-                        </label>
-                        <input
-                          type="text"
-                          value={newCustomerData.billing_city}
-                          onChange={(e) => setNewCustomerData({...newCustomerData, billing_city: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
+                        >
+                          <option value={new Date().getFullYear().toString()}>{new Date().getFullYear()}</option>
+                          <option value={(new Date().getFullYear() + 1).toString()}>{new Date().getFullYear() + 1}</option>
+                        </select>
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
 
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowAddCustomerModal(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                >
-                  Abbrechen
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                >
-                  Kunde erstellen
-                </button>
-              </div>
-            </form>
+                  <div>
+                    <h4 className="text-md font-semibold text-gray-800 mb-3">Rechnungsadresse</h4>
+                    <div className="mb-4">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={newCustomerData.billing_same_as_delivery}
+                          onChange={(e) => setNewCustomerData({ ...newCustomerData, billing_same_as_delivery: e.target.checked })}
+                          className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="text-sm text-gray-700">Rechnungsadresse ist identisch mit Lieferadresse</span>
+                      </label>
+                    </div>
+
+                    {!newCustomerData.billing_same_as_delivery && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Firma (optional)
+                          </label>
+                          <input
+                            type="text"
+                            value={newCustomerData.billing_company}
+                            onChange={(e) => setNewCustomerData({ ...newCustomerData, billing_company: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Vorname
+                            </label>
+                            <input
+                              type="text"
+                              value={newCustomerData.billing_first_name}
+                              onChange={(e) => setNewCustomerData({ ...newCustomerData, billing_first_name: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Nachname
+                            </label>
+                            <input
+                              type="text"
+                              value={newCustomerData.billing_last_name}
+                              onChange={(e) => setNewCustomerData({ ...newCustomerData, billing_last_name: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Straße
+                            </label>
+                            <input
+                              type="text"
+                              value={newCustomerData.billing_street}
+                              onChange={(e) => setNewCustomerData({ ...newCustomerData, billing_street: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Hausnummer
+                            </label>
+                            <input
+                              type="text"
+                              value={newCustomerData.billing_house_number}
+                              onChange={(e) => setNewCustomerData({ ...newCustomerData, billing_house_number: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              PLZ
+                            </label>
+                            <input
+                              type="text"
+                              value={newCustomerData.billing_postal_code}
+                              onChange={(e) => setNewCustomerData({ ...newCustomerData, billing_postal_code: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Stadt
+                            </label>
+                            <input
+                              type="text"
+                              value={newCustomerData.billing_city}
+                              onChange={(e) => setNewCustomerData({ ...newCustomerData, billing_city: e.target.value })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end space-x-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddCustomerModal(false)}
+                      className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                    >
+                      Abbrechen
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    >
+                      Kunde erstellen
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>

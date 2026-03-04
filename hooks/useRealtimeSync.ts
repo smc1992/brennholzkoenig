@@ -20,6 +20,7 @@ interface Product {
   created_at: string;
   updated_at?: string;
   has_quantity_discount?: boolean;
+  slug?: string;
 }
 
 interface RealtimeSyncHook {
@@ -85,18 +86,18 @@ export function useRealtimeSync(): RealtimeSyncHook {
 
   // Optimistische Update-Funktion für sofortige UI-Updates
   const updateProductStockOptimistically = useCallback((productId: number, quantityChange: number) => {
-    setProducts(prevProducts => 
-      prevProducts.map(product => 
-        product.id === productId 
-          ? { 
-              ...product, 
-              stock_quantity: Math.max(0, product.stock_quantity - quantityChange),
-              in_stock: (product.stock_quantity - quantityChange) > 0
-            }
+    setProducts(prevProducts =>
+      prevProducts.map(product =>
+        product.id === productId
+          ? {
+            ...product,
+            stock_quantity: Math.max(0, product.stock_quantity - quantityChange),
+            in_stock: (product.stock_quantity - quantityChange) > 0
+          }
           : product
       )
     );
-    
+
     // Dispatch custom event für andere Komponenten
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('optimisticStockUpdate', {
@@ -108,7 +109,7 @@ export function useRealtimeSync(): RealtimeSyncHook {
   const refreshProducts = useCallback(async () => {
     try {
       setError(null);
-      
+
       const { data, error: fetchError } = await supabase
         .from('products')
         .select('*')
@@ -120,7 +121,7 @@ export function useRealtimeSync(): RealtimeSyncHook {
       }
 
       console.log('🔍 useRealtimeSync: Raw data from database:', data);
-      
+
       // Explizite Datenkonvertierung für korrekte Typen
       const fetchedProducts: Product[] = (data || []).map((item: any) => ({
         id: item.id || 0,
@@ -138,11 +139,12 @@ export function useRealtimeSync(): RealtimeSyncHook {
         in_stock: item.in_stock || false,
         created_at: item.created_at || new Date().toISOString(),
         updated_at: item.updated_at,
-        has_quantity_discount: item.has_quantity_discount || false
+        has_quantity_discount: item.has_quantity_discount || false,
+        slug: item.slug
       }));
-      
+
       console.log('🔍 useRealtimeSync: Converted products:', fetchedProducts);
-      
+
       // Nur aktualisieren wenn sich die Daten unterscheiden
       if (fetchedProducts.length > 0) {
         setProducts(fetchedProducts);
@@ -162,7 +164,7 @@ export function useRealtimeSync(): RealtimeSyncHook {
     }
 
     console.log('🔄 Activating real-time subscription for products and images...');
-    
+
     try {
       const channel = supabase
         .channel('products_and_images_changes')
@@ -190,36 +192,36 @@ export function useRealtimeSync(): RealtimeSyncHook {
             console.log('Image mapping change detected:', payload);
             // Refresh products to get updated image URLs
             refreshProducts();
-            
+
             // Dispatch custom event for image components
             if (typeof window !== 'undefined') {
               window.dispatchEvent(new CustomEvent('imageChange', {
-                detail: { 
+                detail: {
                   action: payload.eventType,
                   productId: payload.new?.product_id || payload.old?.product_id,
                   seoSlug: payload.new?.seo_slug || payload.old?.seo_slug
                 }
               }));
-          }
-        }
-      )
-      .subscribe((status: string) => {
-        console.log('Real-time subscription status:', status);
-        if (status === 'SUBSCRIBED') {
-          console.log('✅ Real-time subscription active for products and images');
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-          console.warn('⚠️ Real-time subscription failed:', status);
-          console.log('📡 Falling back to periodic refresh only');
-          // Don't retry immediately to avoid spam
-          setTimeout(() => {
-            if (!subscription) {
-              console.log('🔄 Retrying real-time subscription...');
-              subscribeToChanges();
             }
-          }, 30000); // Retry after 30 seconds
-        }
-      });
-    
+          }
+        )
+        .subscribe((status: string) => {
+          console.log('Real-time subscription status:', status);
+          if (status === 'SUBSCRIBED') {
+            console.log('✅ Real-time subscription active for products and images');
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+            console.warn('⚠️ Real-time subscription failed:', status);
+            console.log('📡 Falling back to periodic refresh only');
+            // Don't retry immediately to avoid spam
+            setTimeout(() => {
+              if (!subscription) {
+                console.log('🔄 Retrying real-time subscription...');
+                subscribeToChanges();
+              }
+            }, 30000); // Retry after 30 seconds
+          }
+        });
+
       setSubscription(channel);
     } catch (error) {
       console.error('❌ Failed to setup real-time subscription:', error);
@@ -247,7 +249,7 @@ export function useRealtimeSync(): RealtimeSyncHook {
     if (!subscription && !isUnmounting) {
       subscribeToChanges();
     }
-    
+
     // Cleanup on unmount
     return () => {
       setIsUnmounting(true);
@@ -285,7 +287,7 @@ export const productChangeNotifier = {
   notify: (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     // This can be extended to show toast notifications
     console.log(`[${type.toUpperCase()}] ${message}`);
-    
+
     // Dispatch custom event for components to listen to
     window.dispatchEvent(new CustomEvent('productChange', {
       detail: { message, type }

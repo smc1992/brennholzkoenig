@@ -9,41 +9,41 @@ export const useProducts = (filters?: { category?: string; active?: boolean }) =
     queryKey: queryKeys.products.list(filters || {}),
     queryFn: async ({ signal }) => {
       const startTime = performance.now();
-      
+
       // AbortController für Timeout (7 Sekunden)
       const timeoutId = setTimeout(() => {
         if (!signal?.aborted) {
           console.warn('Products query timeout after 7s');
         }
       }, 7000);
-      
+
       try {
         // Verwende page_contents Tabelle mit gezielten Spalten
         let query = supabase
           .from('page_contents')
-          .select('id, title, content, category, is_active, status, created_at, updated_at, meta_data')
+          .select('id, title, content, category, is_active, status, created_at, updated_at, meta_data, slug')
           .eq('content_type', 'product')
           .eq('status', 'published')
           .order('id', { ascending: true })
           .limit(50); // Pagination: max 50 Items
-        
+
         if (filters?.category) {
           query = query.eq('category', filters.category);
         }
-        
+
         if (filters?.active !== undefined) {
           query = query.eq('is_active', filters.active);
         } else {
           // Standard: nur aktive Produkte
           query = query.eq('is_active', true);
         }
-        
+
         const { data, error } = await query;
-        
+
         clearTimeout(timeoutId);
         const duration = performance.now() - startTime;
         performanceMonitor.logQueryPerformance(['products', 'list'], duration);
-        
+
         if (error) {
           console.error('Products query error:', {
             code: error.code,
@@ -53,7 +53,7 @@ export const useProducts = (filters?: { category?: string; active?: boolean }) =
           });
           throw error;
         }
-        
+
         return data || [];
       } catch (error) {
         clearTimeout(timeoutId);
@@ -83,48 +83,48 @@ export const useProduct = (id: string | number) => {
     queryKey: queryKeys.products.detail(id),
     queryFn: async ({ signal }) => {
       const startTime = performance.now();
-      
+
       // Timeout für einzelne Produkte (5 Sekunden)
       const timeoutId = setTimeout(() => {
         if (!signal?.aborted) {
           console.warn(`Product ${id} query timeout after 5s`);
         }
       }, 5000);
-      
+
       try {
         // Versuche zuerst page_contents, dann products als Fallback
         let data, error;
-        
+
         // Primär: page_contents Tabelle
-         const pageContentResult = await supabase
-           .from('page_contents')
-           .select('id, title, content, category, is_active, status, created_at, updated_at, meta_data')
-           .eq('content_type', 'product')
-           .eq('id', id)
-           .eq('is_active', true)
-           .eq('status', 'published')
-           .single();
-         
-         if (pageContentResult.data) {
-           data = pageContentResult.data;
-           error = null;
-         } else {
-           // Fallback: products Tabelle
-           const productResult = await supabase
-             .from('products')
-             .select('id, name, description, price, image_url, category, stock_quantity, unit, is_active, created_at, updated_at')
-             .eq('id', id)
-             .eq('is_active', true)
-             .single();
-          
+        const pageContentResult = await supabase
+          .from('page_contents')
+          .select('id, title, content, category, is_active, status, created_at, updated_at, meta_data, slug')
+          .eq('content_type', 'product')
+          .eq('id', id)
+          .eq('is_active', true)
+          .eq('status', 'published')
+          .single();
+
+        if (pageContentResult.data) {
+          data = pageContentResult.data;
+          error = null;
+        } else {
+          // Fallback: products Tabelle
+          const productResult = await supabase
+            .from('products')
+            .select('id, name, slug, description, price, image_url, category, stock_quantity, unit, is_active, created_at, updated_at')
+            .eq('id', id)
+            .eq('is_active', true)
+            .single();
+
           data = productResult.data;
           error = productResult.error;
         }
-        
+
         clearTimeout(timeoutId);
         const duration = performance.now() - startTime;
         performanceMonitor.logQueryPerformance(['products', 'detail'], duration);
-        
+
         if (error) {
           console.error('Product query error:', {
             code: error.code,
@@ -134,7 +134,7 @@ export const useProduct = (id: string | number) => {
           });
           throw error;
         }
-        
+
         return data;
       } catch (error) {
         clearTimeout(timeoutId);
@@ -159,16 +159,16 @@ export const useProductCategories = () => {
     queryKey: queryKeys.products.categories(),
     queryFn: async () => {
       const startTime = performance.now();
-      
+
       const { data, error } = await supabase
         .from('product_categories')
         .select('*')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
-      
+
       const duration = performance.now() - startTime;
       performanceMonitor.logQueryPerformance(['products', 'categories'], duration);
-      
+
       if (error) throw error;
       return data || [];
     },
@@ -183,23 +183,23 @@ export const useShopSettings = () => {
     queryKey: queryKeys.settings.shop(),
     queryFn: async () => {
       const startTime = performance.now();
-      
+
       const { data, error } = await supabase
         .from('app_settings')
         .select('setting_key, setting_value')
         .in('setting_key', ['minimum_order_quantity', 'shipping_cost_standard', 'shipping_cost_express']);
-      
+
       const duration = performance.now() - startTime;
       performanceMonitor.logQueryPerformance(['settings', 'shop'], duration);
-      
+
       if (error) throw error;
-      
+
       // Transformiere zu Object für einfachere Nutzung
       const settings: Record<string, string> = {};
       data?.forEach((item: any) => {
         settings[item.setting_key] = item.setting_value;
       });
-      
+
       return {
         minOrderQuantity: parseInt(settings.minimum_order_quantity) || 3,
         shippingCosts: {
@@ -219,16 +219,16 @@ export const usePricingTiers = () => {
     queryKey: queryKeys.settings.pricing(),
     queryFn: async () => {
       const startTime = performance.now();
-      
+
       const { data, error } = await supabase
         .from('pricing_tiers')
         .select('*')
         .eq('is_active', true)
         .order('min_quantity', { ascending: true });
-      
+
       const duration = performance.now() - startTime;
       performanceMonitor.logQueryPerformance(['settings', 'pricing'], duration);
-      
+
       if (error) throw error;
       return data || [];
     },
@@ -243,10 +243,10 @@ export const useBlogPosts = (page = 1, limit = 10) => {
     queryKey: [...queryKeys.blog.posts(), { page, limit }],
     queryFn: async () => {
       const startTime = performance.now();
-      
+
       const from = (page - 1) * limit;
       const to = from + limit - 1;
-      
+
       const { data, error, count } = await supabase
         .from('page_contents')
         .select('*', { count: 'exact' })
@@ -254,12 +254,12 @@ export const useBlogPosts = (page = 1, limit = 10) => {
         .eq('status', 'published')
         .order('created_at', { ascending: false })
         .range(from, to);
-      
+
       const duration = performance.now() - startTime;
       performanceMonitor.logQueryPerformance(['blog', 'posts'], duration);
-      
+
       if (error) throw error;
-      
+
       return {
         posts: data || [],
         totalCount: count || 0,
@@ -277,7 +277,7 @@ export const useBlogPost = (slug: string) => {
     queryKey: queryKeys.blog.post(slug),
     queryFn: async () => {
       const startTime = performance.now();
-      
+
       const { data, error } = await supabase
         .from('page_contents')
         .select('*')
@@ -285,10 +285,10 @@ export const useBlogPost = (slug: string) => {
         .eq('slug', slug)
         .eq('status', 'published')
         .single();
-      
+
       const duration = performance.now() - startTime;
       performanceMonitor.logQueryPerformance(['blog', 'post'], duration);
-      
+
       if (error) throw error;
       return data;
     },
@@ -299,31 +299,31 @@ export const useBlogPost = (slug: string) => {
 
 // Content Management für Seiten
 export const usePageContent = (page: string, section?: string) => {
-  const queryKey = section 
+  const queryKey = section
     ? queryKeys.content.section(page, section)
     : queryKeys.content.page(page);
-    
+
   return useQuery({
     queryKey,
     queryFn: async () => {
       const startTime = performance.now();
-      
+
       let query = supabase
         .from('page_contents')
         .select('*')
         .eq('page', page)
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
-      
+
       if (section) {
         query = query.eq('section', section);
       }
-      
+
       const { data, error } = await query;
-      
+
       const duration = performance.now() - startTime;
       performanceMonitor.logQueryPerformance(['content', page], duration);
-      
+
       if (error) throw error;
       return data || [];
     },
@@ -335,7 +335,7 @@ export const usePageContent = (page: string, section?: string) => {
 // Optimierte Mutation für Produkt-Updates
 export const useUpdateProduct = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: any }) => {
       const { data, error } = await supabase
@@ -344,14 +344,14 @@ export const useUpdateProduct = () => {
         .eq('id', id)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
     onSuccess: (data) => {
       // Invalidiere relevante Queries
       queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
-      
+
       // Optimistic Update für bessere UX
       queryClient.setQueryData(queryKeys.products.detail(data.id as number), data);
     },
@@ -361,28 +361,28 @@ export const useUpdateProduct = () => {
 // Prefetching Hook für kritische Daten
 export const usePrefetchCriticalData = () => {
   const queryClient = useQueryClient();
-  
+
   const prefetchProducts = () => {
     queryClient.prefetchQuery({
       queryKey: queryKeys.products.lists(),
       staleTime: 5 * 60 * 1000,
     });
   };
-  
+
   const prefetchSettings = () => {
     queryClient.prefetchQuery({
       queryKey: queryKeys.settings.shop(),
       staleTime: 30 * 60 * 1000,
     });
   };
-  
+
   const prefetchCategories = () => {
     queryClient.prefetchQuery({
       queryKey: queryKeys.products.categories(),
       staleTime: 15 * 60 * 1000,
     });
   };
-  
+
   return {
     prefetchProducts,
     prefetchSettings,

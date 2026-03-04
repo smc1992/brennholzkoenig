@@ -25,15 +25,22 @@ export async function generateStaticParams() {
 
 export default async function ProductPage({ params }: { params: { id: string } }) {
   const supabase = await createClient();
-  const actualProductId = urlToProductId[params.id] || params.id;
-  
+
+  let productQuery = supabase.from('products').select('*');
+  const mappedId = urlToProductId[params.id];
+  const isNumeric = /^\d+$/.test(params.id);
+
+  if (mappedId) {
+    productQuery = productQuery.eq('id', mappedId);
+  } else if (isNumeric) {
+    productQuery = productQuery.eq('id', params.id);
+  } else {
+    productQuery = productQuery.eq('slug', params.id);
+  }
+
   // Server-side data fetching mit automatischem Caching
   const [productResult, pricingResult] = await Promise.all([
-    supabase
-      .from('products')
-      .select('*')
-      .eq('id', actualProductId)
-      .single(),
+    productQuery.single(),
     supabase
       .from('pricing_tiers')
       .select('*')
@@ -41,12 +48,12 @@ export default async function ProductPage({ params }: { params: { id: string } }
   ]);
 
   if (productResult.error || !productResult.data) {
-    console.log('Product not found:', actualProductId, productResult.error);
+    console.log('Product not found:', mappedId || params.id, productResult.error);
     notFound();
   }
 
   return (
-    <ProductDetailClient 
+    <ProductDetailClient
       product={productResult.data}
       pricingTiers={pricingResult.data || []}
       productId={params.id}

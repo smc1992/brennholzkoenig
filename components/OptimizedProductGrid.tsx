@@ -8,6 +8,7 @@ import Image from 'next/image';
 interface Product {
   id: number;
   name: string;
+  slug?: string;
   description: string;
   price: number;
   image_url: string;
@@ -33,7 +34,7 @@ interface OptimizedProductGridProps {
   error?: string | null;
 }
 
-export default function OptimizedProductGrid({ 
+export default function OptimizedProductGrid({
   initialCategory = 'Alle',
   showFilters = true,
   maxProducts,
@@ -43,34 +44,34 @@ export default function OptimizedProductGrid({
 }: OptimizedProductGridProps) {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Prefetch kritische Daten beim Mount
   const { prefetchAll } = usePrefetchCriticalData();
-  
+
   useEffect(() => {
     prefetchAll();
   }, [prefetchAll]);
-  
+
   // Optimierte Queries mit Caching
-  const { 
-    data: realtimeProducts = [], 
-    isLoading: productsLoading, 
-    error: productsError 
-  } = useProducts({ 
+  const {
+    data: realtimeProducts = [],
+    isLoading: productsLoading,
+    error: productsError
+  } = useProducts({
     category: selectedCategory === 'Alle' ? undefined : selectedCategory,
-    active: true 
+    active: true
   });
-  
-  const { 
-    data: categories = [], 
-    isLoading: categoriesLoading 
+
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading
   } = useProductCategories();
-  
-  const { 
+
+  const {
     data: shopSettings,
-    isLoading: settingsLoading 
+    isLoading: settingsLoading
   } = useShopSettings();
-  
+
   // Kombiniere Server-Side und Client-Side Daten
   const products = useMemo(() => {
     // Verwende Server-Side Daten wenn verfügbar, sonst Real-time Daten
@@ -79,38 +80,38 @@ export default function OptimizedProductGrid({
     }
     return realtimeProducts;
   }, [initialProducts, realtimeProducts]);
-  
+
   // Kombiniere Fehler-States
   const combinedError = error || productsError;
-  
+
   // Memoized gefilterte Produkte für Performance
   const filteredProducts = useMemo(() => {
     let filtered = products as unknown as Product[];
-    
+
     // Suchfilter
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(product => 
+      filtered = filtered.filter(product =>
         (product.name as string).toLowerCase().includes(searchLower) ||
         (product.description as string).toLowerCase().includes(searchLower) ||
         (product.category as string).toLowerCase().includes(searchLower)
       );
     }
-    
+
     // Limit anwenden
     if (maxProducts) {
       filtered = filtered.slice(0, maxProducts);
     }
-    
+
     return filtered;
   }, [products, searchTerm, maxProducts]);
-  
+
   // Memoized Kategorien mit "Alle" Option
   const allCategories = useMemo(() => {
     const categoryNames = categories.map((cat: any) => cat.name as string);
     return ['Alle', ...categoryNames];
   }, [categories]);
-  
+
   // Loading State (nur wenn keine Server-Side Daten verfügbar)
   if ((productsLoading || categoriesLoading || settingsLoading) && initialProducts.length === 0) {
     return (
@@ -123,7 +124,7 @@ export default function OptimizedProductGrid({
             ))}
           </div>
         )}
-        
+
         {/* Loading Skeleton für Produkte */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
@@ -140,7 +141,7 @@ export default function OptimizedProductGrid({
       </div>
     );
   }
-  
+
   // Error State
   if (combinedError && products.length === 0) {
     return (
@@ -150,7 +151,7 @@ export default function OptimizedProductGrid({
         </div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Fehler beim Laden der Produkte</h3>
         <p className="text-red-600 mb-4">Fehler beim Laden der Produkte: {typeof combinedError === 'string' ? combinedError : combinedError.message}</p>
-        <button 
+        <button
           onClick={() => window.location.reload()}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
         >
@@ -159,11 +160,11 @@ export default function OptimizedProductGrid({
       </div>
     );
   }
-  
+
   // Preisberechnung mit Caching
   const calculateProductPrice = (product: Product, quantity: number = 1) => {
     if (!shopSettings) return { price: product.price, adjustmentText: '' };
-    
+
     return calculatePriceWithTiers(
       product.price,
       quantity,
@@ -172,7 +173,7 @@ export default function OptimizedProductGrid({
       product.has_quantity_discount || false
     );
   };
-  
+
   return (
     <div className="space-y-6">
       <div className="mb-6 flex justify-between items-center">
@@ -194,18 +195,17 @@ export default function OptimizedProductGrid({
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-          
+
           {/* Kategorie-Filter */}
           <div className="flex flex-wrap gap-3">
             {allCategories.map((category: string) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  selectedCategory === category
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${selectedCategory === category
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 {category}
               </button>
@@ -213,7 +213,7 @@ export default function OptimizedProductGrid({
           </div>
         </div>
       )}
-      
+
       {/* Produkt-Grid */}
       {filteredProducts.length === 0 ? (
         <div className="text-center py-12">
@@ -222,7 +222,7 @@ export default function OptimizedProductGrid({
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Keine Produkte gefunden</h3>
           <p className="text-gray-600">
-            {searchTerm 
+            {searchTerm
               ? `Keine Produkte für "${searchTerm}" gefunden.`
               : 'In dieser Kategorie sind keine Produkte verfügbar.'
             }
@@ -232,11 +232,11 @@ export default function OptimizedProductGrid({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product: Product) => {
             const pricing = calculateProductPrice(product);
-            
+
             return (
-              <Link 
-                key={product.id} 
-                href={`/shop/${product.id}`}
+              <Link
+                key={product.id}
+                href={`/shop/${product.slug || product.id}`}
                 className="group bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
               >
                 {/* Produktbild */}
@@ -249,7 +249,7 @@ export default function OptimizedProductGrid({
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     loading="lazy"
                   />
-                  
+
                   {/* Verfügbarkeits-Badge */}
                   {product.stock_quantity === 0 ? (
                     <div className="absolute top-3 right-3">
@@ -265,31 +265,31 @@ export default function OptimizedProductGrid({
                     </div>
                   ) : null}
                 </div>
-                
+
                 {/* Produktinfo */}
                 <div className="p-4">
                   <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
                     {product.name}
                   </h3>
-                  
+
                   <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                     {product.description}
                   </p>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-lg font-bold text-gray-900">
                         €{pricing.price.toFixed(2)}
                       </span>
                       <span className="text-sm text-gray-500 ml-1">/ {product.unit}</span>
-                      
+
                       {pricing.adjustmentText && (
                         <div className="text-xs text-blue-600 mt-1">
                           {pricing.adjustmentText}
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="text-right">
                       <div className="text-xs text-gray-500">
                         Lager: {product.stock_quantity}
@@ -302,7 +302,7 @@ export default function OptimizedProductGrid({
           })}
         </div>
       )}
-      
+
       {/* Ergebnis-Info */}
       <div className="text-center text-sm text-gray-500">
         {filteredProducts.length} von {products.length} Produkten angezeigt

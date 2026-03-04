@@ -10,6 +10,7 @@ import { calculatePriceWithTiers, getTotalSRMQuantityInCart } from '@/lib/pricin
 interface Product {
   id: number;
   name: string;
+  slug?: string;
   description: string;
   price: number;
   image_url: string;
@@ -50,10 +51,10 @@ const productUrlMapping: { [key: number]: string } = {
   6: 'scheitholz-fichte-33cm'
 };
 
-export default function OptimizedProductSection({ 
-  initialProducts = [], 
-  loadTime = 0, 
-  error: serverError = null 
+export default function OptimizedProductSection({
+  initialProducts = [],
+  loadTime = 0,
+  error: serverError = null
 }: OptimizedProductSectionProps = {}) {
   const { updateProductStockOptimistically } = useRealtimeSync();
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -126,18 +127,18 @@ export default function OptimizedProductSection({
     };
 
     fetchProducts();
-    
+
     // Real-time Updates für Produktänderungen
     const channel = supabase
       .channel('homepage-product-changes')
-      .on('postgres_changes', 
-          { event: '*', schema: 'public', table: 'products' }, 
-          (payload: { eventType: string; new: any; old: any; schema: string; table: string }) => {
-            console.log('Homepage: Produktänderung erkannt, aktualisiere Daten...');
-            fetchProducts();
-          })
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'products' },
+        (payload: { eventType: string; new: any; old: any; schema: string; table: string }) => {
+          console.log('Homepage: Produktänderung erkannt, aktualisiere Daten...');
+          fetchProducts();
+        })
       .subscribe();
-    
+
     // Cleanup bei Komponentenabbau
     return () => {
       supabase.removeChannel(channel);
@@ -156,7 +157,7 @@ export default function OptimizedProductSection({
     };
 
     const existingItemIndex = cart.findIndex(item => item.productId === product.id);
-    
+
     if (existingItemIndex >= 0) {
       const updatedCart = [...cart];
       updatedCart[existingItemIndex].quantity += quantity;
@@ -169,7 +170,7 @@ export default function OptimizedProductSection({
     if (typeof window !== 'undefined') {
       const currentCart = JSON.parse(localStorage.getItem('cart') || '[]');
       const existingIndex = currentCart.findIndex((item: any) => item.id === product.id.toString());
-      
+
       if (existingIndex >= 0) {
         currentCart[existingIndex].quantity += quantity;
       } else {
@@ -188,30 +189,30 @@ export default function OptimizedProductSection({
         });
         console.log('💾 Cart item saved:', currentCart[currentCart.length - 1]);
       }
-      
+
       localStorage.setItem('cart', JSON.stringify(currentCart));
-      
+
       // Optimistische UI-Updates für sofortige SRM-Verfügbarkeits-Anzeige
       updateProductStockOptimistically(product.id, quantity);
-      
+
       // Lokale Produktdaten auch sofort aktualisieren
-      setProducts(prevProducts => 
-        prevProducts.map(p => 
-          p.id === product.id 
+      setProducts(prevProducts =>
+        prevProducts.map(p =>
+          p.id === product.id
             ? { ...p, stock_quantity: Math.max(0, p.stock_quantity - quantity) }
             : p
         )
       );
-      
+
       // Dispatch Event für andere Komponenten
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('stockUpdated', {
           detail: { productId: product.id.toString(), quantityChange: quantity }
         }));
-        
+
         // Event für andere Komponenten auslösen
         window.dispatchEvent(new CustomEvent('cartUpdated'));
-        
+
         // Gesamtmenge im Warenkorb aktualisieren
         const newTotal = getTotalSRMQuantityInCart();
         setTotalCartQuantity(newTotal);
@@ -265,9 +266,9 @@ export default function OptimizedProductSection({
           <h2 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] mb-4">
             Unsere beliebtesten Produkte
           </h2>
-          
 
-          
+
+
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Entdecken Sie unser hochwertiges Brennholz-Sortiment. Perfekt für gemütliche Abende am Kamin.
           </p>
@@ -275,10 +276,10 @@ export default function OptimizedProductSection({
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {products.map((product) => {
-            const productUrl = productUrlMapping[product.id] || `product-${product.id}`;
+            const productUrl = product.slug || productUrlMapping[product.id] || `produkt-${product.id}`;
             const imageUrl = getCDNUrl(product.image_url);
             const hasDiscount = product.original_price && product.original_price > product.price;
-            const discountPercentage = hasDiscount 
+            const discountPercentage = hasDiscount
               ? Math.round(((product.original_price! - product.price) / product.original_price!) * 100)
               : 0;
 
@@ -286,7 +287,7 @@ export default function OptimizedProductSection({
               <div key={product.id} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
                 <div className="relative overflow-hidden">
                   <Link href={`/shop/${productUrl}`}>
-                    <img 
+                    <img
                       src={imageUrl}
                       alt={product.name}
                       className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
@@ -296,13 +297,13 @@ export default function OptimizedProductSection({
                       }}
                     />
                   </Link>
-                  
+
                   {hasDiscount && (
                     <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
                       -{discountPercentage}%
                     </div>
                   )}
-                  
+
                   {product.stock_quantity === 0 ? (
                     <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
                       Ausverkauft
@@ -320,13 +321,13 @@ export default function OptimizedProductSection({
                       {product.category}
                     </span>
                   </div>
-                  
+
                   <h3 className="text-xl font-bold text-[#1A1A1A] mb-2 group-hover:text-[#C04020] transition-colors">
                     <Link href={`/shop/${productUrl}`}>
                       {product.name}
                     </Link>
                   </h3>
-                  
+
                   <p className="text-gray-600 mb-4 line-clamp-2">
                     {product.description}
                   </p>
@@ -355,9 +356,9 @@ export default function OptimizedProductSection({
                           // Für SRM-Artikel: Berücksichtige die Gesamtmenge im Warenkorb
                           if (product.unit === 'SRM') {
                             const pricing = calculatePriceWithTiers(
-                              product.price, 
+                              product.price,
                               1, // Einzelpreis anzeigen
-                              [], 
+                              [],
                               3, // minOrderQuantity
                               product.has_quantity_discount || false,
                               totalCartQuantity
@@ -370,33 +371,32 @@ export default function OptimizedProductSection({
                       </span>
                     </div>
                     <span className="text-sm text-gray-500">
-                      {product.unit === 'SRM' ? 'pro Schüttraummeter' : 
-                       product.unit === 'RM' ? 'pro Raummeter' :
-                       product.unit === 'FM' ? 'pro Festmeter' :
-                       product.unit === 'kg' ? 'pro Kilogramm' :
-                       product.unit === 'Stück' ? 'pro Stück' :
-                       product.unit === 'Palette' ? 'pro Palette' :
-                       product.unit === 'm³' ? 'pro Kubikmeter' :
-                       product.unit || 'pro Schüttraummeter'}
+                      {product.unit === 'SRM' ? 'pro Schüttraummeter' :
+                        product.unit === 'RM' ? 'pro Raummeter' :
+                          product.unit === 'FM' ? 'pro Festmeter' :
+                            product.unit === 'kg' ? 'pro Kilogramm' :
+                              product.unit === 'Stück' ? 'pro Stück' :
+                                product.unit === 'Palette' ? 'pro Palette' :
+                                  product.unit === 'm³' ? 'pro Kubikmeter' :
+                                    product.unit || 'pro Schüttraummeter'}
                     </span>
                   </div>
 
                   <div className="flex space-x-3">
-                    <Link 
+                    <Link
                       href={`/shop/${productUrl}`}
                       className="flex-1 bg-[#C04020] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#A03318] transition-colors text-center"
                     >
                       Details ansehen
                     </Link>
-                    
+
                     <button
                       onClick={() => addToCart(product)}
                       disabled={product.stock_quantity <= 0}
-                      className={`px-4 py-3 rounded-lg font-semibold transition-colors ${
-                        product.stock_quantity > 0
+                      className={`px-4 py-3 rounded-lg font-semibold transition-colors ${product.stock_quantity > 0
                           ? 'bg-green-500 text-white hover:bg-green-600'
                           : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      }`}
+                        }`}
                     >
                       <i className="ri-shopping-cart-line text-lg"></i>
                     </button>
@@ -408,7 +408,7 @@ export default function OptimizedProductSection({
         </div>
 
         <div className="text-center mt-12">
-          <Link 
+          <Link
             href="/shop"
             className="inline-flex items-center bg-[#C04020] text-white px-8 py-4 rounded-lg font-semibold hover:bg-[#A03318] transition-colors"
           >

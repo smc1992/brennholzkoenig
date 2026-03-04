@@ -13,15 +13,15 @@ export const revalidate = false;
 // Supabase Admin Client wird zur Laufzeit erstellt
 function getSupabaseAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.NEXT_PUBLIC_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
   if (!supabaseUrl || !serviceRoleKey) {
     console.warn('Supabase environment variables not configured for app-api-auth-admin-login-route route');
     console.warn('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? 'SET' : 'MISSING');
-    console.warn('NEXT_PUBLIC_SERVICE_ROLE_KEY:', serviceRoleKey ? 'SET' : 'MISSING');
+    console.warn('SUPABASE_SERVICE_ROLE_KEY:', serviceRoleKey ? 'SET' : 'MISSING');
     return null;
   }
-  
+
   return createClient(supabaseUrl, serviceRoleKey);
 }
 
@@ -29,11 +29,11 @@ function getSupabaseAdminClient() {
 function getSupabaseAdmin() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-  
+
   if (!supabaseUrl || !supabaseServiceKey) {
     throw new Error('Missing Supabase environment variables')
   }
-  
+
   // Service Role Client für Admin-Operationen
   return createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
@@ -46,7 +46,7 @@ function getSupabaseAdmin() {
 // SSR-kompatible Session-Verwaltung
 function getSupabaseSSR() {
   const cookieStore = cookies()
-  
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -73,39 +73,39 @@ export async function POST(request: NextRequest) {
   try {
     // Supabase Client zur Laufzeit erstellen
     const supabaseAdmin = getSupabaseAdminClient();
-    
+
     // Prüfen ob Supabase konfiguriert ist
     if (!supabaseAdmin) {
       return Response.json({ error: 'Database service not configured' }, { status: 503 });
     }
 
     const { email, password } = await request.json()
-    
+
     if (!email || !password) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'E-Mail und Passwort sind erforderlich' 
+      return NextResponse.json({
+        success: false,
+        error: 'E-Mail und Passwort sind erforderlich'
       }, { status: 400 })
     }
-    
+
     console.log('🔐 API Admin Login attempt for:', email)
-    
+
     const supabaseSSR = getSupabaseSSR()
-    
+
     // Erste Authentifizierung mit SSR-Client für Session-Management
     const { data: authData, error: authError } = await supabaseSSR.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password: password
     })
-    
+
     if (authError || !authData.user) {
       console.error('❌ API Auth failed:', authError?.message)
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Ungültige Anmeldedaten' 
+      return NextResponse.json({
+        success: false,
+        error: 'Ungültige Anmeldedaten'
       }, { status: 401 })
     }
-    
+
     // Admin-Berechtigung prüfen
     const { data: adminData, error: adminError } = await supabaseAdmin
       .from('admin_users')
@@ -113,30 +113,30 @@ export async function POST(request: NextRequest) {
       .eq('email', email.trim().toLowerCase())
       .eq('is_active', true)
       .single()
-    
+
     if (adminError || !adminData) {
       console.error('❌ Admin check failed:', adminError?.message)
       await supabaseAdmin.auth.signOut()
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Kein Admin-Zugang für diese E-Mail-Adresse' 
+      return NextResponse.json({
+        success: false,
+        error: 'Kein Admin-Zugang für diese E-Mail-Adresse'
       }, { status: 403 })
     }
-    
+
     console.log('✅ API Admin login successful for:', adminData.email)
-    
-    return NextResponse.json({ 
-      success: true, 
+
+    return NextResponse.json({
+      success: true,
       user: authData.user,
       session: authData.session,
       admin: adminData
     })
-    
+
   } catch (error: any) {
     console.error('💥 API Admin login error:', error)
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Server-Fehler bei der Anmeldung' 
+    return NextResponse.json({
+      success: false,
+      error: 'Server-Fehler bei der Anmeldung'
     }, { status: 500 })
   }
 }

@@ -17,6 +17,7 @@ function OrderConfirmationContent() {
 
   useEffect(() => {
     const orderNumber = searchParams.get('order');
+    const token = searchParams.get('token');
     const discountCode = searchParams.get('discount_code');
     const discountAmount = searchParams.get('discount_amount');
 
@@ -25,8 +26,8 @@ function OrderConfirmationContent() {
       return;
     }
 
-    const data: any = { orderNumber };
-    
+    const data: any = { orderNumber, token };
+
     if (discountCode && discountAmount) {
       data.appliedDiscount = {
         code: discountCode,

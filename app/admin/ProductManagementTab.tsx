@@ -82,11 +82,11 @@ export default function ProductManagementTab() {
     const readFormValues = () => {
       const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
       const categorySelect = document.querySelector('select[name="category"]') as HTMLSelectElement;
-      
+
       if (nameInput && categorySelect) {
         const name = nameInput.value || '';
         const category = categorySelect.value || '';
-        
+
         if (name || category) {
           updateProductData(name, category);
         }
@@ -140,7 +140,7 @@ export default function ProductManagementTab() {
 
       // Typisierte Daten mit korrekter Type-Assertion
       const typedProducts = (productsData || []) as unknown as Product[];
-      
+
       // Kategorien aus vorhandenen Produkten extrahieren
       const uniqueCategories = [...new Set(typedProducts.map(p => p.category))];
       const allCategories = [...new Set([...defaultCategories, ...uniqueCategories])];
@@ -162,7 +162,7 @@ export default function ProductManagementTab() {
     }
 
     if (searchTerm) {
-      filtered = filtered.filter(product => 
+      filtered = filtered.filter(product =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -294,7 +294,7 @@ export default function ProductManagementTab() {
             alert('Bitte geben Sie einen gültigen Lagerbestand ein');
             return;
           }
-          updateData = { 
+          updateData = {
             stock_quantity: parseInt(bulkValue),
             in_stock: parseInt(bulkValue) > 0
           };
@@ -316,8 +316,8 @@ export default function ProductManagementTab() {
             const percentage = parseFloat(bulkValue);
             const multiplier = bulkAction === 'price_increase' ? (1 + percentage / 100) : (1 - percentage / 100);
             const newPrice = Math.round(currentPrice * multiplier * 100) / 100;
-            
-            updateData = { 
+
+            updateData = {
               price: newPrice.toString(),
               updated_at: new Date().toISOString()
             };
@@ -357,8 +357,8 @@ export default function ProductManagementTab() {
   };
 
   const toggleProductSelection = (productId: string) => {
-    setSelectedProducts(prev => 
-      prev.includes(productId) 
+    setSelectedProducts(prev =>
+      prev.includes(productId)
         ? prev.filter(id => id !== productId)
         : [...prev, productId]
     );
@@ -382,7 +382,7 @@ export default function ProductManagementTab() {
     try {
       const { error: productError } = await supabase
         .from('products')
-        .update({ 
+        .update({
           stock_quantity: newStock,
           in_stock: newStock > 0,
           updated_at: new Date().toISOString()
@@ -449,7 +449,7 @@ export default function ProductManagementTab() {
     const formData = new FormData(e.currentTarget);
     const formEntries = Object.fromEntries(formData.entries());
     const data: Record<string, string | FormDataEntryValue> = formEntries;
-    
+
     // Use the state value for image_url instead of form data
     data.image_url = mainImageUrl;
 
@@ -479,7 +479,7 @@ export default function ProductManagementTab() {
     const categoryValue = data.category?.toString() || '';
     const unitValue = data.unit?.toString() || '';
     const imageUrlValue = data.image_url?.toString() || '';
-    
+
     addProduct({
       name: nameValue,
       description: descriptionValue,
@@ -652,11 +652,10 @@ export default function ProductManagementTab() {
               <button
                 onClick={handleBulkAction}
                 disabled={!bulkAction}
-                className={`px-6 py-3 rounded-lg font-bold transition-colors cursor-pointer whitespace-nowrap ${
-                  bulkAction
+                className={`px-6 py-3 rounded-lg font-bold transition-colors cursor-pointer whitespace-nowrap ${bulkAction
                     ? 'bg-blue-600 hover:bg-blue-700 text-white'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
+                  }`}
               >
                 <i className="ri-check-line mr-2"></i>
                 Anwenden
@@ -803,11 +802,10 @@ export default function ProductManagementTab() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${
-                          product.is_active
+                        className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${product.is_active
                             ? 'text-green-600 bg-green-100'
                             : 'text-red-600 bg-red-100'
-                        }`}
+                          }`}
                       >
                         {product.is_active ? 'Aktiv' : 'Inaktiv'}
                       </span>
@@ -861,8 +859,8 @@ export default function ProductManagementTab() {
       {/* Add Product Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-gray-200 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-[#1A1A1A]">
                   Neues Produkt hinzufügen
@@ -878,196 +876,198 @@ export default function ProductManagementTab() {
 
             <form
               onSubmit={handleAddProductSubmit}
-              className="p-6 space-y-6"
+              className="flex flex-col overflow-hidden min-h-0"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Produktname *</label>
-                  <input
-                    type="text"
-                    name="name"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
-                    required
-                    placeholder="z.B. Premium Buchenholz"
-                    onChange={(e) => {
-                      const newName = e.target.value;
-                      const categorySelect = document.querySelector('select[name="category"]') as HTMLSelectElement;
-                      const currentCategory = categorySelect?.value || '';
-                      updateProductData(newName, currentCategory);
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Kategorie *</label>
-                  <select
-                    name="category"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] cursor-pointer pr-8"
-                    required
-                    onChange={(e) => {
-                      const newCategory = e.target.value;
-                      const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
-                      const currentName = nameInput?.value || '';
-                      updateProductData(currentName, newCategory);
-                    }}
-                  >
-                    <option value="">Kategorie wählen...</option>
-                    {categories.slice(1).map(category => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Preis (€) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="price"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
-                    required
-                    placeholder="29.90"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Ursprungspreis (€) - optional</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="original_price"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
-                    placeholder="39.90"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Einheit *</label>
-                  <select
-                    name="unit"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] cursor-pointer pr-8"
-                    defaultValue="pro SRM"
-                  >
-                    <option value="pro SRM">pro SRM</option>
-                    <option value="pro Tonne">pro Tonne</option>
-                    <option value="pro Stück">pro Stück</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Lagerbestand (SRM) *</label>
-                  <input
-                    type="number"
-                    name="stock_quantity"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
-                    required
-                    placeholder="100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Mindestbestand (SRM) *</label>
-                  <input
-                    type="number"
-                    name="min_stock_level"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
-                    required
-                    placeholder="10"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Produktbilder</label>
-                  <ProductImageGalleryWithCrop
-                    productData={currentProductData}
-                    onImagesChange={(images) => {
-                      // Update main image URL
-                      const mainImage = images.find(img => img.isMain) || images[0];
-                      if (mainImage) {
-                        setMainImageUrl(mainImage.url);
-                      }
-                      
-                      // Update additional images for form submission
-                      const additionalUrls = images
-                        .filter(img => !img.isMain)
-                        .map(img => img.url);
-                      
-                      const textarea = document.querySelector('textarea[name="additional_images"]') as HTMLTextAreaElement;
-                      if (textarea) {
-                        textarea.value = additionalUrls.join('\n');
-                      }
-                      
-                      console.log('Bilder aktualisiert:', { mainImage: mainImage?.url, additional: additionalUrls });
-                    }}
-                    maxImages={6}
-                    aspectRatio={1}
-                    minWidth={400}
-                    minHeight={400}
-                  />
-                  
-                  {/* Hidden textarea for form submission */}
-                  <textarea
-                    name="additional_images"
-                    className="hidden"
-                    readOnly
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Kurzbeschreibung *</label>
-                  <textarea
-                    name="description"
-                    rows={3}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
-                    required
-                    placeholder="Kurze Produktbeschreibung..."
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Detailbeschreibung</label>
-                  <textarea
-                    name="detailed_description"
-                    rows={4}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
-                    placeholder="Ausführliche Produktbeschreibung..."
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Eigenschaften (eine pro Zeile)</label>
-                  <textarea
-                    name="features"
-                    rows={4}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
-                    placeholder="Kammergetrocknet\\nRestfeuchte < 20%\\nNachhaltiger Anbau\\n..."
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Technische Daten (JSON Format)</label>
-                  <textarea
-                    name="specifications"
-                    rows={4}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] font-mono text-sm"
-                    placeholder={`{"Holzart": "Buche", "Restfeuchte": "< 20%", "Scheitlänge": "25-33 cm"}`}
-                  />
-                  <div className="text-xs text-gray-500 mt-1 space-y-1">
-                    <div><strong>Beispiel:</strong> {`{"Holzart": "Buche", "Restfeuchte": "< 20%"}`}</div>
-                    <div><strong>E-Commerce Tipp:</strong> Nur relevante, messbare Daten eingeben (Heizwert, Feuchtigkeit, Abmessungen)</div>
-                    <div><strong>Automatisch:</strong> Holzart und Größe werden aus Produktname extrahiert</div>
+              <div className="p-6 overflow-y-auto flex-1 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Produktname *</label>
+                    <input
+                      type="text"
+                      name="name"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                      required
+                      placeholder="z.B. Premium Buchenholz"
+                      onChange={(e) => {
+                        const newName = e.target.value;
+                        const categorySelect = document.querySelector('select[name="category"]') as HTMLSelectElement;
+                        const currentCategory = categorySelect?.value || '';
+                        updateProductData(newName, currentCategory);
+                      }}
+                    />
                   </div>
-                </div>
 
-                {/* Hidden fields for wood_type and size - automatically filled */}
-                <input type="hidden" name="wood_type" value={currentProductData.wood_type} />
-                <input type="hidden" name="size" value={currentProductData.size} />
-                <input type="hidden" name="image_url" value={mainImageUrl} />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Kategorie *</label>
+                    <select
+                      name="category"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] cursor-pointer pr-8"
+                      required
+                      onChange={(e) => {
+                        const newCategory = e.target.value;
+                        const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
+                        const currentName = nameInput?.value || '';
+                        updateProductData(currentName, newCategory);
+                      }}
+                    >
+                      <option value="">Kategorie wählen...</option>
+                      {categories.slice(1).map(category => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Preis (€) *</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="price"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                      required
+                      placeholder="29.90"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Ursprungspreis (€) - optional</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="original_price"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                      placeholder="39.90"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Einheit *</label>
+                    <select
+                      name="unit"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] cursor-pointer pr-8"
+                      defaultValue="pro SRM"
+                    >
+                      <option value="pro SRM">pro SRM</option>
+                      <option value="pro Tonne">pro Tonne</option>
+                      <option value="pro Stück">pro Stück</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Lagerbestand (SRM) *</label>
+                    <input
+                      type="number"
+                      name="stock_quantity"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                      required
+                      placeholder="100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Mindestbestand (SRM) *</label>
+                    <input
+                      type="number"
+                      name="min_stock_level"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                      required
+                      placeholder="10"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Produktbilder</label>
+                    <ProductImageGalleryWithCrop
+                      productData={currentProductData}
+                      onImagesChange={(images) => {
+                        // Update main image URL
+                        const mainImage = images.find(img => img.isMain) || images[0];
+                        if (mainImage) {
+                          setMainImageUrl(mainImage.url);
+                        }
+
+                        // Update additional images for form submission
+                        const additionalUrls = images
+                          .filter(img => !img.isMain)
+                          .map(img => img.url);
+
+                        const textarea = document.querySelector('textarea[name="additional_images"]') as HTMLTextAreaElement;
+                        if (textarea) {
+                          textarea.value = additionalUrls.join('\n');
+                        }
+
+                        console.log('Bilder aktualisiert:', { mainImage: mainImage?.url, additional: additionalUrls });
+                      }}
+                      maxImages={6}
+                      aspectRatio={1}
+                      minWidth={400}
+                      minHeight={400}
+                    />
+
+                    {/* Hidden textarea for form submission */}
+                    <textarea
+                      name="additional_images"
+                      className="hidden"
+                      readOnly
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Kurzbeschreibung *</label>
+                    <textarea
+                      name="description"
+                      rows={3}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                      required
+                      placeholder="Kurze Produktbeschreibung..."
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Detailbeschreibung</label>
+                    <textarea
+                      name="detailed_description"
+                      rows={4}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                      placeholder="Ausführliche Produktbeschreibung..."
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Eigenschaften (eine pro Zeile)</label>
+                    <textarea
+                      name="features"
+                      rows={4}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020]"
+                      placeholder="Kammergetrocknet\\nRestfeuchte < 20%\\nNachhaltiger Anbau\\n..."
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Technische Daten (JSON Format)</label>
+                    <textarea
+                      name="specifications"
+                      rows={4}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#C04020] font-mono text-sm"
+                      placeholder={`{"Holzart": "Buche", "Restfeuchte": "< 20%", "Scheitlänge": "25-33 cm"}`}
+                    />
+                    <div className="text-xs text-gray-500 mt-1 space-y-1">
+                      <div><strong>Beispiel:</strong> {`{"Holzart": "Buche", "Restfeuchte": "< 20%"}`}</div>
+                      <div><strong>E-Commerce Tipp:</strong> Nur relevante, messbare Daten eingeben (Heizwert, Feuchtigkeit, Abmessungen)</div>
+                      <div><strong>Automatisch:</strong> Holzart und Größe werden aus Produktname extrahiert</div>
+                    </div>
+                  </div>
+
+                  {/* Hidden fields for wood_type and size - automatically filled */}
+                  <input type="hidden" name="wood_type" value={currentProductData.wood_type} />
+                  <input type="hidden" name="size" value={currentProductData.size} />
+                  <input type="hidden" name="image_url" value={mainImageUrl} />
+                </div>
               </div>
 
-              <div className="flex gap-4 pt-4 border-t border-gray-200">
+              <div className="p-6 border-t border-gray-200 flex gap-4 flex-shrink-0">
                 <button
                   type="submit"
                   className="bg-[#C04020] hover:bg-[#A03318] text-white px-6 py-3 rounded-lg font-bold transition-colors cursor-pointer whitespace-nowrap"
@@ -1114,7 +1114,7 @@ export default function ProductManagementTab() {
                   <h4 className="font-bold text-blue-800">Kategorien-Verwaltung</h4>
                 </div>
                 <p className="text-sm text-blue-700">
-                  Hier können Sie die verfügbaren Produktkategorien einsehen. 
+                  Hier können Sie die verfügbaren Produktkategorien einsehen.
                   Neue Kategorien werden automatisch erstellt, wenn Sie sie bei Produkten verwenden.
                 </p>
               </div>
@@ -1147,7 +1147,7 @@ export default function ProductManagementTab() {
                   <h4 className="font-bold text-green-800">Tipp</h4>
                 </div>
                 <p className="text-sm text-green-700">
-                  Um eine neue Kategorie zu erstellen, geben Sie einfach einen neuen Kategorienamen 
+                  Um eine neue Kategorie zu erstellen, geben Sie einfach einen neuen Kategorienamen
                   beim Hinzufügen oder Bearbeiten eines Produkts ein.
                 </p>
               </div>
@@ -1217,13 +1217,12 @@ export default function ProductManagementTab() {
                           </td>
                           <td className="px-4 py-3">
                             <span
-                              className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${
-                                movement.movement_type === 'in'
+                              className={`inline-flex px-2 py-1 text-xs font-bold rounded-full ${movement.movement_type === 'in'
                                   ? 'bg-green-100 text-green-800'
                                   : movement.movement_type === 'out'
-                                  ? 'bg-red-100 text-red-800'
-                                  : 'bg-blue-100 text-blue-800'
-                              }`}
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-blue-100 text-blue-800'
+                                }`}
                             >
                               {movement.movement_type === 'in' ? 'Eingang' :
                                 movement.movement_type === 'out' ? 'Ausgang' : 'Anpassung'}

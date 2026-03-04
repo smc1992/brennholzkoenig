@@ -59,7 +59,7 @@ export default function ContactForm() {
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const email = e.target.value;
     setFormData(prev => ({ ...prev, email }));
-    
+
     if (email && !validateEmail(email)) {
       setEmailError('Bitte geben Sie eine gültige E-Mail-Adresse ein');
     } else {
@@ -134,26 +134,26 @@ export default function ContactForm() {
   // Submit-Handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isSubmitting) return;
-    
+
     // Validierung
     if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
       setSubmitStatus('error');
       return;
     }
-    
+
     if (!validateEmail(formData.email)) {
       setEmailError('Bitte geben Sie eine gültige E-Mail-Adresse ein');
       return;
     }
-    
+
     setIsSubmitting(true);
     setSubmitStatus('');
-    
+
     try {
       // 1. Kontaktanfrage in Supabase speichern
-      const { data: contactData, error: contactError } = await supabase
+      const { error: contactError } = await supabase
         .from('contact_requests')
         .insert([{
           name: formData.name.trim(),
@@ -164,9 +164,7 @@ export default function ContactForm() {
           product_category: formData.product_category,
           status: 'new',
           created_at: new Date().toISOString()
-        }])
-        .select()
-        .single();
+        }]);
 
       if (contactError) {
         console.error('Fehler beim Speichern der Kontaktanfrage:', contactError);
@@ -178,14 +176,14 @@ export default function ContactForm() {
 
       // 2. E-Mail und Analytics im Hintergrund ausführen (non-blocking)
       const emailHtml = createEmailTemplate(formData);
-      
+
       // Ensure a non-null session_id to satisfy DB constraint
       let sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('analytics-session-id') : null;
       if (!sessionId && typeof window !== 'undefined') {
         sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         sessionStorage.setItem('analytics-session-id', sessionId);
       }
-      
+
       // Fire-and-forget für bessere Performance
       Promise.allSettled([
         // E-Mail senden
@@ -200,7 +198,7 @@ export default function ContactForm() {
             type: 'contact_form'
           })
         }),
-        
+
         // Analytics Event (optional)
         supabase.from('analytics_events').insert([{
           event_type: 'contact_form_submission',
@@ -237,7 +235,7 @@ export default function ContactForm() {
       // Google Analytics Events (non-blocking)
       try {
         trackContact('contact_form', 'website');
-        
+
         // Angebotsanfrage tracken für alle konkreten Produkt-/Preis-/Lieferanfragen
         if (!['Allgemeine Anfrage', 'Sonstiges'].includes(formData.product_category)) {
           trackQuoteRequest(formData.product_category, 1, 'contact_form');
@@ -245,7 +243,7 @@ export default function ContactForm() {
       } catch (analyticsError) {
         console.warn('Google Analytics Fehler:', analyticsError);
       }
-      
+
     } catch (error: any) {
       console.error('Fehler beim Absenden:', error);
       setSubmitStatus('error');
@@ -255,11 +253,10 @@ export default function ContactForm() {
   };
 
   return (
-    <section 
+    <section
       ref={formRef}
-      className={`py-16 bg-gradient-to-br from-amber-50 to-orange-50 transition-all duration-1000 ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-      }`}
+      className={`py-16 bg-gradient-to-br from-amber-50 to-orange-50 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        }`}
     >
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto">
@@ -301,9 +298,8 @@ export default function ContactForm() {
                   required
                   value={formData.email}
                   onChange={handleEmailChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent transition-colors ${
-                    emailError ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent transition-colors ${emailError ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="ihre.email@beispiel.de"
                 />
                 {emailError && (
@@ -343,8 +339,8 @@ export default function ContactForm() {
                   <option value="Industrieholz Buche Klasse 2">Industrieholz Buche Klasse 2</option>
                   <option value="Scheitholz Buche 33cm">Scheitholz Buche 33cm</option>
                   <option value="Scheitholz Buche 25 cm">Scheitholz Buche 25 cm</option>
-                  <option value="Scheitholz - Industrieholz Mix 33 cm">Scheitholz - Industrieholz Mix 33 cm</option>
                   <option value="Scheitholz Fichte 33 cm">Scheitholz Fichte 33 cm</option>
+                  <option value="Scheitholz - Industrieholz Mix 33 cm">Scheitholz - Industrieholz Mix 33 cm</option>
                   {/* Service-/Preis-Themen */}
                   <option value="Lieferung">Lieferung</option>
                   <option value="Preise">Preise</option>
@@ -396,11 +392,10 @@ export default function ContactForm() {
               <button
                 type="submit"
                 disabled={isSubmitting || !!emailError}
-                className={`w-full py-4 px-6 rounded-lg font-semibold text-white transition-all duration-300 ${
-                  isSubmitting || emailError
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-[#C04020] to-[#D4A520] hover:from-[#A03318] hover:to-[#B8941C] transform hover:scale-[1.02] shadow-lg hover:shadow-xl'
-                }`}
+                className={`w-full py-4 px-6 rounded-lg font-semibold text-white transition-all duration-300 ${isSubmitting || emailError
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-[#C04020] to-[#D4A520] hover:from-[#A03318] hover:to-[#B8941C] transform hover:scale-[1.02] shadow-lg hover:shadow-xl'
+                  }`}
               >
                 {isSubmitting ? (
                   <span className="flex items-center justify-center">
