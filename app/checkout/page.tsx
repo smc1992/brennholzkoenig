@@ -150,6 +150,24 @@ interface ProductStock {
   stock_quantity: number;
 }
 
+interface Address {
+  id?: string;
+  customer_id: string;
+  type: 'shipping' | 'billing';
+  title: string;
+  first_name: string;
+  last_name: string;
+  company?: string;
+  street: string;
+  house_number: string;
+  postal_code: string;
+  city: string;
+  country: string;
+  phone?: string;
+  is_default: boolean;
+  created_at?: string;
+}
+
 type MovementType = 'in' | 'out' | 'adjustment';
 
 interface InventoryMovement {
@@ -173,6 +191,8 @@ export default function CheckoutPage() {
     // Wenn es ein Storage-Filename ist, konvertiere zu CDN-URL
     return getCDNUrl(`products/${url}`);
   };
+  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('new');
   const [currentStep, setCurrentStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -309,25 +329,61 @@ export default function CheckoutPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUser(user);
-        // User-Daten vorausfüllen
-        const { data: customer } = await supabase
-          .from('customers')
-          .select('*')
-          .eq('email', user.email as string)
-          .single();
 
-        if (customer) {
-          setDeliveryData((prev) => ({
-            ...prev,
-            firstName: String(customer.first_name || ''),
-            lastName: String(customer.last_name || ''),
-            email: String(customer.email || ''),
-            phone: String(customer.phone || ''),
-            street: String(customer.street || ''),
-            houseNumber: String(customer.house_number || ''),
-            postalCode: String(customer.postal_code || ''),
-            city: String(customer.city || ''),
-          }));
+        // Gespeicherte Adressen laden
+        const { data: addresses } = await supabase
+          .from('customer_addresses')
+          .select('*')
+          .eq('customer_id', user.id)
+          .order('is_default', { ascending: false })
+          .order('created_at', { ascending: false });
+
+        if (addresses && addresses.length > 0) {
+          setSavedAddresses(addresses);
+
+          // Versuche Standard-Lieferadresse zu finden
+          const defaultShipping = addresses.find(a => a.is_default && a.type === 'shipping')
+            || addresses.find(a => a.type === 'shipping')
+            || addresses[0];
+
+          if (defaultShipping) {
+            setSelectedAddressId(defaultShipping.id || '');
+            setDeliveryData((prev) => ({
+              ...prev,
+              firstName: defaultShipping.first_name || '',
+              lastName: defaultShipping.last_name || '',
+              email: user.email as string,
+              phone: defaultShipping.phone || '',
+              company: defaultShipping.company || '',
+              street: defaultShipping.street || '',
+              houseNumber: defaultShipping.house_number || '',
+              postalCode: defaultShipping.postal_code || '',
+              city: defaultShipping.city || '',
+            }));
+          }
+        }
+
+        // Fallback: User-Daten aus profile/customers vorausfüllen wenn keine Adressen existieren
+        if (!addresses || addresses.length === 0) {
+          const { data: customer } = await supabase
+            .from('customers')
+            .select('*')
+            .eq('email', user.email as string)
+            .single();
+
+          if (customer) {
+            setDeliveryData((prev) => ({
+              ...prev,
+              firstName: String(customer.first_name || ''),
+              lastName: String(customer.last_name || ''),
+              email: String(customer.email || ''),
+              phone: String(customer.phone || ''),
+              street: String(customer.street || ''),
+              houseNumber: String(customer.house_number || ''),
+              postalCode: String(customer.postal_code || ''),
+              city: String(customer.city || ''),
+            }));
+          }
         }
       }
     };
@@ -1454,7 +1510,59 @@ export default function CheckoutPage() {
               {/* Schritt 1: Lieferadresse */}
               {currentStep === 1 && (
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Lieferadresse</h2>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900">Lieferadresse</h2>
+
+                    {savedAddresses.length > 0 && (
+                      <div className="mt-4 sm:mt-0">
+                        <select
+                          value={selectedAddressId}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSelectedAddressId(val);
+                            if (val === 'new') {
+                              setDeliveryData(prev => ({
+                                ...prev,
+                                firstName: '',
+                                lastName: '',
+                                phone: '',
+                                company: '',
+                                street: '',
+                                houseNumber: '',
+                                postalCode: '',
+                                city: ''
+                              }));
+                            } else {
+                              const selected = savedAddresses.find(a => a.id === val);
+                              if (selected) {
+                                setDeliveryData(prev => ({
+                                  ...prev,
+                                  firstName: selected.first_name || '',
+                                  lastName: selected.last_name || '',
+                                  phone: selected.phone || '',
+                                  company: selected.company || '',
+                                  street: selected.street || '',
+                                  houseNumber: selected.house_number || '',
+                                  postalCode: selected.postal_code || '',
+                                  city: selected.city || ''
+                                }));
+                              }
+                            }
+                          }}
+                          className="px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-[#C04020] focus:border-transparent outline-none w-full sm:w-auto"
+                        >
+                          <option value="new">+ Neue Adresse eingeben</option>
+                          <optgroup label="Gespeicherte Adressen">
+                            {savedAddresses.map(addr => (
+                              <option key={addr.id} value={addr.id || ''}>
+                                {addr.street} {addr.house_number}, {addr.postal_code} {addr.city} {addr.is_default ? '(Standard)' : ''}
+                              </option>
+                            ))}
+                          </optgroup>
+                        </select>
+                      </div>
+                    )}
+                  </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
