@@ -405,6 +405,17 @@ export default function ProductsTab() {
         return;
       }
 
+      // First delete related inventory movements to prevent foreign key errors
+      const { error: invDeleteError } = await supabase
+        .from("inventory_movements")
+        .delete()
+        .eq("product_id", productToDelete.id);
+
+      if (invDeleteError) {
+        console.warn("Konnte Lagerbewegungen nicht löschen (oder keine vorhanden):", invDeleteError);
+        // Continue anyway as the primary delete might still work or give a more relevant error
+      }
+
       const { error: deleteError } = await supabase
         .from("products")
         .delete()
