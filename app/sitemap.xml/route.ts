@@ -12,18 +12,18 @@ export const revalidate = false;
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
+
   if (!supabaseUrl || !supabaseKey) {
     console.warn('Supabase environment variables not configured for sitemap route');
     return null;
   }
-  
+
   return createClient(supabaseUrl, supabaseKey);
 }
 
 export async function GET() {
   const baseUrl = 'https://brennholz-koenig.de';
-  
+
   // Statische Seiten
   const staticUrls = [
     { url: '', priority: '1.0', changefreq: 'weekly' },
@@ -39,7 +39,7 @@ export async function GET() {
 
   // Supabase Client zur Laufzeit erstellen
   const supabase = getSupabaseClient();
-  
+
   // Blog-Artikel laden
   let blogUrls: any[] = [];
   if (supabase) {
@@ -69,19 +69,23 @@ export async function GET() {
   if (supabase) {
     try {
       const { data: products } = await supabase
-        .from('page_contents')
-        .select('slug, updated_at')
-        .eq('content_type', 'product')
-        .eq('status', 'published')
+        .from('products')
+        .select('id, slug, updated_at')
         .eq('is_active', true);
 
       if (products) {
-        productUrls = products.map(product => ({
-          url: `/shop/${String(product.slug || '')}`,
-          priority: '0.8',
-          changefreq: 'weekly',
-          lastmod: new Date(String(product.updated_at || new Date())).toISOString().split('T')[0]
-        }));
+        productUrls = products.map(product => {
+          // Fallback to id if slug is missing
+          const urlPath = product.slug ? String(product.slug) : String(product.id);
+          return {
+            url: `/shop/${urlPath}`,
+            priority: '0.8',
+            changefreq: 'weekly',
+            lastmod: product.updated_at
+              ? new Date(String(product.updated_at)).toISOString().split('T')[0]
+              : new Date().toISOString().split('T')[0]
+          };
+        });
       }
     } catch (error) {
       console.error('Error loading products for sitemap:', error);

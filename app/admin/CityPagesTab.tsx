@@ -450,6 +450,32 @@ export default function CityPagesTab() {
                 .insert([pageData]);
               if (error) throw error;
             }
+
+            // Sync SEO data
+            const pagePath = `/${pageData.slug}`;
+            const { data: seoData } = await supabase
+              .from('seo_metadata')
+              .select('id')
+              .eq('page_path', pagePath)
+              .single();
+
+            const seoParams = {
+              page_path: pagePath,
+              title: pageData.meta_title,
+              description: pageData.meta_description,
+              keywords: pageData.local_keywords,
+              page_type: 'city',
+              canonical_url: `https://brennholz-koenig.de/${pageData.slug}`,
+              og_title: pageData.meta_title,
+              og_description: pageData.meta_description,
+              robots_directive: 'index, follow'
+            };
+
+            if (seoData) {
+              await supabase.from('seo_metadata').update(seoParams).eq('id', seoData.id);
+            } else {
+              await supabase.from('seo_metadata').insert([seoParams]);
+            }
             await loadCityPages();
             setIsEditing(false);
             setSelectedPage(null);
@@ -479,12 +505,95 @@ export default function CityPagesTab() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Stadtseiten verwalten</h2>
-        <button
-          onClick={handleCreate}
-          className="bg-[#C04020] text-white px-4 py-2 rounded-lg hover:bg-[#A03318] transition-colors"
-        >
-          Neue Stadtseite erstellen
-        </button>
+        <div className="flex space-x-4">
+          <button
+            onClick={async () => {
+              if (!supabase) return;
+              if (!window.confirm('Möchten Sie für Stadtseiten ohne SEO-Daten automatisch Titel und Beschreibung generieren?')) return;
+
+              setLoading(true);
+              try {
+                let updatedCount = 0;
+                for (const page of cityPages) {
+                  let updateNeeded = false;
+                  const updateData: Partial<CityPage> = {};
+
+                  if (!page.meta_title) {
+                    updateData.meta_title = `Premium Brennholz & Kaminholz kaufen in ${page.city_name} | Brennholz König`;
+                    updateNeeded = true;
+                  }
+                  if (!page.meta_description) {
+                    updateData.meta_description = `Hochwertiges Brennholz und Kaminholz in ${page.city_name} bestellen. Schnelle Lieferung, getrocknetes Holz und beste Preise direkt vom Brennholz König.`;
+                    updateNeeded = true;
+                  }
+
+                  // Generate default local keywords if none exist
+                  if (!page.local_keywords || page.local_keywords.length === 0) {
+                    updateData.local_keywords = [
+                      `Brennholz ${page.city_name}`,
+                      `Kaminholz ${page.city_name}`,
+                      `Feuerholz ${page.city_name}`,
+                      `Brennholz kaufen ${page.city_name}`
+                    ];
+                    updateNeeded = true;
+                  }
+
+                  if (updateNeeded) {
+                    const { error: pgErr } = await supabase
+                      .from('city_pages')
+                      .update(updateData)
+                      .eq('id', page.id);
+                    if (pgErr) throw pgErr;
+
+                    // Sync to seo_metadata to ensure it's picked up by SEOManager
+                    const pagePath = `/${page.slug}`;
+                    const { data: seoData } = await supabase
+                      .from('seo_metadata')
+                      .select('id')
+                      .eq('page_path', pagePath)
+                      .single();
+
+                    const seoParams = {
+                      page_path: pagePath,
+                      title: updateData.meta_title || page.meta_title,
+                      description: updateData.meta_description || page.meta_description,
+                      keywords: updateData.local_keywords || page.local_keywords,
+                      page_type: 'city',
+                      canonical_url: `https://brennholz-koenig.de/${page.slug}`,
+                      og_title: updateData.meta_title || page.meta_title,
+                      og_description: updateData.meta_description || page.meta_description,
+                      robots_directive: 'index, follow'
+                    };
+
+                    if (seoData) {
+                      await supabase.from('seo_metadata').update(seoParams).eq('id', seoData.id);
+                    } else {
+                      await supabase.from('seo_metadata').insert([seoParams]);
+                    }
+
+                    updatedCount++;
+                  }
+                }
+                alert(`${updatedCount} Stadtseiten wurden erfolgreich mit SEO-Metadaten aktualisiert.`);
+                await loadCityPages();
+              } catch (e: any) {
+                console.error('Fehler bei der SEO-Generierung:', e);
+                setError('Fehler bei der SEO-Generierung: ' + e.message);
+              } finally {
+                setLoading(false);
+              }
+            }}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            SEO Metadaten generieren
+          </button>
+          <button
+            onClick={handleCreate}
+            className="bg-[#C04020] text-white px-4 py-2 rounded-lg hover:bg-[#A03318] transition-colors"
+          >
+            Neue Stadtseite erstellen
+          </button>
+        </div>
       </div>
 
       {error && (

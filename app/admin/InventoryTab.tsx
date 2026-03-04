@@ -155,7 +155,7 @@ export default function InventoryTab() {
       // Bestand in products Tabelle aktualisieren
       const { error: updateError } = await supabase
         .from('products')
-        .update({ 
+        .update({
           stock_quantity: newStockQuantity, // Verwende den berechneten Wert direkt (bereits validiert)
           updated_at: new Date().toISOString()
         })
@@ -207,7 +207,7 @@ export default function InventoryTab() {
     try {
       const { error } = await supabase
         .from('products')
-        .update({ 
+        .update({
           min_stock_level: minLevel,
           max_stock_level: maxLevel,
           updated_at: new Date().toISOString()
@@ -245,7 +245,7 @@ export default function InventoryTab() {
   };
 
   const getTotalInventoryValue = () => {
-    return products.reduce((total, product) => 
+    return products.reduce((total, product) =>
       total + ((product.price || 0) * (product.stock_quantity || 0)), 0
     );
   };
@@ -290,11 +290,10 @@ export default function InventoryTab() {
         </div>
 
         {message && (
-          <div className={`mb-4 px-4 py-2 rounded-lg text-sm font-medium ${
-            message.includes('erfolgreich')
+          <div className={`mb-4 px-4 py-2 rounded-lg text-sm font-medium ${message.includes('erfolgreich')
               ? 'bg-green-100 text-green-800'
               : 'bg-red-100 text-red-800'
-          }`}>
+            }`}>
             {message}
           </div>
         )}
@@ -307,7 +306,7 @@ export default function InventoryTab() {
                 <p className="text-2xl font-bold text-blue-800">{products.length}</p>
               </div>
               <div className="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-lg">
-                <i className="ri-box-line text-blue-600"></i>
+                <i className="ri-archive-line text-blue-600"></i>
               </div>
             </div>
           </div>
@@ -316,7 +315,7 @@ export default function InventoryTab() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-green-600">Bestandswert</p>
-                <p className="text-2xl font-bold text-green-800">€{getTotalInventoryValue().toLocaleString('de-DE', {minimumFractionDigits: 2})}</p>
+                <p className="text-2xl font-bold text-green-800">€{getTotalInventoryValue().toLocaleString('de-DE', { minimumFractionDigits: 2 })}</p>
               </div>
               <div className="w-10 h-10 flex items-center justify-center bg-green-100 rounded-lg">
                 <i className="ri-money-euro-circle-line text-green-600"></i>
@@ -355,33 +354,30 @@ export default function InventoryTab() {
           <nav className="flex space-x-8 px-6">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap cursor-pointer ${
-                activeTab === 'overview'
+              className={`py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap cursor-pointer ${activeTab === 'overview'
                   ? 'border-green-500 text-green-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+                }`}
             >
               <i className="ri-dashboard-line mr-2"></i>
               Bestandsübersicht
             </button>
             <button
               onClick={() => setActiveTab('alerts')}
-              className={`py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap cursor-pointer ${
-                activeTab === 'alerts'
+              className={`py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap cursor-pointer ${activeTab === 'alerts'
                   ? 'border-green-500 text-green-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+                }`}
             >
               <i className="ri-alarm-warning-line mr-2"></i>
               Warnungen ({stockAlerts.length})
             </button>
             <button
               onClick={() => setActiveTab('movements')}
-              className={`py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap cursor-pointer ${
-                activeTab === 'movements'
+              className={`py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap cursor-pointer ${activeTab === 'movements'
                   ? 'border-green-500 text-green-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+                }`}
             >
               <i className="ri-exchange-line mr-2"></i>
               Lagerbewegungen
@@ -497,18 +493,16 @@ export default function InventoryTab() {
             ) : (
               <div className="space-y-4">
                 {stockAlerts.map((alert, index) => (
-                  <div key={index} className={`border rounded-lg p-4 ${
-                    alert.alert_type === 'out_of_stock' 
-                      ? 'border-red-200 bg-red-50' 
+                  <div key={index} className={`border rounded-lg p-4 ${alert.alert_type === 'out_of_stock'
+                      ? 'border-red-200 bg-red-50'
                       : 'border-orange-200 bg-orange-50'
-                  }`}>
+                    }`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <div className={`w-8 h-8 flex items-center justify-center rounded-full mr-3 ${
-                          alert.alert_type === 'out_of_stock'
+                        <div className={`w-8 h-8 flex items-center justify-center rounded-full mr-3 ${alert.alert_type === 'out_of_stock'
                             ? 'bg-red-100 text-red-600'
                             : 'bg-orange-100 text-orange-600'
-                        }`}>
+                          }`}>
                           <i className={alert.alert_type === 'out_of_stock' ? 'ri-close-circle-line' : 'ri-error-warning-line'}></i>
                         </div>
                         <div>
@@ -564,13 +558,12 @@ export default function InventoryTab() {
                           {product?.name || 'Unbekannt'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs font-bold rounded-full ${
-                            movement.movement_type === 'in' ? 'bg-green-100 text-green-800' :
-                            movement.movement_type === 'out' ? 'bg-red-100 text-red-800' :
-                            'bg-blue-100 text-blue-800'
-                          }`}>
+                          <span className={`px-2 py-1 text-xs font-bold rounded-full ${movement.movement_type === 'in' ? 'bg-green-100 text-green-800' :
+                              movement.movement_type === 'out' ? 'bg-red-100 text-red-800' :
+                                'bg-blue-100 text-blue-800'
+                            }`}>
                             {movement.movement_type === 'in' ? 'Zugang' :
-                             movement.movement_type === 'out' ? 'Abgang' : 'Anpassung'}
+                              movement.movement_type === 'out' ? 'Abgang' : 'Anpassung'}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">

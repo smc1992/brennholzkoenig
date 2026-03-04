@@ -32,14 +32,14 @@ export function SEOMetadata({
   image = '/images/brennholz-hero.jpg',
   product
 }: SEOMetadataProps) {
-  
+
   const finalTitle = title || defaultTitle;
   const finalDescription = description || defaultDescription;
-  
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       document.title = finalTitle;
-      
+
       let metaDescription = document.querySelector('meta[name="description"]') as HTMLMetaElement;
       if (!metaDescription) {
         metaDescription = document.createElement('meta');
@@ -47,7 +47,7 @@ export function SEOMetadata({
         document.head.appendChild(metaDescription);
       }
       metaDescription.setAttribute('content', finalDescription);
-      
+
       // Handle keywords
       if (keywords && keywords.length > 0) {
         let metaKeywords = document.querySelector('meta[name="keywords"]') as HTMLMetaElement;
@@ -58,7 +58,7 @@ export function SEOMetadata({
         }
         metaKeywords.setAttribute('content', keywords.join(', '));
       }
-      
+
       const updateMetaProperty = (property: string, content: string) => {
         let meta = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
         if (!meta) {
@@ -68,13 +68,23 @@ export function SEOMetadata({
         }
         meta.setAttribute('content', content);
       };
-      
+
+      // Update Canonical URL
+      const canonicalUrl = url || `https://brennholz-koenig.de${pageSlug.startsWith('/') ? pageSlug : `/${pageSlug}`}`;
+      let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+      if (!canonicalLink) {
+        canonicalLink = document.createElement('link');
+        canonicalLink.setAttribute('rel', 'canonical');
+        document.head.appendChild(canonicalLink);
+      }
+      canonicalLink.setAttribute('href', canonicalUrl);
+
       updateMetaProperty('og:title', finalTitle);
       updateMetaProperty('og:description', finalDescription);
       updateMetaProperty('og:image', image);
-      updateMetaProperty('og:url', window.location.href);
+      updateMetaProperty('og:url', canonicalUrl);
       updateMetaProperty('og:type', product ? 'product' : 'website');
-      
+
       const updateTwitterMeta = (name: string, content: string) => {
         let meta = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement;
         if (!meta) {
@@ -84,7 +94,7 @@ export function SEOMetadata({
         }
         meta.setAttribute('content', content);
       };
-      
+
       updateTwitterMeta('twitter:card', 'summary_large_image');
       updateTwitterMeta('twitter:title', finalTitle);
       updateTwitterMeta('twitter:description', finalDescription);
