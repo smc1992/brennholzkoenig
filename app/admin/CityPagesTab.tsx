@@ -917,12 +917,12 @@ function CityPageForm({ page, onSave, onCancel }: {
                 <textarea value={formData.hero_subtitle} onChange={(e) => setFormData(prev => ({ ...prev, hero_subtitle: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" rows={2} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Hero CTA Text</label>
-                <input type="text" value={formData.hero_cta_text || ''} onChange={(e) => setFormData(prev => ({ ...prev, hero_cta_text: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Jetzt bestellen" />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Hero Primär-CTA Text (Zum Shop)</label>
+                <input type="text" value={formData.hero_cta_text || ''} onChange={(e) => setFormData(prev => ({ ...prev, hero_cta_text: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Zum Shop" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Hero Sekundär-CTA Text</label>
-                <input type="text" value={formData.hero_secondary_cta_text || ''} onChange={(e) => setFormData(prev => ({ ...prev, hero_secondary_cta_text: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="z. B. WhatsApp Beratung" />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Hero Sekundär-CTA Text (WhatsApp Chat)</label>
+                <input type="text" value={formData.hero_secondary_cta_text || ''} onChange={(e) => setFormData(prev => ({ ...prev, hero_secondary_cta_text: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. WhatsApp Chat" />
               </div>
               <CityImageUploader currentImageUrl={formData.hero_image_url} onImageUploaded={(url) => setFormData(prev => ({ ...prev, hero_image_url: url }))} label="Hero Bild" placeholder="Bild hochladen" citySlug={formData.slug} sectionType="hero" />
               <CityImageUploader currentImageUrl={formData.city_image_url} onImageUploaded={(url) => setFormData(prev => ({ ...prev, city_image_url: url }))} label="Stadtbild" placeholder="Bild hochladen" citySlug={formData.slug} sectionType="city" />
@@ -962,7 +962,7 @@ function CityPageForm({ page, onSave, onCancel }: {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Fließtext (HTML möglich)</label>
                 <textarea value={formData.content_section_2_content || ''} onChange={(e) => setFormData(prev => ({ ...prev, content_section_2_content: e.target.value }))} className="w-full px-3 py-2 border rounded-lg font-mono text-sm" rows={6} placeholder="Beschreibung der regionalen Qualität..." />
               </div>
-              <CityImageUploader currentImageUrl={formData.content_section_2_image_url || ''} onImageUploaded={(url) => setFormData(prev => ({ ...prev, content_section_2_image_url: url }))} label="Bild: Content Section 2" citySlug={formData.slug} sectionType="content-2" />
+
             </div>
           </div>
 
@@ -977,33 +977,11 @@ function CityPageForm({ page, onSave, onCancel }: {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Fließtext (HTML möglich)</label>
                 <textarea value={formData.content_section_3_content || ''} onChange={(e) => setFormData(prev => ({ ...prev, content_section_3_content: e.target.value }))} className="w-full px-3 py-2 border rounded-lg font-mono text-sm" rows={6} placeholder="Beschreibung der Nachhaltigkeit..." />
               </div>
-              <CityImageUploader currentImageUrl={formData.content_section_3_image_url || ''} onImageUploaded={(url) => setFormData(prev => ({ ...prev, content_section_3_image_url: url }))} label="Bild: Content Section 3" citySlug={formData.slug} sectionType="content-3" />
+
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg border">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Service-Bereiche</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Service Titel</label>
-                <input type="text" value={formData.local_service_title} onChange={(e) => setFormData(prev => ({ ...prev, local_service_title: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Service Beschreibung</label>
-                <textarea value={formData.local_service_description} onChange={(e) => setFormData(prev => ({ ...prev, local_service_description: e.target.value }))} className="w-full px-3 py-2 border rounded-lg" rows={3} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Service-Gebiete (kommagetrennt, z.B. Mitte, Vorderer Westen, Wilhelmshöhe)</label>
-                <input type="text" value={
-                  Array.isArray(formData.local_service_areas)
-                    ? (typeof formData.local_service_areas[0] === 'string'
-                      ? (formData.local_service_areas as unknown as string[]).join(', ')
-                      : (formData.local_service_areas as any[]).map(a => a.name || a.title || '').join(', '))
-                    : ''
-                } onChange={(e) => setFormData(prev => ({ ...prev, local_service_areas: e.target.value.split(',').map(a => a.trim()).filter(Boolean) as any }))} className="w-full px-3 py-2 border rounded-lg" placeholder="z.B. Mitte, Vorderer Westen, Wilhelmshöhe" />
-              </div>
-            </div>
-          </div>
+
           <div className="bg-white p-6 rounded-lg border">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">FAQs (max 5)</h3>
             {(() => {
@@ -1183,20 +1161,7 @@ function CityPageForm({ page, onSave, onCancel }: {
               citySlug={formData.slug}
               sectionType="service-expertise"
             />
-            <CityImageUploader
-              currentImageUrl={formData.regional_quality_image_url}
-              onImageUploaded={(url) => setFormData(prev => ({ ...prev, regional_quality_image_url: url }))}
-              label="Bild: Regionale Qualität"
-              citySlug={formData.slug}
-              sectionType="service-quality"
-            />
-            <CityImageUploader
-              currentImageUrl={formData.sustainability_image_url}
-              onImageUploaded={(url) => setFormData(prev => ({ ...prev, sustainability_image_url: url }))}
-              label="Bild: Nachhaltigkeit"
-              citySlug={formData.slug}
-              sectionType="service-sustainability"
-            />
+
             <CityImageUploader
               currentImageUrl={formData.local_partnerships_image_url}
               onImageUploaded={(url) => setFormData(prev => ({ ...prev, local_partnerships_image_url: url }))}
@@ -1278,21 +1243,23 @@ function CityPageForm({ page, onSave, onCancel }: {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Hero CTA Text</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Hero Primär-CTA Text (Zum Shop)</label>
               <input
                 type="text"
-                value={formData.hero_cta_text}
+                value={formData.hero_cta_text || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, hero_cta_text: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+                placeholder="z.B. Zum Shop"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Hero Sekundär-CTA Text (WhatsApp)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Hero Sekundär-CTA Text (WhatsApp Chat)</label>
               <input
                 type="text"
                 value={formData.hero_secondary_cta_text || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, hero_secondary_cta_text: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
+                placeholder="z.B. WhatsApp Chat"
               />
             </div>
             <div>
@@ -1318,27 +1285,7 @@ function CityPageForm({ page, onSave, onCancel }: {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Content-Bilder (Section 2 & 3)</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <CityImageUploader
-              currentImageUrl={formData.content_section_2_image_url}
-              onImageUploaded={(url) => setFormData(prev => ({ ...prev, content_section_2_image_url: url }))}
-              label="Bild für Content Section 2"
-              placeholder="Bild-URL oder Datei hochladen"
-              citySlug={formData.slug}
-              sectionType="content2"
-            />
-            <CityImageUploader
-              currentImageUrl={formData.content_section_3_image_url}
-              onImageUploaded={(url) => setFormData(prev => ({ ...prev, content_section_3_image_url: url }))}
-              label="Bild für Content Section 3"
-              placeholder="Bild-URL oder Datei hochladen"
-              citySlug={formData.slug}
-              sectionType="content3"
-            />
-          </div>
-        </div>
+
 
         {/* 4. CTAs & Kontakt-URLs */}
         <div className="bg-white p-6 rounded-lg border">
@@ -1515,99 +1462,7 @@ function CityPageForm({ page, onSave, onCancel }: {
               />
             </div>
 
-            {/* Service Areas */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Service-Bereiche</label>
-              {(formData.local_service_areas || []).map((area, index) => (
-                <div key={index} className="border p-4 rounded-lg mb-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <input
-                      type="text"
-                      placeholder="Name"
-                      value={area.name}
-                      onChange={(e) => {
-                        const newAreas = [...formData.local_service_areas];
-                        newAreas[index].name = e.target.value;
-                        setFormData(prev => ({ ...prev, local_service_areas: newAreas }));
-                      }}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Kategorie"
-                      value={area.category}
-                      onChange={(e) => {
-                        const newAreas = [...formData.local_service_areas];
-                        newAreas[index].category = e.target.value;
-                        setFormData(prev => ({ ...prev, local_service_areas: newAreas }));
-                      }}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <input
-                      type="text"
-                      placeholder="Titel"
-                      value={area.title}
-                      onChange={(e) => {
-                        const newAreas = [...formData.local_service_areas];
-                        newAreas[index].title = e.target.value;
-                        setFormData(prev => ({ ...prev, local_service_areas: newAreas }));
-                      }}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Badge"
-                      value={area.badge}
-                      onChange={(e) => {
-                        const newAreas = [...formData.local_service_areas];
-                        newAreas[index].badge = e.target.value;
-                        setFormData(prev => ({ ...prev, local_service_areas: newAreas }));
-                      }}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-                    />
-                  </div>
-                  <textarea
-                    placeholder="Beschreibung"
-                    value={area.description}
-                    onChange={(e) => {
-                      const newAreas = [...formData.local_service_areas];
-                      newAreas[index].description = e.target.value;
-                      setFormData(prev => ({ ...prev, local_service_areas: newAreas }));
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent mb-2"
-                    rows={3}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newAreas = formData.local_service_areas.filter((_, i) => i !== index);
-                      setFormData(prev => ({ ...prev, local_service_areas: newAreas }));
-                    }}
-                    className="text-red-600 hover:text-red-800 text-sm"
-                  >
-                    Service-Bereich entfernen
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => {
-                  const newAreas = [...(formData.local_service_areas || []), {
-                    name: '',
-                    category: '',
-                    title: '',
-                    description: '',
-                    badge: '',
-                  }];
-                  setFormData(prev => ({ ...prev, local_service_areas: newAreas }));
-                }}
-                className="text-[#C04020] hover:text-[#A03318] text-sm"
-              >
-                + Service-Bereich hinzufügen
-              </button>
-            </div>
+
 
             {/* Expertise Section */}
             <div className="border-t pt-4">
@@ -2173,24 +2028,7 @@ function CityPageForm({ page, onSave, onCancel }: {
                 rows={4}
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Nachhaltigkeit Bild URL</label>
-              <input
-                type="url"
-                value={formData.sustainability_image_url}
-                onChange={(e) => setFormData(prev => ({ ...prev, sustainability_image_url: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Content Section 3 Bild URL</label>
-              <input
-                type="url"
-                value={formData.content_section_3_image_url}
-                onChange={(e) => setFormData(prev => ({ ...prev, content_section_3_image_url: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C04020] focus:border-transparent"
-              />
-            </div>
+
           </div>
         </div>
 
