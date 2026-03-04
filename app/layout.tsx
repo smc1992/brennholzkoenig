@@ -38,6 +38,9 @@ export const metadata: Metadata = {
     telephone: false,
   },
   metadataBase: new URL(process.env.NODE_ENV === 'production' ? 'https://brennholz-koenig.de' : 'http://localhost:3000'),
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     type: 'website',
     locale: 'de_DE',
