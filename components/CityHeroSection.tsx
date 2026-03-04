@@ -143,24 +143,24 @@ export default function CityHeroSection({
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-8 sm:mb-12">
               <CityButton
                 type="primary"
-                customText={cityData?.hero_cta_text || "Jetzt bestellen"}
                 cityData={cityData}
                 className="group bg-gradient-to-r from-[#D4A520] to-[#B8941C] hover:from-[#B8941C] hover:to-[#9A7A18] text-white font-bold py-3 sm:py-4 px-6 sm:px-8 md:px-10 rounded-full text-base sm:text-lg md:text-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl w-full sm:w-auto min-w-[200px] shadow-xl font-inter"
               >
                 <span className="flex items-center justify-center gap-2">
                   <i className="ri-shopping-cart-line text-lg sm:text-xl"></i>
+                  {cityData?.hero_cta_text || "Jetzt bestellen"}
                   <i className="ri-arrow-right-line text-lg sm:text-xl group-hover:translate-x-1 transition-transform"></i>
                 </span>
               </CityButton>
 
               <CityButton
                 type="whatsapp"
-                customText={cityData?.hero_secondary_cta_text || "WhatsApp Beratung"}
                 cityData={cityData}
                 className="group bg-gradient-to-r from-[#25D366] to-[#20BA5A] hover:from-[#20BA5A] hover:to-[#1BA34E] text-white font-bold py-3 sm:py-4 px-6 sm:px-8 md:px-10 rounded-full text-base sm:text-lg md:text-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl w-full sm:w-auto min-w-[200px] shadow-xl font-inter"
               >
                 <span className="flex items-center justify-center gap-2">
                   <i className="ri-whatsapp-line text-lg sm:text-xl"></i>
+                  {cityData?.hero_secondary_cta_text || "WhatsApp Beratung"}
                   <i className="ri-arrow-right-line text-lg sm:text-xl group-hover:translate-x-1 transition-transform"></i>
                 </span>
               </CityButton>
