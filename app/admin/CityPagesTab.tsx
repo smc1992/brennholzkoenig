@@ -645,74 +645,29 @@ export default function CityPagesTab() {
                     {page.is_active ? 'Aktiv' : 'Inaktiv'}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
                   <Link
                     href={`/${page.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800"
+                    className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                    title="Stadtseite im neuen Tab öffnen"
                   >
-                    Öffnen
+                    <i className="ri-external-link-line text-xl"></i>
                   </Link>
                   <button
-                    onClick={async () => {
-                      const url = window.prompt('Bild-URL für Hero hochladen (z.B. Wikimedia FilePath):');
-                      if (!url) return;
-                      try {
-                        const res = await fetch('/api/city-assets', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ city_slug: page.slug, section: 'hero', image_url: url })
-                        });
-                        const data = await res.json();
-                        if (!res.ok) throw new Error(data?.error || 'Upload fehlgeschlagen');
-                        const publicUrl = data.publicUrl;
-                        const upd = { ...page, hero_image_url: publicUrl } as any;
-                        await handleSave(upd);
-                        alert('Hero-Bild aktualisiert.');
-                      } catch (e: any) {
-                        alert('Fehler beim Upload: ' + (e?.message || e));
-                      }
-                    }}
-                    className="text-indigo-600 hover:text-indigo-900"
-                  >
-                    Hero-Bild hochladen
-                  </button>
-                  <button
-                    onClick={async () => {
-                      const url = window.prompt('Bild-URL für Stadtbild hochladen:');
-                      if (!url) return;
-                      try {
-                        const res = await fetch('/api/city-assets', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ city_slug: page.slug, section: 'city', image_url: url })
-                        });
-                        const data = await res.json();
-                        if (!res.ok) throw new Error(data?.error || 'Upload fehlgeschlagen');
-                        const publicUrl = data.publicUrl;
-                        const upd = { ...page, city_image_url: publicUrl } as any;
-                        await handleSave(upd);
-                        alert('Stadtbild aktualisiert.');
-                      } catch (e: any) {
-                        alert('Fehler beim Upload: ' + (e?.message || e));
-                      }
-                    }}
-                    className="text-indigo-600 hover:text-indigo-900"
-                  >
-                    Stadtbild hochladen
-                  </button>
-                  <button
                     onClick={() => handleEdit(page)}
-                    className="text-[#C04020] hover:text-[#A03318]"
+                    className="inline-flex items-center text-[#C04020] hover:text-[#A03318] transition-colors"
+                    title="Stadtseite bearbeiten"
                   >
-                    Bearbeiten
+                    <i className="ri-edit-line text-xl"></i>
                   </button>
                   <button
                     onClick={() => handleDelete(page.id!)}
-                    className="text-red-600 hover:text-red-900"
+                    className="inline-flex items-center text-red-600 hover:text-red-800 transition-colors"
+                    title="Stadtseite löschen"
                   >
-                    Löschen
+                    <i className="ri-delete-bin-line text-xl"></i>
                   </button>
                 </td>
               </tr>
