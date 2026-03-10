@@ -478,11 +478,10 @@ export default function CityPagesTab() {
               title: pageData.meta_title,
               description: pageData.meta_description,
               keywords: Array.isArray(pageData.local_keywords) ? pageData.local_keywords.join(', ') : pageData.local_keywords,
-              page_type: 'city',
               canonical_url: `https://brennholz-koenig.de/${pageData.slug}`,
               og_title: pageData.meta_title,
               og_description: pageData.meta_description,
-              robots_directive: 'index, follow'
+              robots: 'index, follow'
             };
 
             if (seoData) {
@@ -576,12 +575,11 @@ export default function CityPagesTab() {
                       page_path: pagePath,
                       title: updateData.meta_title || page.meta_title,
                       description: updateData.meta_description || page.meta_description,
-                      keywords: updateData.local_keywords || page.local_keywords,
-                      page_type: 'city',
+                      keywords: Array.isArray(updateData.local_keywords || page.local_keywords) ? (updateData.local_keywords || page.local_keywords as string[]).join(', ') : (updateData.local_keywords || page.local_keywords),
                       canonical_url: `https://brennholz-koenig.de/${page.slug}`,
                       og_title: updateData.meta_title || page.meta_title,
                       og_description: updateData.meta_description || page.meta_description,
-                      robots_directive: 'index, follow'
+                      robots: 'index, follow'
                     };
 
                     if (seoData) {
