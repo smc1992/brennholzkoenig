@@ -34,7 +34,7 @@ export default function BlogContent({ slug }: BlogContentProps) {
   const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [tableOfContents, setTableOfContents] = useState<{id: string, text: string, level: number}[]>([]);
+  const [tableOfContents, setTableOfContents] = useState<{ id: string, text: string, level: number }[]>([]);
 
   const getCategoryColor = (category: string): string => {
     const colors: { [key: string]: string } = {
@@ -61,21 +61,21 @@ export default function BlogContent({ slug }: BlogContentProps) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(content, 'text/html');
     const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
-    
-    const toc: {id: string, text: string, level: number}[] = Array.from(headings).map((heading, index) => {
+
+    const toc: { id: string, text: string, level: number }[] = Array.from(headings).map((heading, index) => {
       const level = parseInt(heading.tagName.charAt(1));
       const text = heading.textContent || '';
       const id = `heading-${index}`;
-      
+
       heading.id = id;
-      
+
       return {
         id,
         text,
         level
       };
     });
-    
+
     setTableOfContents(toc);
   };
 
@@ -88,15 +88,15 @@ export default function BlogContent({ slug }: BlogContentProps) {
 
   const addHeadingIds = (content: string): string => {
     if (typeof window === 'undefined') return content;
-    
+
     const parser = new DOMParser();
     const doc = parser.parseFromString(content, 'text/html');
     const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
-    
+
     headings.forEach((heading, index) => {
       heading.id = `heading-${index}`;
     });
-    
+
     return doc.body.innerHTML;
   };
 
@@ -116,14 +116,14 @@ export default function BlogContent({ slug }: BlogContentProps) {
       .replace(/<table[^>]*style="[^"]*min-width:[^"]*"[^>]*>/gi, (match) => {
         return match.replace(/style="[^"]*"/gi, 'class="w-full"');
       });
-    
+
     return cleanedContent;
   };
 
   const wrapTablesWithContainer = (content: string): string => {
     // Zuerst HTML bereinigen
     const cleanedContent = cleanTableHTML(content);
-    
+
     // Server-side und Client-side kompatible Lösung
     if (typeof window === 'undefined') {
       // Server-side: Verwende String-Manipulation
@@ -135,24 +135,24 @@ export default function BlogContent({ slug }: BlogContentProps) {
         '</table></div>'
       );
     }
-    
+
     // Client-side: Verwende DOM-Manipulation
     const parser = new DOMParser();
     const doc = parser.parseFromString(cleanedContent, 'text/html');
     const tables = doc.querySelectorAll('table');
-    
+
     tables.forEach((table) => {
       // Prüfen ob die Tabelle bereits in einem Container ist
       if (!table.parentElement?.classList.contains('table-container')) {
         const container = doc.createElement('div');
         container.className = 'table-container overflow-x-auto';
-        
+
         // Tabelle mit Container umschließen
         table.parentNode?.insertBefore(container, table);
         container.appendChild(table);
       }
     });
-    
+
     return doc.body.innerHTML;
   };
 
@@ -185,12 +185,12 @@ export default function BlogContent({ slug }: BlogContentProps) {
 
       // Content verarbeiten und Tabellen umschließen
       let processedContent = data.content_value || '';
-      
+
       // Sicherstellen, dass der Content korrekt formatiert ist
       if (processedContent) {
         // Tabellen mit Container umschließen für bessere mobile Darstellung
         processedContent = wrapTablesWithContainer(processedContent);
-        
+
         // Zusätzliche Formatierung für bessere Darstellung
         processedContent = processedContent
           // Sicherstellen, dass Überschriften korrekte IDs haben für das Inhaltsverzeichnis
@@ -230,17 +230,17 @@ export default function BlogContent({ slug }: BlogContentProps) {
       };
 
       setPost(blogPost);
-      
+
       // Inhaltsverzeichnis generieren
       if (processedContent) {
         generateTableOfContents(processedContent);
       }
-      
+
       setLoading(false);
-      
+
       // Verwandte Artikel laden
       loadRelatedPosts(blogPost.category, blogPost.id);
-      
+
     } catch (err) {
       console.error('Error loading blog post:', err);
       setError('Fehler beim Laden des Artikels');
@@ -422,14 +422,13 @@ export default function BlogContent({ slug }: BlogContentProps) {
                     <button
                       key={item.id}
                       onClick={() => scrollToHeading(item.id)}
-                      className={`block w-full text-left text-sm hover:text-[#C04020] transition-colors ${
-                        item.level === 1 ? 'font-bold text-gray-900 mb-1' :
-                        item.level === 2 ? 'font-semibold text-gray-800 pl-0' :
-                        item.level === 3 ? 'font-medium text-gray-700 pl-3' :
-                        item.level === 4 ? 'text-gray-600 pl-6' :
-                        item.level === 5 ? 'text-gray-500 pl-9' :
-                        'text-gray-400 pl-12'
-                      }`}
+                      className={`block w-full text-left text-sm hover:text-[#C04020] transition-colors ${item.level === 1 ? 'font-bold text-gray-900 mb-1' :
+                          item.level === 2 ? 'font-semibold text-gray-800 pl-0' :
+                            item.level === 3 ? 'font-medium text-gray-700 pl-3' :
+                              item.level === 4 ? 'text-gray-600 pl-6' :
+                                item.level === 5 ? 'text-gray-500 pl-9' :
+                                  'text-gray-400 pl-12'
+                        }`}
                     >
                       {item.text}
                     </button>
@@ -447,15 +446,15 @@ export default function BlogContent({ slug }: BlogContentProps) {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
           <div className="flex-1 lg:w-2/3 min-w-0">
-            <div className="prose prose-lg lg:prose-xl max-w-none overflow-hidden blog-content text-left sm:text-justify hyphens-auto break-words prose-headings:text-gray-900 prose-headings:font-black prose-h1:text-3xl sm:prose-h1:text-4xl lg:prose-h1:text-5xl prose-h1:mt-8 lg:prose-h1:mt-12 prose-h1:mb-6 lg:prose-h1:mb-8 prose-h1:leading-tight prose-h2:text-2xl sm:prose-h2:text-3xl lg:prose-h2:text-4xl prose-h2:mt-12 lg:prose-h2:mt-16 prose-h2:mb-6 lg:prose-h2:mb-8 prose-h2:border-b prose-h2:border-gray-200 prose-h2:pb-3 lg:prose-h2:pb-4 prose-h2:relative prose-h2:leading-tight prose-h2:before:content-[''] prose-h2:before:absolute prose-h2:before:left-0 prose-h2:before:top-0 prose-h2:before:w-8 lg:prose-h2:before:w-12 prose-h2:before:h-1 prose-h2:before:bg-[#C04020] prose-h2:before:rounded-full prose-h3:text-xl sm:prose-h3:text-2xl lg:prose-h3:text-3xl prose-h3:mt-8 lg:prose-h3:mt-12 prose-h3:mb-4 lg:prose-h3:mb-6 prose-h3:text-[#C04020] prose-h3:leading-tight prose-h4:text-lg sm:prose-h4:text-xl lg:prose-h4:text-2xl prose-h4:mt-6 lg:prose-h4:mt-10 prose-h4:mb-3 lg:prose-h4:mb-4 prose-h4:text-gray-800 prose-h4:leading-tight prose-h5:text-base sm:prose-h5:text-lg lg:prose-h5:text-xl prose-h5:mt-6 lg:prose-h5:mt-8 prose-h5:mb-2 lg:prose-h5:mb-3 prose-h5:text-gray-700 prose-h5:leading-tight prose-h6:text-sm sm:prose-h6:text-base lg:prose-h6:text-lg prose-h6:mt-4 lg:prose-h6:mt-6 prose-h6:mb-2 prose-h6:text-gray-600 prose-h6:leading-tight prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-6 lg:prose-p:mb-8 prose-p:text-base lg:prose-p:text-lg prose-strong:text-gray-900 prose-strong:font-bold prose-strong:bg-yellow-100 prose-strong:px-1 prose-strong:rounded prose-a:text-[#C04020] prose-a:font-semibold prose-a:no-underline hover:prose-a:text-[#A03318] hover:prose-a:underline prose-a:break-words prose-blockquote:border-l-4 lg:prose-blockquote:border-l-8 prose-blockquote:border-[#C04020] prose-blockquote:bg-gradient-to-r prose-blockquote:from-orange-50 prose-blockquote:to-red-50 prose-blockquote:py-4 lg:prose-blockquote:py-8 prose-blockquote:px-4 lg:prose-blockquote:px-8 prose-blockquote:italic prose-blockquote:text-gray-800 prose-blockquote:text-lg lg:prose-blockquote:text-xl prose-blockquote:font-medium prose-blockquote:rounded-r-xl lg:prose-blockquote:rounded-r-2xl prose-blockquote:shadow-lg prose-blockquote:relative prose-blockquote:before:content-['\201C'] prose-blockquote:before:text-4xl lg:prose-blockquote:before:text-6xl prose-blockquote:before:text-[#C04020] prose-blockquote:before:absolute prose-blockquote:before:-top-1 lg:prose-blockquote:before:-top-2 prose-blockquote:before:-left-1 lg:prose-blockquote:before:-left-2 prose-blockquote:before:font-serif prose-ul:space-y-2 lg:prose-ul:space-y-4 prose-ol:space-y-2 lg:prose-ol:space-y-4 prose-li:text-gray-700 prose-li:leading-relaxed prose-li:text-base lg:prose-li:text-lg prose-li:relative prose-li:pl-1 lg:prose-li:pl-2 prose-li:marker:text-[#C04020] prose-li:marker:font-bold prose-table:border-collapse prose-table:w-full prose-table:shadow-lg prose-table:rounded-lg prose-table:overflow-hidden prose-table:border prose-table:border-gray-300 prose-th:bg-[#C04020] prose-th:text-white prose-th:border prose-th:border-gray-300 prose-th:px-3 lg:prose-th:px-6 prose-th:py-2 lg:prose-th:py-4 prose-th:text-left prose-th:font-bold prose-th:text-xs lg:prose-th:text-sm prose-th:uppercase prose-th:tracking-wider prose-td:border prose-td:border-gray-300 prose-td:px-3 lg:prose-td:px-6 prose-td:py-2 lg:prose-td:py-4 prose-td:text-gray-700 prose-td:text-sm lg:prose-td:text-base prose-td:align-top prose-tr:hover:bg-gray-50 prose-hr:border-gray-300 prose-hr:my-8 lg:prose-hr:my-12 prose-hr:relative prose-hr:before:content-['✦'] prose-hr:before:absolute prose-hr:before:left-1/2 prose-hr:before:top-1/2 prose-hr:before:-translate-x-1/2 prose-hr:before:-translate-y-1/2 prose-hr:before:w-8 lg:prose-hr:before:w-12 prose-hr:before:h-8 lg:prose-hr:before:h-12 prose-hr:before:bg-white prose-hr:before:border-2 prose-hr:before:border-[#C04020] prose-hr:before:rounded-full prose-hr:before:flex prose-hr:before:items-center prose-hr:before:justify-center prose-hr:before:text-[#C04020] prose-hr:before:text-lg lg:prose-hr:before:text-xl prose-code:bg-gray-100 prose-code:px-2 lg:prose-code:px-3 prose-code:py-1 prose-code:rounded-md prose-code:text-xs lg:prose-code:text-sm prose-code:font-mono prose-code:text-[#C04020] prose-code:font-semibold prose-code:break-words prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:p-4 lg:prose-pre:p-8 prose-pre:rounded-xl lg:prose-pre:rounded-2xl prose-pre:overflow-x-auto prose-pre:shadow-xl prose-pre:text-sm lg:prose-pre:text-base prose-img:rounded-xl lg:prose-img:rounded-2xl prose-img:shadow-xl lg:prose-img:shadow-2xl prose-img:border prose-img:border-gray-200 prose-img:my-6 lg:prose-img:my-12 prose-img:w-full prose-img:h-auto [&_.table-container]:overflow-x-auto [&_.table-container]:my-6 [&_table]:min-w-full [&_table]:border-collapse [&_table]:border [&_table]:border-gray-300 [&_th]:bg-[#C04020] [&_th]:text-white [&_th]:p-3 [&_th]:text-left [&_th]:font-semibold [&_th]:border [&_th]:border-gray-300 [&_th]:text-sm [&_td]:border [&_td]:border-gray-300 [&_td]:p-3 [&_td]:text-gray-700 [&_td]:align-top [&_td]:text-sm [&_td]:leading-relaxed [&_tr:hover]:bg-gray-50">
-              <div 
-                dangerouslySetInnerHTML={{ 
+            <div className="prose prose-lg lg:prose-xl max-w-none overflow-hidden blog-content text-left sm:text-justify hyphens-auto break-words prose-headings:text-gray-900 prose-headings:font-black prose-h1:text-3xl sm:prose-h1:text-4xl lg:prose-h1:text-5xl prose-h1:mt-8 lg:prose-h1:mt-12 prose-h1:mb-6 lg:prose-h1:mb-8 prose-h1:leading-tight prose-h2:text-2xl sm:prose-h2:text-3xl lg:prose-h2:text-4xl prose-h2:mt-12 lg:prose-h2:mt-16 prose-h2:mb-6 lg:prose-h2:mb-8 prose-h2:border-b prose-h2:border-gray-200 prose-h2:pb-3 lg:prose-h2:pb-4 prose-h2:relative prose-h2:leading-tight prose-h2:before:content-[''] prose-h2:before:absolute prose-h2:before:left-0 prose-h2:before:top-0 prose-h2:before:w-8 lg:prose-h2:before:w-12 prose-h2:before:h-1 prose-h2:before:bg-[#C04020] prose-h2:before:rounded-full prose-h3:text-xl sm:prose-h3:text-2xl lg:prose-h3:text-3xl prose-h3:mt-8 lg:prose-h3:mt-12 prose-h3:mb-4 lg:prose-h3:mb-6 prose-h3:text-[#C04020] prose-h3:leading-tight prose-h4:text-lg sm:prose-h4:text-xl lg:prose-h4:text-2xl prose-h4:mt-6 lg:prose-h4:mt-10 prose-h4:mb-3 lg:prose-h4:mb-4 prose-h4:text-gray-800 prose-h4:leading-tight prose-h5:text-base sm:prose-h5:text-lg lg:prose-h5:text-xl prose-h5:mt-6 lg:prose-h5:mt-8 prose-h5:mb-2 lg:prose-h5:mb-3 prose-h5:text-gray-700 prose-h5:leading-tight prose-h6:text-sm sm:prose-h6:text-base lg:prose-h6:text-lg prose-h6:mt-4 lg:prose-h6:mt-6 prose-h6:mb-2 prose-h6:text-gray-600 prose-h6:leading-tight prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-6 lg:prose-p:mb-8 prose-p:text-base lg:prose-p:text-lg prose-strong:text-gray-900 prose-strong:font-bold prose-strong:bg-yellow-100 prose-strong:px-1 prose-strong:rounded prose-strong:whitespace-nowrap prose-a:text-[#C04020] prose-a:font-semibold prose-a:no-underline hover:prose-a:text-[#A03318] hover:prose-a:underline prose-a:break-words prose-blockquote:border-l-4 lg:prose-blockquote:border-l-8 prose-blockquote:border-[#C04020] prose-blockquote:bg-gradient-to-r prose-blockquote:from-orange-50 prose-blockquote:to-red-50 prose-blockquote:py-4 lg:prose-blockquote:py-8 prose-blockquote:px-4 lg:prose-blockquote:px-8 prose-blockquote:italic prose-blockquote:text-gray-800 prose-blockquote:text-lg lg:prose-blockquote:text-xl prose-blockquote:font-medium prose-blockquote:rounded-r-xl lg:prose-blockquote:rounded-r-2xl prose-blockquote:shadow-lg prose-blockquote:relative prose-blockquote:before:content-['\201C'] prose-blockquote:before:text-4xl lg:prose-blockquote:before:text-6xl prose-blockquote:before:text-[#C04020] prose-blockquote:before:absolute prose-blockquote:before:-top-1 lg:prose-blockquote:before:-top-2 prose-blockquote:before:-left-1 lg:prose-blockquote:before:-left-2 prose-blockquote:before:font-serif prose-ul:space-y-2 lg:prose-ul:space-y-4 prose-ol:space-y-2 lg:prose-ol:space-y-4 prose-li:text-gray-700 prose-li:leading-relaxed prose-li:text-base lg:prose-li:text-lg prose-li:relative prose-li:pl-1 lg:prose-li:pl-2 prose-li:marker:text-[#C04020] prose-li:marker:font-bold prose-table:border-collapse prose-table:w-full prose-table:shadow-lg prose-table:rounded-lg prose-table:overflow-hidden prose-table:border prose-table:border-gray-300 prose-th:bg-[#C04020] prose-th:text-white prose-th:border prose-th:border-gray-300 prose-th:px-3 lg:prose-th:px-6 prose-th:py-2 lg:prose-th:py-4 prose-th:text-left prose-th:font-bold prose-th:text-xs lg:prose-th:text-sm prose-th:uppercase prose-th:tracking-wider prose-td:border prose-td:border-gray-300 prose-td:px-3 lg:prose-td:px-6 prose-td:py-2 lg:prose-td:py-4 prose-td:text-gray-700 prose-td:text-sm lg:prose-td:text-base prose-td:align-top prose-tr:hover:bg-gray-50 prose-hr:border-gray-300 prose-hr:my-8 lg:prose-hr:my-12 prose-hr:relative prose-hr:before:content-['✦'] prose-hr:before:absolute prose-hr:before:left-1/2 prose-hr:before:top-1/2 prose-hr:before:-translate-x-1/2 prose-hr:before:-translate-y-1/2 prose-hr:before:w-8 lg:prose-hr:before:w-12 prose-hr:before:h-8 lg:prose-hr:before:h-12 prose-hr:before:bg-white prose-hr:before:border-2 prose-hr:before:border-[#C04020] prose-hr:before:rounded-full prose-hr:before:flex prose-hr:before:items-center prose-hr:before:justify-center prose-hr:before:text-[#C04020] prose-hr:before:text-lg lg:prose-hr:before:text-xl prose-code:bg-gray-100 prose-code:px-2 lg:prose-code:px-3 prose-code:py-1 prose-code:rounded-md prose-code:text-xs lg:prose-code:text-sm prose-code:font-mono prose-code:text-[#C04020] prose-code:font-semibold prose-code:break-words prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:p-4 lg:prose-pre:p-8 prose-pre:rounded-xl lg:prose-pre:rounded-2xl prose-pre:overflow-x-auto prose-pre:shadow-xl prose-pre:text-sm lg:prose-pre:text-base prose-img:rounded-xl lg:prose-img:rounded-2xl prose-img:shadow-xl lg:prose-img:shadow-2xl prose-img:border prose-img:border-gray-200 prose-img:my-6 lg:prose-img:my-12 prose-img:w-full prose-img:h-auto [&_.table-container]:overflow-x-auto [&_.table-container]:my-6 [&_table]:min-w-full [&_table]:border-collapse [&_table]:border [&_table]:border-gray-300 [&_th]:bg-[#C04020] [&_th]:text-white [&_th]:p-3 [&_th]:text-left [&_th]:font-semibold [&_th]:border [&_th]:border-gray-300 [&_th]:text-sm [&_td]:border [&_td]:border-gray-300 [&_td]:p-3 [&_td]:text-gray-700 [&_td]:align-top [&_td]:text-sm [&_td]:leading-relaxed [&_tr:hover]:bg-gray-50">
+              <div
+                dangerouslySetInnerHTML={{
                   __html: wrapTablesWithContainer(addHeadingIds(post.content || ''))
-                }} 
+                }}
               />
             </div>
           </div>
-          
+
           {/* Desktop Sidebar */}
           <div className="hidden lg:block w-1/3 max-w-sm">
             <div className="sticky top-8 space-y-6">
@@ -472,14 +471,13 @@ export default function BlogContent({ slug }: BlogContentProps) {
                         <button
                           key={item.id}
                           onClick={() => scrollToHeading(item.id)}
-                          className={`block w-full text-left text-sm hover:text-[#C04020] transition-colors ${
-                            item.level === 1 ? 'font-bold text-gray-900 mb-2' :
-                            item.level === 2 ? 'font-semibold text-gray-800 pl-0' :
-                            item.level === 3 ? 'font-medium text-gray-700 pl-4' :
-                            item.level === 4 ? 'text-gray-600 pl-8' :
-                            item.level === 5 ? 'text-gray-500 pl-12' :
-                            'text-gray-400 pl-16'
-                          }`}
+                          className={`block w-full text-left text-sm hover:text-[#C04020] transition-colors ${item.level === 1 ? 'font-bold text-gray-900 mb-2' :
+                              item.level === 2 ? 'font-semibold text-gray-800 pl-0' :
+                                item.level === 3 ? 'font-medium text-gray-700 pl-4' :
+                                  item.level === 4 ? 'text-gray-600 pl-8' :
+                                    item.level === 5 ? 'text-gray-500 pl-12' :
+                                      'text-gray-400 pl-16'
+                            }`}
                         >
                           {item.text}
                         </button>
@@ -492,7 +490,7 @@ export default function BlogContent({ slug }: BlogContentProps) {
                   )}
                 </div>
               </div>
-              
+
               {/* Quick Facts */}
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                 <h3 className="text-xl font-black text-[#1A1A1A] mb-4 flex items-center">
@@ -514,7 +512,7 @@ export default function BlogContent({ slug }: BlogContentProps) {
                   </div>
                 </div>
               </div>
-              
+
               {/* Expert Tip */}
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
                 <h3 className="text-xl font-black text-[#1A1A1A] mb-4 flex items-center">
@@ -614,10 +612,10 @@ export default function BlogContent({ slug }: BlogContentProps) {
           </div>
         </section>
       )}
-      
+
       {/* Kommentare */}
-      <BlogComments 
-        blogPostId={post.id} 
+      <BlogComments
+        blogPostId={post.id}
         blogPostTitle={post.title}
       />
     </article>
