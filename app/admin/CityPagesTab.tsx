@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/ssr';
 import CityImageUploader from '../../components/CityImageUploader';
 
 // Utility function to clear corrupted Supabase cookies
@@ -41,14 +41,20 @@ const clearSupabaseCookies = () => {
 // Create Supabase client with error handling
 const createSafeSupabaseClient = () => {
   try {
-    return createClientComponentClient();
+    return createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
   } catch (error) {
     console.error('Error creating Supabase client:', error);
     // If there's a cookie parsing error, clear cookies and try again
     if (error instanceof Error && error.message.includes('cookie')) {
       clearSupabaseCookies();
       try {
-        return createClientComponentClient();
+        return createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
       } catch (retryError) {
         console.error('Error creating Supabase client after cookie reset:', retryError);
         throw retryError;
