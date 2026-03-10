@@ -1,5 +1,4 @@
-
-'use client';
+import Link from 'next/link';
 
 export default function RegionSection() {
   return (
@@ -10,7 +9,7 @@ export default function RegionSection() {
             REGIONAL & <span className="text-[#D4A520]">NACHHALTIG</span>
           </h2>
           <p className="text-xl max-w-3xl mx-auto" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
-            Unser Brennholz stammt ausschließlich aus nachhaltiger Forstwirtschaft der Region Fulda. 
+            Unser Brennholz stammt ausschließlich aus nachhaltiger Forstwirtschaft der Region Fulda.
             Kurze Transportwege garantieren frische Qualität und schonen die Umwelt.
           </p>
         </div>
@@ -57,7 +56,7 @@ export default function RegionSection() {
           <h3 className="text-2xl font-bold mb-6 text-center" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
             Unser Liefergebiet
           </h3>
-          
+
           {/* Großstädte */}
           <div className="mb-8">
             <h4 className="text-lg font-bold mb-4 text-[#D4A520]" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
@@ -65,14 +64,26 @@ export default function RegionSection() {
             </h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                'Frankfurt am Main', 'Kassel', 'Wiesbaden', 'Würzburg',
-                'Göttingen', 'Erfurt', 'Offenbach am Main', 'Paderborn'
+                { name: 'Frankfurt am Main', slug: null },
+                { name: 'Kassel', slug: 'kassel' },
+                { name: 'Wiesbaden', slug: null },
+                { name: 'Würzburg', slug: null },
+                { name: 'Göttingen', slug: 'goettingen' },
+                { name: 'Erfurt', slug: null },
+                { name: 'Offenbach am Main', slug: null },
+                { name: 'Paderborn', slug: null }
               ].map((city) => (
-                <div key={city} className="flex items-center text-white">
+                <div key={city.name} className="flex items-center text-white">
                   <div className="w-3 h-3 flex items-center justify-center bg-[#C04020] rounded-full mr-2">
                     <i className="ri-map-pin-line text-white text-xs"></i>
                   </div>
-                  <span className="text-sm">{city}</span>
+                  {city.slug ? (
+                    <Link href={`/${city.slug}`} className="text-sm hover:text-[#D4A520] transition-colors underline decoration-dotted underline-offset-4">
+                      {city.name}
+                    </Link>
+                  ) : (
+                    <span className="text-sm">{city.name}</span>
+                  )}
                 </div>
               ))}
             </div>
@@ -85,14 +96,27 @@ export default function RegionSection() {
             </h4>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {[
-                'Bad Hersfeld', 'Alsfeld', 'Fulda', 'Gießen', 'Marburg',
-                'Hanau', 'Bad Nauheim', 'Schmalkalden', 'Bebra'
+                { name: 'Bad Hersfeld', slug: 'bad-hersfeld' },
+                { name: 'Alsfeld', slug: null },
+                { name: 'Fulda', slug: 'fulda' },
+                { name: 'Gießen', slug: null },
+                { name: 'Marburg', slug: null },
+                { name: 'Hanau', slug: null },
+                { name: 'Bad Nauheim', slug: null },
+                { name: 'Schmalkalden', slug: null },
+                { name: 'Bebra', slug: 'bebra' }
               ].map((city) => (
-                <div key={city} className="flex items-center text-white">
+                <div key={city.name} className="flex items-center text-white">
                   <div className="w-3 h-3 flex items-center justify-center bg-[#D4A520] rounded-full mr-2">
                     <i className="ri-map-pin-line text-white text-xs"></i>
                   </div>
-                  <span className="text-sm">{city}</span>
+                  {city.slug ? (
+                    <Link href={`/${city.slug}`} className="text-sm hover:text-[#D4A520] transition-colors underline decoration-dotted underline-offset-4">
+                      {city.name}
+                    </Link>
+                  ) : (
+                    <span className="text-sm">{city.name}</span>
+                  )}
                 </div>
               ))}
             </div>
@@ -105,15 +129,28 @@ export default function RegionSection() {
             </h4>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {[
-                'Petersberg', 'Künzell', 'Eichenzell', 'Hünfeld', 'Tann (Rhön)',
-                'Neuhof', 'Rotenburg an der Fulda', 'Lauterbach (Hessen)', 
-                'Schlitz', 'Grebenau'
+                { name: 'Petersberg', slug: null },
+                { name: 'Künzell', slug: null },
+                { name: 'Eichenzell', slug: null },
+                { name: 'Hünfeld', slug: 'huenfeld' },
+                { name: 'Tann (Rhön)', slug: 'tann' },
+                { name: 'Neuhof', slug: null },
+                { name: 'Rotenburg an der Fulda', slug: null },
+                { name: 'Lauterbach (Hessen)', slug: null },
+                { name: 'Schlitz', slug: null },
+                { name: 'Grebenau', slug: null }
               ].map((city) => (
-                <div key={city} className="flex items-center text-white">
+                <div key={city.name} className="flex items-center text-white">
                   <div className="w-3 h-3 flex items-center justify-center bg-[#8B7000] rounded-full mr-2">
                     <i className="ri-map-pin-line text-white text-xs"></i>
                   </div>
-                  <span className="text-sm">{city}</span>
+                  {city.slug ? (
+                    <Link href={`/${city.slug}`} className="text-sm hover:text-[#D4A520] transition-colors underline decoration-dotted underline-offset-4">
+                      {city.name}
+                    </Link>
+                  ) : (
+                    <span className="text-sm">{city.name}</span>
+                  )}
                 </div>
               ))}
             </div>
