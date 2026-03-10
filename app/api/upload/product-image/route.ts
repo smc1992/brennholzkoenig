@@ -9,24 +9,26 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const revalidate = false;
 
-// Supabase Client wird zur Laufzeit erstellt
+// Supabase Client wird zur Laufzeit erstellt (Server-Side mit Service Role Key)
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
   if (!supabaseUrl || !supabaseKey) {
     console.warn('Supabase environment variables not configured for app-api-upload-product-image-route route');
     return null;
   }
-  
-  return createClient(supabaseUrl, supabaseKey);
+
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false }
+  });
 }
 
 export async function POST(request: NextRequest) {
   try {
     // Supabase Client zur Laufzeit erstellen
     const supabase = getSupabaseClient();
-    
+
     // Prüfen ob Supabase konfiguriert ist
     if (!supabase) {
       return Response.json({ error: 'Database service not configured' }, { status: 503 });
@@ -35,11 +37,11 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const productData = formData.get('productData') as string;
-    
+
     if (!file) {
       return Response.json({ error: 'Keine Datei hochgeladen' }, { status: 400 });
     }
-    
+
     // Produktdaten optional - Fallback-Werte verwenden wenn nicht vorhanden
     let product = {
       name: 'Neues Produkt',
@@ -48,7 +50,7 @@ export async function POST(request: NextRequest) {
       size: '25cm',
       id: undefined
     };
-    
+
     if (productData) {
       try {
         const parsedData = JSON.parse(productData);
@@ -61,31 +63,31 @@ export async function POST(request: NextRequest) {
     } else {
       console.log('API: Keine Produktdaten empfangen, verwende Fallback-Werte');
     }
-    
+
     // Validierung der Datei
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      return Response.json({ 
-        error: 'Ungültiger Dateityp. Erlaubt: JPEG, PNG, WebP' 
+      return Response.json({
+        error: 'Ungültiger Dateityp. Erlaubt: JPEG, PNG, WebP'
       }, { status: 400 });
     }
-    
+
     // Dateigröße prüfen (max 5MB)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
-      return Response.json({ 
-        error: 'Datei zu groß. Maximum: 5MB' 
+      return Response.json({
+        error: 'Datei zu groß. Maximum: 5MB'
       }, { status: 400 });
     }
-    
+
     // Eindeutigen Storage-Dateinamen generieren
     const storageFilename = generateStorageFilename(file.name);
-    
+
     // SEO-freundlichen Slug generieren
     const seoSlug = generateImageSlug(product, file.name);
     console.log('API: Generierter SEO-Slug:', seoSlug);
     console.log('API: Verwendet für Slug - Name:', product.name, 'Category:', product.category);
-    
+
     // Datei zu Supabase Storage hochladen
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('products')
@@ -93,18 +95,18 @@ export async function POST(request: NextRequest) {
         cacheControl: '31536000', // 1 Jahr
         upsert: false
       });
-    
+
     if (uploadError) {
       console.error('Upload error:', uploadError);
-      return Response.json({ 
-        error: 'Fehler beim Hochladen der Datei' 
+      return Response.json({
+        error: 'Fehler beim Hochladen der Datei'
       }, { status: 500 });
     }
-    
+
     // Bestimme die nächste Bildnummer für dieses Produkt
     let imageIndex = 1;
     let isMainImage = true; // Erstes Bild ist standardmäßig Hauptbild
-    
+
     if (product.id) {
       const { data: existingImages, error: countError } = await supabase
         .from('image_mappings')
@@ -112,19 +114,19 @@ export async function POST(request: NextRequest) {
         .eq('product_id', product.id)
         .order('image_index', { ascending: false })
         .limit(1);
-      
+
       if (!countError && existingImages && existingImages.length > 0) {
         imageIndex = (existingImages[0].image_index || 0) + 1;
         isMainImage = false; // Weitere Bilder sind nicht automatisch Hauptbilder
       }
     }
-    
+
     // SEO-Slug mit Nummerierung generieren
     const baseSlug = generateImageSlug(product, file.name);
     const numberedSlug = imageIndex === 1 ? baseSlug : baseSlug.replace(/\.(\w+)$/, `-${imageIndex}.$1`);
-    
+
     console.log(`API: Generierter nummerierter SEO-Slug: ${numberedSlug} (Index: ${imageIndex})`);
-    
+
     // Image-Mapping in der Datenbank speichern
     const { data: mappingData, error: mappingError } = await supabase
       .from('image_mappings')
@@ -138,40 +140,40 @@ export async function POST(request: NextRequest) {
       })
       .select()
       .single();
-    
+
     if (mappingError) {
       console.error('Mapping error:', mappingError);
-      
+
       // Cleanup: Datei aus Storage löschen wenn Mapping fehlschlägt
       await supabase.storage
         .from('products')
         .remove([storageFilename]);
-      
-      return Response.json({ 
-        error: 'Fehler beim Speichern der Bild-Zuordnung' 
+
+      return Response.json({
+        error: 'Fehler beim Speichern der Bild-Zuordnung'
       }, { status: 500 });
     }
-    
+
     // Automatische Aktualisierung der products-Tabelle (nur für Hauptbilder)
     if (product.id && isMainImage) {
       const imageUrl = `/images/${numberedSlug}`;
-      
+
       // Prüfe, ob das Produkt bereits ein Hauptbild hat
       const { data: existingProduct, error: fetchError } = await supabase
         .from('products')
         .select('image_url')
         .eq('id', product.id)
         .single();
-      
+
       // Aktualisiere das Hauptbild nur wenn es das erste Bild ist
       const { error: updateError } = await supabase
         .from('products')
-        .update({ 
+        .update({
           image_url: imageUrl,
           updated_at: new Date().toISOString()
         })
         .eq('id', product.id);
-      
+
       if (updateError) {
         console.error('Product update error:', updateError);
         // Warnung loggen, aber Upload nicht fehlschlagen lassen
@@ -184,7 +186,7 @@ export async function POST(request: NextRequest) {
     } else {
       console.warn('No product.id provided - automatic image_url update skipped');
     }
-    
+
     // Erfolgreiche Response mit allen URLs
     return Response.json({
       success: true,
@@ -198,11 +200,11 @@ export async function POST(request: NextRequest) {
         fileType: file.type
       }
     });
-    
+
   } catch (error) {
     console.error('Upload API error:', error);
-    return Response.json({ 
-      error: 'Interner Serverfehler' 
+    return Response.json({
+      error: 'Interner Serverfehler'
     }, { status: 500 });
   }
 }
