@@ -3,23 +3,25 @@ import { Suspense } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import BlogContent from './BlogContent';
 
+export const revalidate = 60;
+
 // Sichere Supabase Client-Erstellung für Build-Zeit
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
+
   if (!supabaseUrl || !supabaseKey) {
     console.warn('Supabase environment variables not configured for blog page');
     return null;
   }
-  
+
   return createClient(supabaseUrl, supabaseKey);
 }
 
 export async function generateStaticParams() {
   try {
     const supabase = getSupabaseClient();
-    
+
     if (!supabase) {
       console.warn('Supabase not configured, returning empty static params');
       return [];
@@ -42,7 +44,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   try {
     const supabase = getSupabaseClient();
-    
+
     if (!supabase) {
       return {
         title: 'Blog Post',

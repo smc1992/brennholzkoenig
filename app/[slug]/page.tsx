@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import CityLandingClient from './CityLandingClient';
 import { notFound } from 'next/navigation';
 
+export const revalidate = 60;
+
 const getSupabase = () => {
     return createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
