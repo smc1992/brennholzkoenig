@@ -492,7 +492,12 @@ export default function CityPagesTab() {
             setError(error instanceof Error ? error.message : 'Fehler beim Speichern. Bitte versuchen Sie es erneut.');
 
             // If it's a cookie-related error, try to reset and reload
-            if (error instanceof Error && (error.message.includes('cookie') || error.message.includes('JSON') || error.message.includes('parse'))) {
+            if (
+              error instanceof Error &&
+              (error.message.includes('cookie') ||
+                (error.message.includes('JSON') && !error.message.includes('coerce')) ||
+                error.message.includes('parse'))
+            ) {
               clearSupabaseCookies();
               setError('Authentifizierungsfehler erkannt. Die Seite wird neu geladen...');
               setTimeout(() => {
