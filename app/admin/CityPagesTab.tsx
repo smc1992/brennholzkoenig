@@ -934,7 +934,7 @@ function CityPageForm({ page, onSave, onCancel }: {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Fließtext (HTML möglich)</label>
                 <textarea value={formData.content_section_2_content || ''} onChange={(e) => setFormData(prev => ({ ...prev, content_section_2_content: e.target.value }))} className="w-full px-3 py-2 border rounded-lg font-mono text-sm" rows={6} placeholder="Beschreibung der regionalen Qualität..." />
               </div>
-
+              <CityImageUploader currentImageUrl={formData.content_section_2_image_url || ''} onImageUploaded={(url) => setFormData(prev => ({ ...prev, content_section_2_image_url: url }))} label="Bild Sektion 2 (Regionale Qualität)" placeholder="Bild hochladen" citySlug={formData.slug} sectionType="section2" />
             </div>
           </div>
 
@@ -949,7 +949,7 @@ function CityPageForm({ page, onSave, onCancel }: {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Fließtext (HTML möglich)</label>
                 <textarea value={formData.content_section_3_content || ''} onChange={(e) => setFormData(prev => ({ ...prev, content_section_3_content: e.target.value }))} className="w-full px-3 py-2 border rounded-lg font-mono text-sm" rows={6} placeholder="Beschreibung der Nachhaltigkeit..." />
               </div>
-
+              <CityImageUploader currentImageUrl={formData.content_section_3_image_url || ''} onImageUploaded={(url) => setFormData(prev => ({ ...prev, content_section_3_image_url: url }))} label="Bild Sektion 3 (Nachhaltigkeit)" placeholder="Bild hochladen" citySlug={formData.slug} sectionType="section3" />
             </div>
           </div>
 
