@@ -439,11 +439,19 @@ export default function CityPagesTab() {
           try {
             setError(null);
             if (pageData.id) {
-              const { error } = await supabase
+              console.log('Sende Update an Supabase:', pageData);
+              const { data: updatedCity, error } = await supabase
                 .from('city_pages')
                 .update(pageData)
-                .eq('id', pageData.id);
-              if (error) throw error;
+                .eq('id', pageData.id)
+                .select('*')
+                .single();
+
+              if (error) {
+                console.error('Fehler beim Speicher-Update:', error);
+                throw new Error(`Fehler beim Speichern: ${error.message || 'Sitzung abgelaufen oder fehlende Berechtigung.'}`);
+              }
+              console.log('Erfolgreich gespeichert:', updatedCity);
             } else {
               const { error } = await supabase
                 .from('city_pages')
@@ -463,7 +471,7 @@ export default function CityPagesTab() {
               page_path: pagePath,
               title: pageData.meta_title,
               description: pageData.meta_description,
-              keywords: pageData.local_keywords,
+              keywords: Array.isArray(pageData.local_keywords) ? pageData.local_keywords.join(', ') : pageData.local_keywords,
               page_type: 'city',
               canonical_url: `https://brennholz-koenig.de/${pageData.slug}`,
               og_title: pageData.meta_title,
@@ -481,7 +489,7 @@ export default function CityPagesTab() {
             setSelectedPage(null);
           } catch (error) {
             console.error('Fehler beim Speichern:', error);
-            setError('Fehler beim Speichern. Bitte versuchen Sie es erneut.');
+            setError(error instanceof Error ? error.message : 'Fehler beim Speichern. Bitte versuchen Sie es erneut.');
 
             // If it's a cookie-related error, try to reset and reload
             if (error instanceof Error && (error.message.includes('cookie') || error.message.includes('JSON') || error.message.includes('parse'))) {
