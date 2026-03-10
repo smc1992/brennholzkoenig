@@ -269,23 +269,7 @@ export default function AdminLoginPage() {
           </button>
         </form>
 
-        {/* Demo Access Info */}
-        <div className="mt-8 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-start">
-            <div className="w-5 h-5 flex items-center justify-center mr-3 text-green-600 mt-0.5">
-              <i className="ri-key-line"></i>
-            </div>
-            <div className="text-sm text-green-800">
-              <p className="font-medium mb-1">Admin-Zugangsdaten:</p>
-              <p className="text-xs mb-1">
-                <strong>E-Mail:</strong> info@brennholz-koenig.de
-              </p>
-              <p className="text-xs">
-                <strong>Passwort:</strong> brennholz2024
-              </p>
-            </div>
-          </div>
-        </div>
+
         
         {/* Performance Info */}
         <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
