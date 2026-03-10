@@ -329,7 +329,7 @@ export default function BlogContent({ slug }: BlogContentProps) {
   }
 
   return (
-    <article className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <article className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-32">
       {/* Breadcrumbs */}
       <nav className="mb-12">
         <ol className="flex items-center space-x-3 text-sm">
@@ -423,11 +423,11 @@ export default function BlogContent({ slug }: BlogContentProps) {
                       key={item.id}
                       onClick={() => scrollToHeading(item.id)}
                       className={`block w-full text-left text-sm hover:text-[#C04020] transition-colors ${item.level === 1 ? 'font-bold text-gray-900 mb-1' :
-                          item.level === 2 ? 'font-semibold text-gray-800 pl-0' :
-                            item.level === 3 ? 'font-medium text-gray-700 pl-3' :
-                              item.level === 4 ? 'text-gray-600 pl-6' :
-                                item.level === 5 ? 'text-gray-500 pl-9' :
-                                  'text-gray-400 pl-12'
+                        item.level === 2 ? 'font-semibold text-gray-800 pl-0' :
+                          item.level === 3 ? 'font-medium text-gray-700 pl-3' :
+                            item.level === 4 ? 'text-gray-600 pl-6' :
+                              item.level === 5 ? 'text-gray-500 pl-9' :
+                                'text-gray-400 pl-12'
                         }`}
                     >
                       {item.text}
@@ -472,11 +472,11 @@ export default function BlogContent({ slug }: BlogContentProps) {
                           key={item.id}
                           onClick={() => scrollToHeading(item.id)}
                           className={`block w-full text-left text-sm hover:text-[#C04020] transition-colors ${item.level === 1 ? 'font-bold text-gray-900 mb-2' :
-                              item.level === 2 ? 'font-semibold text-gray-800 pl-0' :
-                                item.level === 3 ? 'font-medium text-gray-700 pl-4' :
-                                  item.level === 4 ? 'text-gray-600 pl-8' :
-                                    item.level === 5 ? 'text-gray-500 pl-12' :
-                                      'text-gray-400 pl-16'
+                            item.level === 2 ? 'font-semibold text-gray-800 pl-0' :
+                              item.level === 3 ? 'font-medium text-gray-700 pl-4' :
+                                item.level === 4 ? 'text-gray-600 pl-8' :
+                                  item.level === 5 ? 'text-gray-500 pl-12' :
+                                    'text-gray-400 pl-16'
                             }`}
                         >
                           {item.text}
