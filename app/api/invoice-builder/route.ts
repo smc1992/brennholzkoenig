@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 // Admin Supabase Client mit Service Role Key
 function getAdminSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SERVICE_ROLE_KEY;
 
   if (serviceRoleKey) {
     return createClient(supabaseUrl, serviceRoleKey, {
@@ -318,7 +318,8 @@ async function getOrCreateCustomerNumber(email: string): Promise<string> {
     console.log('🔍 Fetching customer for email:', email);
 
     // Prüfe ob Kunde bereits existiert und hole customer_number falls vorhanden
-    const { data: existingCustomer, error: fetchError } = await supabase
+    const adminClient = getAdminSupabaseClient();
+    const { data: existingCustomer, error: fetchError } = await adminClient
       .from('customers')
       .select('id, customer_number, email')
       .eq('email', email)
@@ -341,7 +342,7 @@ async function getOrCreateCustomerNumber(email: string): Promise<string> {
     if (existingCustomer) {
       // Kunde existiert, aber hat keine customer_number - aktualisiere ihn
       try {
-        const { error: updateError } = await supabase
+        const { error: updateError } = await adminClient
           .from('customers')
           .update({ customer_number: newCustomerNumber })
           .eq('id', existingCustomer.id);
@@ -357,7 +358,7 @@ async function getOrCreateCustomerNumber(email: string): Promise<string> {
     } else {
       // Kunde existiert nicht - erstelle neuen Kunden
       try {
-        const { error: insertError } = await supabase
+        const { error: insertError } = await adminClient
           .from('customers')
           .insert({
             email: email,
@@ -369,7 +370,7 @@ async function getOrCreateCustomerNumber(email: string): Promise<string> {
         if (insertError) {
           console.log('ℹ️ Could not insert with customer_number (column may not exist):', insertError.message);
           // Fallback: Erstelle Kunde ohne customer_number
-          await supabase
+          await adminClient
             .from('customers')
             .insert({
               email: email,
@@ -400,25 +401,8 @@ async function loadInvoiceData(invoiceId?: string | null, orderId?: string | nul
 
   const isUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
-  let clientToUse = supabase;
-  if ((invoiceId && isUUID(invoiceId)) || (orderId && isUUID(orderId))) {
-    clientToUse = getAdminSupabaseClient();
-  } else {
-    try {
-      const { cookies } = require('next/headers');
-      const { createServerClient } = require('@supabase/ssr');
-      const cookieStore = cookies();
-      clientToUse = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          cookies: { get(name: string) { return cookieStore.get(name)?.value; } }
-        }
-      );
-    } catch (e) {
-      console.warn('Could not create auth client, using anon', e);
-    }
-  }
+  // Always use admin client - this is a server-side API route without browser session
+  const clientToUse = getAdminSupabaseClient();
 
   // Lade Rechnung falls vorhanden
   if (invoiceId) {
