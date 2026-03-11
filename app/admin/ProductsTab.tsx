@@ -590,9 +590,20 @@ export default function ProductsTab() {
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <img
-                          src={product.image_url}
+                          src={product.image_url?.startsWith('/images/') 
+                            ? `/api/cdn/products/${product.image_url.split('/').pop()}` 
+                            : product.image_url}
                           alt={product.name?.toString() || "Product"}
                           className="w-12 h-12 rounded-lg object-cover mr-4"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            if (!target.dataset.fallback) {
+                              target.dataset.fallback = '1';
+                              target.src = product.image_url;
+                            } else {
+                              target.src = '/api/placeholder?width=48&height=48&text=📦';
+                            }
+                          }}
                         />
                         <div>
                           <div className="text-sm font-bold text-[#1A1A1A]">
@@ -1586,11 +1597,19 @@ export default function ProductsTab() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <img
-                    src={selectedProduct.image_url}
+                    src={selectedProduct.image_url?.startsWith('/images/')
+                      ? `/api/cdn/products/${selectedProduct.image_url.split('/').pop()}`
+                      : selectedProduct.image_url}
                     alt={selectedProduct.name}
                     className="w-full h-64 object-cover rounded-lg"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/placeholder-image.jpg';
+                      const target = e.target as HTMLImageElement;
+                      if (!target.dataset.fallback) {
+                        target.dataset.fallback = '1';
+                        target.src = selectedProduct.image_url;
+                      } else {
+                        target.src = '/api/placeholder?width=400&height=256&text=Bild+nicht+verf%C3%BCgbar';
+                      }
                     }}
                   />
                   {selectedProduct.additional_images && selectedProduct.additional_images.length > 0 && (
