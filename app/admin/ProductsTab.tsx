@@ -1336,8 +1336,33 @@ export default function ProductsTab() {
                     slug: generateSlug(formData.get('name') as string)
                   };
 
-                  const { error } = await supabase.from('products').insert([productData]);
+                  const { data: insertedProduct, error } = await supabase
+                    .from('products')
+                    .insert([productData])
+                    .select('id')
+                    .single();
                   if (error) throw error;
+
+                  // Link orphaned image_mappings to the new product
+                  if (insertedProduct?.id && newProductImages.length > 0) {
+                    const storageFilenames = newProductImages
+                      .map(img => img.storageFilename)
+                      .filter(Boolean);
+                    
+                    if (storageFilenames.length > 0) {
+                      const { error: linkError } = await supabase
+                        .from('image_mappings')
+                        .update({ product_id: insertedProduct.id })
+                        .is('product_id', null)
+                        .in('storage_filename', storageFilenames);
+                      
+                      if (linkError) {
+                        console.error('Error linking images to product:', linkError);
+                      } else {
+                        console.log(`Linked ${storageFilenames.length} images to product ${insertedProduct.id}`);
+                      }
+                    }
+                  }
 
                   alert('Produkt erfolgreich erstellt!');
                   setIsAddModalOpen(false);
