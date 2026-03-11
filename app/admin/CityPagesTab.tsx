@@ -537,11 +537,11 @@ export default function CityPagesTab() {
                   const updateData: Partial<CityPage> = {};
 
                   if (!page.meta_title) {
-                    updateData.meta_title = `Premium Brennholz & Kaminholz kaufen in ${page.city_name} | Brennholz König`;
+                    updateData.meta_title = `Premium Brennholz & Kaminholz kaufen in ${page.city_name} | Brennholzkönig`;
                     updateNeeded = true;
                   }
                   if (!page.meta_description) {
-                    updateData.meta_description = `Hochwertiges Brennholz und Kaminholz in ${page.city_name} bestellen. Schnelle Lieferung, getrocknetes Holz und beste Preise direkt vom Brennholz König.`;
+                    updateData.meta_description = `Hochwertiges Brennholz und Kaminholz in ${page.city_name} bestellen. Schnelle Lieferung, getrocknetes Holz und beste Preise direkt vom Brennholzkönig.`;
                     updateNeeded = true;
                   }
 
