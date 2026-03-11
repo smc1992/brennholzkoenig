@@ -9,6 +9,7 @@ interface ImageItem {
   seoSlug: string;
   storageFilename: string;
   url: string;
+  cdnUrl?: string;
   mappingId?: number;
   isMain?: boolean;
   imageOrder?: number;
@@ -175,13 +176,14 @@ export default function ProductImageManager({
         }
 
         if (result.success) {
-          const { seoSlug, storageFilename, mappingId } = result.data;
+          const { seoSlug, storageFilename, mappingId, cdnUrl } = result.data;
           
           return {
             id: `uploaded-${Date.now()}-${Math.random()}`,
             seoSlug,
             storageFilename,
             url: `/images/${seoSlug}`,
+            cdnUrl: cdnUrl || `/api/cdn/products/${storageFilename}`,
             mappingId,
             isMain: images.length === 0 // Erstes Bild ist Hauptbild
           };
@@ -350,12 +352,17 @@ export default function ProductImageManager({
               <div key={image.id} className="relative group">
                 <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
                   <img
-                    src={image.url}
+                    src={image.cdnUrl || image.url}
                     alt={`Produktbild ${image.seoSlug}`}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = '/api/placeholder?width=400&height=400&text=Bild+nicht+verfügbar';
+                      // Fallback: try /images/ route if CDN fails, then placeholder
+                      if (image.cdnUrl && target.src.includes('/api/cdn/')) {
+                        target.src = image.url;
+                      } else {
+                        target.src = '/api/placeholder?width=400&height=400&text=Bild+nicht+verfügbar';
+                      }
                     }}
                   />
                 </div>
