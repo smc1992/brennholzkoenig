@@ -156,6 +156,28 @@ export default function RegionSection() {
             </div>
           </div>
 
+          {/* === SEO Link Structure for All Active Cities === */}
+          <details className="mb-8 group" style={{ fontFamily: 'Inter, Arial, sans-serif' }}>
+            <summary className="cursor-pointer text-white/80 hover:text-white font-medium flex items-center pb-2 border-b border-white/20 list-none">
+              <span className="mr-2">Alle Liefergebiete anzeigen (A-Z)</span>
+              <i className="ri-arrow-down-s-line group-open:rotate-180 transition-transform"></i>
+            </summary>
+            <div className="pt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-3 gap-x-4">
+              {[
+                {"slug":"alheim","city_name":"Alheim"},{"slug":"bad-arolsen","city_name":"Bad Arolsen"},{"slug":"bad-hersfeld","city_name":"Bad Hersfeld"},{"slug":"bad-homburg","city_name":"Bad Homburg"},{"slug":"bad-kissingen","city_name":"Bad Kissingen"},{"slug":"bad-neustadt","city_name":"Bad Neustadt an der Saale"},{"slug":"bad-sooden-allendorf","city_name":"Bad Sooden-Allendorf"},{"slug":"bad-wildungen","city_name":"Bad Wildungen"},{"slug":"baunatal","city_name":"Baunatal"},{"slug":"bebra","city_name":"Bebra"},{"slug":"borken","city_name":"Borken"},{"slug":"buedingen","city_name":"Büdingen"},{"slug":"calden","city_name":"Calden"},{"slug":"ebersburg","city_name":"Ebersburg"},{"slug":"eisenach","city_name":"Eisenach"},{"slug":"eiterfeld","city_name":"Eiterfeld"},{"slug":"eschwege","city_name":"Eschwege"},{"slug":"frankenau","city_name":"Frankenau"},{"slug":"frankenberg","city_name":"Frankenberg"},{"slug":"freigericht","city_name":"Freigericht"},{"slug":"friedland","city_name":"Friedland"},{"slug":"frielendorf","city_name":"Frielendorf"},{"slug":"fritzlar","city_name":"Fritzlar"},{"slug":"fulda","city_name":"Fulda"},{"slug":"gemuenden","city_name":"Gemünden"},{"slug":"gersfeld","city_name":"Gersfeld"},{"slug":"goettingen","city_name":"Göttingen"},{"slug":"grossalmerode","city_name":"Großalmerode"},{"slug":"hann-muenden","city_name":"Hann. Münden"},{"slug":"herbstein","city_name":"Herbstein"},{"slug":"heringen","city_name":"Heringen"},{"slug":"hilders","city_name":"Hilders"},{"slug":"hofbieber","city_name":"Hofbieber"},{"slug":"hofgeismar","city_name":"Hofgeismar"},{"slug":"homberg-efze","city_name":"Homberg (Efze)"},{"slug":"hosenfeld","city_name":"Hosenfeld"},{"slug":"huenfeld","city_name":"Hünfeld"},{"slug":"kassel","city_name":"Kassel"},{"slug":"kaufungen","city_name":"Kaufungen"},{"slug":"kirchheim","city_name":"Kirchheim"},{"slug":"korbach","city_name":"Korbach"},{"slug":"lichtenfels","city_name":"Lichtenfels"},{"slug":"malsfeld","city_name":"Malsfeld"},{"slug":"meissner","city_name":"Meißner"},{"slug":"muecke","city_name":"Mücke"},{"slug":"naumburg","city_name":"Naumburg"},{"slug":"niederaula","city_name":"Niederaula"},{"slug":"reinhardshagen","city_name":"Reinhardshagen"},{"slug":"schwalmstadt","city_name":"Schwalmstadt"},{"slug":"schweinfurt","city_name":"Schweinfurt"},{"slug":"soehrewald","city_name":"Söhrewald"},{"slug":"sontra","city_name":"Sontra"},{"slug":"spangenberg","city_name":"Spangenberg"},{"slug":"steinau-an-der-strasse","city_name":"Steinau an der Straße"},{"slug":"tann","city_name":"Tann (Rhön)"},{"slug":"trendelburg","city_name":"Trendelburg"},{"slug":"voehl","city_name":"Vöhl"},{"slug":"volkmarsen","city_name":"Volkmarsen"},{"slug":"witzenhausen","city_name":"Witzenhausen"},{"slug":"wolfhagen","city_name":"Wolfhagen"}
+              ].map((city) => (
+                <Link 
+                  key={city.slug} 
+                  href={`/${city.slug}`} 
+                  className="text-sm text-gray-300 hover:text-white transition-colors truncate flex items-center"
+                >
+                  <span className="w-1.5 h-1.5 bg-white/30 rounded-full mr-2"></span>
+                  {city.city_name}
+                </Link>
+              ))}
+            </div>
+          </details>
+
           <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
             <iframe
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d156745.0!2d9.675!3d50.554!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47a39d0b4b8c8b07%3A0x4dd4c5c5c5c5c5c5!2sFulda%2C%20Germany!5e0!3m2!1sen!2sus!4v1634567890123!5m2!1sen!2sus"
@@ -165,7 +187,7 @@ export default function RegionSection() {
             ></iframe>
           </div>
 
-          <div className="bg-white/5 rounded-lg p-4 mb-4">
+          <div className="bg-white/5 rounded-lg p-4 mb-4 mt-6">
             <div className="flex items-center justify-center space-x-8">
               <div className="flex items-center">
                 <div className="w-4 h-4 bg-[#C04020] rounded-full mr-2"></div>
